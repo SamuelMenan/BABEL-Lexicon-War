@@ -27,7 +27,7 @@ export const EventTypes = {
   HUD_UPDATE:         'hud:update',        // { wpm, accuracy, hp, activeWord, progress }
 
   // --- Juego ---
-  GAME_START:         'game:start',        // { mode }
+  GAME_START:         'game:start',        // { mode, difficulty }
   GAME_PAUSE:         'game:pause',
   GAME_RESUME:        'game:resume',
   GAME_OVER:          'game:over',         // { score, wpm, accuracy }

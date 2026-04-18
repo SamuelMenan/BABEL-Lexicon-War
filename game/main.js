@@ -43,8 +43,8 @@ export function initGame(mountEl) {
   });
 
   // FIX: marcar juego como activo al recibir GAME_START
-  EventBus.on(EventTypes.GAME_START, ({ mode }) => {
-    Bridge.setState({ isRunning: true, gameMode: mode });
+  EventBus.on(EventTypes.GAME_START, ({ mode, difficulty }) => {
+    Bridge.setState({ isRunning: true, gameMode: mode, difficulty });
   });
 
   EventBus.on(EventTypes.GAME_PAUSE, () => {

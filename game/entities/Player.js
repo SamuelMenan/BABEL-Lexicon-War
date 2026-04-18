@@ -98,9 +98,13 @@ export class Player extends Entity {
   update(delta) {
     this._t += delta;
 
-    // Flotación base
-    const floatY = Math.sin(this._t * 0.5) * 0.08;
+    // Flotación arriba/abajo pronunciada
+    const floatY = Math.sin(this._t * 1.2) * 0.6;
     this._group.position.y = floatY;
+
+    // Deslizamiento en X hacia el objetivo
+    const desiredX = this._targetPos ? this._targetPos.x * 0.18 : 0;
+    this._group.position.x += (desiredX - this._group.position.x) * Math.min(delta * 2, 1);
 
     // Apuntar suavemente hacia el target
     if (this._targetPos) {

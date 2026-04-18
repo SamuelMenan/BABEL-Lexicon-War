@@ -18,8 +18,8 @@ function randomWord(exclude=[]) {
   return pool[Math.floor(Math.random()*pool.length)];
 }
 export class SceneManager {
-  constructor(scene,lexicon,physics,hudCanvas) {
-    this.scene=scene; this.lexicon=lexicon; this.physics=physics; this.hudCanvas=hudCanvas;
+  constructor(scene,lexicon,physics,hudCanvas,cam=null) {
+    this.scene=scene; this.lexicon=lexicon; this.physics=physics; this.hudCanvas=hudCanvas; this._cam=cam;
     this.enemies=[]; this.tokens=[]; this.projectiles=[];
     this.wave=0; this.hp=PLAYER_MAX_HP; this._waveTimer=0;
     this._unsubs=[]; this._player=null; this._particles=null; this._decorRings=[];
@@ -46,14 +46,24 @@ export class SceneManager {
     }
   }
   _buildArena() {
-    this._addStarField(1800,400,0.15,0x223344);
-    this._addStarField(600,150,0.3,0x334466);
-    this._addStarField(120,60,0.55,0x88aacc);
-    const grid=new THREE.GridHelper(120,24,0x0a1520,0x0a1520);
-    grid.position.y=-10; this.scene.add(grid);
-    this._addNebula(-40,10,-80,0x220033,0.06,20);
-    this._addNebula(50,-5,-100,0x001133,0.05,28);
-    this._addNebula(-20,15,-60,0x110022,0.04,15);
+    // Skybox — esfera grande fondo azul-teal profundo
+    this._addNebula(0,0,-30,0x020d18,0.98,280,THREE.BackSide);
+
+    // Nubes nebulosas — capas tipo Pilares de la Creación
+    this._addNebula(-60,20,-120,0x003322,0.18,70);   // teal oscuro izq
+    this._addNebula(70,-10,-140,0x001a33,0.16,80);    // azul profundo der
+    this._addNebula(0,30,-100,0x1a0033,0.14,60);      // púrpura arriba
+    this._addNebula(-30,-20,-90,0x220d00,0.13,50);    // marrón-naranja bajo
+    this._addNebula(40,25,-110,0x003344,0.12,55);     // cyan-verde mid
+    this._addNebula(-10,10,-70,0x330011,0.10,38);     // rojo oscuro accent
+    this._addNebula(20,-15,-80,0x001122,0.15,45);     // azul mid
+
+    // Estrellas — distintos tamaños y colores
+    this._addStarField(2000,500,0.12,0x6688aa);
+    this._addStarField(700,200,0.25,0x88aacc);
+    this._addStarField(200,100,0.5,0xaaccee);
+    this._addStarField(40,80,1.0,0xffffff);           // estrellas brillantes
+
     this._addDecorRing(0,0,-60,22,0x0a2030);
     this._addDecorRing(0,0,-90,35,0x0a1525);
   }
@@ -68,9 +78,9 @@ export class SceneManager {
     geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
     this.scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color,size,sizeAttenuation:true})));
   }
-  _addNebula(x,y,z,color,opacity,radius) {
-    const mat=new THREE.MeshStandardMaterial({color,transparent:true,opacity,side:THREE.BackSide,depthWrite:false});
-    const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,8,8),mat);
+  _addNebula(x,y,z,color,opacity,radius,side=THREE.FrontSide) {
+    const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side,depthWrite:false});
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,12,12),mat);
     mesh.position.set(x,y,z); this.scene.add(mesh);
   }
   _addDecorRing(x,y,z,radius,color) {
@@ -117,6 +127,7 @@ export class SceneManager {
     target.setTargeted(true);
     this.lexicon.setTarget(target.id,target.word);
     this._player?.setTarget(target.position);
+    this._cam?.trackX(target.position.x);
   }
   _onWordProgress({typed,correct}) {
     const targetId=this.lexicon.currentTargetId; if(!targetId) return;

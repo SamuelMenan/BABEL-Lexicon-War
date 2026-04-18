@@ -5,7 +5,6 @@
 
 import { EventBus } from './events.js';
 import { EventTypes } from './eventTypes.js';
-import { DIFFICULTY_LEVELS } from './constants.js';
 
 // Estado reactivo del juego — la UI lee esto vía suscripción
 let _state = {
@@ -18,7 +17,6 @@ let _state = {
   score:       0,
   wave:        0,
   gameMode:    null,
-  difficulty:  DIFFICULTY_LEVELS.MEDIUM,
   isRunning:   false,
 };
 
@@ -60,8 +58,8 @@ export const Bridge = {
 
   // --- Comandos que la UI puede enviar al motor ---
   commands: {
-    startGame(mode, difficulty = DIFFICULTY_LEVELS.MEDIUM) {
-      EventBus.emit(EventTypes.GAME_START, { mode, difficulty });
+    startGame(mode) {
+      EventBus.emit(EventTypes.GAME_START, { mode });
     },
     pauseGame() {
       EventBus.emit(EventTypes.GAME_PAUSE);

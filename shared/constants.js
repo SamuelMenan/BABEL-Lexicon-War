@@ -5,12 +5,6 @@ export const GAME_MODES = {
   RACING: 'racing',
 };
 
-export const DIFFICULTY_LEVELS = {
-  EASY: 'easy',
-  MEDIUM: 'medium',
-  HARD: 'hard',
-};
-
 // --- WPM y timing ---
 export const WPM_WINDOW_MS = 5000;      // ventana deslizante para calcular WPM
 export const WPM_MIN_CHARS  = 5;        // mínimo de chars para calcular WPM válido
@@ -21,15 +15,7 @@ export const ENEMY_BASE_SPEED   = 1.5;  // unidades Three.js por segundo
 export const ENEMY_SPEED_SCALE  = 0.1;  // incremento por oleada
 export const MAX_ACTIVE_ENEMIES = 8;
 export const WAVE_INTERVAL_MS   = 8000; // ms entre oleadas
-// Penalizacion por error de letra segun dificultad:
-// easy   -> retry (solo corregir la letra equivocada)
-// medium -> backstep (retrocede una letra)
-// hard   -> reset (reinicia toda la palabra)
-export const DIFFICULTY_ERROR_POLICY = {
-  [DIFFICULTY_LEVELS.EASY]: 'retry',
-  [DIFFICULTY_LEVELS.MEDIUM]: 'backstep',
-  [DIFFICULTY_LEVELS.HARD]: 'reset',
-};
+export const WORD_ERROR_PENALTY = 'reset'; // 'reset' | 'penalize'
 
 // --- Jugador ---
 export const PLAYER_MAX_HP     = 100;

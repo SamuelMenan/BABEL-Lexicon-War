@@ -7,8 +7,7 @@ import { Bridge } from '../../shared/bridge.js';
 import {
   WPM_WINDOW_MS,
   WPM_MIN_CHARS,
-  DIFFICULTY_LEVELS,
-  DIFFICULTY_ERROR_POLICY,
+  WORD_ERROR_PENALTY,
 } from '../../shared/constants.js';
 
 export class LexiconSystem {
@@ -70,11 +69,6 @@ export class LexiconSystem {
 
   get currentTargetId() { return this._targetId; }
 
-  _getErrorPolicy() {
-    const difficulty = Bridge.getState().difficulty || DIFFICULTY_LEVELS.MEDIUM;
-    return DIFFICULTY_ERROR_POLICY[difficulty] || DIFFICULTY_ERROR_POLICY[DIFFICULTY_LEVELS.MEDIUM];
-  }
-
   // --- Input handlers ---
 
   _onKey({ key, timestamp }) {
@@ -113,16 +107,9 @@ export class LexiconSystem {
         errorAt: this._typed.length,
       });
 
-      const policy = this._getErrorPolicy();
-
-      if (policy === 'reset') {
+      if (WORD_ERROR_PENALTY === 'reset') {
         this._typed = '';
         Bridge.setState({ activeWord: { word: this._targetWord, typed: '' } });
-      }
-
-      if (policy === 'backstep') {
-        this._typed = this._typed.slice(0, -1);
-        Bridge.setState({ activeWord: { word: this._targetWord, typed: this._typed } });
       }
     }
   }

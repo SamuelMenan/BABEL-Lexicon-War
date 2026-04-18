@@ -1,8 +1,8 @@
-// Gestiona la escena de combate: spawn, targeting, colapso, oleadas
-
 import * as THREE from 'three';
 import { Enemy } from '../entities/Enemy.js';
+import { Player } from '../entities/Player.js';
 import { WordToken } from '../entities/WordToken.js';
+import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
@@ -14,17 +14,14 @@ import {
   WAVE_INTERVAL_MS,
   PLAYER_MAX_HP,
   HIT_DAMAGE,
-  COLORS,
 } from '../../shared/constants.js';
 
-function randomSpawnPosition(radius = 18) {
-  const angle = Math.random() * Math.PI * 2;
-  const tilt  = (Math.random() - 0.5) * Math.PI * 0.5;
-  return new THREE.Vector3(
-    Math.cos(angle) * Math.cos(tilt) * radius,
-    Math.sin(tilt) * radius * 0.4,
-    Math.sin(angle) * Math.cos(tilt) * radius,
-  );
+// Enemigos vienen desde la profundidad del espacio (eje -Z)
+function randomSpawnPosition() {
+  const x = (Math.random() - 0.5) * 32;
+  const y = (Math.random() - 0.5) * 16;
+  const z = -(28 + Math.random() * 20);
+  return new THREE.Vector3(x, y, z);
 }
 
 function randomWord(exclude = []) {
@@ -39,64 +36,77 @@ export class SceneManager {
     this.physics   = physics;
     this.hudCanvas = hudCanvas;
 
-    this.enemies   = [];   // Enemy[]
-    this.tokens    = [];   // WordToken[]
+    this.enemies   = [];
+    this.tokens    = [];
     this.wave      = 0;
     this.hp        = PLAYER_MAX_HP;
     this._waveTimer = 0;
     this._unsubs   = [];
+
+    this._player   = null;
+    this._particles = null;
   }
 
   init() {
     this._buildArena();
+    this._buildPlayer();
+    this._particles = new ParticleEmitter(this.scene);
 
     this._unsubs.push(
-      EventBus.on(EventTypes.GAME_START,      () => this._startWave()),
-      EventBus.on(EventTypes.WORD_COMPLETED,  (p) => this._onWordCompleted(p)),
-      EventBus.on(EventTypes.ENEMY_REACHED,   (p) => this._onEnemyReached(p)),
-      EventBus.on(EventTypes.WORD_PROGRESS,   (p) => this._onWordProgress(p)),
+      EventBus.on(EventTypes.GAME_START,     () => this._startWave()),
+      EventBus.on(EventTypes.WORD_COMPLETED, (p) => this._onWordCompleted(p)),
+      EventBus.on(EventTypes.ENEMY_REACHED,  (p) => this._onEnemyReached(p)),
+      EventBus.on(EventTypes.WORD_PROGRESS,  (p) => this._onWordProgress(p)),
     );
   }
 
   destroy() {
     this._unsubs.forEach(fn => fn());
+    this._particles?.dispose();
   }
 
   update(delta) {
     this.physics.update(delta);
     this.hudCanvas.update(delta);
+    this._particles.update(delta);
+    this._player?.update(delta);
     this._autoTarget();
     this._pruneDeadEnemies();
 
-    // Oleada siguiente
     this._waveTimer += delta * 1000;
-    if (this._waveTimer >= WAVE_INTERVAL_MS && this.enemies.filter(e => e.active).length === 0) {
+    const activeCount = this.enemies.filter(e => e.active).length;
+    if (this._waveTimer >= WAVE_INTERVAL_MS && activeCount === 0) {
       this._waveTimer = 0;
       this._startWave();
     }
   }
 
-  // --- Arena ---
-
   _buildArena() {
-    // Estrella de fondo: puntos aleatorios
-    const starCount = 800;
-    const positions = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 200;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 200;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 200;
+    // Campo de estrellas
+    const count = 1200;
+    const pos   = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3]     = (Math.random() - 0.5) * 300;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 200;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 300;
     }
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const stars = new THREE.Points(
-      starGeo,
-      new THREE.PointsMaterial({ color: 0x445566, size: 0.15 }),
-    );
-    this.scene.add(stars);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.scene.add(new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({ color: 0x334455, size: 0.2, sizeAttenuation: true }),
+    ));
+
+    // Rejilla de referencia en el plano XZ — da profundidad visual
+    const grid = new THREE.GridHelper(80, 20, 0x112233, 0x0a1520);
+    grid.position.y = -6;
+    this.scene.add(grid);
   }
 
-  // --- Oleadas ---
+  _buildPlayer() {
+    this._player = new Player();
+    this._player.addToScene(this.scene);
+  }
 
   _startWave() {
     this.wave++;
@@ -107,7 +117,7 @@ export class SceneManager {
     Bridge.setState({ wave: this.wave });
 
     for (let i = 0; i < count; i++) {
-      this._spawnEnemy(speed);
+      setTimeout(() => this._spawnEnemy(speed), i * 400); // spawn escalonado
     }
   }
 
@@ -126,32 +136,27 @@ export class SceneManager {
     EventBus.emit(EventTypes.ENEMY_SPAWNED, { id: enemy.id, word, position: pos });
   }
 
-  // --- Targeting automático ---
-
   _autoTarget() {
-    if (this.lexicon.currentTargetId) return; // ya hay target
-
+    if (this.lexicon.currentTargetId) return;
     const active = this.enemies.filter(e => e.active);
-    if (active.length === 0) return;
+    if (!active.length) return;
 
-    // Target: enemigo más cercano al jugador
     active.sort((a, b) => a.distanceToPlayer - b.distanceToPlayer);
     const target = active[0];
     target.setTargeted(true);
     this.lexicon.setTarget(target.id, target.word);
   }
 
-  // --- Eventos ---
-
   _onWordCompleted({ enemyId }) {
     const enemy = this.enemies.find(e => e.id === enemyId);
     if (!enemy) return;
 
+    // Partículas en posición del enemigo antes de removerlo
+    this._particles.burst(enemy.position.clone());
+
     enemy.active = false;
     enemy.setTargeted(false);
     enemy.removeFromScene(this.scene);
-
-    // Actualizar tokens visibles
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
 
     EventBus.emit(EventTypes.ENEMY_COLLAPSED, { id: enemyId, word: enemy.word });
@@ -161,6 +166,8 @@ export class SceneManager {
     const enemy = this.enemies.find(e => e.id === id);
     if (!enemy || !enemy.active) return;
 
+    this._particles.burst(enemy.position.clone());
+
     enemy.active = false;
     enemy.removeFromScene(this.scene);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
@@ -169,6 +176,8 @@ export class SceneManager {
     Bridge.setState({ hp: this.hp });
     EventBus.emit(EventTypes.PLAYER_HIT, { damage: HIT_DAMAGE });
 
+    if (id === this.lexicon.currentTargetId) this.lexicon.clearTarget();
+
     if (this.hp <= 0) {
       EventBus.emit(EventTypes.PLAYER_DIED);
       EventBus.emit(EventTypes.GAME_OVER, {
@@ -176,11 +185,6 @@ export class SceneManager {
         wpm:      Bridge.getState().wpm,
         accuracy: Bridge.getState().accuracy,
       });
-    }
-
-    // Si era el target activo, liberar
-    if (id === this.lexicon.currentTargetId) {
-      this.lexicon.clearTarget();
     }
   }
 
@@ -191,7 +195,6 @@ export class SceneManager {
   }
 
   _pruneDeadEnemies() {
-    // Limpiar muertos de memoria si la escena crece
     if (this.enemies.length > 200) {
       this.enemies = this.enemies.filter(e => e.active);
       this.tokens  = this.tokens.filter(t => t.enemy.active);

@@ -1,4 +1,4 @@
-// TYPO-1 — nave del jugador en el centro de la escena
+// TYPO-1 — nave del jugador con animaciones de disparo y apuntado
 
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
@@ -7,9 +7,14 @@ import { COLORS } from '../../shared/constants.js';
 export class Player extends Entity {
   constructor() {
     super();
-    this._t      = 0;
-    this._group  = new THREE.Group();
-    this.mesh    = this._group;
+    this._t         = 0;
+    this._recoil    = 0;      // 0..1, decae tras disparo
+    this._targetPos = null;   // Vector3 del enemigo actual
+    this._group     = new THREE.Group();
+    this.mesh       = this._group;
+
+    this._engineGlow = null;
+    this._muzzle     = null;
 
     this._build();
   }
@@ -17,66 +22,115 @@ export class Player extends Entity {
   _build() {
     const cyan = COLORS.PLAYER;
 
-    // Cuerpo principal — cono apuntando hacia los enemigos (eje -Z)
-    const bodyGeo = new THREE.ConeGeometry(0.4, 1.6, 6);
-    bodyGeo.rotateX(Math.PI / 2); // apunta hacia -Z
+    // Cuerpo principal
+    const bodyGeo = new THREE.ConeGeometry(0.42, 1.8, 6);
+    bodyGeo.rotateX(Math.PI / 2);
     const bodyMat = new THREE.MeshStandardMaterial({
-      color:     cyan,
-      emissive:  cyan,
-      emissiveIntensity: 0.4,
-      metalness: 0.6,
-      roughness: 0.3,
+      color: cyan, emissive: cyan, emissiveIntensity: 0.35,
+      metalness: 0.7, roughness: 0.25,
     });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    this._group.add(body);
+    this._group.add(new THREE.Mesh(bodyGeo, bodyMat));
 
-    // Alas — dos planos inclinados
+    // Alas
     const wingGeo = new THREE.BufferGeometry();
-    const verts = new Float32Array([
-      // ala derecha
-       0,  0,  0.3,
-       1.2, -0.1, 0.8,
-       0.2, -0.05, -0.5,
-      // ala izquierda
-       0,  0,  0.3,
-      -1.2, -0.1, 0.8,
-      -0.2, -0.05, -0.5,
-    ]);
-    wingGeo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    wingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+       0,    0,   0.4,   1.3, -0.1,  0.9,   0.25, -0.05, -0.6,
+       0,    0,   0.4,  -1.3, -0.1,  0.9,  -0.25, -0.05, -0.6,
+    ]), 3));
     wingGeo.computeVertexNormals();
     const wingMat = new THREE.MeshStandardMaterial({
-      color:     cyan,
-      emissive:  cyan,
-      emissiveIntensity: 0.2,
-      side:      THREE.DoubleSide,
-      metalness: 0.8,
-      roughness: 0.2,
+      color: cyan, emissive: cyan, emissiveIntensity: 0.15,
+      side: THREE.DoubleSide, metalness: 0.8, roughness: 0.2,
     });
-    const wings = new THREE.Mesh(wingGeo, wingMat);
-    this._group.add(wings);
+    this._group.add(new THREE.Mesh(wingGeo, wingMat));
 
-    // Motor — esfera brillante en la cola
-    const engineGeo = new THREE.SphereGeometry(0.18, 8, 8);
+    // Cañón — punto de salida del disparo
+    const muzzleGeo = new THREE.SphereGeometry(0.07, 6, 6);
+    const muzzleMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, emissive: cyan, emissiveIntensity: 0.5,
+    });
+    this._muzzle = new THREE.Mesh(muzzleGeo, muzzleMat);
+    this._muzzle.position.set(0, 0, -0.95); // punta frontal
+    this._group.add(this._muzzle);
+
+    // Motor (cola)
     const engineMat = new THREE.MeshStandardMaterial({
-      color:             0x88aaff,
-      emissive:          0x4466ff,
-      emissiveIntensity: 1.5,
+      color: 0x88aaff, emissive: 0x4466ff, emissiveIntensity: 1.5,
     });
-    const engineMesh = new THREE.Mesh(engineGeo, engineMat);
-    engineMesh.position.z = 0.85;
-    this._group.add(engineMesh);
+    this._engineGlow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), engineMat);
+    this._engineGlow.position.z = 0.95;
+    this._group.add(this._engineGlow);
 
-    // Luz puntual que irradia desde la nave
-    const light = new THREE.PointLight(cyan, 2, 8);
-    this._group.add(light);
+    // Flash de disparo (oculto por defecto)
+    const flashMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, emissive: cyan, emissiveIntensity: 4,
+      transparent: true, opacity: 0,
+    });
+    this._flash = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), flashMat);
+    this._flash.position.set(0, 0, -0.95);
+    this._group.add(this._flash);
+
+    // Luz puntual de la nave
+    this._light = new THREE.PointLight(cyan, 2, 10);
+    this._group.add(this._light);
 
     this._group.position.set(0, 0, 2);
   }
 
+  // Llamado desde SceneManager con posición del target actual
+  setTarget(pos) { this._targetPos = pos; }
+  clearTarget()  { this._targetPos = null; }
+
+  // Retorna posición mundial del cañón (para origen del proyectil)
+  get muzzlePosition() {
+    const pos = new THREE.Vector3();
+    this._muzzle.getWorldPosition(pos);
+    return pos;
+  }
+
+  // Animación de disparo — recoil + flash
+  fireAnim() {
+    this._recoil = 1;
+    this._flash.material.opacity = 1;
+    setTimeout(() => { this._flash.material.opacity = 0; }, 80);
+  }
+
   update(delta) {
     this._t += delta;
-    // Leve inclinación rítmica
-    this._group.rotation.z = Math.sin(this._t * 0.4) * 0.06;
-    this._group.rotation.x = Math.sin(this._t * 0.3) * 0.03;
+
+    // Flotación base
+    const floatY = Math.sin(this._t * 0.5) * 0.08;
+    this._group.position.y = floatY;
+
+    // Apuntar suavemente hacia el target
+    if (this._targetPos) {
+      const dir = new THREE.Vector3()
+        .subVectors(this._targetPos, this._group.position)
+        .normalize();
+      const targetQuat = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, -1), dir,
+      );
+      this._group.quaternion.slerp(targetQuat, delta * 3);
+    } else {
+      // Sin target → volver a orientación neutra
+      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 2);
+    }
+
+    // Recoil hacia atrás al disparar
+    if (this._recoil > 0) {
+      this._group.position.z = 2 + this._recoil * 0.4;
+      this._recoil = Math.max(0, this._recoil - delta * 8);
+    } else {
+      this._group.position.z = 2 + Math.sin(this._t * 0.35) * 0.05;
+    }
+
+    // Pulso del motor — se intensifica con recoil
+    const enginePulse = 1.2 + Math.sin(this._t * 4) * 0.3 + this._recoil;
+    this._engineGlow.material.emissiveIntensity = enginePulse;
+    const engineScale = 1 + Math.sin(this._t * 4) * 0.15;
+    this._engineGlow.scale.setScalar(engineScale);
+
+    // Luz pulsa también
+    this._light.intensity = 1.5 + Math.sin(this._t * 3) * 0.5 + this._recoil * 2;
   }
 }

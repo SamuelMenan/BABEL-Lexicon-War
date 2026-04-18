@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GameLoop } from './GameLoop.js';
 import { Camera } from '../rendering/Camera.js';
+import { PostProcessing } from '../rendering/PostProcessing.js';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { COLORS } from '../../shared/constants.js';
@@ -13,20 +14,23 @@ export class Engine {
     this.scene    = null;
     this._cam     = null;
     this.renderer = null;
+    this._post    = null;
   }
 
-  get camera() { return this._cam.instance; }
+  get camera()        { return this._cam.instance; }
+  get camController() { return this._cam; }
 
   init() {
     this._initRenderer();
     this._initScene();
     this._initCamera();
     this._initLights();
+    this._initPost();
     this._bindResize();
 
-    // Render al final de cada frame
+    // Render al final de cada frame via composer (bloom)
     this.loop.addSystem({
-      update: () => this.renderer.render(this.scene, this.camera),
+      update: () => this._post.render(),
     });
 
     EventBus.emit(EventTypes.SCENE_READY);
@@ -42,14 +46,18 @@ export class Engine {
 
   _initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(COLORS.BACKGROUND, 0.018);
+    this.scene.fog = new THREE.FogExp2(0x020d18, 0.012);
   }
 
   _initCamera() {
     this._cam = new Camera();
     this._cam.init();
-    // Cámara actualiza en loop
     this.loop.addSystem({ update: (d) => this._cam.update(d) });
+  }
+
+  _initPost() {
+    this._post = new PostProcessing(this.renderer, this.scene, this.camera);
+    this._post.init();
   }
 
   _initLights() {

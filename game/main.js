@@ -31,7 +31,7 @@ export function initGame(mountEl) {
   engine.addSystem('physics',   physics);
   engine.addSystem('hudCanvas', hudCanvas);
 
-  sceneManager = new SceneManager(engine.scene, lexicon, physics, hudCanvas);
+  sceneManager = new SceneManager(engine.scene, lexicon, physics, hudCanvas, engine.camController);
   sceneManager.init();
 
   engine.addSystem('scene', {

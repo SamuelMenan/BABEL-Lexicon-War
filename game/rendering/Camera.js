@@ -1,5 +1,3 @@
-// Cámara con perspectiva 3D real — enemigos vienen desde la profundidad
-
 import * as THREE from 'three';
 import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from '../../shared/constants.js';
 
@@ -12,13 +10,15 @@ export class Camera {
       CAMERA_FAR,
     );
     this._t       = 0;
-    this._baseY   = 4;
-    this._baseZ   = 14;
+    this._baseY   = 2;
+    this._baseZ   = 8;
+    this._targetX = 0;   // X mundial del enemigo objetivo
+    this._currentX = 0;  // X interpolada de la cámara
   }
 
   init() {
     this.instance.position.set(0, this._baseY, this._baseZ);
-    this.instance.lookAt(0, 0, 0);
+    this.instance.lookAt(0, 1, -6);
 
     window.addEventListener('resize', () => {
       this.instance.aspect = window.innerWidth / window.innerHeight;
@@ -26,11 +26,18 @@ export class Camera {
     });
   }
 
-  // Leve flotación sinusoidal — da sensación de nave viva
+  // Llamar desde SceneManager cuando cambia el objetivo
+  trackX(worldX) {
+    this._targetX = worldX;
+  }
+
   update(delta) {
     this._t += delta;
-    this.instance.position.y = this._baseY + Math.sin(this._t * 0.25) * 0.25;
-    this.instance.position.x = Math.sin(this._t * 0.15) * 0.4;
-    this.instance.lookAt(0, 0, 0);
+    // Lerp suave hacia X del objetivo (escala reducida — no seguir 1:1)
+    this._currentX += (this._targetX * 0.05 - this._currentX) * Math.min(delta * 2.5, 1);
+    this.instance.position.x = this._currentX;
+    this.instance.position.y = this._baseY + Math.sin(this._t * 0.3) * 0.2;
+    this.instance.position.z = this._baseZ;
+    this.instance.lookAt(this._currentX * 0.15, 1, -6);
   }
 }

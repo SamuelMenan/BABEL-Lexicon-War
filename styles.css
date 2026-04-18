@@ -35,3 +35,67 @@ html, body {
 #hud-root * {
   pointer-events: auto;
 }
+
+/* ── Animaciones HUD ── */
+
+@keyframes letter-pop {
+  0%   { transform: scale(1)   translateY(0);    color: #00ff88; }
+  40%  { transform: scale(1.5) translateY(-4px); color: #00ffcc; }
+  100% { transform: scale(1)   translateY(0);    color: #00ff88; }
+}
+
+@keyframes box-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-10px); }
+  40%     { transform: translateX(10px); }
+  60%     { transform: translateX(-7px); }
+  80%     { transform: translateX(7px); }
+}
+
+@keyframes box-flash-red {
+  0%,100% { border-color: #ff3333; box-shadow: 0 0 18px #ff3333; }
+  50%     { border-color: #ff6666; box-shadow: 0 0 32px #ff6666; }
+}
+
+@keyframes edge-flash-red {
+  0%,100% { opacity: 0; }
+  50%     { opacity: 1; }
+}
+
+@keyframes wave-badge {
+  0%   { opacity: 0; transform: translateY(-12px); }
+  20%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(12px); }
+}
+
+/* Clase aplicada por React según estado */
+.word-box-idle {
+  border: 1px solid #00ffcc44;
+  box-shadow: 0 0 10px #00ffcc22;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.word-box-correct {
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 20px #00ff8866;
+  transition: none;
+}
+
+.word-box-wrong {
+  animation: box-shake 0.32s ease, box-flash-red 0.32s ease;
+}
+
+.letter-popped {
+  animation: letter-pop 0.18s ease forwards;
+  display: inline-block;
+}
+
+.edge-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  background: radial-gradient(ellipse at center, transparent 60%, #ff333344 100%);
+  animation: edge-flash-red 0.35s ease forwards;
+}

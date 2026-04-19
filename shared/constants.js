@@ -26,10 +26,11 @@ export const HIT_DAMAGE        = 20;
 export const CAMERA_FOV    = 75;
 export const CAMERA_NEAR   = 0.1;
 export const CAMERA_FAR    = 1000;
+export const BLOOM_LAYER   = 1;
 
 // --- Colores del universo BABEL ---
 export const COLORS = {
-  BACKGROUND:       0x000008,
+  BACKGROUND:       0x000000,
   PLAYER:           0x00ffcc,
   ENEMY:            0xff4466,
   ENEMY_TARGETED:   0xffcc00,

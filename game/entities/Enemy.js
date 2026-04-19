@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
 
 export class Enemy extends Entity {
   constructor(word, position, speed = ENEMY_BASE_SPEED) {
@@ -26,7 +26,9 @@ export class Enemy extends Entity {
     const geo   = new THREE.IcosahedronGeometry(0.7, 1);
     const edges = new THREE.EdgesGeometry(geo);
     this._lineMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 });
-    this._group.add(new THREE.LineSegments(edges, this._lineMat));
+    const hullLines = new THREE.LineSegments(edges, this._lineMat);
+    hullLines.layers.enable(BLOOM_LAYER);
+    this._group.add(hullLines);
     geo.dispose();
 
     // Núcleo interior brillante
@@ -35,6 +37,7 @@ export class Enemy extends Entity {
       transparent: true, opacity: 0.5,
     });
     this._core = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), this._coreMat);
+    this._core.layers.enable(BLOOM_LAYER);
     this._group.add(this._core);
 
     // Anillo orbital — rota independiente
@@ -44,6 +47,7 @@ export class Enemy extends Entity {
       color, emissive: color, emissiveIntensity: 0.5,
     });
     this._ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    this._ringMesh.layers.enable(BLOOM_LAYER);
     this._ring.add(this._ringMesh);
     this._ring.rotation.x = Math.PI / 3;
     this._group.add(this._ring);
@@ -51,6 +55,7 @@ export class Enemy extends Entity {
     // Segundo anillo en eje diferente
     const ring2 = new THREE.Group();
     const ring2Mesh = new THREE.Mesh(ringGeo.clone(), ringMat.clone());
+    ring2Mesh.layers.enable(BLOOM_LAYER);
     ring2.add(ring2Mesh);
     ring2.rotation.z = Math.PI / 2.5;
     this._ring2 = ring2;

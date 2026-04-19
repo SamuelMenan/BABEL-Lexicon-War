@@ -1,50 +1,77 @@
 import { Engine } from './core/Engine.js';
 import { SceneManager } from './core/SceneManager.js';
+import { RacingSceneManager } from './core/RacingSceneManager.js';
 import { InputSystem } from './systems/InputSystem.js';
 import { LexiconSystem } from './systems/LexiconSystem.js';
 import { PhysicsSystem } from './systems/PhysicsSystem.js';
+import { RacingSystem } from './systems/RacingSystem.js';
 import { HUDCanvas } from './rendering/HUDCanvas.js';
 import { EventBus } from '../shared/events.js';
 import { EventTypes } from '../shared/eventTypes.js';
 import { Bridge } from '../shared/bridge.js';
+import { GAME_MODES } from '../shared/constants.js';
 
 let engine       = null;
-let sceneManager = null;
+let _lexicon     = null;
+let _physics     = null;
+let _activeScene = null;
 
 export function initGame(mountEl) {
   engine = new Engine(mountEl);
   engine.init();
 
   const input     = new InputSystem();
-  const lexicon   = new LexiconSystem();
-  const physics   = new PhysicsSystem();
+  _lexicon        = new LexiconSystem();
+  _physics        = new PhysicsSystem();
   const hudCanvas = new HUDCanvas();
 
   hudCanvas.setCamera(engine.camera);
   hudCanvas.mount();
 
   input.init();
-  lexicon.init();
+  _lexicon.init();
 
   engine.addSystem('input',     input);
-  engine.addSystem('lexicon',   lexicon);
-  engine.addSystem('physics',   physics);
+  engine.addSystem('lexicon',   _lexicon);
+  engine.addSystem('physics',   _physics);
   engine.addSystem('hudCanvas', hudCanvas);
 
-  sceneManager = new SceneManager(engine.scene, lexicon, physics, hudCanvas, engine.camController);
-  sceneManager.init();
+  // Single proxy slot — swapped out per mode without accumulating loop entries
+  engine.addSystem('scene', { update: (d) => _activeScene?.update(d) });
 
-  engine.addSystem('scene', {
-    update: (delta) => sceneManager.update(delta),
-  });
-
-  EventBus.on(EventTypes.ENEMY_SPAWNED, () => {
-    physics.setEnemies(sceneManager.enemies);
-  });
-
-  // FIX: marcar juego como activo al recibir GAME_START
   EventBus.on(EventTypes.GAME_START, ({ mode }) => {
+    _activeScene?.destroy();
+    _activeScene = null;
+
     Bridge.setState({ isRunning: true, gameMode: mode });
+
+    if (mode === GAME_MODES.RACING) {
+      engine.camController.setRacingMode(true);
+      hudCanvas.setTokens([]);
+      _physics.setEnemies([]);
+
+      const rsm = new RacingSceneManager(engine.scene, hudCanvas, engine.camController);
+      rsm.init();
+
+      const rs = new RacingSystem(_lexicon);
+      rs.init();
+
+      _activeScene = {
+        update:  (d) => { rsm.update(d); rs.update(d); },
+        destroy: ()  => { rsm.destroy(); rs.destroy(); engine.camController.setRacingMode(false); },
+      };
+
+    } else {
+      engine.camController.setRacingMode(false);
+
+      const sm = new SceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
+      sm.init();
+      sm._startWave();
+
+      EventBus.on(EventTypes.ENEMY_SPAWNED, () => _physics.setEnemies(sm.enemies));
+
+      _activeScene = sm;
+    }
   });
 
   EventBus.on(EventTypes.GAME_PAUSE, () => {
@@ -66,9 +93,11 @@ export function initGame(mountEl) {
 }
 
 export function destroyGame() {
-  sceneManager?.destroy();
+  _activeScene?.destroy();
   engine?.destroy();
   EventBus.off();
   engine       = null;
-  sceneManager = null;
+  _activeScene = null;
+  _lexicon     = null;
+  _physics     = null;
 }

@@ -18,7 +18,7 @@ export class Projectile extends Entity {
     const mat = new THREE.MeshStandardMaterial({
       color:             0x00ffcc,
       emissive:          0x00ffcc,
-      emissiveIntensity: 3,
+      emissiveIntensity: 1.8,
     });
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.copy(origin);
@@ -28,7 +28,7 @@ export class Projectile extends Entity {
     this._trailGeo = new THREE.BufferGeometry().setFromPoints(pts);
     this._trail    = new THREE.Line(
       this._trailGeo,
-      new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.5 }),
+      new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.45 }),
     );
     this._trailOrigin = origin.clone();
   }

@@ -7,7 +7,7 @@ import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
-import { WORD_POOL_ES,ENEMY_BASE_SPEED,ENEMY_SPEED_SCALE,MAX_ACTIVE_ENEMIES,WAVE_INTERVAL_MS,PLAYER_MAX_HP,HIT_DAMAGE } from '../../shared/constants.js';
+import { WORD_POOL_ES,ENEMY_BASE_SPEED,ENEMY_SPEED_SCALE,MAX_ACTIVE_ENEMIES,WAVE_INTERVAL_MS,PLAYER_MAX_HP,HIT_DAMAGE,BLOOM_LAYER } from '../../shared/constants.js';
 
 function randomSpawnPosition() {
   const x=(Math.random()-0.5)*36, y=(Math.random()-0.5)*18, z=-(30+Math.random()*22);
@@ -46,23 +46,23 @@ export class SceneManager {
     }
   }
   _buildArena() {
-    // Skybox — esfera grande fondo azul-teal profundo
-    this._addNebula(0,0,-30,0x020d18,0.98,280,THREE.BackSide);
+    // Skybox negro para alto contraste con elementos luminosos.
+    this._addNebula(0,0,-30,0x000000,1.0,280,THREE.BackSide);
 
     // Nubes nebulosas — capas tipo Pilares de la Creación
-    this._addNebula(-60,20,-120,0x003322,0.18,70);   // teal oscuro izq
-    this._addNebula(70,-10,-140,0x001a33,0.16,80);    // azul profundo der
-    this._addNebula(0,30,-100,0x1a0033,0.14,60);      // púrpura arriba
-    this._addNebula(-30,-20,-90,0x220d00,0.13,50);    // marrón-naranja bajo
-    this._addNebula(40,25,-110,0x003344,0.12,55);     // cyan-verde mid
-    this._addNebula(-10,10,-70,0x330011,0.10,38);     // rojo oscuro accent
-    this._addNebula(20,-15,-80,0x001122,0.15,45);     // azul mid
+    this._addNebula(-60,20,-120,0x05070a,0.06,70);
+    this._addNebula(70,-10,-140,0x04070b,0.05,80);
+    this._addNebula(0,30,-100,0x08080d,0.045,60);
+    this._addNebula(-30,-20,-90,0x090703,0.04,50);
+    this._addNebula(40,25,-110,0x050809,0.038,55);
+    this._addNebula(-10,10,-70,0x0b0507,0.035,38);
+    this._addNebula(20,-15,-80,0x040506,0.04,45);
 
     // Estrellas — distintos tamaños y colores
-    this._addStarField(2000,500,0.12,0x6688aa);
-    this._addStarField(700,200,0.25,0x88aacc);
-    this._addStarField(200,100,0.5,0xaaccee);
-    this._addStarField(40,80,1.0,0xffffff);           // estrellas brillantes
+    this._addStarField(2000,500,0.1,0xc7d6e6);
+    this._addStarField(700,200,0.2,0xd8e2ef);
+    this._addStarField(200,100,0.35,0xeaf3ff);
+    this._addStarField(40,80,0.75,0xffffff);
 
     this._addDecorRing(0,0,-60,22,0x0a2030);
     this._addDecorRing(0,0,-90,35,0x0a1525);
@@ -76,17 +76,21 @@ export class SceneManager {
     }
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-    this.scene.add(new THREE.Points(geo,new THREE.PointsMaterial({color,size,sizeAttenuation:true})));
+    const stars = new THREE.Points(geo,new THREE.PointsMaterial({color,size,sizeAttenuation:true}));
+    stars.layers.enable(BLOOM_LAYER);
+    this.scene.add(stars);
   }
   _addNebula(x,y,z,color,opacity,radius,side=THREE.FrontSide) {
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side,depthWrite:false});
     const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,12,12),mat);
+    mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x,y,z); this.scene.add(mesh);
   }
   _addDecorRing(x,y,z,radius,color) {
     const geo=new THREE.TorusGeometry(radius,0.08,6,48);
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.4});
     const mesh=new THREE.Mesh(geo,mat);
+    mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x,y,z); mesh.rotation.x=Math.PI/2;
     this.scene.add(mesh); this._decorRings.push(mesh);
   }

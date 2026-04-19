@@ -46,7 +46,7 @@ export class Engine {
 
   _initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x020d18, 0.012);
+    this.scene.fog = new THREE.FogExp2(0x000000, 0.008);
   }
 
   _initCamera() {
@@ -61,17 +61,15 @@ export class Engine {
   }
 
   _initLights() {
-    // Luz ambiental fría — base de visibilidad
-    const ambient = new THREE.AmbientLight(0x112233, 1.2);
+    // Iluminacion neutra para no alterar los colores del modelo.
+    const ambient = new THREE.AmbientLight(0x202020, 0.9);
     this.scene.add(ambient);
 
-    // Luz puntual delantera — ilumina enemigos al acercarse
-    const front = new THREE.PointLight(0x00ffcc, 3, 30);
+    const front = new THREE.PointLight(0xffffff, 1.2, 26);
     front.position.set(0, 2, 10);
     this.scene.add(front);
 
-    // Luz de relleno trasera — profundidad
-    const back = new THREE.PointLight(0xff4466, 1.5, 40);
+    const back = new THREE.PointLight(0x667788, 0.55, 32);
     back.position.set(0, -3, -15);
     this.scene.add(back);
   }

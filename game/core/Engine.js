@@ -37,7 +37,7 @@ export class Engine {
   }
 
   _initRenderer() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(COLORS.BACKGROUND);
@@ -46,7 +46,8 @@ export class Engine {
 
   _initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x000000, 0.008);
+    this.scene.background = new THREE.Color(0x00000a);
+    this.scene.fog = new THREE.FogExp2(0x00000a, 0.006);
   }
 
   _initCamera() {

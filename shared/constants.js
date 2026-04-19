@@ -6,16 +6,16 @@ export const GAME_MODES = {
 };
 
 // --- WPM y timing ---
-export const WPM_WINDOW_MS = 5000;      // ventana deslizante para calcular WPM
-export const WPM_MIN_CHARS  = 5;        // mínimo de chars para calcular WPM válido
-export const WORDS_PER_MINUTE_SCALE = 12; // factor velocidad WPM → movimiento
+export const WPM_WINDOW_MS = 5000;
+export const WPM_MIN_CHARS  = 5;
+export const WORDS_PER_MINUTE_SCALE = 12;
 
 // --- Combate ---
-export const ENEMY_BASE_SPEED   = 1.5;  // unidades Three.js por segundo
-export const ENEMY_SPEED_SCALE  = 0.1;  // incremento por oleada
+export const ENEMY_BASE_SPEED   = 1.5;
+export const ENEMY_SPEED_SCALE  = 0.1;
 export const MAX_ACTIVE_ENEMIES = 8;
-export const WAVE_INTERVAL_MS   = 8000; // ms entre oleadas
-export const WORD_ERROR_PENALTY = 'reset'; // 'reset' | 'penalize'
+export const WAVE_INTERVAL_MS   = 8000;
+export const WORD_ERROR_PENALTY = 'reset';
 
 // --- Jugador ---
 export const PLAYER_MAX_HP     = 100;
@@ -27,6 +27,13 @@ export const CAMERA_FOV    = 75;
 export const CAMERA_NEAR   = 0.1;
 export const CAMERA_FAR    = 1000;
 export const BLOOM_LAYER   = 1;
+
+// --- Carrera ---
+export const RACE_TARGET_DISTANCE = 500;
+export const RACE_TIME_LIMIT      = 90;
+export const RACE_OPPONENT_WPM    = 25;  // NPC opponent effective WPM
+// [minStreak, multiplier]
+export const FLOW_STEPS = [[0,1.0],[5,1.2],[10,1.4],[15,1.6],[20,2.0]];
 
 // --- Colores del universo BABEL ---
 export const COLORS = {
@@ -43,10 +50,9 @@ export const COLORS = {
   HUD_NEUTRAL:      '#888888',
 };
 
-// --- Palabras de prueba (pool inicial — sustituir por sistema de progresión) ---
 export const WORD_POOL_ES = [
-  'enjambre', 'léxico', 'babel', 'sintaxis', 'cifra', 'nexo',
-  'patrón', 'señal', 'umbral', 'vector', 'pulso', 'nodo',
-  'código', 'glifo', 'forma', 'flujo', 'nexolang', 'typo',
+  'enjambre', 'lexico', 'babel', 'sintaxis', 'cifra', 'nexo',
+  'patron', 'senal', 'umbral', 'vector', 'pulso', 'nodo',
+  'codigo', 'glifo', 'forma', 'flujo', 'nexolang', 'typo',
   'lyra', 'kael', 'voss', 'piloto', 'escritor', 'palabra',
 ];

@@ -35,8 +35,9 @@ export const EventTypes = {
   WAVE_COMPLETE:      'wave:complete',     // { waveNumber }
 
   // --- Carrera ---
-  RACE_COMPLETED:     'race:completed',    // { distance, time, wpm, peakWPM, accuracy }
-  RACE_FAILED:        'race:failed',       // { distance, targetDistance, timeElapsed }
+  RACE_COMPLETED:        'race:completed',
+  RACE_FAILED:           'race:failed',
+  RACE_PHRASE_COMPLETED: 'race:phrase_completed',
 
   // --- Sistema ---
   SCENE_READY:        'scene:ready',

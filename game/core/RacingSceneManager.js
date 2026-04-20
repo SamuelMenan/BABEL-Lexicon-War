@@ -18,8 +18,8 @@ export class RacingSceneManager {
     this._particles=null; this._t=0; this._opponentDist=0;
     this._playerWordBurst=0; this._playerWordLead=0;
     this._prevSceneBackground=null; this._prevSceneFog=null;
-    this._playerBase   = new THREE.Vector3(-2.45,-1.35,2.2);
-    this._opponentBase = new THREE.Vector3( 2.45,-0.15,0.55);
+    this._playerBase   = new THREE.Vector3(-5.2,-1.35,2.2);
+    this._opponentBase = new THREE.Vector3( 5.0,-0.15,0.8);
     this._smoothProgress=0;
     this._smoothLead=0;
     this._smoothBurst=0;
@@ -208,7 +208,7 @@ export class RacingSceneManager {
     });
   }
   _loadOpponentShip(){
-    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,2.0,true,0,(ship,mixer)=>{
+    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,3.2,true,0,(ship,mixer)=>{
       this._opponentShip=ship; this._opponentMixer=mixer;
     });
   }

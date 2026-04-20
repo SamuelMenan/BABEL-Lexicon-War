@@ -66,9 +66,10 @@ export function initGame(mountEl) {
 
       const sm = new SceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
       sm.init();
-      sm._startWave();
 
-      EventBus.on(EventTypes.ENEMY_SPAWNED, () => _physics.setEnemies(sm.enemies));
+      // Use the scene enemy array reference directly; no per-spawn listener needed.
+      _physics.setEnemies(sm.enemies);
+      sm._startWave();
 
       _activeScene = sm;
     }
@@ -86,6 +87,10 @@ export function initGame(mountEl) {
 
   EventBus.on(EventTypes.GAME_OVER, (result) => {
     Bridge.setState({ isRunning: false, gameOver: true, ...result });
+  });
+
+  EventBus.on(EventTypes.PLAYER_HIT, ({ damage }) => {
+    engine?.onPlayerDamage?.(damage ?? 0);
   });
 
   engine.start();

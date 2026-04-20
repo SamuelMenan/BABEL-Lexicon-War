@@ -30,7 +30,10 @@ export class Engine {
 
     // Render al final de cada frame via composer (bloom)
     this.loop.addSystem({
-      update: () => this._post.render(),
+      update: (d) => {
+        this._post.update(d);
+        this._post.render();
+      },
     });
 
     EventBus.emit(EventTypes.SCENE_READY);
@@ -84,6 +87,10 @@ export class Engine {
   addSystem(name, system) {
     this.systems[name] = system;
     this.loop.addSystem(system);
+  }
+
+  onPlayerDamage(amount) {
+    this._post?.onPlayerDamage(amount);
   }
 
   start()   { this.loop.start(); }

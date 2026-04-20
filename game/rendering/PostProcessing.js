@@ -21,6 +21,11 @@ export class PostProcessing {
     this._darkLineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
     this._darkPointsMaterial = new THREE.PointsMaterial({ color: 0x000000, size: 0.001 });
     this._storedMaterials = {};
+
+    this._damageVignettePass = null;
+    this._damageVignetteStrength = 0;
+    this._damageFadePerSecond = 1.5;
+    this._maxDamageForFullVignette = 45;
   }
 
   init() {
@@ -70,6 +75,49 @@ export class PostProcessing {
     this._finalComposer = new EffectComposer(this._renderer);
     this._finalComposer.addPass(renderPass);
     this._finalComposer.addPass(mixPass);
+
+    this._damageVignettePass = new ShaderPass(
+      new THREE.ShaderMaterial({
+        uniforms: {
+          baseTexture: { value: null },
+          vignetteStrength: { value: 0 },
+          vignetteColor: { value: new THREE.Color(0xff1a1a) },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D baseTexture;
+          uniform float vignetteStrength;
+          uniform vec3 vignetteColor;
+          varying vec2 vUv;
+
+          void main() {
+            vec4 base = texture2D(baseTexture, vUv);
+
+            vec2 p = vUv * 2.0 - 1.0;
+            float radial = length(p);
+            float edgeMask = smoothstep(0.5, 1.1, radial);
+
+            // Stronger response near corners than side centers.
+            float cornerMask = pow(clamp(abs(p.x) * abs(p.y), 0.0, 1.0), 0.55);
+
+            float mask = clamp(edgeMask * 0.72 + cornerMask * 1.25, 0.0, 1.0);
+            float amount = clamp(mask * vignetteStrength, 0.0, 1.0);
+
+            vec3 outColor = mix(base.rgb, vignetteColor, amount);
+            gl_FragColor = vec4(outColor, base.a);
+          }
+        `,
+      }),
+      'baseTexture',
+    );
+    this._finalComposer.addPass(this._damageVignettePass);
+
     const outputPass = new OutputPass();
     this._finalComposer.addPass(outputPass);
 
@@ -77,6 +125,32 @@ export class PostProcessing {
       this._bloomComposer.setSize(window.innerWidth, window.innerHeight);
       this._finalComposer.setSize(window.innerWidth, window.innerHeight);
     });
+  }
+
+  onPlayerDamage(amount = 0) {
+    const normalized = THREE.MathUtils.clamp(
+      amount / this._maxDamageForFullVignette,
+      0,
+      1,
+    );
+
+    // Stack small hits naturally; big hits can push close to full vignette.
+    this._damageVignetteStrength = THREE.MathUtils.clamp(
+      this._damageVignetteStrength + normalized,
+      0,
+      1,
+    );
+  }
+
+  update(delta) {
+    if (!this._damageVignettePass) return;
+
+    this._damageVignetteStrength = Math.max(
+      0,
+      this._damageVignetteStrength - delta * this._damageFadePerSecond,
+    );
+
+    this._damageVignettePass.uniforms.vignetteStrength.value = this._damageVignetteStrength;
   }
 
   _darkenNonBloomed(obj) {

@@ -31,9 +31,31 @@ export const BLOOM_LAYER   = 1;
 // --- Carrera ---
 export const RACE_TARGET_DISTANCE = 500;
 export const RACE_TIME_LIMIT      = 90;
-export const RACE_OPPONENT_WPM    = 25;  // NPC opponent effective WPM
+export const RACE_OPPONENT_WPM    = 25;
+export const RACE_PHRASE_COUNT    = 8;
+export const RACE_COUNTDOWN_SECS  = 5;
 // [minStreak, multiplier]
 export const FLOW_STEPS = [[0,1.0],[5,1.2],[10,1.4],[15,1.6],[20,2.0]];
+
+// Frases narrativas del universo BABEL — cada una es un array de palabras
+export const PHRASE_POOL_ES = [
+  ['las', 'palabras', 'no', 'se', 'acaban'],
+  ['solo', 'cambian', 'de', 'mano'],
+  ['el', 'enjambre', 'lexical', 'avanza'],
+  ['escribe', 'antes', 'de', 'que', 'lleguen'],
+  ['cada', 'glifo', 'es', 'un', 'escudo'],
+  ['el', 'flujo', 'nunca', 'miente'],
+  ['sintaxis', 'sobre', 'el', 'caos'],
+  ['kael', 'voss', 'no', 'retrocede'],
+  ['el', 'nodo', 'central', 'colapsa'],
+  ['lyra', 'voss', 'transmite', 'aun'],
+  ['babel', 'fue', 'un', 'error'],
+  ['el', 'patron', 'se', 'repite'],
+  ['nexolang', 'no', 'puede', 'contenerte'],
+  ['la', 'precision', 'es', 'el', 'arma'],
+  ['pulso', 'y', 'vector', 'se', 'alinean'],
+  ['escribe', 'o', 'perece'],
+];
 
 // --- Colores del universo BABEL ---
 export const COLORS = {

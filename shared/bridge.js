@@ -15,12 +15,20 @@ let _state = {
   gameMode:         null,
   isRunning:        false,
   // Racing state
-  distanceTraveled: 0,
-  targetDistance:   500,
-  flowMultiplier:   1.0,
-  timeRemaining:    90,
-  flowStreak:       0,
-  raceVictory:      null,
+  distanceTraveled:       0,
+  targetDistance:         500,
+  flowMultiplier:         1.0,
+  timeRemaining:          90,
+  flowStreak:             0,
+  raceVictory:            null,
+  countdown:              5,
+  countdownActive:        false,
+  phraseProgress:         0,
+  opponentPhraseProgress: 0,
+  currentPhrase:          null,
+  currentPhraseWordIndex: 0,
+  totalPhrases:           0,
+  playerPhrasesCompleted: 0,
 };
 
 const stateListeners = new Set();

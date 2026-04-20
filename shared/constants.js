@@ -32,7 +32,8 @@ export const BLOOM_LAYER   = 1;
 export const RACE_TARGET_DISTANCE = 500;
 export const RACE_TIME_LIMIT      = 90;
 export const RACE_OPPONENT_WPM    = 25;
-export const RACE_PHRASE_COUNT    = 8;
+export const RACE_PHRASE_COUNT    = 16; // pool size to draw from
+export const RACE_DURATION        = 60; // seconds, like a typing test
 export const RACE_COUNTDOWN_SECS  = 5;
 // [minStreak, multiplier]
 export const FLOW_STEPS = [[0,1.0],[5,1.2],[10,1.4],[15,1.6],[20,2.0]];

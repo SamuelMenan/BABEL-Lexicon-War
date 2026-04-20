@@ -71,25 +71,41 @@ function RacePhraseDisplay({ currentPhrase, currentPhraseWordIndex, activeWord, 
 }
 
 // --- Race: dual progress bars ---
-function RaceBars({ phraseProgress, opponentPhraseProgress, playerPhrasesCompleted, totalPhrases }) {
-  const playerPct   = Math.min(100, phraseProgress * 100);
-  const opponentPct = Math.min(100, opponentPhraseProgress * 100);
-  const oppDone     = Math.min(totalPhrases, Math.round(opponentPhraseProgress * totalPhrases));
+function RaceFooter({ wpm, accuracy, playerPhrasesCompleted, opponentPhraseProgress, timeRemaining }) {
+  const oppDone  = Math.floor(opponentPhraseProgress);
+  const s        = Math.max(0, Math.round(timeRemaining ?? 60));
+  const timePct  = Math.min(100, ((60 - s) / 60) * 100);
+  const mm       = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss2      = String(s % 60).padStart(2, '0');
+  const timerCol = s <= 10 ? '#ff4466' : s <= 20 ? '#ffcc00' : '#ffffff';
+  const winning  = playerPhrasesCompleted > oppDone;
   return (
-    <div style={styles.raceBarsWrap}>
-      <div style={styles.raceBarRow}>
-        <span style={{ ...styles.raceBarLabel, color: '#00ffcc' }}>KAEL</span>
-        <div style={styles.raceBarTrack}>
-          <div style={{ ...styles.raceBarFill, width: `${playerPct}%`, background: '#00ffcc', boxShadow: '0 0 8px #00ffcc88' }} />
-        </div>
-        <span style={styles.raceBarCount}>{playerPhrasesCompleted}/{totalPhrases}</span>
+    <div style={styles.raceFooter}>
+      {/* left — player stats */}
+      <div style={styles.racePanel}>
+        <span style={{ ...styles.racePilot, color: '#00ffcc' }}>KAEL</span>
+        <span style={styles.raceStat}><span style={styles.raceStatLbl}>WPM</span> {wpm}</span>
+        <span style={styles.raceStat}><span style={styles.raceStatLbl}>ACC</span> {accuracy}%</span>
+        <span style={styles.raceStat}><span style={styles.raceStatLbl}>FRASES</span> {playerPhrasesCompleted}</span>
+        {winning && <span style={{ fontSize: '0.55rem', color: '#00ff88', letterSpacing: '0.2em', marginTop: '0.2rem' }}>ADELANTE</span>}
       </div>
-      <div style={styles.raceBarRow}>
-        <span style={{ ...styles.raceBarLabel, color: '#ff4444' }}>RIVAL</span>
-        <div style={styles.raceBarTrack}>
-          <div style={{ ...styles.raceBarFill, width: `${opponentPct}%`, background: '#ff3344', boxShadow: '0 0 8px #ff334488' }} />
+
+      {/* center — timer + bar */}
+      <div style={styles.raceCenterCol}>
+        <span style={{ ...styles.statValue, color: timerCol, fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.04em', animation: s <= 10 ? 'blink 0.5s step-end infinite' : 'none' }}>
+          {mm}:{ss2}
+        </span>
+        <div style={styles.raceTimeTrack}>
+          <div style={{ ...styles.raceTimeFill, width: `${timePct}%` }} />
         </div>
-        <span style={styles.raceBarCount}>{oppDone}/{totalPhrases}</span>
+      </div>
+
+      {/* right — rival stats */}
+      <div style={{ ...styles.racePanel, alignItems: 'flex-end' }}>
+        <span style={{ ...styles.racePilot, color: '#ff4444' }}>RIVAL</span>
+        <span style={styles.raceStat}><span style={styles.raceStatLbl}>WPM</span> ~25</span>
+        <span style={styles.raceStat}><span style={styles.raceStatLbl}>FRASES</span> {oppDone}</span>
+        {!winning && <span style={{ fontSize: '0.55rem', color: '#ff4466', letterSpacing: '0.2em', marginTop: '0.2rem' }}>ADELANTE</span>}
       </div>
     </div>
   );
@@ -151,10 +167,11 @@ export default function HUD() {
   const {
     wpm, accuracy, hp, activeWord, wave, gameMode,
     flowMultiplier,
-    phraseProgress, opponentPhraseProgress,
+    opponentPhraseProgress,
     currentPhrase, currentPhraseWordIndex,
-    totalPhrases, playerPhrasesCompleted,
+    playerPhrasesCompleted,
     countdown, countdownActive,
+    timeRemaining,
   } = state;
 
   const isRacing = gameMode === GAME_MODES.RACING;
@@ -192,11 +209,12 @@ export default function HUD() {
             activeWord={activeWord}
             animState={animState}
           />
-          <RaceBars
-            phraseProgress={phraseProgress}
-            opponentPhraseProgress={opponentPhraseProgress}
-            playerPhrasesCompleted={playerPhrasesCompleted}
-            totalPhrases={totalPhrases || 8}
+          <RaceFooter
+            wpm={wpm}
+            accuracy={accuracy}
+            playerPhrasesCompleted={playerPhrasesCompleted || 0}
+            opponentPhraseProgress={opponentPhraseProgress || 0}
+            timeRemaining={timeRemaining ?? 60}
           />
         </>
       ) : (
@@ -233,13 +251,15 @@ const styles = {
   phraseDone:    { color: '#00ff8866', fontWeight: 'bold' },
   phraseCurrent: { color: '#cccccc', fontWeight: 'bold', letterSpacing: '0.12em' },
   phraseUpcoming:{ color: '#333333' },
-  // Race bars
-  raceBarsWrap:  { position: 'absolute', bottom: '1.8rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '420px' },
-  raceBarRow:    { display: 'flex', alignItems: 'center', gap: '0.6rem' },
-  raceBarLabel:  { fontSize: '0.6rem', letterSpacing: '0.2em', fontWeight: 'bold', width: '2.5rem', textAlign: 'right' },
-  raceBarTrack:  { flex: 1, height: '6px', background: '#111', borderRadius: '3px', overflow: 'hidden', border: '1px solid #ffffff11' },
-  raceBarFill:   { height: '100%', borderRadius: '3px', transition: 'width 0.25s ease' },
-  raceBarCount:  { fontSize: '0.6rem', color: '#555', width: '2rem', textAlign: 'left' },
+  // Race footer
+  raceFooter:    { position: 'absolute', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'flex-start', gap: '1.5rem', width: '560px' },
+  racePanel:     { display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '100px' },
+  racePilot:     { fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.25em', marginBottom: '0.2rem' },
+  raceStat:      { fontSize: '0.8rem', color: '#00ffcc', letterSpacing: '0.05em' },
+  raceStatLbl:   { fontSize: '0.5rem', color: '#445', letterSpacing: '0.2em', marginRight: '0.3rem' },
+  raceCenterCol: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', paddingTop: '0.1rem' },
+  raceTimeTrack: { width: '100%', height: '4px', background: '#111', borderRadius: '2px', overflow: 'hidden', border: '1px solid #ffffff11' },
+  raceTimeFill:  { height: '100%', borderRadius: '2px', background: 'linear-gradient(90deg,#00ffcc,#00ff88)', boxShadow: '0 0 8px #00ffcc66', transition: 'width 1s linear' },
   // Countdown
   countdownOverlay: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)', zIndex: 10 },
   countdownNum:  { fontSize: '9rem', fontWeight: 'bold', letterSpacing: '-0.02em', lineHeight: 1 },

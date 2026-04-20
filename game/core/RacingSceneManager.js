@@ -8,6 +8,8 @@ import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "../../sh
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage"];
 
+const VOID_ANIM_DURATION = 3.2;
+
 export class RacingSceneManager {
   constructor(scene, hudCanvas, cam) {
     this.scene=scene; this.hudCanvas=hudCanvas; this._cam=cam||null;
@@ -18,6 +20,10 @@ export class RacingSceneManager {
     this._prevSceneBackground=null; this._prevSceneFog=null;
     this._playerBase   = new THREE.Vector3(-2.45,-1.35,2.2);
     this._opponentBase = new THREE.Vector3( 2.45,-0.15,0.55);
+    this._smoothProgress=0;
+    this._smoothLead=0;
+    this._smoothBurst=0;
+    this._voidAnim=null;
     this._unsubs=[];
   }
   init(){
@@ -25,7 +31,11 @@ export class RacingSceneManager {
     this._loadPlayerShip(); this._loadOpponentShip();
     this._particles=new ParticleEmitter(this.scene);
     this._cam?.setRacingMode(true);
-    this._unsubs.push(EventBus.on(EventTypes.WORD_COMPLETED,()=>this._onWordCompleted()));
+    this._unsubs.push(
+      EventBus.on(EventTypes.WORD_COMPLETED,()=>this._onWordCompleted()),
+      EventBus.on(EventTypes.RACE_COMPLETED,(e)=>this._startVoidAnim(e.winner,e.gameOverPayload)),
+      EventBus.on(EventTypes.RACE_FAILED,   (e)=>this._startVoidAnim(e.winner,e.gameOverPayload)),
+    );
   }
   destroy(){
     this._unsubs.forEach(fn=>fn()); this._unsubs=[];
@@ -43,45 +53,96 @@ export class RacingSceneManager {
     this._tunnelMixer?.update(delta); this._playerMixer?.update(delta);
     this._opponentMixer?.update(delta); this._particles?.update(delta);
     this.hudCanvas?.update(delta);
-    const state=Bridge.getState(); const wpm=state.wpm||0;
-    this._playerWordBurst=Math.max(0,this._playerWordBurst-delta*3.8);
-    this._playerWordLead=Math.max(0,this._playerWordLead-delta*0.7);
 
-    if(this._tunnelWrapper){
-      const scrollSpeed=(wpm/WORDS_PER_MINUTE_SCALE)*1.2+0.3;
-      this._tunnelOffset+=scrollSpeed*delta;
-      if(this._tunnelOffset>55) this._tunnelOffset=0;
-      this._tunnelWrapper.position.z=-25+this._tunnelOffset;
-    }
+    // void animation overrides everything
+    if(this._voidAnim){ this._updateVoidAnim(delta); return; }
+
+    const state=Bridge.getState(); const wpm=state.wpm||0;
+    this._playerWordBurst=Math.max(0,this._playerWordBurst-delta*1.8);
+    this._playerWordLead=Math.max(0,this._playerWordLead-delta*0.5);
+
     this._opponentDist+=(RACE_OPPONENT_WPM/WORDS_PER_MINUTE_SCALE)*delta;
     const playerDist=state.distanceTraveled||0;
     const targetDist=state.targetDistance||500;
     const progressRatio=THREE.MathUtils.clamp(playerDist/targetDist,0,1);
-    const progressPush=progressRatio*24;
-    const leadOffset=THREE.MathUtils.clamp((playerDist-this._opponentDist)*0.012,-1.2,1.2);
-    const typedAdvance=(this._playerWordLead+this._playerWordBurst*0.8)*0.4;
+    const rawLead=THREE.MathUtils.clamp((playerDist-this._opponentDist)*0.012,-1.2,1.2);
+
+    // lerp all driving values — nothing jumps
+    const lf=delta*0.9;
+    this._smoothProgress+=(progressRatio-this._smoothProgress)*Math.min(lf*0.6,1);
+    this._smoothLead    +=(rawLead-this._smoothLead)*Math.min(lf*0.8,1);
+    this._smoothBurst   +=(this._playerWordBurst-this._smoothBurst)*Math.min(lf*1.2,1);
+
+    if(this._tunnelWrapper){
+      this._tunnelWrapper.position.z=-25+this._smoothProgress*55;
+    }
+    const progressPush =this._smoothProgress*24;
+    const typedAdvance =(this._playerWordLead+this._smoothBurst*0.8)*0.4;
 
     if(this._playerShip){
-      this._playerShip.position.x=this._playerBase.x+Math.sin(this._t*1.45)*0.28+Math.cos(this._t*0.68)*0.14+leadOffset*0.06;
-      this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*2.1)*0.24+Math.cos(this._t*1.3)*0.11+this._playerWordBurst*0.12;
-      this._playerShip.position.z=this._playerBase.z-leadOffset-typedAdvance-progressPush;
-
-      this._playerShip.rotation.x=-0.08+Math.sin(this._t*1.9)*0.06-this._playerWordBurst*0.04;
+      this._playerShip.position.x=this._playerBase.x+Math.sin(this._t*1.45)*0.28+Math.cos(this._t*0.68)*0.14+this._smoothLead*0.06;
+      this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*2.1)*0.24+Math.cos(this._t*1.3)*0.11+this._smoothBurst*0.12;
+      this._playerShip.position.z=this._playerBase.z-this._smoothLead-typedAdvance-progressPush;
+      this._playerShip.rotation.x=-0.08+Math.sin(this._t*1.9)*0.06-this._smoothBurst*0.04;
       this._playerShip.rotation.y=Math.PI+Math.sin(this._t*0.92)*0.08;
-      this._playerShip.rotation.z=leadOffset*0.09+Math.sin(this._t*1.45)*0.07;
+      this._playerShip.rotation.z=this._smoothLead*0.09+Math.sin(this._t*1.45)*0.07;
     }
     if(this._opponentShip){
-      this._opponentShip.position.x=this._opponentBase.x+Math.sin(this._t*1.2+0.8)*0.24+Math.cos(this._t*0.62+0.2)*0.11-leadOffset*0.05;
+      this._opponentShip.position.x=this._opponentBase.x+Math.sin(this._t*1.2+0.8)*0.24+Math.cos(this._t*0.62+0.2)*0.11-this._smoothLead*0.05;
       this._opponentShip.position.y=this._opponentBase.y+Math.sin(this._t*1.6+1.1)*0.2+Math.cos(this._t*1.05+0.4)*0.08;
-      this._opponentShip.position.z=this._opponentBase.z+progressPush*0.35+leadOffset*0.65;
-
+      this._opponentShip.position.z=this._opponentBase.z+progressPush*0.35+this._smoothLead*0.65;
       this._opponentShip.rotation.x=-0.05+Math.sin(this._t*1.4+0.3)*0.05;
       this._opponentShip.rotation.y=Math.sin(this._t*0.75+0.6)*0.07;
-      this._opponentShip.rotation.z=-leadOffset*0.09+Math.sin(this._t*1.1+0.5)*0.06;
+      this._opponentShip.rotation.z=-this._smoothLead*0.09+Math.sin(this._t*1.1+0.5)*0.06;
     }
     if(this._cam){
       const targetFOV=THREE.MathUtils.clamp(70+(wpm/40)*10,70,80);
       this._cam.setRacingFOV(targetFOV);
+    }
+  }
+  _startVoidAnim(winner, gameOverPayload){
+    if(this._voidAnim) return;
+    this._voidAnim={ t:0, winner, gameOverPayload,
+      playerStartZ: this._playerShip?.position.z ?? this._playerBase.z,
+      playerStartX: this._playerShip?.position.x ?? this._playerBase.x,
+      playerStartY: this._playerShip?.position.y ?? this._playerBase.y,
+      oppStartZ:    this._opponentShip?.position.z ?? this._opponentBase.z,
+    };
+  }
+  _updateVoidAnim(delta){
+    const va=this._voidAnim;
+    va.t+=delta;
+    const p=Math.min(1, va.t/VOID_ANIM_DURATION);
+    const ease=p*p*p; // cubic ease-in — starts slow, accelerates into void
+
+    const winnerShip   = va.winner==='player' ? this._playerShip   : this._opponentShip;
+    const loserShip    = va.winner==='player' ? this._opponentShip  : this._playerShip;
+    const winnerStartZ = va.winner==='player' ? va.playerStartZ     : va.oppStartZ;
+    const loserStartZ  = va.winner==='player' ? va.oppStartZ        : va.playerStartZ;
+
+    if(winnerShip){
+      winnerShip.position.z = winnerStartZ - ease*55;
+      winnerShip.position.x = va.winner==='player'
+        ? THREE.MathUtils.lerp(va.playerStartX, 0, p*0.7)
+        : THREE.MathUtils.lerp(va.oppStartZ,    0, p*0.7);
+      winnerShip.position.y = va.winner==='player'
+        ? THREE.MathUtils.lerp(va.playerStartY, 0, p*0.5)
+        : winnerShip.position.y;
+      winnerShip.rotation.x = -ease*0.4;
+    }
+    if(loserShip){
+      loserShip.position.z = loserStartZ + ease*8; // drifts back
+    }
+    if(this._tunnelWrapper){
+      this._tunnelWrapper.position.z = (-25 + this._smoothProgress*55) - ease*55;
+    }
+    if(this._cam){
+      this._cam.setRacingFOV(THREE.MathUtils.lerp(75, 95, ease));
+    }
+
+    if(p>=1){
+      this._voidAnim=null;
+      EventBus.emit(EventTypes.GAME_OVER, va.gameOverPayload);
     }
   }
   _buildBackground(){

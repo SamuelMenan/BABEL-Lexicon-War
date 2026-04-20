@@ -3,24 +3,27 @@ import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import {
   PHRASE_POOL_ES,
-  RACE_PHRASE_COUNT,
   RACE_COUNTDOWN_SECS,
+  RACE_DURATION,
   RACE_TARGET_DISTANCE,
   RACE_OPPONENT_WPM,
-  WORDS_PER_MINUTE_SCALE,
   FLOW_STEPS,
 } from '../../shared/constants.js';
+
+const AVG_WORDS = PHRASE_POOL_ES.reduce((s, p) => s + p.length, 0) / PHRASE_POOL_ES.length;
+// opponent phrases completed per second
+const OPP_PHRASES_PER_SEC = (RACE_OPPONENT_WPM / 60) / AVG_WORDS;
 
 export class RacingSystem {
   constructor(lexicon) {
     this._lexicon = lexicon;
 
-    this._phrases    = [];
-    this._phraseIdx  = 0;
-    this._wordIdx    = 0;
+    this._phrases   = [];
+    this._phraseIdx = 0;
+    this._wordIdx   = 0;
 
-    this._playerDone = 0;
-    this._oppProgress = 0;
+    this._playerDone    = 0;
+    this._oppDone       = 0; // fractional opponent phrases
 
     this._countdown       = RACE_COUNTDOWN_SECS;
     this._countdownActive = false;
@@ -32,26 +35,23 @@ export class RacingSystem {
     this._peakWPM        = 0;
     this._timeElapsed    = 0;
 
-    // phrases/sec rate for opponent
-    const avgWords = PHRASE_POOL_ES.reduce((s, p) => s + p.length, 0) / PHRASE_POOL_ES.length;
-    this._oppRate = (RACE_OPPONENT_WPM / 60) / avgWords / RACE_PHRASE_COUNT;
-
     this._unsubs = [];
   }
 
   init() {
-    // shuffle pool and pick RACE_PHRASE_COUNT phrases
+    // build infinite-enough phrase queue from shuffled pool
     const pool = [...PHRASE_POOL_ES];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    this._phrases = Array.from({ length: RACE_PHRASE_COUNT }, (_, i) => pool[i % pool.length]);
+    // loop the pool 4x so we never run out in 60 seconds
+    this._phrases = [...pool, ...pool, ...pool, ...pool];
 
     this._phraseIdx       = 0;
     this._wordIdx         = 0;
     this._playerDone      = 0;
-    this._oppProgress     = 0;
+    this._oppDone         = 0;
     this._countdown       = RACE_COUNTDOWN_SECS;
     this._countdownActive = true;
     this._active          = false;
@@ -62,8 +62,8 @@ export class RacingSystem {
     this._timeElapsed     = 0;
 
     this._unsubs.push(
-      EventBus.on(EventTypes.WORD_COMPLETED,  () => this._onWordCompleted()),
-      EventBus.on(EventTypes.WORD_PROGRESS,   (p) => this._onWordProgress(p)),
+      EventBus.on(EventTypes.WORD_COMPLETED, () => this._onWordCompleted()),
+      EventBus.on(EventTypes.WORD_PROGRESS,  (p) => this._onWordProgress(p)),
     );
 
     Bridge.setState({
@@ -73,10 +73,11 @@ export class RacingSystem {
       opponentPhraseProgress: 0,
       currentPhrase:          this._phrases[0],
       currentPhraseWordIndex: 0,
-      totalPhrases:           RACE_PHRASE_COUNT,
+      totalPhrases:           null, // time-based — no fixed total
       playerPhrasesCompleted: 0,
       distanceTraveled:       0,
       targetDistance:         RACE_TARGET_DISTANCE,
+      timeRemaining:          RACE_DURATION,
       flowMultiplier:         1.0,
       flowStreak:             0,
     });
@@ -107,27 +108,32 @@ export class RacingSystem {
     if (!this._active) return;
 
     this._timeElapsed += delta;
+    const timeRemaining = Math.max(0, RACE_DURATION - this._timeElapsed);
+    const timeProgress  = Math.min(1, this._timeElapsed / RACE_DURATION);
 
     const wpm = Bridge.getState().wpm;
     if (wpm > this._peakWPM) this._peakWPM = wpm;
 
-    this._oppProgress = Math.min(1, this._oppProgress + this._oppRate * delta);
+    this._oppDone += OPP_PHRASES_PER_SEC * delta;
 
-    // map player phrase progress → distanceTraveled for 3D scene
-    const playerProgress = this._playerDone / RACE_PHRASE_COUNT;
     Bridge.setState({
-      opponentPhraseProgress: this._oppProgress,
-      phraseProgress:         playerProgress,
+      opponentPhraseProgress: this._oppDone,
+      playerPhrasesCompleted: this._playerDone,
+      phraseProgress:         timeProgress,       // drives visual tunnel
+      distanceTraveled:       Math.round(timeProgress * RACE_TARGET_DISTANCE),
+      timeRemaining,
       flowMultiplier:         this._flowMultiplier,
       flowStreak:             this._flowStreak,
-      distanceTraveled:       Math.round(playerProgress * RACE_TARGET_DISTANCE),
     });
 
-    if (this._oppProgress >= 1) this._onDefeat();
+    if (timeRemaining <= 0) this._onTimeUp();
   }
 
   _setWord() {
-    if (this._phraseIdx >= this._phrases.length) return;
+    if (this._phraseIdx >= this._phrases.length) {
+      // extend if needed
+      this._phrases.push(...PHRASE_POOL_ES);
+    }
     const phrase = this._phrases[this._phraseIdx];
     const word   = phrase[this._wordIdx];
     this._lexicon.setTarget(`race_${this._phraseIdx}_${this._wordIdx}`, word);
@@ -146,22 +152,15 @@ export class RacingSystem {
       this._wordIdx++;
       setTimeout(() => { if (this._active && !this._finished) this._setWord(); }, 0);
     } else {
-      // phrase done
       this._wordIdx = 0;
       this._phraseIdx++;
       this._playerDone++;
-
       Bridge.setState({ playerPhrasesCompleted: this._playerDone });
       EventBus.emit(EventTypes.RACE_PHRASE_COMPLETED, {
         phraseIndex: this._phraseIdx - 1,
-        progress:    this._playerDone / RACE_PHRASE_COUNT,
+        playerDone:  this._playerDone,
       });
-
-      if (this._playerDone >= RACE_PHRASE_COUNT) {
-        this._onVictory();
-      } else {
-        setTimeout(() => { if (this._active && !this._finished) this._setWord(); }, 0);
-      }
+      setTimeout(() => { if (this._active && !this._finished) this._setWord(); }, 0);
     }
   }
 
@@ -180,39 +179,25 @@ export class RacingSystem {
     this._flowMultiplier = mult;
   }
 
-  _onVictory() {
+  _onTimeUp() {
     this._finished = true;
     this._active   = false;
-    const state = Bridge.getState();
-    EventBus.emit(EventTypes.RACE_COMPLETED, {
-      time:     this._timeElapsed,
-      wpm:      state.wpm,
-      peakWPM:  this._peakWPM,
-      accuracy: state.accuracy,
-    });
-    EventBus.emit(EventTypes.GAME_OVER, {
-      raceVictory: true,
+    const state    = Bridge.getState();
+    const victory  = this._playerDone > Math.floor(this._oppDone);
+
+    const payload = {
+      raceVictory: victory,
       score:       this._playerDone,
       wpm:         state.wpm,
       accuracy:    state.accuracy,
       peakWPM:     this._peakWPM,
       timeElapsed: Math.round(this._timeElapsed),
-    });
-  }
+    };
 
-  _onDefeat() {
-    this._finished = true;
-    this._active   = false;
-    const state = Bridge.getState();
-    EventBus.emit(EventTypes.RACE_FAILED, {
-      playerProgress: this._playerDone / RACE_PHRASE_COUNT,
-      timeElapsed:    this._timeElapsed,
-    });
-    EventBus.emit(EventTypes.GAME_OVER, {
-      raceVictory: false,
-      score:       this._playerDone,
-      wpm:         state.wpm,
-      accuracy:    state.accuracy,
+    const evType = victory ? EventTypes.RACE_COMPLETED : EventTypes.RACE_FAILED;
+    EventBus.emit(evType, {
+      winner:          victory ? 'player' : 'opponent',
+      gameOverPayload: payload,
     });
   }
 }

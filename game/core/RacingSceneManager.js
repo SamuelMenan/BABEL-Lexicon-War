@@ -74,11 +74,12 @@ export class RacingSceneManager {
     this._smoothBurst   +=(this._playerWordBurst-this._smoothBurst)*Math.min(lf*1.2,1);
 
     if(this._tunnelWrapper){
-      this._tunnelWrapper.position.z=-25+this._smoothProgress*55;
+      this._tunnelWrapper.position.z=-22+this._smoothProgress*55;
     }
     const progressPush =this._smoothProgress*24;
     const typedAdvance =(this._playerWordLead+this._smoothBurst*0.8)*0.4;
 
+    const CAM_Z=8;
     if(this._playerShip){
       this._playerShip.position.x=this._playerBase.x+Math.sin(this._t*1.45)*0.28+Math.cos(this._t*0.68)*0.14+this._smoothLead*0.06;
       this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*2.1)*0.24+Math.cos(this._t*1.3)*0.11+this._smoothBurst*0.12;
@@ -188,7 +189,7 @@ export class RacingSceneManager {
       const box=new THREE.Box3().setFromObject(root);
       const sz=new THREE.Vector3(); box.getSize(sz);
       const maxDim=Math.max(sz.x,sz.y,sz.z);
-      if(maxDim>0) root.scale.setScalar(30/maxDim);
+      if(maxDim>0) root.scale.setScalar(32/maxDim);
       root.position.set(0,0,-25);
       const wrapper=new THREE.Group();
       wrapper.add(root);
@@ -202,12 +203,12 @@ export class RacingSceneManager {
     },(xhr)=>{},(err)=>console.warn("tunnel load err",err));
   }
   _loadPlayerShip(){
-    this._loadShip("/models/spaceship.glb",this._playerBase,2.7,false,Math.PI,(ship,mixer)=>{
+    this._loadShip("/models/spaceship.glb",this._playerBase,5.0,false,Math.PI,(ship,mixer)=>{
       this._playerShip=ship; this._playerMixer=mixer;
     });
   }
   _loadOpponentShip(){
-    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,2.45,true,0,(ship,mixer)=>{
+    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,2.0,true,0,(ship,mixer)=>{
       this._opponentShip=ship; this._opponentMixer=mixer;
     });
   }

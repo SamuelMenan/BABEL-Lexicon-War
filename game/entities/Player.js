@@ -6,13 +6,14 @@ import { Entity } from './Entity.js';
 import { COLORS } from '../../shared/constants.js';
 
 const PLAYER_MODEL_URL = '/models/spaceship_colaid1_50k.glb';
-const TARGET_MODEL_LENGTH = 3.0;
+const TARGET_MODEL_LENGTH = 3.8;
 
 export class Player extends Entity {
   constructor() {
     super();
     this._t = 0;
     this._recoil = 0;
+    this._hitShake = 0;
     this._targetPos = null;
 
     this._group = new THREE.Group();
@@ -21,14 +22,13 @@ export class Player extends Entity {
     this.mesh = this._group;
 
     this._muzzle = null;
-    this._engineGlow = null;
     this._flash = null;
     this._light = null;
 
     this._loader = new GLTFLoader();
     this._mixer = null;
     this._actions = [];
-    this._basePosition = new THREE.Vector3(0, -0.18, 2.85);
+    this._basePosition = new THREE.Vector3(0, 0.2, 2.85);
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -44,17 +44,6 @@ export class Player extends Entity {
     this._muzzle = new THREE.Object3D();
     this._group.add(this._muzzle);
 
-    // Engine glow remains procedural even with GLB model.
-    const engineMat = new THREE.MeshStandardMaterial({
-      color: 0x88aaff,
-      emissive: 0x4466ff,
-      emissiveIntensity: 0.45,
-      transparent: true,
-      opacity: 0.35,
-    });
-    this._engineGlow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), engineMat);
-    this._group.add(this._engineGlow);
-
     const flashMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: cyan,
@@ -65,10 +54,15 @@ export class Player extends Entity {
     this._flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), flashMat);
     this._group.add(this._flash);
 
-    // Luz neutra y suave para no contaminar el color real del GLB.
-    this._light = new THREE.PointLight(0xffffff, 0.18, 5);
-    this._light.position.set(0, 0, 0.2);
+    // Key point light — illuminates ship from front-above
+    this._light = new THREE.PointLight(0xc0d8ff, 0.5, 5);
+    this._light.position.set(-0.4, 0.9, -0.3);
     this._group.add(this._light);
+
+    // Cyan rim from below-back — engine exhaust bounce
+    this._lightRim = new THREE.PointLight(0x00eebb, 0.25, 4);
+    this._lightRim.position.set(0, -0.8, 1.0);
+    this._group.add(this._lightRim);
 
     this._setSocketPositions({
       centerX: 0,
@@ -78,10 +72,9 @@ export class Player extends Entity {
     });
   }
 
-  _setSocketPositions({ centerX, centerY, frontZ, backZ }) {
+  _setSocketPositions({ centerX, centerY, frontZ }) {
     this._muzzle.position.set(centerX, centerY, frontZ);
     this._flash.position.set(centerX, centerY, frontZ);
-    this._engineGlow.position.set(centerX, centerY, backZ);
   }
 
   _clearShipRoot() {
@@ -202,8 +195,8 @@ export class Player extends Entity {
     if (!finalBox.isEmpty()) {
       const finalCenter = finalBox.getCenter(new THREE.Vector3());
       this._setSocketPositions({
-        centerX: finalCenter.x,
-        centerY: finalCenter.y,
+        centerX: 0,
+        centerY: 0,
         frontZ: finalBox.min.z - 0.15,
         backZ: finalBox.max.z + 0.15,
       });
@@ -227,20 +220,32 @@ export class Player extends Entity {
     }, 80);
   }
 
+  takeHit(strength = 1) {
+    // Trigger a short shake/recoil response when an enemy reaches the player.
+    const s = Math.max(0.2, Number(strength) || 1);
+    this._hitShake = Math.max(this._hitShake, Math.min(1.2, 0.55 * s));
+    this._recoil = Math.max(this._recoil, 0.35 * s);
+  }
+
   update(delta) {
     this._t += delta;
     this._mixer?.update(delta);
 
     const floatY = Math.sin(this._t * 1.2) * 0.12;
-    this._group.position.y = this._basePosition.y + floatY;
+    const shakeY = this._hitShake > 0 ? Math.sin(this._t * 28) * this._hitShake * 0.35 : 0;
+    if (this._hitShake > 0) this._hitShake = Math.max(0, this._hitShake - delta * 4);
+    this._group.position.y = this._basePosition.y + floatY + shakeY;
 
-    const desiredX = this._targetPos ? this._targetPos.x * 0.15 : 0;
-    this._group.position.x += (desiredX - this._group.position.x) * Math.min(delta * 2, 1);
+    const tx = this._targetPos ? this._targetPos.x : 0;
+    const snapX = tx < -6 ? -4.3 : tx > 6 ? 4.3 : 0;
+    this._group.position.x += (snapX - this._group.position.x) * Math.min(delta * 3, 1);
 
     if (this._targetPos) {
       const dir = new THREE.Vector3()
         .subVectors(this._targetPos, this._group.position)
         .normalize();
+      dir.y = -0.25;
+      dir.normalize();
       const targetQuat = new THREE.Quaternion().setFromUnitVectors(
         new THREE.Vector3(0, 0, -1),
         dir,
@@ -257,11 +262,7 @@ export class Player extends Entity {
       this._group.position.z = this._basePosition.z + Math.sin(this._t * 0.35) * 0.02;
     }
 
-    const enginePulse = 0.2 + Math.sin(this._t * 4) * 0.03 + this._recoil * 0.14;
-    this._engineGlow.material.emissiveIntensity = enginePulse;
-    const engineScale = 1 + Math.sin(this._t * 4) * 0.03;
-    this._engineGlow.scale.setScalar(engineScale);
-
-    this._light.intensity = 0.18 + Math.sin(this._t * 3) * 0.04 + this._recoil * 0.22;
+    this._light.intensity    = 0.5  + Math.sin(this._t * 3) * 0.04 + this._recoil * 0.2;
+    this._lightRim.intensity = 0.25 + Math.sin(this._t * 4) * 0.03 + this._recoil * 0.1;
   }
 }

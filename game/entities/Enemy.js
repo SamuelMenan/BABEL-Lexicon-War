@@ -1,124 +1,216 @@
-// Unidad del Enjambre — icosaedro con anillo orbital y núcleo pulsante
-
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { BLOOM_LAYER, COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
+import { getSoftGlowTexture } from '../../shared/softVisuals.js';
+
+export const ENEMY_TYPES = {
+  SCOUT:    'scout',    // icosaedro pequeño, cyan, rápido
+  SENTINEL: 'sentinel', // octaedro medio, violeta, 3 anillos
+  GUARDIAN: 'guardian', // dodecaedro grande, naranja, lento
+  PHANTOM:  'phantom',  // tetraedro, teal translúcido, sin anillos
+  APEX:     'apex',     // icosaedro grande, dorado, 4 anillos, boss
+};
+
+const CFGS = {
+  scout: {
+    geo: () => new THREE.IcosahedronGeometry(0.55, 1),
+    color: 0xff4466, glowColor: 0xff4466,
+    coreR: 0.18, coreScale: 1,
+    glowSize: 2.4, glowOp: 0.5,
+    rings: [
+      { r: 0.85, tube: 0.035, rotX: Math.PI/3,       rotSpeed: [0,1.5,0] },
+      { r: 0.85, tube: 0.035, rotZ: Math.PI/2.5,     rotSpeed: [1.2,0,0] },
+    ],
+    speedMult: 1.25, tumble: [0.7, 1.0], pulseFreq: 2.5, glowFreq: 2.1,
+    emissiveInt: 0.8,
+  },
+  sentinel: {
+    geo: () => new THREE.OctahedronGeometry(0.72, 0),
+    color: 0xaa44ff, glowColor: 0x8822ee,
+    coreR: 0.22, coreScale: 1,
+    glowSize: 3.2, glowOp: 0.55,
+    rings: [
+      { r: 1.0,  tube: 0.04, rotX: Math.PI/4,       rotSpeed: [0, 1.1, 0] },
+      { r: 1.0,  tube: 0.04, rotZ: Math.PI/2,        rotSpeed: [0.9, 0, 0] },
+      { r: 0.65, tube: 0.03, rotX: Math.PI/1.5,      rotSpeed: [0, -1.8, 0] },
+    ],
+    speedMult: 1.0, tumble: [0.5, 0.75], pulseFreq: 2.0, glowFreq: 1.7,
+    emissiveInt: 0.9,
+  },
+  guardian: {
+    geo: () => new THREE.DodecahedronGeometry(0.9, 0),
+    color: 0xff8800, glowColor: 0xff6600,
+    coreR: 0.28, coreScale: 1,
+    glowSize: 4.0, glowOp: 0.6,
+    rings: [
+      { r: 1.3,  tube: 0.055, rotX: Math.PI/3,      rotSpeed: [0, 0.7, 0] },
+      { r: 1.3,  tube: 0.055, rotZ: Math.PI/2.5,    rotSpeed: [0.6, 0, 0] },
+      { r: 0.9,  tube: 0.04,  rotX: Math.PI/1.8,    rotSpeed: [0, -1.0, 0] },
+    ],
+    speedMult: 0.65, tumble: [0.35, 0.55], pulseFreq: 1.6, glowFreq: 1.4,
+    emissiveInt: 1.0,
+  },
+  phantom: {
+    geo: () => new THREE.TetrahedronGeometry(0.8, 0),
+    color: 0x00eedd, glowColor: 0x00ccbb,
+    coreR: 0.16, coreScale: 0.85,
+    glowSize: 3.8, glowOp: 0.35,
+    rings: [],
+    speedMult: 1.1, tumble: [1.1, 1.4], pulseFreq: 3.5, glowFreq: 3.0,
+    emissiveInt: 0.6, hullOpacity: 0.45,
+  },
+  apex: {
+    geo: () => new THREE.IcosahedronGeometry(1.1, 1),
+    color: 0xffdd44, glowColor: 0xffaa00,
+    coreR: 0.35, coreScale: 1,
+    glowSize: 5.5, glowOp: 0.7,
+    rings: [
+      { r: 1.6,  tube: 0.06,  rotX: Math.PI/3,      rotSpeed: [0, 0.55, 0] },
+      { r: 1.6,  tube: 0.06,  rotZ: Math.PI/2.5,    rotSpeed: [0.5, 0, 0] },
+      { r: 1.1,  tube: 0.04,  rotX: Math.PI/1.5,    rotSpeed: [0, -0.9, 0] },
+      { r: 0.75, tube: 0.03,  rotZ: Math.PI/1.2,    rotSpeed: [-0.7, 0.4, 0] },
+    ],
+    speedMult: 0.5, tumble: [0.3, 0.4], pulseFreq: 1.2, glowFreq: 1.0,
+    emissiveInt: 1.4,
+  },
+};
+
+export function pickEnemyType(word = '', wave = 1) {
+  const r = Math.random();
+  if (r < 0.20) return ENEMY_TYPES.SCOUT;
+  if (r < 0.40) return ENEMY_TYPES.SENTINEL;
+  if (r < 0.60) return ENEMY_TYPES.GUARDIAN;
+  if (r < 0.80) return ENEMY_TYPES.PHANTOM;
+  return ENEMY_TYPES.APEX;
+}
 
 export class Enemy extends Entity {
-  constructor(word, position, speed = ENEMY_BASE_SPEED) {
+  constructor(word, position, speed = ENEMY_BASE_SPEED, type = ENEMY_TYPES.SCOUT) {
     super();
     this.word     = word;
     this.speed    = speed;
     this.targeted = false;
+    this._type    = type;
+    this._cfg     = CFGS[type] ?? CFGS.scout;
     this._t       = Math.random() * Math.PI * 2;
+    this._rings   = [];
+    this._ringMats= [];
 
     this._group = new THREE.Group();
     this.mesh   = this._group;
-
     this._build();
     this._group.position.copy(position);
   }
 
   _build() {
-    const color = COLORS.ENEMY;
+    const cfg   = this._cfg;
+    const color = cfg.color;
 
-    // Casco — icosaedro de aristas
-    const geo   = new THREE.IcosahedronGeometry(0.7, 1);
+    // hull edges
+    const geo   = cfg.geo();
     const edges = new THREE.EdgesGeometry(geo);
-    this._lineMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 });
-    const hullLines = new THREE.LineSegments(edges, this._lineMat);
-    hullLines.layers.enable(BLOOM_LAYER);
-    this._group.add(hullLines);
+    this._lineMat = new THREE.LineBasicMaterial({
+      color, transparent: true, opacity: cfg.hullOpacity ?? 0.9,
+    });
+    const hull = new THREE.LineSegments(edges, this._lineMat);
+    hull.layers.enable(BLOOM_LAYER);
+    this._group.add(hull);
     geo.dispose();
 
-    // Núcleo interior brillante
+    // core
     this._coreMat = new THREE.MeshStandardMaterial({
-      color, emissive: color, emissiveIntensity: 0.8,
-      transparent: true, opacity: 0.5,
+      color, emissive: color, emissiveIntensity: cfg.emissiveInt,
+      transparent: true, opacity: 0.55,
     });
-    this._core = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), this._coreMat);
+    this._core = new THREE.Mesh(new THREE.SphereGeometry(cfg.coreR, 8, 8), this._coreMat);
     this._core.layers.enable(BLOOM_LAYER);
     this._group.add(this._core);
 
-    // Anillo orbital — rota independiente
-    this._ring = new THREE.Group();
-    const ringGeo = new THREE.TorusGeometry(1.0, 0.04, 6, 24);
-    const ringMat = new THREE.MeshStandardMaterial({
-      color, emissive: color, emissiveIntensity: 0.5,
-    });
-    this._ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    this._ringMesh.layers.enable(BLOOM_LAYER);
-    this._ring.add(this._ringMesh);
-    this._ring.rotation.x = Math.PI / 3;
-    this._group.add(this._ring);
+    // glow sprite
+    this._glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: getSoftGlowTexture(), color: cfg.glowColor,
+      transparent: true, opacity: cfg.glowOp,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    this._glow.scale.set(cfg.glowSize, cfg.glowSize, 1);
+    this._glow.layers.enable(BLOOM_LAYER);
+    this._group.add(this._glow);
 
-    // Segundo anillo en eje diferente
-    const ring2 = new THREE.Group();
-    const ring2Mesh = new THREE.Mesh(ringGeo.clone(), ringMat.clone());
-    ring2Mesh.layers.enable(BLOOM_LAYER);
-    ring2.add(ring2Mesh);
-    ring2.rotation.z = Math.PI / 2.5;
-    this._ring2 = ring2;
-    this._ring2Mat = ring2Mesh.material;
-    this._group.add(ring2);
+    // rings
+    const ringGeo = new THREE.TorusGeometry(1, 1, 6, 24); // placeholder — scaled per ring
+    cfg.rings.forEach(rd => {
+      const rg  = new THREE.TorusGeometry(rd.r, rd.tube, 6, 24);
+      const mat = new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: cfg.emissiveInt * 0.6,
+      });
+      const mesh = new THREE.Mesh(rg, mat);
+      mesh.layers.enable(BLOOM_LAYER);
+      const grp = new THREE.Group();
+      grp.add(mesh);
+      if (rd.rotX !== undefined) grp.rotation.x = rd.rotX;
+      if (rd.rotZ !== undefined) grp.rotation.z = rd.rotZ;
+      grp.userData.rotSpeed = rd.rotSpeed ?? [0, 1, 0];
+      this._rings.push(grp);
+      this._ringMats.push(mat);
+      this._group.add(grp);
+    });
+    ringGeo.dispose();
   }
 
   setTargeted(val) {
     this.targeted = val;
-    const color = val ? COLORS.ENEMY_TARGETED : COLORS.ENEMY;
+    const color = val ? COLORS.ENEMY_TARGETED : this._cfg.color;
     this._lineMat.color.set(color);
     this._coreMat.color.set(color);
     this._coreMat.emissive.set(color);
-    this._ringMesh.material.color.set(color);
-    this._ringMesh.material.emissive.set(color);
-    this._ring2Mat.color.set(color);
-    this._ring2Mat.emissive.set(color);
-    this._coreMat.emissiveIntensity = val ? 1.8 : 0.8;
-    this._ringMesh.material.emissiveIntensity = val ? 1.2 : 0.5;
+    this._coreMat.emissiveIntensity = val ? 1.8 : this._cfg.emissiveInt;
+    this._ringMats.forEach(m => {
+      m.color.set(color); m.emissive.set(color);
+      m.emissiveIntensity = val ? 1.2 : this._cfg.emissiveInt * 0.6;
+    });
+    if (this._glow?.material) this._glow.material.opacity = val ? 0.85 : this._cfg.glowOp;
   }
 
-  // Impacto de proyectil — flash breve
   hitFlash() {
-    this._coreMat.emissiveIntensity = 4;
+    this._coreMat.emissiveIntensity = 5;
     setTimeout(() => {
-      this._coreMat.emissiveIntensity = this.targeted ? 1.8 : 0.8;
+      this._coreMat.emissiveIntensity = this.targeted ? 1.8 : this._cfg.emissiveInt;
     }, 100);
   }
 
   update(delta) {
     if (!this.active) return;
     this._t += delta;
+    const cfg = this._cfg;
 
-    // Avanza hacia el jugador
     const dir = new THREE.Vector3()
-      .subVectors(new THREE.Vector3(0, 0, 2), this._group.position)
+      .subVectors(new THREE.Vector3(0, 0.2, 2), this._group.position)
       .normalize();
-    this._group.position.addScaledVector(dir, this.speed * delta);
+    this._group.position.addScaledVector(dir, this.speed * cfg.speedMult * delta);
 
-    // Rotación tumbling del cuerpo
-    this._group.rotation.x += delta * 0.6;
-    this._group.rotation.y += delta * 0.9;
+    this._group.rotation.x += delta * cfg.tumble[0];
+    this._group.rotation.y += delta * cfg.tumble[1];
 
-    // Anillos rotan independientemente
-    this._ring.rotation.y  += delta * 1.4;
-    this._ring2.rotation.x += delta * 1.1;
+    this._rings.forEach(grp => {
+      const rs = grp.userData.rotSpeed;
+      grp.rotation.x += delta * rs[0];
+      grp.rotation.y += delta * rs[1];
+      grp.rotation.z += delta * rs[2];
+    });
 
-    // Pulso del núcleo
-    const pulse = 1 + Math.sin(this._t * 2.5) * 0.12;
+    const pulse = cfg.coreScale + Math.sin(this._t * cfg.pulseFreq) * 0.14;
     this._core.scale.setScalar(pulse);
+    if (this._glow) {
+      this._glow.scale.setScalar(cfg.glowSize + Math.sin(this._t * cfg.glowFreq) * 0.18);
+    }
 
-    // Escala general cuando está targeted — "tiembla" ligeramente
     if (this.targeted) {
-      const tremble = 1 + Math.sin(this._t * 18) * 0.03;
-      this._group.scale.setScalar(tremble);
+      this._group.scale.setScalar(1 + Math.sin(this._t * 18) * 0.03);
     } else {
       this._group.scale.setScalar(1);
     }
   }
 
-  get distanceToPlayer() {
-    return this._group.position.distanceTo(new THREE.Vector3(0, 0, 2));
-  }
-
-  get position() { return this._group.position; }
+  get distanceToPlayer() { return this._group.position.distanceTo(new THREE.Vector3(0, 0.2, 2)); }
+  get position()         { return this._group.position; }
 }

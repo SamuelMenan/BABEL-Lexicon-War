@@ -20,7 +20,7 @@ export class Camera {
 
   init() {
     this.instance.position.set(0, this._baseY, this._baseZ);
-    this.instance.lookAt(0, 1, -6);
+    this.instance.lookAt(0, 0.5, -8);
 
     window.addEventListener('resize', () => {
       this.instance.aspect = window.innerWidth / window.innerHeight;
@@ -60,7 +60,7 @@ export class Camera {
     this.instance.position.x = this._currentX;
     this.instance.position.y = this._baseY + Math.sin(this._t * 0.3) * 0.2;
     this.instance.position.z = this._baseZ;
-    this.instance.lookAt(this._currentX * 0.15, 1, -6);
+    this.instance.lookAt(this._currentX * 0.15, 0.5, -8);
   }
 
   _updateRacing(delta) {

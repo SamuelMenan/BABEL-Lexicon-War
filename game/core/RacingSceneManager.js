@@ -14,8 +14,10 @@ export class RacingSceneManager {
     this._sceneObjects=[]; this._tunnelWrapper=null; this._tunnelMixer=null; this._tunnelOffset=0;
     this._playerShip=null; this._playerMixer=null; this._opponentShip=null; this._opponentMixer=null;
     this._particles=null; this._t=0; this._opponentDist=0;
-    this._playerBase   = new THREE.Vector3(-2.8,-0.4,1.5);
-    this._opponentBase = new THREE.Vector3( 2.8,-0.4,1.5);
+    this._playerWordBurst=0; this._playerWordLead=0;
+    this._prevSceneBackground=null; this._prevSceneFog=null;
+    this._playerBase   = new THREE.Vector3(-2.45,-1.35,2.2);
+    this._opponentBase = new THREE.Vector3( 2.45,-0.15,0.55);
     this._unsubs=[];
   }
   init(){
@@ -29,6 +31,9 @@ export class RacingSceneManager {
     this._unsubs.forEach(fn=>fn()); this._unsubs=[];
     this._tunnelMixer?.stopAllAction(); this._playerMixer?.stopAllAction();
     this._opponentMixer?.stopAllAction(); this._particles?.dispose();
+    this.scene.background=this._prevSceneBackground?this._prevSceneBackground.clone():null;
+    this.scene.fog=this._prevSceneFog?this._prevSceneFog.clone():null;
+    this._prevSceneBackground=null; this._prevSceneFog=null;
     this._cam?.setRacingMode(false);
     for(const obj of this._sceneObjects) obj.removeFromParent();
     this._sceneObjects=[];
@@ -39,6 +44,9 @@ export class RacingSceneManager {
     this._opponentMixer?.update(delta); this._particles?.update(delta);
     this.hudCanvas?.update(delta);
     const state=Bridge.getState(); const wpm=state.wpm||0;
+    this._playerWordBurst=Math.max(0,this._playerWordBurst-delta*3.8);
+    this._playerWordLead=Math.max(0,this._playerWordLead-delta*0.7);
+
     if(this._tunnelWrapper){
       const scrollSpeed=(wpm/WORDS_PER_MINUTE_SCALE)*1.2+0.3;
       this._tunnelOffset+=scrollSpeed*delta;
@@ -47,16 +55,29 @@ export class RacingSceneManager {
     }
     this._opponentDist+=(RACE_OPPONENT_WPM/WORDS_PER_MINUTE_SCALE)*delta;
     const playerDist=state.distanceTraveled||0;
+    const targetDist=state.targetDistance||500;
+    const progressRatio=THREE.MathUtils.clamp(playerDist/targetDist,0,1);
+    const progressPush=progressRatio*24;
     const leadOffset=THREE.MathUtils.clamp((playerDist-this._opponentDist)*0.012,-1.2,1.2);
+    const typedAdvance=(this._playerWordLead+this._playerWordBurst*0.8)*0.4;
+
     if(this._playerShip){
-      this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*1.1)*0.10;
-      this._playerShip.position.z=this._playerBase.z+leadOffset;
-      this._playerShip.rotation.z=leadOffset*0.08+Math.sin(this._t*0.7)*0.03;
+      this._playerShip.position.x=this._playerBase.x+Math.sin(this._t*1.45)*0.28+Math.cos(this._t*0.68)*0.14+leadOffset*0.06;
+      this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*2.1)*0.24+Math.cos(this._t*1.3)*0.11+this._playerWordBurst*0.12;
+      this._playerShip.position.z=this._playerBase.z-leadOffset-typedAdvance-progressPush;
+
+      this._playerShip.rotation.x=-0.08+Math.sin(this._t*1.9)*0.06-this._playerWordBurst*0.04;
+      this._playerShip.rotation.y=Math.PI+Math.sin(this._t*0.92)*0.08;
+      this._playerShip.rotation.z=leadOffset*0.09+Math.sin(this._t*1.45)*0.07;
     }
     if(this._opponentShip){
-      this._opponentShip.position.y=this._opponentBase.y+Math.sin(this._t*0.9+1)*0.09;
-      this._opponentShip.position.z=this._opponentBase.z-leadOffset;
-      this._opponentShip.rotation.z=-leadOffset*0.08+Math.sin(this._t*0.6+0.5)*0.03;
+      this._opponentShip.position.x=this._opponentBase.x+Math.sin(this._t*1.2+0.8)*0.24+Math.cos(this._t*0.62+0.2)*0.11-leadOffset*0.05;
+      this._opponentShip.position.y=this._opponentBase.y+Math.sin(this._t*1.6+1.1)*0.2+Math.cos(this._t*1.05+0.4)*0.08;
+      this._opponentShip.position.z=this._opponentBase.z+progressPush*0.35+leadOffset*0.65;
+
+      this._opponentShip.rotation.x=-0.05+Math.sin(this._t*1.4+0.3)*0.05;
+      this._opponentShip.rotation.y=Math.sin(this._t*0.75+0.6)*0.07;
+      this._opponentShip.rotation.z=-leadOffset*0.09+Math.sin(this._t*1.1+0.5)*0.06;
     }
     if(this._cam){
       const targetFOV=THREE.MathUtils.clamp(70+(wpm/40)*10,70,80);
@@ -64,15 +85,16 @@ export class RacingSceneManager {
     }
   }
   _buildBackground(){
-    const bg=new THREE.MeshBasicMaterial({color:0x000006,side:THREE.BackSide,depthWrite:false});
+    this._prevSceneBackground=this.scene.background?this.scene.background.clone():null;
+    this._prevSceneFog=this.scene.fog?this.scene.fog.clone():null;
+
+    this.scene.background=new THREE.Color(0x000000);
+    this.scene.fog=new THREE.FogExp2(0x000000,0.004);
+
+    const bg=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,depthWrite:false});
     this._addToScene(new THREE.Mesh(new THREE.SphereGeometry(200,16,16),bg));
-    this._addNebulaGlow(  0,  0,-70,0x001166,0.30,80);
-    this._addNebulaGlow(-25, 10,-80,0x003388,0.22,60);
-    this._addNebulaGlow( 25,-10,-75,0x002244,0.20,55);
-    this._addNebulaGlow(  0, 15,-60,0x004455,0.18,45);
-    this._addNebulaGlow(  0,  0,-50,0x110033,0.28,35);
-    this._addStarField(1800,350,0.14,0x7788aa);
-    this._addStarField(500, 200,0.25,0xaabbcc);
+    this._addStarField(1800,350,0.14,0x8f8f8f);
+    this._addStarField(500, 200,0.25,0xd6d6d6);
     this._addStarField(60,  100,0.8, 0xffffff);
   }
   _addNebulaGlow(x,y,z,color,opacity,radius){
@@ -113,21 +135,22 @@ export class RacingSceneManager {
       this._addToScene(wrapper);
       if(gltf.animations&&gltf.animations.length){
         this._tunnelMixer=new THREE.AnimationMixer(root);
+        this._tunnelMixer.timeScale=0.12;
         gltf.animations.forEach(clip=>this._tunnelMixer.clipAction(clip).play());
       }
     },(xhr)=>{},(err)=>console.warn("tunnel load err",err));
   }
   _loadPlayerShip(){
-    this._loadShip("/models/spaceship.glb",this._playerBase,1.2,false,(ship,mixer)=>{
+    this._loadShip("/models/spaceship.glb",this._playerBase,2.7,false,Math.PI,(ship,mixer)=>{
       this._playerShip=ship; this._playerMixer=mixer;
     });
   }
   _loadOpponentShip(){
-    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,1.1,true,(ship,mixer)=>{
+    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,2.45,true,0,(ship,mixer)=>{
       this._opponentShip=ship; this._opponentMixer=mixer;
     });
   }
-  _loadShip(url,basePos,targetSize,tintRed,onLoaded){
+  _loadShip(url,basePos,targetSize,tintRed,yaw,onLoaded){
     const loader=new GLTFLoader();
     loader.load(url,(gltf)=>{
       const root=gltf.scene;
@@ -136,15 +159,32 @@ export class RacingSceneManager {
       const maxDim=Math.max(sz.x,sz.y,sz.z)||1;
       root.scale.setScalar(targetSize/maxDim);
       root.position.copy(basePos);
-      root.rotation.y=Math.PI;
+      root.rotation.y=yaw;
       root.traverse(node=>{
         if(!node.isMesh) return;
         node.layers.enable(BLOOM_LAYER);
-        if(tintRed&&node.material){
+        if(node.material){
           const mats=Array.isArray(node.material)?node.material:[node.material];
-          mats.forEach(m=>{ m.emissive=new THREE.Color(0.4,0,0); m.emissiveIntensity=0.6; });
+          mats.forEach(m=>{
+            if(!m) return;
+            if('emissive' in m && m.emissive){
+              if(tintRed){
+                m.emissive=new THREE.Color(0.7,0.08,0.05);
+                m.emissiveIntensity=Math.max(m.emissiveIntensity??0,1.8);
+              } else {
+                m.emissive=new THREE.Color(0.35,0.2,0.05);
+                m.emissiveIntensity=Math.max(m.emissiveIntensity??0,0.85);
+              }
+            }
+            if('metalness' in m) m.metalness=Math.min(1,(m.metalness??0.5)+0.08);
+            if('roughness' in m) m.roughness=Math.max(0.12,(m.roughness??0.7)-0.15);
+            m.needsUpdate=true;
+          });
         }
       });
+
+      this._attachShipLights(root,tintRed);
+
       this._addToScene(root);
       let mixer=null;
       if(gltf.animations&&gltf.animations.length){
@@ -154,8 +194,42 @@ export class RacingSceneManager {
       onLoaded(root,mixer);
     },(xhr)=>{},(err)=>console.warn("ship load err",url,err));
   }
+  _attachShipLights(ship,tintRed){
+    // front light (ship's nose direction)
+    const key=new THREE.PointLight(tintRed?0xff3344:0xffbb55,tintRed?5.5:2.1,tintRed?30:18);
+    key.position.set(0,0.35,1.5);
+    ship.add(key);
+
+    // fill from below
+    const fill=new THREE.PointLight(tintRed?0xff2211:0x446688,tintRed?3.2:0.9,tintRed?22:14);
+    fill.position.set(0,0.25,-1.1);
+    ship.add(fill);
+
+    if(tintRed){
+      // back light — illuminates what camera sees (ship faces away)
+      const back=new THREE.PointLight(0xff4422,4.0,25);
+      back.position.set(0,0.5,-2.0);
+      ship.add(back);
+      // top rim
+      const rim=new THREE.PointLight(0xff6633,2.5,20);
+      rim.position.set(0,2.0,0);
+      ship.add(rim);
+    }
+
+    const glowMat=new THREE.MeshBasicMaterial({
+      color:tintRed?0xff3311:0xffaa33,
+      transparent:true,
+      opacity:tintRed?0.92:0.78,
+    });
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(tintRed?0.18:0.1,8,8),glowMat);
+    glow.position.set(0,0,1.08);
+    glow.layers.enable(BLOOM_LAYER);
+    ship.add(glow);
+  }
   _addToScene(obj){ this.scene.add(obj); this._sceneObjects.push(obj); }
   _onWordCompleted(){
-    if(this._playerShip) this._particles?.burst(this._playerShip.position,12);
+    this._playerWordBurst=Math.min(this._playerWordBurst+1.15,3.2);
+    this._playerWordLead=Math.min(this._playerWordLead+0.42,3.8);
+    if(this._playerShip) this._particles?.burst(this._playerShip.position,14);
   }
 }

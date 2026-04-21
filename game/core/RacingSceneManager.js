@@ -1,6 +1,8 @@
-import * as THREE from "three";
+﻿import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ParticleEmitter } from "../rendering/ParticleEmitter.js";
+import { CareerPlayer } from "../entities/careerPlayer.js";
+import { EnemyPlayer } from "../entities/enemyPlayer.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
 import { Bridge } from "../../shared/bridge.js";
@@ -14,7 +16,7 @@ export class RacingSceneManager {
   constructor(scene, hudCanvas, cam) {
     this.scene=scene; this.hudCanvas=hudCanvas; this._cam=cam||null;
     this._sceneObjects=[]; this._tunnelWrapper=null; this._tunnelMixer=null; this._tunnelOffset=0;
-    this._playerShip=null; this._playerMixer=null; this._opponentShip=null; this._opponentMixer=null;
+    this._playerShip=null; this._opponentShip=null;
     this._particles=null; this._t=0; this._opponentDist=0;
     this._playerWordBurst=0; this._playerWordLead=0;
     this._prevSceneBackground=null; this._prevSceneFog=null;
@@ -28,7 +30,7 @@ export class RacingSceneManager {
   }
   init(){
     this._buildBackground(); this._loadTunnel();
-    this._loadPlayerShip(); this._loadOpponentShip();
+    this._loadShips();
     this._particles=new ParticleEmitter(this.scene);
     this._cam?.setRacingMode(true);
     this._unsubs.push(
@@ -39,8 +41,9 @@ export class RacingSceneManager {
   }
   destroy(){
     this._unsubs.forEach(fn=>fn()); this._unsubs=[];
-    this._tunnelMixer?.stopAllAction(); this._playerMixer?.stopAllAction();
-    this._opponentMixer?.stopAllAction(); this._particles?.dispose();
+    this._tunnelMixer?.stopAllAction(); this._particles?.dispose();
+    this._playerShip?.removeFromScene(this.scene); this._playerShip?.dispose?.();
+    this._opponentShip?.removeFromScene(this.scene); this._opponentShip?.dispose?.();
     this.scene.background=this._prevSceneBackground?this._prevSceneBackground.clone():null;
     this.scene.fog=this._prevSceneFog?this._prevSceneFog.clone():null;
     this._prevSceneBackground=null; this._prevSceneFog=null;
@@ -50,8 +53,7 @@ export class RacingSceneManager {
   }
   update(delta){
     this._t+=delta;
-    this._tunnelMixer?.update(delta); this._playerMixer?.update(delta);
-    this._opponentMixer?.update(delta); this._particles?.update(delta);
+    this._tunnelMixer?.update(delta); this._particles?.update(delta);
     this.hudCanvas?.update(delta);
 
     // void animation overrides everything
@@ -79,23 +81,20 @@ export class RacingSceneManager {
     const progressPush =this._smoothProgress*24;
     const typedAdvance =(this._playerWordLead+this._smoothBurst*0.8)*0.4;
 
-    const CAM_Z=8;
-    if(this._playerShip){
-      this._playerShip.position.x=this._playerBase.x+Math.sin(this._t*1.45)*0.28+Math.cos(this._t*0.68)*0.14+this._smoothLead*0.06;
-      this._playerShip.position.y=this._playerBase.y+Math.sin(this._t*2.1)*0.24+Math.cos(this._t*1.3)*0.11+this._smoothBurst*0.12;
-      this._playerShip.position.z=this._playerBase.z-this._smoothLead-typedAdvance-progressPush;
-      this._playerShip.rotation.x=-0.08+Math.sin(this._t*1.9)*0.06-this._smoothBurst*0.04;
-      this._playerShip.rotation.y=Math.PI+Math.sin(this._t*0.92)*0.08;
-      this._playerShip.rotation.z=this._smoothLead*0.09+Math.sin(this._t*1.45)*0.07;
-    }
-    if(this._opponentShip){
-      this._opponentShip.position.x=this._opponentBase.x+Math.sin(this._t*1.2+0.8)*0.24+Math.cos(this._t*0.62+0.2)*0.11-this._smoothLead*0.05;
-      this._opponentShip.position.y=this._opponentBase.y+Math.sin(this._t*1.6+1.1)*0.2+Math.cos(this._t*1.05+0.4)*0.08;
-      this._opponentShip.position.z=this._opponentBase.z+progressPush*0.35+this._smoothLead*0.65;
-      this._opponentShip.rotation.x=-0.05+Math.sin(this._t*1.4+0.3)*0.05;
-      this._opponentShip.rotation.y=Math.sin(this._t*0.75+0.6)*0.07;
-      this._opponentShip.rotation.z=-this._smoothLead*0.09+Math.sin(this._t*1.1+0.5)*0.06;
-    }
+    const raceState={
+      t:this._t,
+      smoothProgress:this._smoothProgress,
+      smoothLead:this._smoothLead,
+      smoothBurst:this._smoothBurst,
+      progressPush,
+      typedAdvance,
+      wpm,
+    };
+    this._playerShip?.setRaceState(raceState);
+    this._opponentShip?.setRaceState(raceState);
+    this._playerShip?.update(delta);
+    this._opponentShip?.update(delta);
+
     if(this._cam){
       const targetFOV=THREE.MathUtils.clamp(70+(wpm/40)*10,70,80);
       this._cam.setRacingFOV(targetFOV);
@@ -104,10 +103,10 @@ export class RacingSceneManager {
   _startVoidAnim(winner, gameOverPayload){
     if(this._voidAnim) return;
     this._voidAnim={ t:0, winner, gameOverPayload,
-      playerStartZ: this._playerShip?.position.z ?? this._playerBase.z,
-      playerStartX: this._playerShip?.position.x ?? this._playerBase.x,
-      playerStartY: this._playerShip?.position.y ?? this._playerBase.y,
-      oppStartZ:    this._opponentShip?.position.z ?? this._opponentBase.z,
+      playerStartZ: this._playerShip?.mesh?.position.z ?? this._playerBase.z,
+      playerStartX: this._playerShip?.mesh?.position.x ?? this._playerBase.x,
+      playerStartY: this._playerShip?.mesh?.position.y ?? this._playerBase.y,
+      oppStartZ:    this._opponentShip?.mesh?.position.z ?? this._opponentBase.z,
     };
   }
   _updateVoidAnim(delta){
@@ -122,17 +121,17 @@ export class RacingSceneManager {
     const loserStartZ  = va.winner==='player' ? va.oppStartZ        : va.playerStartZ;
 
     if(winnerShip){
-      winnerShip.position.z = winnerStartZ - ease*55;
-      winnerShip.position.x = va.winner==='player'
+      winnerShip.mesh.position.z = winnerStartZ - ease*55;
+      winnerShip.mesh.position.x = va.winner==='player'
         ? THREE.MathUtils.lerp(va.playerStartX, 0, p*0.7)
         : THREE.MathUtils.lerp(va.oppStartZ,    0, p*0.7);
-      winnerShip.position.y = va.winner==='player'
+      winnerShip.mesh.position.y = va.winner==='player'
         ? THREE.MathUtils.lerp(va.playerStartY, 0, p*0.5)
-        : winnerShip.position.y;
-      winnerShip.rotation.x = -ease*0.4;
+        : winnerShip.mesh.position.y;
+      winnerShip.mesh.rotation.x = -ease*0.4;
     }
     if(loserShip){
-      loserShip.position.z = loserStartZ + ease*8; // drifts back
+      loserShip.mesh.position.z = loserStartZ + ease*8; // drifts back
     }
     if(this._tunnelWrapper){
       this._tunnelWrapper.position.z = (-25 + this._smoothProgress*55) - ease*55;
@@ -158,6 +157,15 @@ export class RacingSceneManager {
     this._addStarField(1800,350,0.14,0x8f8f8f);
     this._addStarField(500, 200,0.25,0xd6d6d6);
     this._addStarField(60,  100,0.8, 0xffffff);
+
+    const ambient=new THREE.AmbientLight(0x1a1e2e,2.5);
+    this._addToScene(ambient);
+    const camFill=new THREE.PointLight(0xc8deff,2.2,28);
+    camFill.position.set(0,3,14);
+    this._addToScene(camFill);
+    const sideFill=new THREE.PointLight(0x2a3a6a,1.2,22);
+    sideFill.position.set(-8,1,8);
+    this._addToScene(sideFill);
   }
   _addNebulaGlow(x,y,z,color,opacity,radius){
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -202,91 +210,11 @@ export class RacingSceneManager {
       }
     },(xhr)=>{},(err)=>console.warn("tunnel load err",err));
   }
-  _loadPlayerShip(){
-    this._loadShip("/models/spaceship.glb",this._playerBase,5.0,false,Math.PI,(ship,mixer)=>{
-      this._playerShip=ship; this._playerMixer=mixer;
-    });
-  }
-  _loadOpponentShip(){
-    this._loadShip("/models/spaceship__low_poly.glb",this._opponentBase,3.2,true,0,(ship,mixer)=>{
-      this._opponentShip=ship; this._opponentMixer=mixer;
-    });
-  }
-  _loadShip(url,basePos,targetSize,tintRed,yaw,onLoaded){
-    const loader=new GLTFLoader();
-    loader.load(url,(gltf)=>{
-      const root=gltf.scene;
-      const box=new THREE.Box3().setFromObject(root);
-      const sz=new THREE.Vector3(); box.getSize(sz);
-      const maxDim=Math.max(sz.x,sz.y,sz.z)||1;
-      root.scale.setScalar(targetSize/maxDim);
-      root.position.copy(basePos);
-      root.rotation.y=yaw;
-      root.traverse(node=>{
-        if(!node.isMesh) return;
-        node.layers.enable(BLOOM_LAYER);
-        if(node.material){
-          const mats=Array.isArray(node.material)?node.material:[node.material];
-          mats.forEach(m=>{
-            if(!m) return;
-            if('emissive' in m && m.emissive){
-              if(tintRed){
-                m.emissive=new THREE.Color(0.7,0.08,0.05);
-                m.emissiveIntensity=Math.max(m.emissiveIntensity??0,1.8);
-              } else {
-                m.emissive=new THREE.Color(0.35,0.2,0.05);
-                m.emissiveIntensity=Math.max(m.emissiveIntensity??0,0.85);
-              }
-            }
-            if('metalness' in m) m.metalness=Math.min(1,(m.metalness??0.5)+0.08);
-            if('roughness' in m) m.roughness=Math.max(0.12,(m.roughness??0.7)-0.15);
-            m.needsUpdate=true;
-          });
-        }
-      });
-
-      this._attachShipLights(root,tintRed);
-
-      this._addToScene(root);
-      let mixer=null;
-      if(gltf.animations&&gltf.animations.length){
-        mixer=new THREE.AnimationMixer(root);
-        gltf.animations.forEach(clip=>mixer.clipAction(clip).play());
-      }
-      onLoaded(root,mixer);
-    },(xhr)=>{},(err)=>console.warn("ship load err",url,err));
-  }
-  _attachShipLights(ship,tintRed){
-    // front light (ship's nose direction)
-    const key=new THREE.PointLight(tintRed?0xff3344:0xffbb55,tintRed?5.5:2.1,tintRed?30:18);
-    key.position.set(0,0.35,1.5);
-    ship.add(key);
-
-    // fill from below
-    const fill=new THREE.PointLight(tintRed?0xff2211:0x446688,tintRed?3.2:0.9,tintRed?22:14);
-    fill.position.set(0,0.25,-1.1);
-    ship.add(fill);
-
-    if(tintRed){
-      // back light — illuminates what camera sees (ship faces away)
-      const back=new THREE.PointLight(0xff4422,4.0,25);
-      back.position.set(0,0.5,-2.0);
-      ship.add(back);
-      // top rim
-      const rim=new THREE.PointLight(0xff6633,2.5,20);
-      rim.position.set(0,2.0,0);
-      ship.add(rim);
-    }
-
-    const glowMat=new THREE.MeshBasicMaterial({
-      color:tintRed?0xff3311:0xffaa33,
-      transparent:true,
-      opacity:tintRed?0.92:0.78,
-    });
-    const glow=new THREE.Mesh(new THREE.SphereGeometry(tintRed?0.18:0.1,8,8),glowMat);
-    glow.position.set(0,0,1.08);
-    glow.layers.enable(BLOOM_LAYER);
-    ship.add(glow);
+  _loadShips(){
+    this._playerShip = new CareerPlayer(this._playerBase);
+    this._opponentShip = new EnemyPlayer(this._opponentBase);
+    this._addToScene(this._playerShip.mesh);
+    this._addToScene(this._opponentShip.mesh);
   }
   _addToScene(obj){ this.scene.add(obj); this._sceneObjects.push(obj); }
   _onWordCompleted(){

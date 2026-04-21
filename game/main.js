@@ -1,5 +1,5 @@
-import { Engine } from './core/Engine.js';
-import { SceneManager } from './core/SceneManager.js';
+﻿import { Engine } from './core/Engine.js';
+import { CombatSceneManager } from './core/CombatSceneManager.js';
 import { RacingSceneManager } from './core/RacingSceneManager.js';
 import { InputSystem } from './systems/InputSystem.js';
 import { LexiconSystem } from './systems/LexiconSystem.js';
@@ -64,7 +64,7 @@ export function initGame(mountEl) {
     } else {
       engine.camController.setRacingMode(false);
 
-      const sm = new SceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
+      const sm = new CombatSceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
       sm.init();
 
       // Use the scene enemy array reference directly; no per-spawn listener needed.

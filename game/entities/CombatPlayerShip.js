@@ -1,11 +1,11 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
 import { COLORS } from '../../shared/constants.js';
 
 const COMBAT_MODEL_URL = '/models/spaceship_colaid1_50k.glb';
 const TARGET_MODEL_LENGTH = 3.8;
 
-export class CombatPlayer extends ShipBase {
+export class CombatPlayerShip extends ShipBase {
   constructor() {
     super({ modelUrl: COMBAT_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: Math.PI });
     this._recoil = 0;

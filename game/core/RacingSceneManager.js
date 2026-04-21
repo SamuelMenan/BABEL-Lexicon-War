@@ -1,8 +1,8 @@
 ﻿import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ParticleEmitter } from "../rendering/ParticleEmitter.js";
-import { CareerPlayer } from "../entities/careerPlayer.js";
-import { EnemyPlayer } from "../entities/enemyPlayer.js";
+import { RacingPlayerShip } from "../entities/RacingPlayerShip.js";
+import { RacingOpponentShip } from "../entities/RacingOpponentShip.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
 import { Bridge } from "../../shared/bridge.js";
@@ -211,8 +211,8 @@ export class RacingSceneManager {
     },(xhr)=>{},(err)=>console.warn("tunnel load err",err));
   }
   _loadShips(){
-    this._playerShip = new CareerPlayer(this._playerBase);
-    this._opponentShip = new EnemyPlayer(this._opponentBase);
+    this._playerShip = new RacingPlayerShip(this._playerBase);
+    this._opponentShip = new RacingOpponentShip(this._opponentBase);
     this._addToScene(this._playerShip.mesh);
     this._addToScene(this._opponentShip.mesh);
   }

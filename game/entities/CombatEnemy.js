@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { BLOOM_LAYER, COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
@@ -84,7 +84,7 @@ export function pickEnemyType(word = '', wave = 1) {
   return ENEMY_TYPES.APEX;
 }
 
-export class Enemy extends Entity {
+export class CombatEnemy extends Entity {
   constructor(word, position, speed = ENEMY_BASE_SPEED, type = ENEMY_TYPES.SCOUT) {
     super();
     this.word     = word;

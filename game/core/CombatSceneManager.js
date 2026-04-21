@@ -1,6 +1,6 @@
 ﻿import * as THREE from 'three';
-import { Enemy, pickEnemyType } from '../entities/Enemy.js';
-import { CombatPlayer } from '../entities/combatPlayer.js';
+import { CombatEnemy, pickEnemyType } from '../entities/CombatEnemy.js';
+import { CombatPlayerShip } from '../entities/CombatPlayerShip.js';
 import { Projectile, PROJECTILE_TYPES } from '../entities/Projectile.js';
 import { WordToken } from '../entities/WordToken.js';
 import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
@@ -42,7 +42,7 @@ function pickProjectileType() {
   return PROJECTILE_TYPES.BURST;
 }
 
-export class SceneManager {
+export class CombatSceneManager {
   constructor(scene, lexicon, physics, hudCanvas, cam = null) {
     this.scene = scene; this.lexicon = lexicon; this.physics = physics;
     this.hudCanvas = hudCanvas; this._cam = cam;
@@ -86,7 +86,7 @@ export class SceneManager {
   }
 
   _buildPlayer() {
-    this._player = new CombatPlayer();
+    this._player = new CombatPlayerShip();
     this._player.addToScene(this.scene);
   }
 
@@ -103,7 +103,7 @@ export class SceneManager {
     const activeWords = this.enemies.filter(e => e.active).map(e => e.word);
     const word = randomWord(activeWords), pos = randomSpawnPosition();
     const type = pickEnemyType(word, this.wave);
-    const enemy = new Enemy(word, pos, speed, type), token = new WordToken(enemy);
+    const enemy = new CombatEnemy(word, pos, speed, type), token = new WordToken(enemy);
     enemy.addToScene(this.scene);
     this.enemies.push(enemy);
     this.tokens.push(token);

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -9,7 +11,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Orbitron', sans-serif;
   color: #e0e0e0;
 }
 
@@ -40,8 +42,22 @@ html, body {
 
 @keyframes letter-pop {
   0%   { transform: scale(1)   translateY(0);    color: #00ff88; }
-  40%  { transform: scale(1.5) translateY(-4px); color: #00ffcc; }
+  40%  { transform: scale(1.62) translateY(-6px); color: #8df8ff; }
   100% { transform: scale(1)   translateY(0);    color: #00ff88; }
+}
+
+@keyframes letter-hit {
+  0%   { transform: scale(1); text-shadow: 0 0 0 rgba(0,255,204,0); }
+  35%  { transform: scale(1.28); text-shadow: 0 0 18px rgba(0,255,204,0.95); }
+  100% { transform: scale(1); text-shadow: 0 0 0 rgba(0,255,204,0); }
+}
+
+@keyframes letter-wrong {
+  0%   { transform: translateX(0) scale(1); color: #ff4466; }
+  25%  { transform: translateX(-3px) scale(1.12); color: #ff93a5; }
+  50%  { transform: translateX(3px) scale(1.08); color: #ff4466; }
+  75%  { transform: translateX(-2px) scale(1.05); }
+  100% { transform: translateX(0) scale(1); color: #ff4466; }
 }
 
 @keyframes box-shake {
@@ -69,6 +85,13 @@ html, body {
   100% { opacity: 0; transform: translateY(12px); }
 }
 
+@keyframes wave-fullscreen-in {
+  0%   { opacity: 0; transform: scale(0.9); filter: blur(8px); }
+  20%  { opacity: 1; transform: scale(1.02); filter: blur(0); }
+  70%  { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.06); filter: blur(3px); }
+}
+
 /* Clase aplicada por React según estado */
 .word-box-idle {
   border: 1px solid #00ffcc44;
@@ -91,6 +114,16 @@ html, body {
   display: inline-block;
 }
 
+.letter-hit {
+  animation: letter-hit 0.2s ease forwards;
+  display: inline-block;
+}
+
+.letter-wrong {
+  animation: letter-wrong 0.24s ease forwards;
+  display: inline-block;
+}
+
 .edge-flash {
   position: fixed;
   inset: 0;
@@ -98,4 +131,111 @@ html, body {
   z-index: 20;
   background: radial-gradient(ellipse at center, transparent 60%, #ff333344 100%);
   animation: edge-flash-red 0.35s ease forwards;
+}
+
+/* ── HUD v2: word-area states (no box borders) ── */
+
+@keyframes word-shake {
+  0%,100% { transform: translateX(0) skewX(0deg); }
+  15%     { transform: translateX(-8px) skewX(-1.5deg); }
+  35%     { transform: translateX(8px) skewX(1.5deg); }
+  55%     { transform: translateX(-5px) skewX(-0.8deg); }
+  75%     { transform: translateX(5px) skewX(0.8deg); }
+}
+
+@keyframes word-glitch-color {
+  0%,100% { filter: none; }
+  20%     { filter: hue-rotate(180deg) saturate(3) brightness(1.5); }
+  40%     { filter: none; }
+  60%     { filter: hue-rotate(90deg) saturate(2); }
+}
+
+@keyframes wpm-pulse-up {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06) translateY(-2px); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wpm-pulse-down {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.95) translateY(1px); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.word-area-idle    { }
+
+.word-area-correct { }
+
+.word-area-wrong {
+  animation: word-shake 0.32s ease, word-glitch-color 0.32s ease;
+}
+
+.wpm-up   { animation: wpm-pulse-up   0.22s ease; }
+.wpm-down { animation: wpm-pulse-down 0.22s ease; }
+
+.cursor-blink { animation: cursor-blink 1s step-end infinite; }
+
+.wave-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0, 255, 204, 0.2) 0%, rgba(0, 8, 20, 0.76) 45%, rgba(0, 0, 0, 0.92) 100%);
+  animation: wave-fullscreen-in 1.45s ease forwards;
+}
+
+.wave-fullscreen-danger {
+  background: radial-gradient(circle at center, rgba(255, 82, 82, 0.25) 0%, rgba(28, 6, 8, 0.82) 44%, rgba(0, 0, 0, 0.94) 100%);
+}
+
+.wave-fullscreen-inner {
+  text-align: center;
+  color: #e6ffff;
+  text-shadow: 0 0 24px rgba(0, 255, 204, 0.8), 0 0 72px rgba(0, 255, 204, 0.5);
+}
+
+.wave-fullscreen-danger .wave-fullscreen-inner {
+  color: #ffe8ea;
+  text-shadow: 0 0 24px rgba(255, 94, 110, 0.86), 0 0 72px rgba(255, 94, 110, 0.46);
+}
+
+.wave-fullscreen-tag {
+  display: block;
+  font-size: clamp(0.85rem, 1.6vw, 1.3rem);
+  letter-spacing: 0.42em;
+  opacity: 0.85;
+}
+
+.wave-fullscreen-num {
+  display: block;
+  font-size: clamp(4.5rem, 13vw, 11rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  margin: 0.2rem 0;
+}
+
+.wave-fullscreen-sub {
+  display: block;
+  font-size: clamp(0.8rem, 1.4vw, 1.2rem);
+  letter-spacing: 0.32em;
+  opacity: 0.8;
+}
+
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }

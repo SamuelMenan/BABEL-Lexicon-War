@@ -220,6 +220,6 @@ export class RacingSceneManager {
   _onWordCompleted(){
     this._playerWordBurst=Math.min(this._playerWordBurst+1.15,3.2);
     this._playerWordLead=Math.min(this._playerWordLead+0.42,3.8);
-    if(this._playerShip) this._particles?.burst(this._playerShip.position,14);
+    if(this._playerShip?.mesh?.position) this._particles?.burst(this._playerShip.mesh.position,14);
   }
 }

@@ -14,20 +14,20 @@ const styles = {
     background: 'rgba(0,0,8,0.85)',
   },
   title: {
-    fontFamily: 'monospace',
+    fontFamily: "'Orbitron', sans-serif",
     fontSize: '3rem',
     color: '#00ffcc',
     letterSpacing: '0.3em',
     textTransform: 'uppercase',
   },
   subtitle: {
-    fontFamily: 'monospace',
+    fontFamily: "'Orbitron', sans-serif",
     fontSize: '0.9rem',
     color: '#888',
     letterSpacing: '0.2em',
   },
   btn: {
-    fontFamily: 'monospace',
+    fontFamily: "'Orbitron', sans-serif",
     fontSize: '1rem',
     color: '#000',
     background: '#00ffcc',
@@ -45,7 +45,7 @@ export default function MainMenu() {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>BABEL</h1>
-      <p style={styles.subtitle}>Lexicon War</p>
+      <p style={styles.subtitle}>Guerra Lexica</p>
       <p style={{ ...styles.subtitle, color: '#555', fontStyle: 'italic' }}>
         "Las palabras no se acaban. Solo cambian de mano."
       </p>

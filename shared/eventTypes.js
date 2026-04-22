@@ -3,7 +3,7 @@
 
 export const EventTypes = {
   // --- Input ---
-  KEY_TYPED:          'key:typed',         // { key, timestamp }
+  KEY_TYPED:          'key:typed',
   KEY_BACKSPACE:      'key:backspace',
   INPUT_CLEARED:      'input:cleared',
 
@@ -16,15 +16,18 @@ export const EventTypes = {
   // --- Enemigos ---
   ENEMY_SPAWNED:      'enemy:spawned',     // { id, word, position }
   ENEMY_COLLAPSED:    'enemy:collapsed',   // { id, word }
-  ENEMY_REACHED:      'enemy:reached',     // { id } — llegó al jugador
+  ENEMY_REACHED:      'enemy:reached',     // { id }
 
   // --- Jugador ---
-  PLAYER_HIT:         'player:hit',        // { damage }
-  PLAYER_DIED:        'player:died',
-  PLAYER_STATS:       'player:stats',      // { hp, energy }
+  PLAYER_HIT:           'player:hit',        // { damage }
+  PLAYER_DIED:          'player:died',
+  PLAYER_STATS:         'player:stats',      // { hp, energy }
+  PLAYER_OVERHEAT_START: 'player:overheat_start',
+  PLAYER_OVERHEAT_END:   'player:overheat_end',
+  PLAYER_RESOURCE_UPDATE: 'player:resource_update', // telemetría: { hull, shield, lexHeat }
 
   // --- HUD / UI ---
-  HUD_UPDATE:         'hud:update',        // { wpm, accuracy, hp, activeWord, progress }
+  HUD_UPDATE:         'hud:update',
 
   // --- Juego ---
   GAME_START:         'game:start',        // { mode }
@@ -32,7 +35,7 @@ export const EventTypes = {
   GAME_RESUME:        'game:resume',
   GAME_OVER:          'game:over',         // { score, wpm, accuracy }
   WAVE_START:         'wave:start',        // { waveNumber }
-  WAVE_COMPLETE:      'wave:complete',     // { waveNumber }
+  WAVE_COMPLETE:      'wave:complete',
 
   // --- Carrera ---
   RACE_COMPLETED:        'race:completed',

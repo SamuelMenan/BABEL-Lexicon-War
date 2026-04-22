@@ -1,4 +1,4 @@
-// Sistema más crítico del motor.
+﻿// Sistema más crítico del motor.
 // Gestiona: targeting, estado de palabra activa, WPM, precisión.
 
 import { EventBus } from '../../shared/events.js';
@@ -48,6 +48,10 @@ export class LexiconSystem {
   // --- Targeting ---
 
   setTarget(enemyId, word) {
+    if (!word || typeof word !== 'string') {
+      console.warn('[LexiconSystem] setTarget: invalid word', word, 'for id', enemyId);
+      return;
+    }
     this._targetId   = enemyId;
     this._targetWord = word.toLowerCase();
     this._typed      = '';
@@ -73,6 +77,12 @@ export class LexiconSystem {
 
   _onKey({ key, timestamp }) {
     if (!this._targetWord) return;
+    // Space is never a typed character — always silently ignored or used as word separator
+    if (key === ' ') {
+      // Safety net: if word fully typed but auto-advance failed for any reason
+      if (this._typed.length === this._targetWord.length) this._onWordCompleted();
+      return;
+    }
 
     const expected = this._targetWord[this._typed.length];
     const correct  = key.toLowerCase() === expected;
@@ -121,18 +131,22 @@ export class LexiconSystem {
   }
 
   _onWordCompleted() {
-    const wpm      = this._calcWPM();
-    const accuracy = this._calcAccuracy();
+    const wpm         = this._calcWPM();
+    const accuracy    = this._calcAccuracy();
+    const completedId = this._targetId;
+    const completedWord = this._targetWord;
 
     EventBus.emit(EventTypes.WORD_COMPLETED, {
-      word:     this._targetWord,
+      word:     completedWord,
       wpm,
       accuracy,
-      enemyId:  this._targetId,
+      enemyId:  completedId,
     });
 
-    // El EnemySystem / SceneManager decide qué enemigo sigue
-    this.clearTarget();
+    // Only clear if no handler (e.g. RacingSystem) set a new target during emit
+    if (this._targetId === completedId) {
+      this.clearTarget();
+    }
   }
 
   _onTargetChanged({ enemyId, word }) {

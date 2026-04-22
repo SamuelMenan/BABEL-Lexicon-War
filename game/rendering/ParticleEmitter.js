@@ -91,6 +91,9 @@ export class ParticleEmitter {
   }
 
   burst(position) {
+    if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number') {
+      return;
+    }
     const slot = this._pool.find(b => !b.active);
     if (!slot) return; // pool lleno, ignorar
     slot.activate(position);

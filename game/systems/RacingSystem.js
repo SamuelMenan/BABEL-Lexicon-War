@@ -1,4 +1,4 @@
-import { EventBus } from '../../shared/events.js';
+﻿import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import {
@@ -100,7 +100,7 @@ export class RacingSystem {
         this._countdownActive = false;
         this._active = true;
         Bridge.setState({ countdownActive: false, countdown: 0 });
-        setTimeout(() => this._setWord(), 0);
+        this._setWord();
       }
       return;
     }
@@ -131,11 +131,14 @@ export class RacingSystem {
 
   _setWord() {
     if (this._phraseIdx >= this._phrases.length) {
-      // extend if needed
       this._phrases.push(...PHRASE_POOL_ES);
     }
     const phrase = this._phrases[this._phraseIdx];
-    const word   = phrase[this._wordIdx];
+    const word   = phrase?.[this._wordIdx];
+    if (!word) {
+      console.warn('[RacingSystem] _setWord: no word at', this._phraseIdx, this._wordIdx);
+      return;
+    }
     this._lexicon.setTarget(`race_${this._phraseIdx}_${this._wordIdx}`, word);
     Bridge.setState({
       currentPhrase:          phrase,
@@ -150,7 +153,7 @@ export class RacingSystem {
     const phrase = this._phrases[this._phraseIdx];
     if (this._wordIdx < phrase.length - 1) {
       this._wordIdx++;
-      setTimeout(() => { if (this._active && !this._finished) this._setWord(); }, 0);
+      if (this._active && !this._finished) this._setWord();
     } else {
       this._wordIdx = 0;
       this._phraseIdx++;
@@ -160,7 +163,7 @@ export class RacingSystem {
         phraseIndex: this._phraseIdx - 1,
         playerDone:  this._playerDone,
       });
-      setTimeout(() => { if (this._active && !this._finished) this._setWord(); }, 0);
+      if (this._active && !this._finished) this._setWord();
     }
   }
 

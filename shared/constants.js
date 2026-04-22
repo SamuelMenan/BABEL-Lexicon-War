@@ -11,16 +11,29 @@ export const WPM_MIN_CHARS  = 5;
 export const WORDS_PER_MINUTE_SCALE = 12;
 
 // --- Combate ---
-export const ENEMY_BASE_SPEED   = 1.5;
-export const ENEMY_SPEED_SCALE  = 0.1;
-export const MAX_ACTIVE_ENEMIES = 8;
-export const WAVE_INTERVAL_MS   = 8000;
+export const ENEMY_BASE_SPEED   = 2.0;
+export const ENEMY_SPEED_SCALE  = 0.12;
+export const MAX_ACTIVE_ENEMIES = 12;
+export const WAVE_INTERVAL_MS   = 5000;
 export const WORD_ERROR_PENALTY = 'reset';
 
 // --- Jugador ---
 export const PLAYER_MAX_HP     = 100;
 export const PLAYER_MAX_ENERGY = 100;
+export const PLAYER_MAX_SHIELD = 100; // alias semántico para PLAYER_MAX_ENERGY
 export const HIT_DAMAGE        = 20;
+
+// --- LEX-HEAT ---
+export const LEX_HEAT_MAX          = 100;
+export const LEX_HEAT_ON_MISTAKE   = 6;    // por error de tipeo
+export const LEX_HEAT_ON_HIT       = 14;   // por enemigo que alcanza al jugador
+export const LEX_HEAT_DECAY_PER_SEC = 7;   // enfriamiento pasivo por segundo
+export const OVERHEAT_THRESHOLD    = 85;   // nivel que activa overheat
+export const OVERHEAT_DURATION_SEC = 3.5;  // duración del estado overheat
+
+// --- SHIELD ---
+export const SHIELD_REGEN_PER_SEC  = 12;   // regeneración por segundo
+export const SHIELD_REGEN_DELAY_MS = 1600; // ms sin daño antes de regen
 
 // --- Rendering ---
 export const CAMERA_FOV    = 75;
@@ -32,8 +45,8 @@ export const BLOOM_LAYER   = 1;
 export const RACE_TARGET_DISTANCE = 500;
 export const RACE_TIME_LIMIT      = 90;
 export const RACE_OPPONENT_WPM    = 25;
-export const RACE_PHRASE_COUNT    = 16; // pool size to draw from
-export const RACE_DURATION        = 60; // seconds, like a typing test
+export const RACE_PHRASE_COUNT    = 16;
+export const RACE_DURATION        = 60;
 export const RACE_COUNTDOWN_SECS  = 5;
 // [minStreak, multiplier]
 export const FLOW_STEPS = [[0,1.0],[5,1.2],[10,1.4],[15,1.6],[20,2.0]];
@@ -73,9 +86,50 @@ export const COLORS = {
   HUD_NEUTRAL:      '#888888',
 };
 
-export const WORD_POOL_ES = [
-  'enjambre', 'lexico', 'babel', 'sintaxis', 'cifra', 'nexo',
-  'patron', 'senal', 'umbral', 'vector', 'pulso', 'nodo',
-  'codigo', 'glifo', 'forma', 'flujo', 'nexolang', 'typo',
-  'lyra', 'kael', 'voss', 'piloto', 'escritor', 'palabra',
+// Palabras cortas (<=5 chars) — early waves
+export const WORD_POOL_SHORT = [
+  'eco', 'red', 'eje', 'ion', 'arco', 'neo', 'sol', 'era', 'fin', 'lex',
+  'bit', 'luz', 'hilo', 'byte', 'nodo', 'typo', 'kael', 'voss', 'lyra', 'glifo',
+  'nexo', 'pulso', 'cifra', 'datos', 'babel', 'flujo', 'senal', 'campo', 'forma', 'piloto',
 ];
+
+// Palabras medias (6-8 chars) — mid waves
+export const WORD_POOL_MEDIUM = [
+  'vector', 'umbral', 'patron', 'codigo', 'lexico', 'espectro', 'nebulosa', 'colapso',
+  'guardian', 'lenguaje', 'escritor', 'sintaxis', 'enjambre', 'nexolang', 'cifrado',
+  'impulso', 'enlace', 'receptor', 'cargador', 'impacto', 'fractura', 'circuito',
+  'vortice', 'balizaje', 'palabra',
+];
+
+// Palabras largas (9+ chars) — late waves
+export const WORD_POOL_LONG = [
+  'algoritmo', 'resonancia', 'convergencia', 'modulacion', 'transmision', 'frecuencia',
+  'protocolo', 'secuencia', 'centinela', 'estructura', 'fragmento', 'interferencia',
+  'lexicograma', 'singularidad', 'codificacion', 'perturbacion', 'dissonancia',
+];
+
+// Pool completo — union de todos los tiers
+export const WORD_POOL_ES = [
+  ...WORD_POOL_SHORT,
+  ...WORD_POOL_MEDIUM,
+  ...WORD_POOL_LONG,
+];
+
+// --- Spawn Director ---
+export const SPAWN_BUDGET_BASE          = 1.50;
+export const SPAWN_BUDGET_WAVE_FACTOR   = 0.45;
+export const SPAWN_BUDGET_SKILL_FACTOR  = 0.55;
+export const SPAWN_BUDGET_DANGER_FACTOR = 0.45;
+export const SPAWN_MIN_BUDGET           = 1.2;
+export const SPAWN_MAX_BUDGET           = 10.0;
+export const SPAWN_COMPOSITION_JITTER   = 0.08;
+export const SPAWN_REPEAT_PENALTY       = 0.45;
+export const SPAWN_RARE_PITY_STEP       = 0.06;
+export const SPAWN_RARE_PITY_MAX        = 0.24;
+export const SPAWN_MIN_WEIGHT_SCOUT     = 0.18;
+export const SPAWN_MIN_WEIGHT_SENTINEL  = 0.14;
+export const SPAWN_MIN_WEIGHT_GUARDIAN  = 0.10;
+export const SPAWN_MIN_WEIGHT_PHANTOM   = 0.10;
+export const SPAWN_MIN_WEIGHT_APEX      = 0.06;
+export const SPAWN_MAX_WEIGHT_APEX      = 0.16;
+export const SPAWN_RARE_PITY_THRESHOLD  = 4;

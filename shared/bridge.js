@@ -6,8 +6,16 @@ import { EventTypes } from './eventTypes.js';
 let _state = {
   wpm:              0,
   accuracy:         100,
+  // HULL / SHIELD (hp y energy mantenidos para compatibilidad)
   hp:               100,
   energy:           100,
+  maxHp:            100,
+  maxShield:        100,
+  // LEX-HEAT
+  lexHeat:          0,
+  lexHeatMax:       100,
+  isOverheated:     false,
+  overheatTimeLeft: 0,
   activeWord:       null,
   targetId:         null,
   score:            0,
@@ -29,6 +37,8 @@ let _state = {
   currentPhraseWordIndex: 0,
   totalPhrases:           0,
   playerPhrasesCompleted: 0,
+  combatEnemies:    [],
+  swarmRemnants:    0,
 };
 
 const stateListeners = new Set();

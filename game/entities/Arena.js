@@ -16,6 +16,7 @@ export class Arena {
     this._backdropMixer = null;
     this._sf = new Starfield(scene);
     this._moon = new Moon(scene);
+    this._sceneLights = [];
   }
 
   build(scenario) {
@@ -38,6 +39,8 @@ export class Arena {
     this._backdrop?.removeFromParent();
     this._backdrop = null;
     this._moon.dispose();
+    this._sceneLights.forEach(l => this._scene.remove(l));
+    this._sceneLights = [];
   }
 
   _buildScenario1() {
@@ -76,14 +79,21 @@ export class Arena {
     this._sf.addStarCluster(-450, 80, -320, 120, 30, 0.32, 0xffffff, 0.70);
     this._sf.addMilkyWay();
     this._moon.load();
-    const shipKey = new THREE.PointLight(0xc8deff, 1.6, 9);
-    shipKey.position.set(-1.5, 2.5, 5.5);
+    const shipKey = new THREE.PointLight(0xe6f2ff, 3.2, 18);
+    shipKey.position.set(-1.1, 3.1, 6.2);
     this._scene.add(shipKey);
-    const shipFill = new THREE.PointLight(0x1a2a55, 1.0, 7);
-    shipFill.position.set(2, -1.5, 5);
+    this._sceneLights.push(shipKey);
+    const shipFill = new THREE.PointLight(0xb9d4ff, 2.4, 16);
+    shipFill.position.set(2.5, -0.9, 6.1);
     this._scene.add(shipFill);
-    const shipAmb = new THREE.AmbientLight(0x06090f, 1.0);
+    this._sceneLights.push(shipFill);
+    const shipRim = new THREE.PointLight(0x79ffd6, 1.6, 12);
+    shipRim.position.set(0, -1.5, 5.5);
+    this._scene.add(shipRim);
+    this._sceneLights.push(shipRim);
+    const shipAmb = new THREE.AmbientLight(0x1a2538, 2.2);
     this._scene.add(shipAmb);
+    this._sceneLights.push(shipAmb);
   }
 
   _loadBackdropScenario1() {

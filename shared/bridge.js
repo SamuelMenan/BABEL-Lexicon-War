@@ -28,6 +28,11 @@ let _state = {
   gameMode:         null,
   isRunning:        false,
   gameOver:         false,
+  preCombatActive:  false,
+  preCombatStep:    null,
+  preCombatValue:   null,
+  preCombatMessage: '',
+  preCombatLevel:   'yellow',
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,

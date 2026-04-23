@@ -32,6 +32,19 @@ export class InputSystem {
   _onKeyDown(e) {
     if (!this._active) return;
 
+    const isDeleteKey =
+      e.key === 'Delete' ||
+      e.key === 'Del' ||
+      e.key === 'Supr' ||
+      e.code === 'Delete' ||
+      e.keyCode === 46;
+
+    if (isDeleteKey) {
+      e.preventDefault();
+      EventBus.emit(EventTypes.DEBUG_FORCE_PLAYER_DEATH);
+      return;
+    }
+
     // Prevenir comportamiento del navegador en teclas relevantes al juego
     if (e.key === 'Backspace' || e.key === ' ') e.preventDefault();
 

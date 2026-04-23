@@ -20,7 +20,7 @@ export const ASSET_MANIFESTS = {
     { type: 'gltf', url: '/models/truth_about_the_dark_side_of_the_moon.glb', optional: true },
   ],
   combat: [
-    { type: 'gltf', url: '/models/spaceship_colaid1_50k.glb',    optional: true },
+    { type: 'gltf', url: '/models/spaceshipnew.glb',              optional: true },
     { type: 'gltf', url: '/models/radiation_of_space.glb',        optional: true },
   ],
   racing: [

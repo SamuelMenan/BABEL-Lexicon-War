@@ -72,7 +72,7 @@ export async function initGame(mountEl) {
       sm.init();
 
       _physics.setEnemies(sm.enemies);
-      sm._startWave();
+      sm.startCombatWithCountdown();
 
       _activeScene = sm;
     }

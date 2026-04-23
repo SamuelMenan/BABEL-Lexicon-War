@@ -6,6 +6,7 @@ export const EventTypes = {
   KEY_TYPED:          'key:typed',
   KEY_BACKSPACE:      'key:backspace',
   INPUT_CLEARED:      'input:cleared',
+  DEBUG_FORCE_PLAYER_DEATH: 'debug:force_player_death',
 
   // --- Lexicon / Palabras ---
   WORD_PROGRESS:      'word:progress',     // { word, typed, correct }
@@ -37,6 +38,9 @@ export const EventTypes = {
   GAME_OVER:          'game:over',         // { score, wpm, accuracy }
   WAVE_START:         'wave:start',        // { waveNumber }
   WAVE_COMPLETE:      'wave:complete',
+  COMBAT_COUNTDOWN_START: 'combat:countdown_start',
+  COMBAT_COUNTDOWN_TICK:  'combat:countdown_tick',
+  COMBAT_COUNTDOWN_END:   'combat:countdown_end',
 
   // --- Carrera ---
   RACE_COMPLETED:        'race:completed',

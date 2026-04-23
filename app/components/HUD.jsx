@@ -280,6 +280,22 @@ function LowHpFrame({ level }) {
   );
 }
 
+function PreCombatOverlay({ active, step, value, message, level }) {
+  if (!active) return null;
+  const engage = step === 'engage';
+  return (
+    <div className={`precombat-overlay precombat-overlay-${level}`}>
+      <div className={`precombat-frame precombat-frame-${level}`}>
+        <span className="precombat-phase">{engage ? 'ENGAGE' : 'PREPARE'}</span>
+        <span className={`precombat-value ${engage ? 'precombat-value-engage' : ''}`}>{value ?? '...'}</span>
+        <span className="precombat-message">{message}</span>
+      </div>
+      <div className="precombat-scanline" />
+      {engage && <div className="precombat-edge-flash" />}
+    </div>
+  );
+}
+
 function StatusBar({ label, value, max=100, danger=false, forceColor, flash=false }) {
   const pct = Math.max(0, Math.min(100, (value/max)*100));
   const col = forceColor ?? (danger && pct<=35 ? "#ff4466" : "var(--col-active)");
@@ -465,7 +481,9 @@ export default function HUD() {
     playerPhrasesCompleted, countdown, countdownActive, timeRemaining,
     combatEnemies, swarmRemnants, targetId,
     lexHeat = 0, lexHeatMax = 100, isOverheated = false,
-    warnings = {} } = state;
+    warnings = {},
+    preCombatActive = false, preCombatStep = null,
+    preCombatValue = null, preCombatMessage = '', preCombatLevel = 'yellow' } = state;
 
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? 'none';
@@ -476,6 +494,13 @@ export default function HUD() {
         {showFlash && <div className="edge-flash" />}
         <LowHpFrame level={lowHpLevel} />
         <div className="hud-safe-zone">
+          <PreCombatOverlay
+            active={preCombatActive}
+            step={preCombatStep}
+            value={preCombatValue}
+            message={preCombatMessage}
+            level={preCombatLevel}
+          />
           <WaveAnnouncement wave={waveNotice} />
           <WarningIcon warnings={warnings} />
           {/* Top-left: pilot info */}

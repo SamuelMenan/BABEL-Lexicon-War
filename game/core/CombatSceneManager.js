@@ -12,6 +12,29 @@ import { Bridge } from '../../shared/bridge.js';
 import { WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG, ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES, WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT, PLAYER_MAX_HP, LEX_HEAT_MAX, WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M, SPAWN_BUDGET_BASE, SPAWN_BUDGET_WAVE_FACTOR, SPAWN_BUDGET_SKILL_FACTOR, SPAWN_BUDGET_DANGER_FACTOR, SPAWN_MIN_BUDGET, SPAWN_MAX_BUDGET, SPAWN_COMPOSITION_JITTER, SPAWN_REPEAT_PENALTY, SPAWN_RARE_PITY_STEP, SPAWN_RARE_PITY_MAX, SPAWN_MIN_WEIGHT_SCOUT, SPAWN_MIN_WEIGHT_SENTINEL, SPAWN_MIN_WEIGHT_GUARDIAN, SPAWN_MIN_WEIGHT_PHANTOM, SPAWN_MIN_WEIGHT_APEX, SPAWN_MAX_WEIGHT_APEX, SPAWN_RARE_PITY_THRESHOLD } from '../../shared/constants.js';
 
 const ACTIVE_ARENA_SCENARIO = ARENA_SCENARIO_2;
+const PREPARE_MS = 600;
+const STEP_MS = 700;
+const ENGAGE_MS = 450;
+
+const PRECOMBAT_STEPS = {
+  PREPARE: 'prepare',
+  FIVE: '5',
+  FOUR: '4',
+  THREE: '3',
+  TWO: '2',
+  ONE: '1',
+  ENGAGE: 'engage',
+};
+
+const PRECOMBAT_MESSAGES = {
+  [PRECOMBAT_STEPS.PREPARE]: 'PROTOCOLO PRE-COMBATE INICIALIZADO',
+  [PRECOMBAT_STEPS.FIVE]: 'ALINEANDO NODO DE INTERCEPCION',
+  [PRECOMBAT_STEPS.FOUR]: 'ESTABILIZANDO RUTA DE IMPACTO',
+  [PRECOMBAT_STEPS.THREE]: 'SINCRONIZANDO CANAL LEXICO',
+  [PRECOMBAT_STEPS.TWO]: 'FIJANDO FRECUENCIA DE OBJETIVO',
+  [PRECOMBAT_STEPS.ONE]: 'ENTRADA AL ENJAMBRE INMINENTE',
+  [PRECOMBAT_STEPS.ENGAGE]: 'ERROR DE SINTAXIS. COINCIDENCIA FALLIDA.',
+};
 
 function randomSpawnPosition() {
   const z = -(62 + Math.random() * 28);
@@ -71,10 +94,15 @@ export class CombatSceneManager {
     this._prevWarningGlobal = 'none';
     this._deathSequenceStarted = false;
     this._gameOverDelayTimer = null;
+    this._deathBurstTimers = [];
+    this._preCombatActive = false;
+    this._preCombatTimers = [];
+    this._spawnTimers = [];
   }
 
   init() {
     this._deathSequenceStarted = false;
+    this._resetPreCombatUIState();
     this._resources.reset();
     this._arena.build(ACTIVE_ARENA_SCENARIO);
     this._buildPlayer();
@@ -83,6 +111,7 @@ export class CombatSceneManager {
       EventBus.on(EventTypes.WORD_COMPLETED,  (pp) => this._onWordCompleted(pp)),
       EventBus.on(EventTypes.ENEMY_REACHED,   (pp) => this._onEnemyReached(pp)),
       EventBus.on(EventTypes.WORD_PROGRESS,   (pp) => this._onWordProgress(pp)),
+      EventBus.on(EventTypes.DEBUG_FORCE_PLAYER_DEATH, () => this._onForcePlayerDeath()),
     );
   }
 
@@ -91,12 +120,62 @@ export class CombatSceneManager {
       clearTimeout(this._gameOverDelayTimer);
       this._gameOverDelayTimer = null;
     }
+
+    this._clearDeathBurstTimers();
+    this._clearPreCombatTimers();
+    this._clearSpawnTimers();
+    this._preCombatActive = false;
+    this._resetPreCombatUIState();
+
+    this.projectiles.forEach((p) => p?.removeFromScene?.(this.scene));
+    this.projectiles = [];
+
+    this.enemies.forEach((e) => {
+      if (!e) return;
+      e.active = false;
+      e.setTargeted?.(false);
+      e.removeFromScene?.(this.scene);
+    });
+    this.enemies = [];
+    this.tokens = [];
+
+    if (this._player) {
+      this._player.dispose?.(this.scene);
+      this._player.removeFromScene?.(this.scene);
+      this._player = null;
+    }
+
+    this.hudCanvas?.setTokens?.([]);
+    this.hudCanvas?.setOccluders?.([]);
+    this.lexicon?.clearTarget?.();
+
+    this._publishEnemies();
     this._unsubs.forEach(fn => fn());
+    this._unsubs = [];
+
     this._particles?.dispose();
+    this._particles = null;
     this._arena.dispose();
+
+    this._deathSequenceStarted = false;
+    this._prevWarningGlobal = 'none';
   }
 
   update(delta) {
+    if (this._deathSequenceStarted) {
+      this._particles.update(delta);
+      this._player?.update(delta);
+      return;
+    }
+
+    if (this._preCombatActive) {
+      this.hudCanvas.update(delta);
+      this._particles.update(delta);
+      this._player?.update(delta);
+      this._arena.update(delta);
+      return;
+    }
+
     this.physics.update(delta);
     this.hudCanvas.update(delta);
     this._particles.update(delta);
@@ -278,32 +357,171 @@ export class CombatSceneManager {
 
     EventBus.emit(EventTypes.PLAYER_HIT, { damage: HIT_DAMAGE });
     if (this._resources.isDead) {
-      this._deathSequenceStarted = true;
-      this.enemies.forEach((e) => {
-        if (!e?.active) return;
-        e.active = false;
-        e.setTargeted?.(false);
-        e.removeFromScene(this.scene);
-      });
-      this.hudCanvas.setTokens([]);
-      this.lexicon.clearTarget();
-      this.projectiles.forEach((p) => p.removeFromScene(this.scene));
-      this.projectiles = [];
-      this._publishEnemies();
-      EventBus.emit(EventTypes.PLAYER_DIED);
-      const _colPos = this._player?.position.clone();
-      if (_colPos) this._particles.burstCollapse(_colPos);
-      this._player?.startCollapse(() => {
-        this._gameOverDelayTimer = setTimeout(() => {
-          this._gameOverDelayTimer = null;
-          EventBus.emit(EventTypes.GAME_OVER, {
-            score:    this.wave,
-            wpm:      Bridge.getState().wpm,
-            accuracy: Bridge.getState().accuracy,
-          });
-        }, 900);
-      });
+      this._startPlayerDeathSequence();
     }
+  }
+
+  _onForcePlayerDeath() {
+    if (this._deathSequenceStarted) return;
+    this._startPlayerDeathSequence();
+  }
+
+  _startPlayerDeathSequence() {
+    this._stopPreCombatCountdown();
+    this._deathSequenceStarted = true;
+    this._cam?.trackX(0);
+    this.enemies.forEach((e) => {
+      if (!e?.active) return;
+      e.active = false;
+      e.setTargeted?.(false);
+      e.removeFromScene(this.scene);
+    });
+    this.hudCanvas.setTokens([]);
+    this.lexicon.clearTarget();
+    this.projectiles.forEach((p) => p.removeFromScene(this.scene));
+    this.projectiles = [];
+    this._publishEnemies();
+    EventBus.emit(EventTypes.PLAYER_DIED);
+
+    const colPos = this._player?.position.clone();
+    if (colPos) {
+      this._emitDeathLetterBursts(colPos);
+      this._particles.burst(colPos.clone());
+      this._particles.burst(colPos.clone());
+    }
+
+    this._player?.startCollapse(this.scene, () => {
+      this._gameOverDelayTimer = setTimeout(() => {
+        this._gameOverDelayTimer = null;
+        EventBus.emit(EventTypes.GAME_OVER, {
+          score:    this.wave,
+          wpm:      Bridge.getState().wpm,
+          accuracy: Bridge.getState().accuracy,
+        });
+      }, 600);
+    });
+  }
+
+  _emitDeathLetterBursts(origin) {
+    this._clearDeathBurstTimers();
+    const offsets = [
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-0.45, 0.22, -0.12),
+      new THREE.Vector3(0.52, -0.08, 0.16),
+      new THREE.Vector3(0.0, 0.36, -0.24),
+      new THREE.Vector3(-0.22, -0.28, 0.1),
+    ];
+    const scheduleMs = [0, 140, 280, 420, 560];
+
+    scheduleMs.forEach((ms, idx) => {
+      const timer = setTimeout(() => {
+        this._deathBurstTimers = this._deathBurstTimers.filter((t) => t !== timer);
+        const pos = origin.clone().add(offsets[idx]);
+        this._particles.burstCollapse(pos);
+      }, ms);
+      this._deathBurstTimers.push(timer);
+    });
+  }
+
+  _clearDeathBurstTimers() {
+    if (this._deathBurstTimers.length === 0) return;
+    this._deathBurstTimers.forEach((timer) => clearTimeout(timer));
+    this._deathBurstTimers = [];
+  }
+
+  startCombatWithCountdown() {
+    if (this._deathSequenceStarted) return;
+    this._stopPreCombatCountdown();
+    this._preCombatActive = true;
+
+    EventBus.emit(EventTypes.COMBAT_COUNTDOWN_START, { step: PRECOMBAT_STEPS.PREPARE });
+    Bridge.setState({
+      preCombatActive: true,
+      preCombatStep: PRECOMBAT_STEPS.PREPARE,
+      preCombatValue: null,
+      preCombatMessage: PRECOMBAT_MESSAGES[PRECOMBAT_STEPS.PREPARE],
+      preCombatLevel: 'yellow',
+    });
+
+    this._schedulePreCombat(PREPARE_MS, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.FIVE, '5', 'yellow');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.FOUR, '4', 'yellow');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS * 2, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.THREE, '3', 'yellow');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS * 3, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.TWO, '2', 'yellow');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS * 4, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.ONE, '1', 'red');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS * 5, () => {
+      this._setPreCombatStep(PRECOMBAT_STEPS.ENGAGE, 'ENGAGE', 'red');
+    });
+
+    this._schedulePreCombat(PREPARE_MS + STEP_MS * 5 + ENGAGE_MS, () => {
+      this._preCombatActive = false;
+      this._clearPreCombatTimers();
+      this._resetPreCombatUIState();
+      EventBus.emit(EventTypes.COMBAT_COUNTDOWN_END, { step: PRECOMBAT_STEPS.ENGAGE });
+      this._startWave();
+    });
+  }
+
+  _schedulePreCombat(ms, cb) {
+    const timer = setTimeout(() => {
+      this._preCombatTimers = this._preCombatTimers.filter((t) => t !== timer);
+      if (!this._preCombatActive || this._deathSequenceStarted) return;
+      cb();
+    }, ms);
+    this._preCombatTimers.push(timer);
+  }
+
+  _setPreCombatStep(step, value, level) {
+    EventBus.emit(EventTypes.COMBAT_COUNTDOWN_TICK, { step, value, level });
+    Bridge.setState({
+      preCombatActive: true,
+      preCombatStep: step,
+      preCombatValue: value,
+      preCombatMessage: PRECOMBAT_MESSAGES[step],
+      preCombatLevel: level,
+    });
+  }
+
+  _clearPreCombatTimers() {
+    if (this._preCombatTimers.length === 0) return;
+    this._preCombatTimers.forEach((timer) => clearTimeout(timer));
+    this._preCombatTimers = [];
+  }
+
+  _clearSpawnTimers() {
+    if (this._spawnTimers.length === 0) return;
+    this._spawnTimers.forEach((timer) => clearTimeout(timer));
+    this._spawnTimers = [];
+  }
+
+  _stopPreCombatCountdown() {
+    this._clearPreCombatTimers();
+    this._preCombatActive = false;
+    this._resetPreCombatUIState();
+  }
+
+  _resetPreCombatUIState() {
+    Bridge.setState({
+      preCombatActive: false,
+      preCombatStep: null,
+      preCombatValue: null,
+      preCombatMessage: '',
+      preCombatLevel: 'yellow',
+    });
   }
 
 
@@ -475,7 +693,12 @@ export class CombatSceneManager {
 
   _spawnComposition(composition, speed) {
     composition.forEach((type, i) => {
-      setTimeout(() => this._spawnEnemyOfType(type, speed), i * 450);
+      const timer = setTimeout(() => {
+        this._spawnTimers = this._spawnTimers.filter((t) => t !== timer);
+        if (this._deathSequenceStarted || this._preCombatActive) return;
+        this._spawnEnemyOfType(type, speed);
+      }, i * 450);
+      this._spawnTimers.push(timer);
     });
   }
 

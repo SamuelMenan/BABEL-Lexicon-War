@@ -131,6 +131,34 @@ html, body {
   50% { opacity: 1; filter: brightness(1.18); }
 }
 
+@keyframes precombat-pulse-yellow {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 204, 0, 0.18), 0 0 28px rgba(255, 204, 0, 0.12); }
+  50% { box-shadow: inset 0 0 0 1px rgba(255, 204, 0, 0.38), 0 0 42px rgba(255, 204, 0, 0.28); }
+}
+
+@keyframes precombat-pulse-red {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 68, 102, 0.2), 0 0 34px rgba(255, 68, 102, 0.16); }
+  45% { box-shadow: inset 0 0 0 1px rgba(255, 68, 102, 0.45), 0 0 68px rgba(255, 68, 102, 0.38); }
+}
+
+@keyframes precombat-number-pop {
+  0% { opacity: 0.35; transform: scale(0.8); }
+  45% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes precombat-scan {
+  0% { transform: translateY(-40%); opacity: 0; }
+  20% { opacity: 0.26; }
+  100% { transform: translateY(360%); opacity: 0; }
+}
+
+@keyframes precombat-edge-flash {
+  0% { opacity: 0; }
+  35% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
 /* Clase aplicada por React según estado */
 .word-box-idle {
   border: 1px solid #00ffcc44;
@@ -383,6 +411,118 @@ html, body {
 
 .status-bar-flash {
   animation: status-bar-flash 0.9s ease-in-out infinite;
+}
+
+.precombat-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.52) 62%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+.precombat-frame {
+  position: relative;
+  min-width: min(82vw, 760px);
+  padding: 1.2rem 1.4rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  animation: precombat-number-pop 0.24s ease-out;
+}
+
+.precombat-frame::before,
+.precombat-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0.55rem;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.precombat-frame-yellow {
+  border-color: rgba(255, 204, 0, 0.35);
+  animation: precombat-number-pop 0.24s ease-out, precombat-pulse-yellow 0.8s ease-in-out infinite;
+}
+
+.precombat-frame-yellow::before {
+  border-color: rgba(255, 204, 0, 0.26);
+}
+
+.precombat-frame-red {
+  border-color: rgba(255, 68, 102, 0.46);
+  animation: precombat-number-pop 0.2s ease-out, precombat-pulse-red 0.38s ease-in-out infinite;
+}
+
+.precombat-frame-red::before {
+  border-color: rgba(255, 68, 102, 0.34);
+}
+
+.precombat-phase {
+  font-size: 0.68rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.precombat-value {
+  font-size: clamp(4.4rem, 14vw, 8.8rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.precombat-overlay-yellow .precombat-value {
+  color: #ffcc00;
+  text-shadow: 0 0 26px rgba(255, 204, 0, 0.7), 0 0 76px rgba(255, 204, 0, 0.36);
+}
+
+.precombat-overlay-red .precombat-value {
+  color: #ff4466;
+  text-shadow: 0 0 30px rgba(255, 68, 102, 0.82), 0 0 92px rgba(255, 68, 102, 0.5);
+}
+
+.precombat-value-engage {
+  letter-spacing: 0.18em;
+  transform: translateX(0.09em);
+}
+
+.precombat-message {
+  font-size: clamp(0.54rem, 1.2vw, 0.72rem);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.precombat-scanline {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 32%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  animation: precombat-scan 1.1s ease-in-out infinite;
+}
+
+.precombat-overlay-yellow .precombat-scanline {
+  background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.48), transparent);
+}
+
+.precombat-overlay-red .precombat-scanline {
+  background: linear-gradient(90deg, transparent, rgba(255, 68, 102, 0.58), transparent);
+}
+
+.precombat-edge-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 58%, rgba(255, 68, 102, 0.42) 100%);
+  animation: precombat-edge-flash 0.35s ease-out;
 }
 
 .deck-warning-yellow {

@@ -4,6 +4,11 @@ import { EventBus } from './events.js';
 import { EventTypes } from './eventTypes.js';
 
 let _state = {
+  // Loading
+  isLoading:       true,
+  loadingProgress: 0,
+  loadingMode:     null,
+  loadingMessage:  '',
   wpm:              0,
   accuracy:         100,
   // HULL / SHIELD (hp y energy mantenidos para compatibilidad)
@@ -22,6 +27,7 @@ let _state = {
   wave:             0,
   gameMode:         null,
   isRunning:        false,
+  gameOver:         false,
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,
@@ -39,6 +45,13 @@ let _state = {
   playerPhrasesCompleted: 0,
   combatEnemies:    [],
   swarmRemnants:    0,
+  warnings: {
+    proximityLevel:      'none',
+    lowHpLevel:          'none',
+    globalLevel:         'none',
+    closestEnemyDistance: null,
+    lowHp:               false,
+  },
 };
 
 const stateListeners = new Set();
@@ -81,6 +94,10 @@ export const Bridge = {
     },
     resumeGame() {
       EventBus.emit(EventTypes.GAME_RESUME);
+    },
+    beginLoading(mode) {
+      _state = { ..._state, isLoading: true, loadingProgress: 0, loadingMode: mode ?? null, loadingMessage: '' };
+      notifyStateChange();
     },
   },
 };

@@ -28,6 +28,7 @@ export const EventTypes = {
 
   // --- HUD / UI ---
   HUD_UPDATE:         'hud:update',
+  WARNING_CHANGED:    'warning:changed',
 
   // --- Juego ---
   GAME_START:         'game:start',        // { mode }
@@ -45,4 +46,8 @@ export const EventTypes = {
   // --- Sistema ---
   SCENE_READY:        'scene:ready',
   ASSETS_LOADED:      'assets:loaded',
+
+  // --- Carga ---
+  LOADING_PROGRESS: 'loading:progress',  // { progress, message, stage }
+  LOADING_COMPLETE: 'loading:complete',  // { mode }
 };

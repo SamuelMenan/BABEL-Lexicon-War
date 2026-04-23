@@ -5,6 +5,31 @@ export const GAME_MODES = {
   RACING: 'racing',
 };
 
+
+// --- Carga ---
+export const LOADING_STAGES = {
+  INIT:     'INICIALIZANDO SISTEMAS LEXICOS',
+  GEOMETRY: 'CONSTRUYENDO GEOMETRIA DEL ENJAMBRE',
+  SCENE:    'CARGANDO ENTORNO ESPACIAL',
+  WARMUP:   'COMPILANDO SHADERS · CALENTANDO MOTOR',
+  READY:    'ENTRANDO AL CAMPO DE BATALLA',
+};
+
+export const ASSET_MANIFESTS = {
+  shared: [
+    { type: 'gltf', url: '/models/truth_about_the_dark_side_of_the_moon.glb', optional: true },
+  ],
+  combat: [
+    { type: 'gltf', url: '/models/spaceship_colaid1_50k.glb',    optional: true },
+    { type: 'gltf', url: '/models/radiation_of_space.glb',        optional: true },
+  ],
+  racing: [
+    { type: 'gltf', url: '/models/spaceship.glb',                              optional: true },
+    { type: 'gltf', url: '/models/spaceship__low_poly.glb',                    optional: true },
+    { type: 'gltf', url: '/models/24_dizzying_space_travel_-_inktober2019.glb', optional: true },
+  ],
+};
+
 // --- WPM y timing ---
 export const WPM_WINDOW_MS = 5000;
 export const WPM_MIN_CHARS  = 5;
@@ -22,6 +47,14 @@ export const PLAYER_MAX_HP     = 100;
 export const PLAYER_MAX_ENERGY = 100;
 export const PLAYER_MAX_SHIELD = 100; // alias semántico para PLAYER_MAX_ENERGY
 export const HIT_DAMAGE        = 20;
+
+// --- WARNINGS ---
+export const WARN_PROXIMITY_YELLOW_M = 35;
+export const WARN_PROXIMITY_RED_M    = 20;
+export const WARN_HP_YELLOW_PCT      = 0.40;
+export const WARN_HP_RED_PCT         = 0.20;
+export const WARN_HP_HYSTERESIS      = 0.05;
+export const WARN_DEBUG              = false;
 
 // --- LEX-HEAT ---
 export const LEX_HEAT_MAX          = 100;

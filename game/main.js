@@ -1,4 +1,5 @@
-﻿import { Engine } from './core/Engine.js';
+import { Engine } from './core/Engine.js';
+import { AssetLoader } from './core/AssetLoader.js';
 import { CombatSceneManager } from './core/CombatSceneManager.js';
 import { RacingSceneManager } from './core/RacingSceneManager.js';
 import { InputSystem } from './systems/InputSystem.js';
@@ -16,7 +17,7 @@ let _lexicon     = null;
 let _physics     = null;
 let _activeScene = null;
 
-export function initGame(mountEl) {
+export async function initGame(mountEl) {
   engine = new Engine(mountEl);
   engine.init();
 
@@ -39,9 +40,12 @@ export function initGame(mountEl) {
   // Single proxy slot — swapped out per mode without accumulating loop entries
   engine.addSystem('scene', { update: (d) => _activeScene?.update(d) });
 
-  EventBus.on(EventTypes.GAME_START, ({ mode }) => {
+  EventBus.on(EventTypes.GAME_START, async ({ mode }) => {
     _activeScene?.destroy();
     _activeScene = null;
+
+    // Show loading for this mode (cache makes re-entry fast)
+    await AssetLoader.preload(mode, engine.renderer);
 
     Bridge.setState({ isRunning: true, gameMode: mode });
 
@@ -67,7 +71,6 @@ export function initGame(mountEl) {
       const sm = new CombatSceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
       sm.init();
 
-      // Use the scene enemy array reference directly; no per-spawn listener needed.
       _physics.setEnemies(sm.enemies);
       sm._startWave();
 
@@ -94,7 +97,9 @@ export function initGame(mountEl) {
   });
 
   engine.start();
-  return engine;
+
+  // Initial shared preload — shows LoadingScreen until done, then MainMenu appears
+  await AssetLoader.preload(null, engine.renderer);
 }
 
 export function destroyGame() {

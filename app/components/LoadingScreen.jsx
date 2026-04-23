@@ -74,9 +74,9 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
 
         {/* ── Quote ── */}
         <div style={S.quoteBlock}>
-          <p style={S.quoteLine}>"Las palabras no se acaban.</p>
-          <p style={S.quoteLine}>&nbsp;Solo cambian de mano."</p>
-          <p style={S.quoteAttr}>— LYRA VOSS · ÚLTIMA TRANSMISIÓN</p>
+          <p style={S.quoteLine}>"Error de sintaxis.</p>
+          <p style={S.quoteLine}>&nbsp;Coincidencia fallida."</p>
+          <p style={S.quoteAttr}>— SISTEMA BABEL · ALERTA DE CARGA</p>
         </div>
       </div>
 

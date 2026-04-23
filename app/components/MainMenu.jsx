@@ -44,10 +44,10 @@ export default function MainMenu() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>BABEL</h1>
-      <p style={styles.subtitle}>Guerra Lexica</p>
+      <h1 style={styles.title}>BABEL:</h1>
+      <p style={styles.subtitle}>Lexicon War</p>
       <p style={{ ...styles.subtitle, color: '#555', fontStyle: 'italic' }}>
-        "Las palabras no se acaban. Solo cambian de mano."
+        "Error de sintaxis. Coincidencia fallida."
       </p>
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
         <button style={styles.btn} onClick={() => start(GAME_MODES.COMBAT)}>

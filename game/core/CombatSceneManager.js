@@ -69,9 +69,12 @@ export class CombatSceneManager {
     this._recentWords  = [];   // rolling anti-repeat window
     this._pubThrottle  = 0;    // ms accumulator for distance refresh
     this._prevWarningGlobal = 'none';
+    this._deathSequenceStarted = false;
+    this._gameOverDelayTimer = null;
   }
 
   init() {
+    this._deathSequenceStarted = false;
     this._resources.reset();
     this._arena.build(ACTIVE_ARENA_SCENARIO);
     this._buildPlayer();
@@ -84,6 +87,10 @@ export class CombatSceneManager {
   }
 
   destroy() {
+    if (this._gameOverDelayTimer) {
+      clearTimeout(this._gameOverDelayTimer);
+      this._gameOverDelayTimer = null;
+    }
     this._unsubs.forEach(fn => fn());
     this._particles?.dispose();
     this._arena.dispose();
@@ -254,6 +261,7 @@ export class CombatSceneManager {
   }
 
   _onEnemyReached({ id }) {
+    if (this._deathSequenceStarted) return;
     const enemy = this.enemies.find(e => e.id === id);
     if (!enemy || !enemy.active) return;
     this._particles.burst(enemy.position.clone());
@@ -269,13 +277,31 @@ export class CombatSceneManager {
     this._resources.addLexHeat(LEX_HEAT_ON_HIT);
 
     EventBus.emit(EventTypes.PLAYER_HIT, { damage: HIT_DAMAGE });
-
     if (this._resources.isDead) {
+      this._deathSequenceStarted = true;
+      this.enemies.forEach((e) => {
+        if (!e?.active) return;
+        e.active = false;
+        e.setTargeted?.(false);
+        e.removeFromScene(this.scene);
+      });
+      this.hudCanvas.setTokens([]);
+      this.lexicon.clearTarget();
+      this.projectiles.forEach((p) => p.removeFromScene(this.scene));
+      this.projectiles = [];
+      this._publishEnemies();
       EventBus.emit(EventTypes.PLAYER_DIED);
-      EventBus.emit(EventTypes.GAME_OVER, {
-        score:    this.wave,
-        wpm:      Bridge.getState().wpm,
-        accuracy: Bridge.getState().accuracy,
+      const _colPos = this._player?.position.clone();
+      if (_colPos) this._particles.burstCollapse(_colPos);
+      this._player?.startCollapse(() => {
+        this._gameOverDelayTimer = setTimeout(() => {
+          this._gameOverDelayTimer = null;
+          EventBus.emit(EventTypes.GAME_OVER, {
+            score:    this.wave,
+            wpm:      Bridge.getState().wpm,
+            accuracy: Bridge.getState().accuracy,
+          });
+        }, 900);
       });
     }
   }

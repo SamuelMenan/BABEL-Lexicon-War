@@ -23,7 +23,13 @@ export class CombatPlayerShip extends ShipBase {
     this._loadModel();
 
     this._group.position.copy(this._basePosition);
+    this._collapsing = false;
+    this._collapseT = 0;
+    this._collapseOnDone = null;
+    this._collapseDone = false;
   }
+
+  get position() { return this._group.position; }
 
   _buildFxNodes() {
     const cyan = COLORS.PLAYER;
@@ -141,6 +147,7 @@ export class CombatPlayerShip extends ShipBase {
   }
 
   update(delta) {
+    if (this._collapsing) { this._updateCollapse(delta); return; }
     super.update(delta);
 
     const floatY = Math.sin(this._t * 1.2) * 0.12;
@@ -174,5 +181,58 @@ export class CombatPlayerShip extends ShipBase {
 
     this._light.intensity = 0.5 + Math.sin(this._t * 3) * 0.04 + this._recoil * 0.2;
     this._lightRim.intensity = 0.25 + Math.sin(this._t * 4) * 0.03 + this._recoil * 0.1;
+  }
+
+  startCollapse(onDone) {
+    if (this._collapsing) return;
+    this._collapsing = true;
+    this._collapseT = 0;
+    this._collapseDone = false;
+    this._collapseOnDone = onDone ?? null;
+    this._group.traverse(node => {
+      if (!node.isMesh) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach(mat => { mat.transparent = true; mat.needsUpdate = true; });
+    });
+  }
+
+  _updateCollapse(delta) {
+    if (this._collapseDone) return;
+    const TOTAL = 1.35;
+    this._collapseT += delta;
+    const t = Math.min(this._collapseT / TOTAL, 1);
+    if (t < 0.28) {
+      this._group.scale.setScalar(1 + Math.sin((t / 0.28) * Math.PI) * 0.68);
+    } else {
+      const decay = Math.max(0, 1 - (t - 0.28) / 0.72);
+      this._group.scale.setScalar(1 + decay * 0.18);
+    }
+    if (t >= 0.12) {
+      const g = (t - 0.12) / 0.88;
+      this._group.position.x = this._basePosition.x + (Math.random() - 0.5) * g * 0.50;
+      this._group.position.y = this._basePosition.y + (Math.random() - 0.5) * g * 0.44;
+      this._group.rotation.z = (Math.random() - 0.5) * g * 0.9;
+      this._group.rotation.x = (Math.random() - 0.5) * g * 0.4;
+    }
+    const opacity = t < 0.22 ? 1 : Math.max(0, 1 - (t - 0.22) / 0.78);
+    this._group.traverse(node => {
+      if (!node.isMesh) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach(mat => {
+        mat.opacity = opacity;
+        if ('emissiveIntensity' in mat) {
+          const flicker = 0.7 + Math.sin(this._collapseT * 70) * 0.45;
+          mat.emissiveIntensity = Math.max(0, flicker * (1 - t));
+        }
+      });
+    });
+    if (this._light) this._light.intensity = (0.8 + Math.sin(this._collapseT * 52) * 0.45) * opacity;
+    if (this._lightRim) this._lightRim.intensity = (0.45 + Math.sin(this._collapseT * 60) * 0.25) * opacity;
+    if (t >= 1) {
+      this._collapseDone = true;
+      const cb = this._collapseOnDone;
+      this._collapseOnDone = null;
+      cb?.();
+    }
   }
 }

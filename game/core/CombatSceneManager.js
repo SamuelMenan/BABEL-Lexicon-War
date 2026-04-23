@@ -9,7 +9,7 @@ import { ProgressionSystem } from '../systems/ProgressionSystem.js';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
-import { WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG, ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES, WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT, PLAYER_MAX_HP, LEX_HEAT_MAX, SPAWN_BUDGET_BASE, SPAWN_BUDGET_WAVE_FACTOR, SPAWN_BUDGET_SKILL_FACTOR, SPAWN_BUDGET_DANGER_FACTOR, SPAWN_MIN_BUDGET, SPAWN_MAX_BUDGET, SPAWN_COMPOSITION_JITTER, SPAWN_REPEAT_PENALTY, SPAWN_RARE_PITY_STEP, SPAWN_RARE_PITY_MAX, SPAWN_MIN_WEIGHT_SCOUT, SPAWN_MIN_WEIGHT_SENTINEL, SPAWN_MIN_WEIGHT_GUARDIAN, SPAWN_MIN_WEIGHT_PHANTOM, SPAWN_MIN_WEIGHT_APEX, SPAWN_MAX_WEIGHT_APEX, SPAWN_RARE_PITY_THRESHOLD } from '../../shared/constants.js';
+import { WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG, ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES, WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT, PLAYER_MAX_HP, LEX_HEAT_MAX, WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M, SPAWN_BUDGET_BASE, SPAWN_BUDGET_WAVE_FACTOR, SPAWN_BUDGET_SKILL_FACTOR, SPAWN_BUDGET_DANGER_FACTOR, SPAWN_MIN_BUDGET, SPAWN_MAX_BUDGET, SPAWN_COMPOSITION_JITTER, SPAWN_REPEAT_PENALTY, SPAWN_RARE_PITY_STEP, SPAWN_RARE_PITY_MAX, SPAWN_MIN_WEIGHT_SCOUT, SPAWN_MIN_WEIGHT_SENTINEL, SPAWN_MIN_WEIGHT_GUARDIAN, SPAWN_MIN_WEIGHT_PHANTOM, SPAWN_MIN_WEIGHT_APEX, SPAWN_MAX_WEIGHT_APEX, SPAWN_RARE_PITY_THRESHOLD } from '../../shared/constants.js';
 
 const ACTIVE_ARENA_SCENARIO = ARENA_SCENARIO_2;
 
@@ -68,6 +68,7 @@ export class CombatSceneManager {
     this._apexSpawnedThisWave = 0;
     this._recentWords  = [];   // rolling anti-repeat window
     this._pubThrottle  = 0;    // ms accumulator for distance refresh
+    this._prevWarningGlobal = 'none';
   }
 
   init() {
@@ -131,6 +132,24 @@ export class CombatSceneManager {
 
   _publishEnemies() {
     const active = this.enemies.filter(e => e.active);
+    const minDist = active.length > 0
+      ? Math.min(...active.map(e => e.distanceToPlayer))
+      : Infinity;
+
+    const previousWarnings = Bridge.getState().warnings ?? {};
+    const proximityLevel = this._deriveProximityLevel(minDist);
+    const lowHpLevel = previousWarnings.lowHpLevel ?? 'none';
+    const globalLevel = this._deriveGlobalWarningLevel(proximityLevel, lowHpLevel);
+
+    const warnings = {
+      ...previousWarnings,
+      proximityLevel,
+      closestEnemyDistance: Number.isFinite(minDist) ? Math.round(minDist) : null,
+      lowHpLevel,
+      lowHp: lowHpLevel !== 'none',
+      globalLevel,
+    };
+
     Bridge.setState({
       combatEnemies: active.map(e => ({
         id: e.id, word: e.word,
@@ -138,7 +157,29 @@ export class CombatSceneManager {
         targeted: e.id === this.lexicon.currentTargetId,
       })),
       swarmRemnants: active.length,
+      warnings,
     });
+
+    if (this._prevWarningGlobal !== globalLevel) {
+      this._prevWarningGlobal = globalLevel;
+      EventBus.emit(EventTypes.WARNING_CHANGED, {
+        source: 'combat',
+        warnings,
+      });
+    }
+  }
+
+  _deriveProximityLevel(distance) {
+    if (!Number.isFinite(distance)) return 'none';
+    if (distance <= WARN_PROXIMITY_RED_M) return 'red';
+    if (distance <= WARN_PROXIMITY_YELLOW_M) return 'yellow';
+    return 'none';
+  }
+
+  _deriveGlobalWarningLevel(proximityLevel, lowHpLevel) {
+    if (proximityLevel === 'red' || lowHpLevel === 'red') return 'red';
+    if (proximityLevel === 'yellow' || lowHpLevel === 'yellow') return 'yellow';
+    return 'none';
   }
 
   _spawnEnemyOfType(type, speed) {

@@ -2,7 +2,7 @@
 import { Bridge } from "../../shared/bridge.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
-import { GAME_MODES } from "../../shared/constants.js";
+import { GAME_MODES, WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M } from "../../shared/constants.js";
 
 // ─── Shared ─────────────────────────────────────────────────────────────────
 
@@ -205,11 +205,86 @@ function CombatTopRight({ wpm, accuracy }) {
   );
 }
 
-function StatusBar({ label, value, max=100, danger=false, forceColor }) {
+function getProximityLevel(distance) {
+  if (!Number.isFinite(distance)) return "none";
+  if (distance <= WARN_PROXIMITY_RED_M) return "red";
+  if (distance <= WARN_PROXIMITY_YELLOW_M) return "yellow";
+  return "none";
+}
+
+function WarningTriangle({ level, size = "1em" }) {
+  if (level === "none") return null;
+  return <span className={level === "red" ? "deck-warning-red" : "deck-warning-yellow"} style={{ fontSize: size }}>⚠</span>;
+}
+
+function WarningBox({ level, label, detail }) {
+  if (level === 'none') return null;
+
+  return (
+    <div className={`warning-icon warning-icon-${level}`}>
+      <WarningTriangle level={level} size="1.1rem" />
+      <span className="warning-icon-text">
+        <span className="warning-icon-title">{label}</span>
+        {detail ? <span className="warning-icon-detail">{detail}</span> : null}
+      </span>
+    </div>
+  );
+}
+
+function WarningIcon({ warnings }) {
+  const proximityLevel = warnings?.proximityLevel ?? 'none';
+  const lowHpLevel = warnings?.lowHpLevel ?? 'none';
+  const distance = warnings?.closestEnemyDistance;
+
+  const boxes = [];
+  if (proximityLevel !== 'none') {
+    boxes.push({
+      level: proximityLevel,
+      label: proximityLevel === 'red' ? 'OBJETO CERCANO' : 'OBJETO CERCA',
+      detail: `${distance ?? '--'}M`,
+    });
+  }
+
+  if (lowHpLevel !== 'none') {
+    boxes.push({
+      level: lowHpLevel,
+      label: lowHpLevel === 'red' ? 'VIDA BAJA' : 'VIDA MEDIA',
+      detail: null,
+    });
+  }
+
+  if (boxes.length === 0) return null;
+
+  return (
+    <div className="warning-stack">
+      {boxes.map((box) => (
+        <WarningBox key={`${box.label}-${box.detail ?? 'x'}`} level={box.level} label={box.label} detail={box.detail} />
+      ))}
+    </div>
+  );
+}
+
+function LowHpFrame({ level }) {
+  if (level === 'none') return null;
+
+  return (
+    <div className={`low-hp-frame low-hp-frame-${level}`}>
+      <div className="low-hp-frame-corner low-hp-frame-corner-tl" />
+      <div className="low-hp-frame-corner low-hp-frame-corner-tr" />
+      <div className="low-hp-frame-corner low-hp-frame-corner-bl" />
+      <div className="low-hp-frame-corner low-hp-frame-corner-br" />
+      <div className="low-hp-frame-scan low-hp-frame-scan-top" />
+      <div className="low-hp-frame-scan low-hp-frame-scan-bottom" />
+      <div className="low-hp-frame-caption">HULL · {level === 'red' ? 'CRITICAL' : 'LOW'}</div>
+    </div>
+  );
+}
+
+function StatusBar({ label, value, max=100, danger=false, forceColor, flash=false }) {
   const pct = Math.max(0, Math.min(100, (value/max)*100));
   const col = forceColor ?? (danger && pct<=35 ? "#ff4466" : "var(--col-active)");
   return (
-    <div style={S.statusBarRow}>
+    <div className={flash ? "status-bar-flash" : ""} style={S.statusBarRow}>
       <span style={S.statusBarLabel}>{label}</span>
       <div style={S.statusBarTrack}>
         <div style={{ ...S.statusBarFill, width: pct+"%", background: col, boxShadow: "0 0 5px "+col }} />
@@ -219,15 +294,21 @@ function StatusBar({ label, value, max=100, danger=false, forceColor }) {
   );
 }
 
-function CombatBottomLeft({ hp, lexHeat, lexHeatMax = 100, isOverheated, wave, swarmRemnants }) {
+function CombatBottomLeft({ hp, lexHeat, lexHeatMax = 100, isOverheated, wave, swarmRemnants, warnings }) {
   const lexHeatPct = (lexHeat / lexHeatMax) * 100;
   const lexHeatColor = isOverheated ? "#ff4466"
     : lexHeatPct >= 85 ? "#ff4466"
     : lexHeatPct >= 60 ? "#ffcc00"
     : "var(--col-active)";
+  const lowHpLevel = warnings?.lowHpLevel ?? 'none';
+  const hpForceColor = lowHpLevel === 'red'
+    ? '#ff4466'
+    : lowHpLevel === 'yellow'
+      ? '#ffcc00'
+      : undefined;
   return (
     <div style={S.combatBottomLeft}>
-      <StatusBar label="CASCO"      value={hp}      danger />
+      <StatusBar label="CASCO"      value={hp}      danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
       <StatusBar label="CALOR·LEX"  value={lexHeat} max={lexHeatMax} forceColor={lexHeatColor} />
       <div style={S.waveBlock}>
         <span style={S.waveLabel}>OLEADA · LEXICA</span>
@@ -306,7 +387,10 @@ function LexiconDeck({ combatEnemies, targetId, flowMultiplier }) {
             <span style={S.deckRowBullet}>{e.targeted ? "▸" : " "}</span>
             <span style={{ ...S.deckRowWord, color: e.targeted ? "var(--col-active)" : "rgba(255,255,255,0.55)",
               fontWeight: e.targeted ? "bold" : "normal" }}>{e.word}</span>
-            <span style={S.deckRowDist}>{e.distance}m</span>
+            <span style={S.deckRowDistWrap}>
+              <WarningTriangle level={getProximityLevel(e.distance)} />
+              <span style={S.deckRowDist}>{e.distance}m</span>
+            </span>
           </div>
         ))}
         {sorted.length === 0 && (
@@ -380,30 +464,36 @@ export default function HUD() {
     opponentPhraseProgress, currentPhrase, currentPhraseWordIndex,
     playerPhrasesCompleted, countdown, countdownActive, timeRemaining,
     combatEnemies, swarmRemnants, targetId,
-    lexHeat = 0, lexHeatMax = 100, isOverheated = false } = state;
+    lexHeat = 0, lexHeatMax = 100, isOverheated = false,
+    warnings = {} } = state;
 
   const isRacing = gameMode === GAME_MODES.RACING;
+  const lowHpLevel = warnings?.lowHpLevel ?? 'none';
 
   if (!isRacing) {
     return (
       <div style={S.hud}>
         {showFlash && <div className="edge-flash" />}
-        <WaveAnnouncement wave={waveNotice} />
-        {/* Top-left: pilot info */}
-        <div style={S.combatTopLeft}>
-          <span style={S.pilotName}>KAEL · VOSS</span>
-          <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+        <LowHpFrame level={lowHpLevel} />
+        <div className="hud-safe-zone">
+          <WaveAnnouncement wave={waveNotice} />
+          <WarningIcon warnings={warnings} />
+          {/* Top-left: pilot info */}
+          <div style={S.combatTopLeft}>
+            <span style={S.pilotName}>KAEL · VOSS</span>
+            <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+          </div>
+          {/* Top-center: ticker */}
+          <CombatTicker />
+          {/* Top-right: WPM + accuracy */}
+          <CombatTopRight wpm={wpm} accuracy={accuracy} />
+          {/* Bottom-left: status bars */}
+          <CombatBottomLeft hp={hp} lexHeat={lexHeat} lexHeatMax={lexHeatMax} isOverheated={isOverheated} wave={wave} swarmRemnants={swarmRemnants} warnings={warnings} />
+          {/* Bottom-center: active word panel */}
+          <CombatWordPanel activeWord={activeWord} animState={animState} />
+          {/* Bottom-right: lexicon deck */}
+          <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
         </div>
-        {/* Top-center: ticker */}
-        <CombatTicker />
-        {/* Top-right: WPM + accuracy */}
-        <CombatTopRight wpm={wpm} accuracy={accuracy} />
-        {/* Bottom-left: status bars */}
-        <CombatBottomLeft hp={hp} lexHeat={lexHeat} lexHeatMax={lexHeatMax} isOverheated={isOverheated} wave={wave} swarmRemnants={swarmRemnants} />
-        {/* Bottom-center: active word panel */}
-        <CombatWordPanel activeWord={activeWord} animState={animState} />
-        {/* Bottom-right: lexicon deck */}
-        <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
       </div>
     );
   }
@@ -411,26 +501,30 @@ export default function HUD() {
   return (
     <div style={S.hud}>
       {showFlash && <div className="edge-flash" />}
-      <WaveAnnouncement wave={waveNotice} />
-      <Countdown countdown={countdown} countdownActive={countdownActive} />
-      {/* Top-left: pilot info */}
-      <div style={S.combatTopLeft}>
-        <span style={S.pilotName}>KAEL · VOSS</span>
-        <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+      <LowHpFrame level={lowHpLevel} />
+      <div className="hud-safe-zone">
+        <WaveAnnouncement wave={waveNotice} />
+        <WarningIcon warnings={warnings} />
+        <Countdown countdown={countdown} countdownActive={countdownActive} />
+        {/* Top-left: pilot info */}
+        <div style={S.combatTopLeft}>
+          <span style={S.pilotName}>KAEL · VOSS</span>
+          <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+        </div>
+        {/* Top-center: race ticker */}
+        <RaceTicker timeRemaining={timeRemaining} playerPhrasesCompleted={playerPhrasesCompleted} />
+        {/* Top-right: WPM + accuracy */}
+        <CombatTopRight wpm={wpm} accuracy={accuracy} />
+        {/* Bottom-left: race stats */}
+        <RaceBottomLeft wpm={wpm} accuracy={accuracy} flowMultiplier={flowMultiplier}
+          playerPhrasesCompleted={playerPhrasesCompleted || 0}
+          opponentPhraseProgress={opponentPhraseProgress || 0} />
+        {/* Center: phrase */}
+        <RacePhrase currentPhrase={currentPhrase} currentPhraseWordIndex={currentPhraseWordIndex}
+          activeWord={activeWord} animState={animState} />
+        {/* Bottom-center: timer */}
+        <RaceTimer timeRemaining={timeRemaining ?? 60} />
       </div>
-      {/* Top-center: race ticker */}
-      <RaceTicker timeRemaining={timeRemaining} playerPhrasesCompleted={playerPhrasesCompleted} />
-      {/* Top-right: WPM + accuracy */}
-      <CombatTopRight wpm={wpm} accuracy={accuracy} />
-      {/* Bottom-left: race stats */}
-      <RaceBottomLeft wpm={wpm} accuracy={accuracy} flowMultiplier={flowMultiplier}
-        playerPhrasesCompleted={playerPhrasesCompleted || 0}
-        opponentPhraseProgress={opponentPhraseProgress || 0} />
-      {/* Center: phrase */}
-      <RacePhrase currentPhrase={currentPhrase} currentPhraseWordIndex={currentPhraseWordIndex}
-        activeWord={activeWord} animState={animState} />
-      {/* Bottom-center: timer */}
-      <RaceTimer timeRemaining={timeRemaining ?? 60} />
     </div>
   );
 }
@@ -516,6 +610,7 @@ const S = {
   deckRowActive: { background:"rgba(0,255,204,0.05)" },
   deckRowBullet: { width:"1rem", fontSize:"0.72rem", color:"var(--col-active)", flexShrink:0 },
   deckRowWord: { flex:1, transition:"color 0.2s" },
+  deckRowDistWrap: { display:"inline-flex", alignItems:"center", gap:"0.3rem", minWidth:"3.8rem", justifyContent:"flex-end" },
   deckRowDist: { fontSize:"0.66rem", color:"rgba(255,255,255,0.25)", letterSpacing:"0.05em" },
   deckEmpty: { padding:"0.55rem 1rem", fontSize:"0.62rem", color:"rgba(255,255,255,0.15)",
     letterSpacing:"0.2em", textAlign:"center" },

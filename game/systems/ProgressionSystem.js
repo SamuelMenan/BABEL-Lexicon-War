@@ -6,6 +6,10 @@ import {
   LEX_HEAT_MAX, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
   LEX_HEAT_DECAY_PER_SEC,
   OVERHEAT_THRESHOLD, OVERHEAT_DURATION_SEC,
+  WARN_HP_YELLOW_PCT,
+  WARN_HP_RED_PCT,
+  WARN_HP_HYSTERESIS,
+  WARN_DEBUG,
 } from '../../shared/constants.js';
 
 // Cooldown after overheat ends before it can re-trigger
@@ -18,6 +22,7 @@ export class ProgressionSystem {
     this._isOverheated     = false;
     this._overheatLeft     = 0;
     this._overheatCooldown = 0;
+    this._lowHpLevel       = 'none';
   }
 
   reset() {
@@ -26,6 +31,7 @@ export class ProgressionSystem {
     this._isOverheated     = false;
     this._overheatLeft     = 0;
     this._overheatCooldown = 0;
+    this._lowHpLevel       = 'none';
     this._publish();
   }
 
@@ -88,10 +94,50 @@ export class ProgressionSystem {
       lexHeat:         this._lexHeat,
       isOverheated:    this._isOverheated,
       overheatTimeLeft: this._overheatLeft,
+      lowHpLevel:      this._lowHpLevel,
     };
   }
 
+  _deriveLowHpLevel(hpPct) {
+    const current = this._lowHpLevel;
+
+    if (current === 'red') {
+      if (hpPct <= WARN_HP_RED_PCT + WARN_HP_HYSTERESIS) return 'red';
+      if (hpPct <= WARN_HP_YELLOW_PCT) return 'yellow';
+      return 'none';
+    }
+
+    if (current === 'yellow') {
+      if (hpPct <= WARN_HP_RED_PCT) return 'red';
+      if (hpPct <= WARN_HP_YELLOW_PCT + WARN_HP_HYSTERESIS) return 'yellow';
+      return 'none';
+    }
+
+    if (hpPct <= WARN_HP_RED_PCT) return 'red';
+    if (hpPct <= WARN_HP_YELLOW_PCT) return 'yellow';
+    return 'none';
+  }
+
+  _deriveGlobalLevel(proximityLevel, lowHpLevel) {
+    if (proximityLevel === 'red' || lowHpLevel === 'red') return 'red';
+    if (proximityLevel === 'yellow' || lowHpLevel === 'yellow') return 'yellow';
+    return 'none';
+  }
+
   _publish() {
+    const previousWarnings = Bridge.getState().warnings ?? {};
+    const previousLowHpLevel = this._lowHpLevel;
+    const hpPct = this._hull / PLAYER_MAX_HP;
+    const lowHpLevel = this._deriveLowHpLevel(hpPct);
+    this._lowHpLevel = lowHpLevel;
+
+    const warnings = {
+      ...previousWarnings,
+      lowHpLevel,
+      lowHp: lowHpLevel !== 'none',
+      globalLevel: this._deriveGlobalLevel(previousWarnings.proximityLevel ?? 'none', lowHpLevel),
+    };
+
     Bridge.setState({
       hp:              this._hull,
       maxHp:           PLAYER_MAX_HP,
@@ -99,6 +145,18 @@ export class ProgressionSystem {
       lexHeatMax:      LEX_HEAT_MAX,
       isOverheated:    this._isOverheated,
       overheatTimeLeft: this._overheatLeft,
+      warnings,
     });
+
+    if (WARN_DEBUG && previousLowHpLevel !== lowHpLevel) {
+      console.log('[Warnings] lowHpLevel', previousLowHpLevel, '→', lowHpLevel, warnings);
+    }
+
+    if (previousLowHpLevel !== lowHpLevel) {
+      EventBus.emit(EventTypes.WARNING_CHANGED, {
+        source: 'progression',
+        warnings,
+      });
+    }
   }
 }

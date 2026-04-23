@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { AssetLoader } from '../core/AssetLoader.js';
 import { BLOOM_LAYER } from '../../shared/constants.js';
 import { Moon } from './Moon.js';
 import { Starfield } from './Starfield.js';
@@ -86,82 +87,92 @@ export class Arena {
   }
 
   _loadBackdropScenario1() {
-    const loader = new GLTFLoader();
-    loader.load('/models/radiation_of_space.glb', (gltf) => {
-      const sceneRoot = gltf?.scene;
-      if (!sceneRoot) return;
-      const wrapper = new THREE.Group();
-      wrapper.add(sceneRoot);
-      sceneRoot.traverse((node) => {
-        if (!node.isMesh) return;
-        node.castShadow = false; node.receiveShadow = false; node.frustumCulled = false;
-        const sourceMats = Array.isArray(node.material) ? node.material : [node.material];
-        const tunedMats = sourceMats.map((sourceMat) => {
-          if (!sourceMat) return sourceMat;
-          const mat = sourceMat.clone();
-          const baseColor = mat.color?.clone?.() ?? new THREE.Color(0x9fb7ff);
-          mat.fog = false; mat.depthWrite = false; mat.depthTest = true;
-          mat.toneMapped = false; mat.side = THREE.DoubleSide;
-          if ('color' in mat && mat.color) mat.color.copy(baseColor.lerp(new THREE.Color(0xffffff), 0.2));
-          if ('emissive' in mat && mat.emissive) { mat.emissive.copy(baseColor); mat.emissiveIntensity = Math.max(mat.emissiveIntensity ?? 0, 1.4); }
-          if (mat.transparent) mat.opacity = Math.max(mat.opacity ?? 1, 0.9);
-          mat.needsUpdate = true;
-          return mat;
-        });
-        node.material = Array.isArray(node.material) ? tunedMats : tunedMats[0];
+    const url = '/models/radiation_of_space.glb';
+    const cached = AssetLoader.getGLTF(url);
+    if (cached) { this._applyBackdropScenario1(cached); return; }
+    new GLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario1(gltf); },
+      undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
+  }
+
+  _applyBackdropScenario1(gltf) {
+    const sceneRoot = gltf?.scene;
+    if (!sceneRoot) return;
+    const wrapper = new THREE.Group();
+    wrapper.add(sceneRoot);
+    sceneRoot.traverse((node) => {
+      if (!node.isMesh) return;
+      node.castShadow = false; node.receiveShadow = false; node.frustumCulled = false;
+      const sourceMats = Array.isArray(node.material) ? node.material : [node.material];
+      const tunedMats = sourceMats.map((sourceMat) => {
+        if (!sourceMat) return sourceMat;
+        const mat = sourceMat.clone();
+        const baseColor = mat.color?.clone?.() ?? new THREE.Color(0x9fb7ff);
+        mat.fog = false; mat.depthWrite = false; mat.depthTest = true;
+        mat.toneMapped = false; mat.side = THREE.DoubleSide;
+        if ('color' in mat && mat.color) mat.color.copy(baseColor.lerp(new THREE.Color(0xffffff), 0.2));
+        if ('emissive' in mat && mat.emissive) { mat.emissive.copy(baseColor); mat.emissiveIntensity = Math.max(mat.emissiveIntensity ?? 0, 1.4); }
+        if (mat.transparent) mat.opacity = Math.max(mat.opacity ?? 1, 0.9);
+        mat.needsUpdate = true;
+        return mat;
       });
-      const initialBox = new THREE.Box3().setFromObject(wrapper);
-      if (!initialBox.isEmpty()) {
-        const center = initialBox.getCenter(new THREE.Vector3());
-        sceneRoot.position.sub(center);
-        const size = new THREE.Box3().setFromObject(wrapper).getSize(new THREE.Vector3());
-        wrapper.scale.setScalar(320 / (Math.max(size.x, size.y, size.z) || 1));
-        wrapper.position.z += -95 - new THREE.Box3().setFromObject(wrapper).max.z;
-      }
-      wrapper.position.x = 0; wrapper.position.y = -6;
-      wrapper.rotation.y = Math.PI; wrapper.renderOrder = -1000;
-      this._scene.add(wrapper);
-      this._backdrop = wrapper;
-    }, undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
+      node.material = Array.isArray(node.material) ? tunedMats : tunedMats[0];
+    });
+    const initialBox = new THREE.Box3().setFromObject(wrapper);
+    if (!initialBox.isEmpty()) {
+      const center = initialBox.getCenter(new THREE.Vector3());
+      sceneRoot.position.sub(center);
+      const size = new THREE.Box3().setFromObject(wrapper).getSize(new THREE.Vector3());
+      wrapper.scale.setScalar(320 / (Math.max(size.x, size.y, size.z) || 1));
+      wrapper.position.z += -95 - new THREE.Box3().setFromObject(wrapper).max.z;
+    }
+    wrapper.position.x = 0; wrapper.position.y = -6;
+    wrapper.rotation.y = Math.PI; wrapper.renderOrder = -1000;
+    this._scene.add(wrapper);
+    this._backdrop = wrapper;
   }
 
   _loadBackdropScenario2() {
-    const loader = new GLTFLoader();
-    loader.load('/models/radiation_of_space.glb', (gltf) => {
-      const sceneRoot = gltf?.scene;
-      if (!sceneRoot) return;
-      this._backdropMixer?.stopAllAction();
-      this._backdropMixer = null;
-      const wrapper = new THREE.Group();
-      wrapper.add(sceneRoot);
-      sceneRoot.traverse((node) => {
-        if (!node.isMesh) return;
-        node.castShadow = false; node.receiveShadow = false; node.frustumCulled = false;
-        node.layers.enable(BLOOM_LAYER);
-        const mats = Array.isArray(node.material) ? node.material : [node.material];
-        mats.forEach((mat) => {
-          if (!mat) return;
-          mat.fog = false; mat.depthWrite = false; mat.side = THREE.DoubleSide; mat.toneMapped = false;
-          if ('emissiveIntensity' in mat) mat.emissiveIntensity = Math.max(mat.emissiveIntensity ?? 0, 1.2);
-          if ('emissive' in mat && mat.emissive) mat.emissive.copy(mat.color?.clone?.() ?? new THREE.Color(0x8844ff));
-          mat.needsUpdate = true;
-        });
+    const url = '/models/radiation_of_space.glb';
+    const cached = AssetLoader.getGLTF(url);
+    if (cached) { this._applyBackdropScenario2(cached); return; }
+    new GLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario2(gltf); },
+      undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
+  }
+
+  _applyBackdropScenario2(gltf) {
+    const sceneRoot = gltf?.scene;
+    if (!sceneRoot) return;
+    this._backdropMixer?.stopAllAction();
+    this._backdropMixer = null;
+    const wrapper = new THREE.Group();
+    wrapper.add(sceneRoot);
+    sceneRoot.traverse((node) => {
+      if (!node.isMesh) return;
+      node.castShadow = false; node.receiveShadow = false; node.frustumCulled = false;
+      node.layers.enable(BLOOM_LAYER);
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach((mat) => {
+        if (!mat) return;
+        mat.fog = false; mat.depthWrite = false; mat.side = THREE.DoubleSide; mat.toneMapped = false;
+        if ('emissiveIntensity' in mat) mat.emissiveIntensity = Math.max(mat.emissiveIntensity ?? 0, 1.2);
+        if ('emissive' in mat && mat.emissive) mat.emissive.copy(mat.color?.clone?.() ?? new THREE.Color(0x8844ff));
+        mat.needsUpdate = true;
       });
-      const initialBox = new THREE.Box3().setFromObject(wrapper);
-      if (!initialBox.isEmpty()) {
-        const center = initialBox.getCenter(new THREE.Vector3());
-        sceneRoot.position.sub(center);
-        const size = new THREE.Box3().setFromObject(wrapper).getSize(new THREE.Vector3());
-        wrapper.scale.setScalar(360 / (Math.max(size.x, size.y, size.z) || 1));
-      }
-      wrapper.position.set(0, 0, -50); wrapper.rotation.set(0, 0, 0); wrapper.renderOrder = -1000;
-      this._scene.add(wrapper);
-      this._backdrop = wrapper;
-      const clips = gltf.animations || [];
-      if (clips.length > 0) {
-        this._backdropMixer = new THREE.AnimationMixer(wrapper);
-        for (const clip of clips) { const action = this._backdropMixer.clipAction(clip); action.reset(); action.play(); }
-      }
-    }, undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
+    });
+    const initialBox = new THREE.Box3().setFromObject(wrapper);
+    if (!initialBox.isEmpty()) {
+      const center = initialBox.getCenter(new THREE.Vector3());
+      sceneRoot.position.sub(center);
+      const size = new THREE.Box3().setFromObject(wrapper).getSize(new THREE.Vector3());
+      wrapper.scale.setScalar(360 / (Math.max(size.x, size.y, size.z) || 1));
+    }
+    wrapper.position.set(0, 0, -50); wrapper.rotation.set(0, 0, 0); wrapper.renderOrder = -1000;
+    this._scene.add(wrapper);
+    this._backdrop = wrapper;
+    const clips = gltf.animations || [];
+    if (clips.length > 0) {
+      this._backdropMixer = new THREE.AnimationMixer(wrapper);
+      for (const clip of clips) { const action = this._backdropMixer.clipAction(clip); action.reset(); action.play(); }
+    }
   }
 }

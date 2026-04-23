@@ -1,5 +1,6 @@
 ﻿import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { AssetLoader } from '../core/AssetLoader.js';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
 import { BLOOM_LAYER } from '../../shared/constants.js';
 
@@ -15,47 +16,51 @@ export class Moon {
   }
 
   load() {
+    const url = '/models/truth_about_the_dark_side_of_the_moon.glb';
+    const cached = AssetLoader.getGLTF(url);
+    if (cached) { this._applyMoonGLTF(cached); return; }
     const loader = new GLTFLoader();
-    loader.load('/models/truth_about_the_dark_side_of_the_moon.glb', (gltf) => {
-      const root = gltf?.scene;
-      if (!root) return;
-      const box = new THREE.Box3().setFromObject(root);
-      if (!box.isEmpty()) {
-        root.position.sub(box.getCenter(new THREE.Vector3()));
-        const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
-        root.scale.setScalar(38 / (Math.max(size.x, size.y, size.z) || 1));
-      }
-      root.traverse((node) => {
-        if (!node.isMesh) return;
-        node.layers.enable(BLOOM_LAYER);
-        const mats = Array.isArray(node.material) ? node.material : [node.material];
-        mats.forEach((mat) => {
-          if (!mat) return;
-          if (mat.isMeshBasicMaterial) {
-            const stdMat = new THREE.MeshStandardMaterial({ color: mat.color ?? new THREE.Color(0x888888), roughness: 0.85, metalness: 0.05 });
-            Object.assign(mat, stdMat);
-          } else {
-            mat.roughness = mat.roughness ?? 0.85;
-            mat.metalness = mat.metalness ?? 0.05;
-          }
-          mat.toneMapped = false;
-          mat.needsUpdate = true;
-        });
+    loader.load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyMoonGLTF(gltf); },
+      undefined, (err) => console.warn('Moon model could not be loaded.', err));
+  }
+
+  _applyMoonGLTF(gltf) {
+    const root = gltf?.scene;
+    if (!root) return;
+    const box = new THREE.Box3().setFromObject(root);
+    if (!box.isEmpty()) {
+      root.position.sub(box.getCenter(new THREE.Vector3()));
+      const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+      root.scale.setScalar(38 / (Math.max(size.x, size.y, size.z) || 1));
+    }
+    root.traverse((node) => {
+      if (!node.isMesh) return;
+      node.layers.enable(BLOOM_LAYER);
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach((mat) => {
+        if (!mat) return;
+        if (mat.isMeshBasicMaterial) {
+          const stdMat = new THREE.MeshStandardMaterial({ color: mat.color ?? new THREE.Color(0x888888), roughness: 0.85, metalness: 0.05 });
+          Object.assign(mat, stdMat);
+        } else {
+          mat.roughness = mat.roughness ?? 0.85;
+          mat.metalness = mat.metalness ?? 0.05;
+        }
+        mat.toneMapped = false;
+        mat.needsUpdate = true;
       });
-      root.position.set(0, 0, -78);
-      root.rotation.y = -Math.PI * 0.25;
-      this._scene.add(root);
-      this._moon = root;
-
-      const keyLight = new THREE.PointLight(0xffe8b0, 1800, 72);
-      keyLight.position.set(-22, 18, -65);
-      this._scene.add(keyLight);
-      this._moonLight = keyLight;
-
-      this._buildCore();
-      this._buildRings();
-      this._buildEnvironment();
-    }, undefined, (err) => console.warn('Moon model could not be loaded.', err));
+    });
+    root.position.set(0, 0, -78);
+    root.rotation.y = -Math.PI * 0.25;
+    this._scene.add(root);
+    this._moon = root;
+    const keyLight = new THREE.PointLight(0xffe8b0, 1800, 72);
+    keyLight.position.set(-22, 18, -65);
+    this._scene.add(keyLight);
+    this._moonLight = keyLight;
+    this._buildCore();
+    this._buildRings();
+    this._buildEnvironment();
   }
 
   update(delta) {

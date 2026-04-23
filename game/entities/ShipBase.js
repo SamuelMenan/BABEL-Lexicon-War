@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { AssetLoader } from '../core/AssetLoader.js';
 import { Entity } from './Entity.js';
 
 export class ShipBase extends Entity {
@@ -34,13 +35,13 @@ export class ShipBase extends Entity {
 
   _loadModel() {
     if (!this._modelUrl) return;
+    const cached = AssetLoader.getGLTF(this._modelUrl);
+    if (cached) { this._applyLoadedModel(cached); return; }
     this._loader.load(
       this._modelUrl,
-      (gltf) => this._applyLoadedModel(gltf),
+      (gltf) => { AssetLoader.setGLTF(this._modelUrl, gltf); this._applyLoadedModel(gltf); },
       undefined,
-      (err) => {
-        console.warn('Ship model load failed, using fallback ship.', err);
-      },
+      (err) => { console.warn('Ship model load failed, using fallback ship.', err); },
     );
   }
 

@@ -1,5 +1,6 @@
 ﻿import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { AssetLoader } from "../core/AssetLoader.js";
 import { ParticleEmitter } from "../rendering/ParticleEmitter.js";
 import { RacingPlayerShip } from "../entities/RacingPlayerShip.js";
 import { RacingOpponentShip } from "../entities/RacingOpponentShip.js";
@@ -185,30 +186,35 @@ export class RacingSceneManager {
     stars.layers.enable(BLOOM_LAYER); this._addToScene(stars);
   }
   _loadTunnel(){
-    const loader=new GLTFLoader();
-    loader.load("/models/24_dizzying_space_travel_-_inktober2019.glb",(gltf)=>{
-      const root=gltf.scene;
-      root.traverse(node=>{
-        if(!node.isMesh) return;
-        const lc=node.name.toLowerCase();
-        if(SHIP_HINTS.some(h=>lc.includes(h))){ node.visible=false; return; }
-        node.layers.enable(BLOOM_LAYER);
-      });
-      const box=new THREE.Box3().setFromObject(root);
-      const sz=new THREE.Vector3(); box.getSize(sz);
-      const maxDim=Math.max(sz.x,sz.y,sz.z);
-      if(maxDim>0) root.scale.setScalar(32/maxDim);
-      root.position.set(0,0,-25);
-      const wrapper=new THREE.Group();
-      wrapper.add(root);
-      this._tunnelWrapper=wrapper;
-      this._addToScene(wrapper);
-      if(gltf.animations&&gltf.animations.length){
-        this._tunnelMixer=new THREE.AnimationMixer(root);
-        this._tunnelMixer.timeScale=0.12;
-        gltf.animations.forEach(clip=>this._tunnelMixer.clipAction(clip).play());
-      }
-    },(xhr)=>{},(err)=>console.warn("tunnel load err",err));
+    const url="/models/24_dizzying_space_travel_-_inktober2019.glb";
+    const cached=AssetLoader.getGLTF(url);
+    if(cached){ this._applyTunnel(cached); return; }
+    new GLTFLoader().load(url,(gltf)=>{ AssetLoader.setGLTF(url,gltf); this._applyTunnel(gltf); },
+      (xhr)=>{},(err)=>console.warn('tunnel load err',err));
+  }
+
+  _applyTunnel(gltf){
+    const root=gltf.scene;
+    root.traverse(node=>{
+      if(!node.isMesh) return;
+      const lc=node.name.toLowerCase();
+      if(SHIP_HINTS.some(h=>lc.includes(h))){ node.visible=false; return; }
+      node.layers.enable(BLOOM_LAYER);
+    });
+    const box=new THREE.Box3().setFromObject(root);
+    const sz=new THREE.Vector3(); box.getSize(sz);
+    const maxDim=Math.max(sz.x,sz.y,sz.z);
+    if(maxDim>0) root.scale.setScalar(32/maxDim);
+    root.position.set(0,0,-25);
+    const wrapper=new THREE.Group();
+    wrapper.add(root);
+    this._tunnelWrapper=wrapper;
+    this._addToScene(wrapper);
+    if(gltf.animations&&gltf.animations.length){
+      this._tunnelMixer=new THREE.AnimationMixer(root);
+      this._tunnelMixer.timeScale=0.12;
+      gltf.animations.forEach(clip=>this._tunnelMixer.clipAction(clip).play());
+    }
   }
   _loadShips(){
     this._playerShip = new RacingPlayerShip(this._playerBase);

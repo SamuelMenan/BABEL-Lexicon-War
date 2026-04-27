@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
 import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const CAREER_MODEL_URL = '/models/spaceship.glb';
 const TARGET_MODEL_LENGTH = 5.0;
@@ -13,6 +14,9 @@ export class RacingPlayerShip extends ShipBase {
 
     this._light = null;
     this._lightRim = null;
+
+    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingPlayer);
+    this._booster.attachToShip(this._group);
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -115,5 +119,13 @@ export class RacingPlayerShip extends ShipBase {
 
     this._light.intensity = 2.1 + Math.sin(t * 3.0) * 0.08 + smoothBurst * 0.03;
     this._lightRim.intensity = 0.8 + Math.sin(t * 4.0) * 0.04 + smoothProgress * 0.1;
+
+    // smoothBurst > 0.05 means the player is actively typing fast → engines firing
+    this._booster.update(delta, smoothBurst > 0.05);
+  }
+
+  dispose() {
+    this._booster.dispose();
+    super.dispose();
   }
 }

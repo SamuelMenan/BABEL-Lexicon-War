@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
 import { COLORS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const COMBAT_MODEL_URL = '/models/spaceshipnew.glb';
 const TARGET_MODEL_LENGTH = 3.8;
@@ -22,6 +23,10 @@ export class CombatPlayerShip extends ShipBase {
     this._lightRim = null;
     this._lightFill = null;
     this._lightBack = null;
+
+    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.combatPlayer);
+    this._booster.attachToShip(this._group);
+    this._isThrusting = false;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -246,7 +251,13 @@ export class CombatPlayerShip extends ShipBase {
     this._lightRim.intensity = 2.6 + Math.sin(this._t * 4) * 0.14 + this._recoil * 0.4;
     if (this._lightFill) this._lightFill.intensity = 3.0 + Math.sin(this._t * 2.4) * 0.14 + this._recoil * 0.3;
     if (this._lightBack) this._lightBack.intensity = 3.4 + Math.sin(this._t * 2.2) * 0.16 + this._recoil * 0.4;
+
+    this._booster.update(delta, this._isThrusting);
+    if (this._isThrusting) this._isThrusting = false;   // auto-clear; caller sets it each frame
   }
+
+  /** Call each frame while the engines are firing (e.g. when targeting, boosting, or recoiling). */
+  setThrusting(on) { this._isThrusting = on; }
 
 
   startCollapse(scene, onDone) {
@@ -482,6 +493,7 @@ export class CombatPlayerShip extends ShipBase {
     this._cleanupCollapseFx(scene);
     this._collapseScene = null;
     this._collapseOnDone = null;
+    this._booster.dispose();
     super.dispose();
   }
 }

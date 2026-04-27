@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
 import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const ENEMY_MODEL_URL = '/models/spaceship__low_poly.glb';
 const TARGET_MODEL_LENGTH = 3.2;
@@ -14,6 +15,9 @@ export class RacingOpponentShip extends ShipBase {
     this._light = null;
     this._lightFill = null;
     this._lightRim = null;
+
+    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingOpponent);
+    this._booster.attachToShip(this._group);
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -120,5 +124,14 @@ export class RacingOpponentShip extends ShipBase {
     this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
     this._lightFill.intensity = 3.2 + Math.sin(t * 1.9) * 0.05;
     this._lightRim.intensity = 2.5 + Math.sin(t * 2.1) * 0.06;
+
+    // Opponent is "always" accelerating from the player's perspective;
+    // tie it to smoothLead so it dims when the player is winning.
+    this._booster.update(delta, smoothLead > -0.5);
+  }
+
+  dispose() {
+    this._booster.dispose();
+    super.dispose();
   }
 }

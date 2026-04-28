@@ -29,6 +29,12 @@ export class RacingPlayerShip extends ShipBase {
     glow.position.set(0, 0, 1.08);
     glow.layers.enable(BLOOM_LAYER);
     this._group.add(glow);
+
+    this._light = this._makePointLight(0xffd3a0, 3.2, 11.5, new THREE.Vector3(-0.18, 1.05, -0.42));
+    this._group.add(this._light);
+
+    this._lightRim = this._makePointLight(0xffb06a, 1.9, 9.5, new THREE.Vector3(0.14, -0.22, 1.35));
+    this._group.add(this._lightRim);
   }
 
   _buildFallbackShip() {

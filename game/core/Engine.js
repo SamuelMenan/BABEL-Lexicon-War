@@ -65,17 +65,31 @@ export class Engine {
   }
 
   _initLights() {
-    // Iluminacion neutra para no alterar los colores del modelo.
     const ambient = new THREE.AmbientLight(0x202020, 0.9);
     this.scene.add(ambient);
+    this._globalAmbient = ambient;
 
     const front = new THREE.PointLight(0xffffff, 1.2, 26);
     front.position.set(0, 2, 10);
     this.scene.add(front);
+    this._globalFront = front;
 
     const back = new THREE.PointLight(0x667788, 0.55, 32);
     back.position.set(0, -3, -15);
     this.scene.add(back);
+    this._globalBack = back;
+  }
+
+  suppressGlobalLights() {
+    if (this._globalAmbient) this._globalAmbient.intensity = 0;
+    if (this._globalFront)   this._globalFront.intensity   = 0;
+    if (this._globalBack)    this._globalBack.intensity    = 0;
+  }
+
+  restoreGlobalLights() {
+    if (this._globalAmbient) this._globalAmbient.intensity = 0.9;
+    if (this._globalFront)   this._globalFront.intensity   = 1.2;
+    if (this._globalBack)    this._globalBack.intensity    = 0.55;
   }
 
   _bindResize() {

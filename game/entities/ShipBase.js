@@ -110,6 +110,8 @@ export class ShipBase extends Entity {
       color,
       transparent: true,
       opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     return new THREE.Mesh(new THREE.SphereGeometry(radius, 8, 8), glowMat);
   }

@@ -39,9 +39,9 @@ export class PostProcessing {
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(w, h),
-      0.24,  // strength
-      0.08,  // radius
-      0.86,  // threshold
+      0.32,  // strength
+      0.10,  // radius
+      0.35,  // threshold — tuned for glow FX; ship meshes excluded from BLOOM_LAYER
     );
     this._bloomComposer.addPass(bloomPass);
 

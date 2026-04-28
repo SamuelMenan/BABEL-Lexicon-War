@@ -119,6 +119,21 @@ export const COLORS = {
   HUD_NEUTRAL:      '#888888',
 };
 
+
+// --- Racing material presets — same PBR baseline, different emissive tint ---
+export const RACING_MATERIALS = {
+  PLAYER: {
+    metalness: 0.72, roughness: 0.22,
+    emissiveR: 0.22, emissiveG: 0.12, emissiveB: 0.03,
+    emissiveIntensity: 0.9,
+  },
+  OPPONENT: {
+    metalness: 0.28, roughness: 0.52,
+    emissiveR: 0.30, emissiveG: 0.04, emissiveB: 0.02,
+    emissiveIntensity: 0.28,
+  },
+};
+
 // Palabras cortas (<=5 chars) — early waves
 export const WORD_POOL_SHORT = [
   'eco', 'red', 'eje', 'ion', 'arco', 'neo', 'sol', 'era', 'fin', 'lex',

@@ -1,6 +1,6 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
 
 const ENEMY_MODEL_URL = '/models/spaceship__low_poly.glb';
 const TARGET_MODEL_LENGTH = 3.2;
@@ -11,10 +11,6 @@ export class RacingOpponentShip extends ShipBase {
     this._basePosition = basePosition.clone();
     this._raceState = null;
 
-    this._light = null;
-    this._lightFill = null;
-    this._lightRim = null;
-
     this._buildFxNodes();
     this._buildFallbackShip();
     this._loadModel();
@@ -22,16 +18,7 @@ export class RacingOpponentShip extends ShipBase {
   }
 
   _buildFxNodes() {
-    this._light = this._makePointLight(0xff3344, 5.5, 30, new THREE.Vector3(0, 0.35, 1.5));
-    this._group.add(this._light);
-
-    this._lightFill = this._makePointLight(0xff2211, 3.2, 22, new THREE.Vector3(0, 0.25, -1.1));
-    this._group.add(this._lightFill);
-
-    this._lightRim = this._makePointLight(0xff6633, 2.5, 20, new THREE.Vector3(0, 2.0, 0));
-    this._group.add(this._lightRim);
-
-    const glow = this._makeGlow(0xff3311, 0.92, 0.18);
+    const glow = this._makeGlow(0xff6633, 0.95, 0.20);
     glow.position.set(0, 0, 1.08);
     glow.layers.enable(BLOOM_LAYER);
     this._group.add(glow);
@@ -70,29 +57,31 @@ export class RacingOpponentShip extends ShipBase {
   }
 
   _configureLoadedMesh(node) {
-    node.layers.enable(BLOOM_LAYER);
+    node.layers.set(0);
   }
 
   _tuneLoadedMesh(node) {
     if (!node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material) => {
-      if (!material) return;
-      if ('emissive' in material && material.emissive) {
-        material.emissive = new THREE.Color(0.7, 0.08, 0.05);
-        material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 1.8);
-      }
-      if ('metalness' in material) material.metalness = Math.min(1, (material.metalness ?? 0.5) + 0.08);
-      if ('roughness' in material) material.roughness = Math.max(0.12, (material.roughness ?? 0.7) - 0.15);
-      material.needsUpdate = true;
+    const mat = RACING_MATERIALS.OPPONENT;
+    const inputs = Array.isArray(node.material) ? node.material : [node.material];
+    const tuned = inputs.map((src) => {
+      const baseColor = src?.color ? src.color.clone().lerp(new THREE.Color(1, 1, 1), 0.45) : new THREE.Color(COLORS.ENEMY);
+      const std = new THREE.MeshStandardMaterial({
+        color: baseColor,
+        map: src?.map || null,
+        emissive: new THREE.Color(mat.emissiveR, mat.emissiveG, mat.emissiveB),
+        emissiveIntensity: mat.emissiveIntensity,
+        metalness: mat.metalness,
+        roughness: mat.roughness,
+        flatShading: true,
+      });
+      src?.dispose?.();
+      return std;
     });
+    node.material = Array.isArray(node.material) ? tuned : tuned[0];
   }
 
-  _afterLoadedModel(modelRoot) {
-    modelRoot.traverse((node) => {
-      if (node.isMesh) node.layers.enable(BLOOM_LAYER);
-    });
-  }
+  _afterLoadedModel(_modelRoot) {}
 
   setRaceState(state) {
     this._raceState = state;
@@ -116,9 +105,5 @@ export class RacingOpponentShip extends ShipBase {
     this._group.rotation.x = -0.05 + Math.sin(t * 1.4 + 0.3) * 0.05;
     this._group.rotation.y = Math.sin(t * 0.75 + 0.6) * 0.07;
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;
-
-    this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
-    this._lightFill.intensity = 3.2 + Math.sin(t * 1.9) * 0.05;
-    this._lightRim.intensity = 2.5 + Math.sin(t * 2.1) * 0.06;
   }
 }

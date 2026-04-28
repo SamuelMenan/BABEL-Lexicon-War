@@ -1,4 +1,4 @@
-﻿import * as THREE from "three";
+import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { AssetLoader } from "../core/AssetLoader.js";
 import { ParticleEmitter } from "../rendering/ParticleEmitter.js";
@@ -8,6 +8,7 @@ import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
 import { Bridge } from "../../shared/bridge.js";
 import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "../../shared/constants.js";
+import { RacingLightingRig } from "../rendering/RacingLightingRig.js";
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage"];
 
@@ -28,9 +29,11 @@ export class RacingSceneManager {
     this._smoothBurst=0;
     this._voidAnim=null;
     this._unsubs=[];
+    this._rig=null;
   }
   init(){
     this._buildBackground(); this._loadTunnel();
+    this._rig=new RacingLightingRig(this.scene); this._rig.init();
     this._loadShips();
     this._particles=new ParticleEmitter(this.scene);
     this._cam?.setRacingMode(true);
@@ -48,6 +51,7 @@ export class RacingSceneManager {
     this.scene.background=this._prevSceneBackground?this._prevSceneBackground.clone():null;
     this.scene.fog=this._prevSceneFog?this._prevSceneFog.clone():null;
     this._prevSceneBackground=null; this._prevSceneFog=null;
+    this._rig?.dispose(); this._rig=null;
     this._cam?.setRacingMode(false);
     for(const obj of this._sceneObjects) obj.removeFromParent();
     this._sceneObjects=[];
@@ -159,14 +163,9 @@ export class RacingSceneManager {
     this._addStarField(500, 200,0.25,0xd6d6d6);
     this._addStarField(60,  100,0.8, 0xffffff);
 
-    const ambient=new THREE.AmbientLight(0x1a1e2e,2.5);
+    const ambient=new THREE.AmbientLight(0x2a3050,1.8);
     this._addToScene(ambient);
-    const camFill=new THREE.PointLight(0xc8deff,2.2,28);
-    camFill.position.set(0,3,14);
-    this._addToScene(camFill);
-    const sideFill=new THREE.PointLight(0x2a3a6a,1.2,22);
-    sideFill.position.set(-8,1,8);
-    this._addToScene(sideFill);
+    // Point lights moved to RacingLightingRig
   }
   _addNebulaGlow(x,y,z,color,opacity,radius){
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false});

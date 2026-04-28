@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -39,9 +39,9 @@ export class PostProcessing {
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(w, h),
-      0.32,  // strength
-      0.10,  // radius
-      0.35,  // threshold — tuned for glow FX; ship meshes excluded from BLOOM_LAYER
+      0.55,  // strength
+      0.28,  // radius
+      0.28,  // threshold
     );
     this._bloomComposer.addPass(bloomPass);
 
@@ -186,3 +186,4 @@ export class PostProcessing {
     this._finalComposer.render();
   }
 }
+

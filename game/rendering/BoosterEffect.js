@@ -1,12 +1,13 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { BLOOM_LAYER } from '../../shared/constants.js';
 
 // --------------------------------------------------------------------------
 // Texture factories (lazily created, globally cached)
 // --------------------------------------------------------------------------
 
-let _flameTex  = null;
-let _innerTex  = null;
+let _flameTex = null;
+let _innerTex = null;
+let _starTex  = null;
 
 function _buildFlameTexture() {
   const size   = 256;
@@ -47,78 +48,115 @@ function _buildInnerTexture() {
   return tex;
 }
 
+// Star/cross burst — 4-axis spike pattern with soft core.
+// Produces the distinctive lens-flare cross when bloom radius is high.
+function _buildStarTexture() {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const cx = size / 2, cy = size / 2;
+
+  const drawStreak = (angle, halfLen, halfW) => {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    const g = ctx.createLinearGradient(-halfLen, 0, halfLen, 0);
+    g.addColorStop(0,    'rgba(255,255,255,0)');
+    g.addColorStop(0.28, 'rgba(255,255,255,0.08)');
+    g.addColorStop(0.50, 'rgba(255,255,255,1)');
+    g.addColorStop(0.72, 'rgba(255,255,255,0.08)');
+    g.addColorStop(1,    'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, halfLen, halfW, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  // Main cross (horizontal + vertical)
+  drawStreak(0,             size * 0.49, size * 0.024);
+  drawStreak(Math.PI / 2,   size * 0.49, size * 0.024);
+  // Diagonal cross — shorter, softer
+  drawStreak(Math.PI / 4,   size * 0.37, size * 0.015);
+  drawStreak(-Math.PI / 4,  size * 0.37, size * 0.015);
+
+  // Soft core glow on top
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.11);
+  g.addColorStop(0,   'rgba(255,255,255,1)');
+  g.addColorStop(0.5, 'rgba(255,255,255,0.85)');
+  g.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.generateMipmaps = false;
+  tex.minFilter = tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
 function _getFlame() { return (_flameTex ??= _buildFlameTexture()); }
-function _getInner() { return (_innerTex ??= _buildInnerTexture()); }
+function _getInner() { return (_innerTex  ??= _buildInnerTexture()); }
+function _getStar()  { return (_starTex   ??= _buildStarTexture());  }
 
 // --------------------------------------------------------------------------
 // Ship preset configs
 // --------------------------------------------------------------------------
-// localPosition — offset in LOCAL ship-group space to the engine nozzle.
-//   In all three ships the "back" of the hull sits at +Z in local space
-//   (the cone fallback geometry has its base at +Z; loaded models are
-//   centred and scaled identically). Tune these values after loading the
-//   actual GLB to place the effect exactly on the nozzle.
-//
-// bodyRadius  — half-width of the exhaust cone at its opening (nozzle end)
-// bodyLength  — length of the cone along the exhaust axis
-// flameSize   — diameter of the outer halo sprite
-// innerSize   — diameter of the bright hot-core sprite
-// lightColor  — PointLight hue
-// lightIntens — baseline PointLight intensity (idle)
-// lightDist   — PointLight falloff distance
-// lightOffset — PointLight shift relative to root (fine-tune light origin)
-// bodyColor   — exhaust cone tint
-// flameColor  — outer flame sprite tint
-// innerColor  — core sprite tint
 
 export const SHIP_BOOSTER_CONFIGS = {
 
   // spaceshipnew.glb  |  targetLength 3.8  |  warm orange emissive on hull
   combatPlayer: {
     localPosition: new THREE.Vector3(0, 0, 1.85),
-    bodyRadius:    0.13,
-    bodyLength:    0.52,
-    flameSize:     0.70,
-    innerSize:     0.28,
+    bodyRadius:    0.18,
+    bodyLength:    0.70,
+    flameSize:     1.40,
+    innerSize:     0.55,
+    starSize:      2.20,
     lightColor:    0x66bbff,
-    lightIntens:   2.4,
-    lightDist:     6.5,
-    lightOffset:   new THREE.Vector3(0, 0, 0.28),
+    lightIntens:   5.5,
+    lightDist:     10.0,
+    lightOffset:   new THREE.Vector3(0, 0, 0.35),
     bodyColor:     0x88ccff,
     flameColor:    0x44aaff,
     innerColor:    0xddf0ff,
+    starColor:     0x66ccff,
   },
 
   // spaceship.glb  |  targetLength 5.0  |  warm orange glow on hull
   racingPlayer: {
     localPosition: new THREE.Vector3(0, 0, 2.45),
-    bodyRadius:    0.17,
-    bodyLength:    0.68,
-    flameSize:     0.92,
-    innerSize:     0.38,
+    bodyRadius:    0.22,
+    bodyLength:    0.88,
+    flameSize:     1.85,
+    innerSize:     0.75,
+    starSize:      2.90,
     lightColor:    0xff9933,
-    lightIntens:   3.2,
-    lightDist:     8.5,
-    lightOffset:   new THREE.Vector3(0, 0, 0.38),
+    lightIntens:   6.5,
+    lightDist:     12.0,
+    lightOffset:   new THREE.Vector3(0, 0, 0.45),
     bodyColor:     0xffaa44,
     flameColor:    0xff8822,
     innerColor:    0xfff0dd,
+    starColor:     0xffbb55,
   },
 
   // spaceship__low_poly.glb  |  targetLength 3.2  |  red hull emissive
   racingOpponent: {
     localPosition: new THREE.Vector3(0, 0, 1.58),
-    bodyRadius:    0.13,
-    bodyLength:    0.50,
-    flameSize:     0.74,
-    innerSize:     0.30,
+    bodyRadius:    0.16,
+    bodyLength:    0.65,
+    flameSize:     1.50,
+    innerSize:     0.60,
+    starSize:      2.35,
     lightColor:    0xff4422,
-    lightIntens:   2.8,
-    lightDist:     7.0,
-    lightOffset:   new THREE.Vector3(0, 0, 0.26),
+    lightIntens:   5.8,
+    lightDist:     10.5,
+    lightOffset:   new THREE.Vector3(0, 0, 0.30),
     bodyColor:     0xff5533,
     flameColor:    0xff3311,
     innerColor:    0xffd0c0,
+    starColor:     0xff6644,
   },
 };
 
@@ -127,70 +165,75 @@ export const SHIP_BOOSTER_CONFIGS = {
 // --------------------------------------------------------------------------
 
 export class BoosterEffect {
-  /**
-   * @param {object} config  One of SHIP_BOOSTER_CONFIGS or a custom object.
-   */
   constructor(config = SHIP_BOOSTER_CONFIGS.racingPlayer) {
     this._t               = 0;
-    this._currentStrength = 0.28;   // starts at idle level — no pop on first frame
+    this._currentStrength = 0.28;
     this._cfg             = null;
 
-    // ---- scene-graph root (parented to the ship group) -------------------
     this._root = new THREE.Object3D();
     this._root.name = 'BoosterEffect';
 
-    // ---- exhaust cone body -----------------------------------------------
-    // Unit cone: CylinderGeometry(tipRadius=0, baseRadius=1, height=1)
-    // After rotateX(π/2): cylinder axis aligns with +Z
-    // After translate(0,0,0.5): base sits at Z=0 (nozzle), tip at Z=1 (exhaust end)
-    // Scale is applied per-frame via mesh.scale, driven by config + flicker.
+    // Exhaust cone body
     const coneGeo = new THREE.CylinderGeometry(0, 1, 1, 8, 1, true);
     coneGeo.rotateX(Math.PI / 2);
     coneGeo.translate(0, 0, 0.5);
 
     this._bodyMat = new THREE.MeshBasicMaterial({
-      color:      0xffffff,
+      color:       0xffffff,
       transparent: true,
-      opacity:    0.35,
-      blending:   THREE.AdditiveBlending,
-      depthWrite: false,
-      side:       THREE.BackSide,     // visible from outside the cone
+      opacity:     0.35,
+      blending:    THREE.AdditiveBlending,
+      depthWrite:  false,
+      side:        THREE.BackSide,
     });
     this._body = new THREE.Mesh(coneGeo, this._bodyMat);
     this._body.layers.enable(BLOOM_LAYER);
     this._root.add(this._body);
 
-    // ---- outer flame halo sprite -----------------------------------------
+    // Outer flame halo sprite
     this._flameMat = new THREE.SpriteMaterial({
-      map:        _getFlame(),
-      color:      0xffffff,
+      map:         _getFlame(),
+      color:       0xffffff,
       transparent: true,
-      opacity:    0.72,
-      blending:   THREE.AdditiveBlending,
-      depthWrite: false,
+      opacity:     0.72,
+      blending:    THREE.AdditiveBlending,
+      depthWrite:  false,
     });
     this._flame = new THREE.Sprite(this._flameMat);
     this._flame.layers.enable(BLOOM_LAYER);
     this._root.add(this._flame);
 
-    // ---- hot-core sprite -------------------------------------------------
+    // Hot-core sprite
     this._innerMat = new THREE.SpriteMaterial({
-      map:        _getInner(),
-      color:      0xffffff,
+      map:         _getInner(),
+      color:       0xffffff,
       transparent: true,
-      opacity:    0.90,
-      blending:   THREE.AdditiveBlending,
-      depthWrite: false,
+      opacity:     0.90,
+      blending:    THREE.AdditiveBlending,
+      depthWrite:  false,
     });
     this._inner = new THREE.Sprite(this._innerMat);
     this._inner.layers.enable(BLOOM_LAYER);
     this._root.add(this._inner);
 
-    // ---- dynamic point light ---------------------------------------------
+    // Star/cross burst sprite — driven by bloom for wide spike glow
+    this._starMat = new THREE.SpriteMaterial({
+      map:         _getStar(),
+      color:       0xffffff,
+      transparent: true,
+      opacity:     0.85,
+      blending:    THREE.AdditiveBlending,
+      depthWrite:  false,
+      rotation:    0,
+    });
+    this._star = new THREE.Sprite(this._starMat);
+    this._star.layers.enable(BLOOM_LAYER);
+    this._root.add(this._star);
+
+    // Dynamic point light
     this._light = new THREE.PointLight(0xffffff, 1, 8);
     this._root.add(this._light);
 
-    // Apply initial configuration
     this.setConfig(config);
   }
 
@@ -198,54 +241,37 @@ export class BoosterEffect {
   // Public API
   // -------------------------------------------------------------------------
 
-  /**
-   * Parent the booster assembly to a ship's group.
-   * Call once after constructing the ship.
-   * @param {THREE.Group} shipGroup  The ship's this._group
-   */
   attachToShip(shipGroup) {
     if (this._root.parent) this._root.parent.remove(this._root);
     shipGroup.add(this._root);
   }
 
-  /**
-   * Switch to a different ship's config at any time.
-   * Safe to call mid-session (e.g., when a model finishes loading).
-   * @param {object} cfg
-   */
   setConfig(cfg) {
     this._cfg = cfg;
 
-    // Root position: engine nozzle in local ship space
     this._root.position.copy(cfg.localPosition);
 
-    // Body baseline scale — update() multiplies on top of this
     this._body.scale.set(cfg.bodyRadius, cfg.bodyRadius, cfg.bodyLength);
     this._bodyMat.color.set(cfg.bodyColor);
 
-    // Flame sprite
     this._flameMat.color.set(cfg.flameColor);
     this._flame.scale.setScalar(cfg.flameSize);
     this._flame.position.set(0, 0, cfg.bodyLength * 0.45);
 
-    // Inner sprite (closer to nozzle opening)
     this._innerMat.color.set(cfg.innerColor);
     this._inner.scale.setScalar(cfg.innerSize);
     this._inner.position.set(0, 0, cfg.bodyLength * 0.12);
 
-    // Light
+    this._starMat.color.set(cfg.starColor);
+    this._star.scale.setScalar(cfg.starSize);
+    this._star.position.set(0, 0, cfg.bodyLength * 0.20);
+
     this._light.color.set(cfg.lightColor);
-    this._light.intensity = cfg.lightIntens * 0.35;   // starts at idle level
+    this._light.intensity = cfg.lightIntens * 0.35;
     this._light.distance  = cfg.lightDist;
     this._light.position.copy(cfg.lightOffset);
   }
 
-  /**
-   * Call every frame, ideally from within the ship's own update(delta) method.
-   *
-   * @param {number}  deltaTime      Seconds since last frame (same delta the GameLoop provides)
-   * @param {boolean} isAccelerating True when the ship is thrusting
-   */
   update(deltaTime, isAccelerating) {
     this._t += deltaTime;
 
@@ -253,19 +279,13 @@ export class BoosterEffect {
     const cfg = this._cfg;
     if (!cfg) return;
 
-    // ------------------------------------------------------------------
     // Multi-frequency flicker
-    // Three oscillators at non-harmonic frequencies prevent a mechanical
-    // pattern while staying cheaper than a noise function.
-    // ------------------------------------------------------------------
-    const f1 = Math.sin(t * 13.1) * 0.5 + 0.5;   // fast shimmer
-    const f2 = Math.sin(t *  5.7) * 0.5 + 0.5;   // medium pulse
-    const f3 = Math.sin(t *  1.9) * 0.5 + 0.5;   // slow breathe
-    const flicker = f1 * 0.20 + f2 * 0.48 + f3 * 0.32;   // weighted composite
+    const f1 = Math.sin(t * 13.1) * 0.5 + 0.5;
+    const f2 = Math.sin(t *  5.7) * 0.5 + 0.5;
+    const f3 = Math.sin(t *  1.9) * 0.5 + 0.5;
+    const flicker = f1 * 0.20 + f2 * 0.48 + f3 * 0.32;
 
-    // ------------------------------------------------------------------
-    // Strength: lerps between idle (dim, alive) and accel (full thrust)
-    // ------------------------------------------------------------------
+    // Strength lerp
     const targetStrength = isAccelerating
       ? 0.72 + flicker * 0.28
       : 0.25 + flicker * 0.14;
@@ -275,48 +295,41 @@ export class BoosterEffect {
     this._currentStrength += (targetStrength - this._currentStrength) * alpha;
     const s = this._currentStrength;
 
-    // ------------------------------------------------------------------
     // Exhaust cone
-    // scale.x/y = width (radius), scale.z = length along exhaust axis
-    // BackSide + AdditiveBlending → soft glow tube
-    // ------------------------------------------------------------------
     const coneW = cfg.bodyRadius * (0.50 + s * 0.80);
     const coneL = cfg.bodyLength * (0.55 + s * 0.75);
     this._body.scale.set(coneW, coneW, coneL);
     this._bodyMat.opacity = 0.08 + s * 0.36;
 
-    // ------------------------------------------------------------------
-    // Outer flame sprite (wider halo, positioned along exhaust axis)
-    // ------------------------------------------------------------------
+    // Outer flame sprite
     const flameFactor = 0.60 + s * 0.58 + flicker * 0.14;
     this._flame.scale.setScalar(cfg.flameSize * flameFactor);
     this._flameMat.opacity = 0.18 + s * 0.65;
 
-    // ------------------------------------------------------------------
-    // Inner core sprite (tight, high-opacity, faster flicker)
-    // ------------------------------------------------------------------
-    const coreF  = Math.sin(t * 19.3) * 0.5 + 0.5;   // extra-fast core shimmer
+    // Inner core sprite
+    const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
     const coreFactor = 0.68 + s * 0.42 + coreF * 0.10;
     this._inner.scale.setScalar(cfg.innerSize * coreFactor);
     this._innerMat.opacity = 0.55 + s * 0.40 + coreF * 0.05;
 
-    // ------------------------------------------------------------------
-    // Point light — intensity smoothly follows thrust strength
-    // ------------------------------------------------------------------
+    // Star burst sprite — slow rotation + pulse on thrust
+    const starPulse = 0.55 + s * 0.65 + flicker * 0.12;
+    this._star.scale.setScalar(cfg.starSize * starPulse);
+    this._starMat.opacity = isAccelerating
+      ? 0.50 + s * 0.45 + flicker * 0.08
+      : 0.15 + s * 0.20 + flicker * 0.05;
+    this._starMat.rotation += deltaTime * 0.35;
+
+    // Point light
     this._light.intensity = cfg.lightIntens * (0.30 + s * 0.90 + flicker * 0.18);
   }
 
-  /**
-   * Remove from scene and free GPU resources.
-   * Call when the ship is destroyed or the scene is torn down.
-   */
   dispose() {
     if (this._root.parent) this._root.parent.remove(this._root);
     this._body.geometry.dispose();
     this._bodyMat.dispose();
     this._flameMat.dispose();
     this._innerMat.dispose();
-    // Shared textures (_flameTex, _innerTex) are module-level singletons;
-    // do not dispose them here — other instances may still need them.
+    this._starMat.dispose();
   }
 }

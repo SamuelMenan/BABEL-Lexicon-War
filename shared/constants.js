@@ -134,6 +134,10 @@ export const RACING_MATERIALS = {
   },
 };
 
+if (typeof globalThis !== 'undefined') {
+  globalThis.RACING_MATERIALS = RACING_MATERIALS;
+}
+
 // Palabras cortas (<=5 chars) — early waves
 export const WORD_POOL_SHORT = [
   'eco', 'red', 'eje', 'ion', 'arco', 'neo', 'sol', 'era', 'fin', 'lex',

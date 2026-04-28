@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
-const ENEMY_MODEL_URL = '/models/spaceship__low_poly.glb';
+const ENEMY_MODEL_URL = '/models/waldeinsamkeit-class_strategic_survey_vessel.glb';
 const TARGET_MODEL_LENGTH = 3.2;
 
 export class RacingOpponentShip extends ShipBase {
@@ -26,10 +26,19 @@ export class RacingOpponentShip extends ShipBase {
   }
 
   _buildFxNodes() {
-    const glow = this._makeGlow(0xff6633, 0.95, 0.20);
+    const glow = this._makeGlow(0xffffff, 0.95, 0.20);
     glow.position.set(0, 0, 1.08);
     glow.layers.enable(BLOOM_LAYER);
     this._group.add(glow);
+
+    this._light = this._makePointLight(0xffffff, 5.5, 14.0, new THREE.Vector3(0, 0.4, -0.3));
+    this._group.add(this._light);
+
+    this._lightFill = this._makePointLight(0xffffff, 3.2, 10.0, new THREE.Vector3(0.2, -0.2, 0.5));
+    this._group.add(this._lightFill);
+
+    this._lightRim = this._makePointLight(0xffffff, 2.5, 8.0, new THREE.Vector3(-0.15, 0.1, 1.2));
+    this._group.add(this._lightRim);
   }
 
   _buildFallbackShip() {
@@ -71,22 +80,17 @@ export class RacingOpponentShip extends ShipBase {
   _tuneLoadedMesh(node) {
     if (!node.material) return;
     const mat = RACING_MATERIALS.OPPONENT;
-    const inputs = Array.isArray(node.material) ? node.material : [node.material];
-    const tuned = inputs.map((src) => {
-      const baseColor = src?.color ? src.color.clone().lerp(new THREE.Color(1, 1, 1), 0.45) : new THREE.Color(COLORS.ENEMY);
-      const std = new THREE.MeshStandardMaterial({
-        color: baseColor,
-        map: src?.map || null,
-        emissive: new THREE.Color(mat.emissiveR, mat.emissiveG, mat.emissiveB),
-        emissiveIntensity: mat.emissiveIntensity,
-        metalness: mat.metalness,
-        roughness: mat.roughness,
-        flatShading: true,
-      });
-      src?.dispose?.();
-      return std;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material) => {
+      if (!material) return;
+      if ('emissive' in material && material.emissive) {
+        material.emissive = new THREE.Color(mat.emissiveR, mat.emissiveG, mat.emissiveB);
+        material.emissiveIntensity = mat.emissiveIntensity;
+      }
+      if ('metalness' in material) material.metalness = mat.metalness;
+      if ('roughness' in material) material.roughness = mat.roughness;
+      material.needsUpdate = true;
     });
-    node.material = Array.isArray(node.material) ? tuned : tuned[0];
   }
 
   _afterLoadedModel(_modelRoot) {}

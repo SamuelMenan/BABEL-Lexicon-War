@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const ENEMY_MODEL_URL = '/models/spaceship__low_poly.glb';
 const TARGET_MODEL_LENGTH = 3.2;
@@ -10,6 +11,13 @@ export class RacingOpponentShip extends ShipBase {
     super({ modelUrl: ENEMY_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: 0 });
     this._basePosition = basePosition.clone();
     this._raceState = null;
+
+    this._light = null;
+    this._lightFill = null;
+    this._lightRim = null;
+
+    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingOpponent);
+    this._booster.attachToShip(this._group);
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -105,5 +113,18 @@ export class RacingOpponentShip extends ShipBase {
     this._group.rotation.x = -0.05 + Math.sin(t * 1.4 + 0.3) * 0.05;
     this._group.rotation.y = Math.sin(t * 0.75 + 0.6) * 0.07;
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;
+
+    this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
+    this._lightFill.intensity = 3.2 + Math.sin(t * 1.9) * 0.05;
+    this._lightRim.intensity = 2.5 + Math.sin(t * 2.1) * 0.06;
+
+    // Opponent is "always" accelerating from the player's perspective;
+    // tie it to smoothLead so it dims when the player is winning.
+    this._booster.update(delta, smoothLead > -0.5);
+  }
+
+  dispose() {
+    this._booster.dispose();
+    super.dispose();
   }
 }

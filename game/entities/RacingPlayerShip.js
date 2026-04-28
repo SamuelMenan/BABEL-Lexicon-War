@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
 import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const CAREER_MODEL_URL = '/models/spaceship.glb';
 const TARGET_MODEL_LENGTH = 5.0;
@@ -10,6 +11,12 @@ export class RacingPlayerShip extends ShipBase {
     super({ modelUrl: CAREER_MODEL_URL, targetLength: TARGET_MODEL_LENGTH });
     this._basePosition = basePosition.clone();
     this._raceState = null;
+
+    this._light = null;
+    this._lightRim = null;
+
+    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingPlayer);
+    this._booster.attachToShip(this._group);
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -92,7 +99,7 @@ export class RacingPlayerShip extends ShipBase {
 
     if (!this._raceState) return;
 
-    const { t, smoothLead, smoothBurst, typedAdvance, progressPush } = this._raceState;
+    const { t, smoothLead, smoothBurst, smoothProgress, typedAdvance, progressPush } = this._raceState;
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.45) * 0.28 + Math.cos(t * 0.68) * 0.14 + smoothLead * 0.06;
     this._group.position.y = this._basePosition.y + Math.sin(t * 2.1) * 0.24 + Math.cos(t * 1.3) * 0.11 + smoothBurst * 0.12;
@@ -100,5 +107,15 @@ export class RacingPlayerShip extends ShipBase {
     this._group.rotation.x = -0.08 + Math.sin(t * 1.9) * 0.06 - smoothBurst * 0.04;
     this._group.rotation.y = Math.PI + Math.sin(t * 0.92) * 0.08;
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
+
+    this._light.intensity = 2.1 + Math.sin(t * 3.0) * 0.08 + smoothBurst * 0.03;
+    this._lightRim.intensity = 0.8 + Math.sin(t * 4.0) * 0.04 + smoothProgress * 0.1;
+
+    this._booster.update(delta, smoothBurst > 0.05);
+  }
+
+  dispose() {
+    this._booster.dispose();
+    super.dispose();
   }
 }

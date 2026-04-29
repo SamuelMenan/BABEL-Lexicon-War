@@ -13,8 +13,6 @@ export class RacingOpponentShip extends ShipBase {
     this._raceState = null;
 
     this._light = null;
-    this._lightFill = null;
-    this._lightRim = null;
 
     this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingOpponent);
     this._booster.attachToShip(this._group);
@@ -33,12 +31,6 @@ export class RacingOpponentShip extends ShipBase {
 
     this._light = this._makePointLight(0xffffff, 5.5, 14.0, new THREE.Vector3(0, 0.4, -0.3));
     this._group.add(this._light);
-
-    this._lightFill = this._makePointLight(0xffffff, 3.2, 10.0, new THREE.Vector3(0.2, -0.2, 0.5));
-    this._group.add(this._lightFill);
-
-    this._lightRim = this._makePointLight(0xffffff, 2.5, 8.0, new THREE.Vector3(-0.15, 0.1, 1.2));
-    this._group.add(this._lightRim);
   }
 
   _buildFallbackShip() {
@@ -84,7 +76,7 @@ export class RacingOpponentShip extends ShipBase {
     materials.forEach((material) => {
       if (!material) return;
       if ('emissive' in material && material.emissive) {
-        material.emissive = new THREE.Color(mat.emissiveR, mat.emissiveG, mat.emissiveB);
+        material.emissive.setRGB(mat.emissiveR, mat.emissiveG, mat.emissiveB);
         material.emissiveIntensity = mat.emissiveIntensity;
       }
       if ('metalness' in material) material.metalness = mat.metalness;
@@ -119,8 +111,6 @@ export class RacingOpponentShip extends ShipBase {
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;
 
     this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
-    this._lightFill.intensity = 3.2 + Math.sin(t * 1.9) * 0.05;
-    this._lightRim.intensity = 2.5 + Math.sin(t * 2.1) * 0.06;
 
     // Opponent is "always" accelerating from the player's perspective;
     // tie it to smoothLead so it dims when the player is winning.

@@ -55,7 +55,7 @@ export class ShipBase extends Entity {
 
     modelRoot.traverse((node) => {
       if (!node.isMesh) return;
-      node.castShadow = true;
+      node.castShadow = false;
       node.receiveShadow = false;
       this._configureLoadedMesh(node);
       this._tuneLoadedMesh(node);
@@ -106,6 +106,8 @@ export class ShipBase extends Entity {
   }
 
   _makeGlow(color, opacity, radius) {
+    // Shared unit sphere scaled to radius — avoids a unique GPU buffer per glow sphere.
+    const geo = AssetLoader.getGeo('sphere-8') ?? new THREE.SphereGeometry(1, 8, 8);
     const glowMat = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
@@ -113,7 +115,9 @@ export class ShipBase extends Entity {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    return new THREE.Mesh(new THREE.SphereGeometry(radius, 8, 8), glowMat);
+    const mesh = new THREE.Mesh(geo, glowMat);
+    mesh.scale.setScalar(radius);
+    return mesh;
   }
 
   dispose() {

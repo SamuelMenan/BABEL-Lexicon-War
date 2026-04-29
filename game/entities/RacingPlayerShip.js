@@ -13,7 +13,6 @@ export class RacingPlayerShip extends ShipBase {
     this._raceState = null;
 
     this._light = null;
-    this._lightRim = null;
 
     this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingPlayer);
     this._booster.attachToShip(this._group);
@@ -32,9 +31,6 @@ export class RacingPlayerShip extends ShipBase {
 
     this._light = this._makePointLight(0xffd3a0, 3.2, 11.5, new THREE.Vector3(-0.18, 1.05, -0.42));
     this._group.add(this._light);
-
-    this._lightRim = this._makePointLight(0xffb06a, 1.9, 9.5, new THREE.Vector3(0.14, -0.22, 1.35));
-    this._group.add(this._lightRim);
   }
 
   _buildFallbackShip() {
@@ -80,7 +76,7 @@ export class RacingPlayerShip extends ShipBase {
     materials.forEach((material) => {
       if (!material) return;
       if ('emissive' in material && material.emissive) {
-        material.emissive = new THREE.Color(mat.emissiveR, mat.emissiveG, mat.emissiveB);
+        material.emissive.setRGB(mat.emissiveR, mat.emissiveG, mat.emissiveB);
         material.emissiveIntensity = mat.emissiveIntensity;
       }
       if ('metalness' in material) material.metalness = mat.metalness;
@@ -115,7 +111,6 @@ export class RacingPlayerShip extends ShipBase {
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
 
     this._light.intensity = 2.1 + Math.sin(t * 3.0) * 0.08 + smoothBurst * 0.03;
-    this._lightRim.intensity = 0.8 + Math.sin(t * 4.0) * 0.04 + smoothProgress * 0.1;
 
     this._booster.update(delta, smoothBurst > 0.05);
   }

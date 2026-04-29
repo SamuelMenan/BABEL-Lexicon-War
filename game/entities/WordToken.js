@@ -2,6 +2,8 @@
 // La posición 3D del enemigo se convierte a coordenadas de pantalla cada frame.
 // El DOM lo maneja HUDCanvas.js — WordToken solo expone los datos.
 
+import * as THREE from 'three';
+
 export class WordToken {
   constructor(enemy) {
     this.enemy   = enemy;

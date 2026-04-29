@@ -5,23 +5,32 @@ import { PostProcessing } from '../rendering/PostProcessing.js';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { COLORS } from '../../shared/constants.js';
+import { detectQualityTier, setQualityTier, getQualityTier } from '../../shared/qualitySettings.js';
 
 export class Engine {
   constructor(mountEl) {
-    this.mountEl  = mountEl;
-    this.loop     = new GameLoop();
-    this.systems  = {};
-    this.scene    = null;
-    this._cam     = null;
-    this.renderer = null;
-    this._post    = null;
+    this.mountEl    = mountEl;
+    this.loop       = new GameLoop();
+    this.systems    = {};
+    this.scene      = null;
+    this._cam       = null;
+    this.renderer   = null;
+    this._post      = null;
+    this.qualityTier = null; // set in init() after renderer is available
   }
+
+  get quality() { return this.qualityTier; }
 
   get camera()        { return this._cam.instance; }
   get camController() { return this._cam; }
 
   init() {
     this._initRenderer();
+    // Detect hardware capability immediately after renderer is created.
+    const tier = detectQualityTier(this.renderer);
+    setQualityTier(tier);
+    this.qualityTier = tier;
+
     this._initScene();
     this._initCamera();
     this._initLights();
@@ -105,6 +114,14 @@ export class Engine {
 
   onPlayerDamage(amount) {
     this._post?.onPlayerDamage(amount);
+  }
+
+  invalidateBloomCache() {
+    this._post?.invalidateBloomCache();
+  }
+
+  setBloomEnabled(enabled) {
+    this._post?.setBloomEnabled(enabled);
   }
 
   start()   { this.loop.start(); }

@@ -10,6 +10,7 @@ import { LOADING_STAGES, ASSET_MANIFESTS, GAME_MODES } from '../../shared/consta
 const _gltfCache = new Map();  // url → gltf
 const _geoCache  = new Map();  // key → THREE.BufferGeometry
 const _texCache  = new Map();  // key → THREE.Texture
+const _matCache  = new Map();  // key → THREE.Material
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,7 @@ function _buildGeometryCache() {
     base.dispose();
   }
   if (!_geoCache.has('sphere-8'))   _geoCache.set('sphere-8', new THREE.SphereGeometry(1, 8, 8));
+  if (!_geoCache.has('sphere-12'))  _geoCache.set('sphere-12', new THREE.SphereGeometry(1, 12, 12));
   if (!_geoCache.has('torus-6-24')) _geoCache.set('torus-6-24', new THREE.TorusGeometry(1, 0.04, 6, 24));
 }
 
@@ -129,4 +131,8 @@ export const AssetLoader = {
   getTex(key)            { return _texCache.get(key); },
   setTex(key, tex)       { _texCache.set(key, tex); },
   hasGLTF(url)           { return _gltfCache.has(url); },
+
+  getMat(key)            { return _matCache.get(key); },
+  setMat(key, mat)       { _matCache.set(key, mat); },
+  setGeo(key, geo)       { _geoCache.set(key, geo); },
 };

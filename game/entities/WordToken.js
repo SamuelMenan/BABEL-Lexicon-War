@@ -28,5 +28,4 @@ export class WordToken {
   }
 }
 
-import * as THREE from 'three';
 WordToken._tempPos = new THREE.Vector3();

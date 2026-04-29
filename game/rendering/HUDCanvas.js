@@ -125,6 +125,5 @@ export class HUDCanvas {
   }
 }
 
-import * as THREE from 'three';
 HUDCanvas._tempNdc1 = new THREE.Vector3();
 HUDCanvas._tempNdc2 = new THREE.Vector3();

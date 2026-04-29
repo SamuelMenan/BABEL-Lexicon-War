@@ -44,6 +44,35 @@ const CONFIGS = {
   },
 };
 
+const _projDataCache = new Map();
+function getProjData(type) {
+  if (_projDataCache.has(type)) return _projDataCache.get(type);
+  const cfg = CONFIGS[type] ?? CONFIGS.standard;
+  
+  const coreGeo = new THREE.CylinderGeometry(cfg.coreR, cfg.coreR, cfg.coreLen, 5);
+  coreGeo.rotateX(Math.PI / 2);
+  const coreMat = new THREE.MeshBasicMaterial({ color: cfg.coreColor });
+  
+  const glowGeo = new THREE.CylinderGeometry(cfg.glowR0, cfg.glowR1, cfg.glowLen, 5);
+  glowGeo.rotateX(Math.PI / 2);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: cfg.glowColor, transparent: true, opacity: cfg.glowOp,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  
+  const tipGeo = new THREE.SphereGeometry(cfg.tipR, 5, 5);
+  const tipMat = new THREE.MeshBasicMaterial({ color: cfg.tipColor });
+  
+  const trailMat = new THREE.LineBasicMaterial({
+    color: cfg.trailColor, transparent: true, opacity: cfg.trailOp,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  
+  const data = { coreGeo, coreMat, glowGeo, glowMat, tipGeo, tipMat, trailMat };
+  _projDataCache.set(type, data);
+  return data;
+}
+
 export class Projectile extends Entity {
   constructor(origin, target, onHit, type = PROJECTILE_TYPES.STANDARD) {
     super();
@@ -54,46 +83,35 @@ export class Projectile extends Entity {
     this._speed    = cfg.speed;
     this._life     = cfg.life;
     this._trailMax = cfg.trail;
+    this._tempPos  = origin.clone();
+    
+    // We try to fill trail point arrays initially rather than allocating inside loop
     this._trailPts = Array.from({ length: cfg.trail }, () => origin.clone());
 
     this.mesh = new THREE.Group();
     this.mesh.position.copy(origin);
 
+    const d = getProjData(type);
+
     // core rod
-    const coreGeo = new THREE.CylinderGeometry(cfg.coreR, cfg.coreR, cfg.coreLen, 5);
-    coreGeo.rotateX(Math.PI / 2);
-    const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: cfg.coreColor }));
+    const core = new THREE.Mesh(d.coreGeo, d.coreMat);
     core.layers.enable(BLOOM_LAYER);
     this.mesh.add(core);
 
     // outer glow (tapered)
-    const glowGeo = new THREE.CylinderGeometry(cfg.glowR0, cfg.glowR1, cfg.glowLen, 5);
-    glowGeo.rotateX(Math.PI / 2);
-    const glow = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({
-      color: cfg.glowColor, transparent: true, opacity: cfg.glowOp,
-      depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
+    const glow = new THREE.Mesh(d.glowGeo, d.glowMat);
     glow.layers.enable(BLOOM_LAYER);
     this.mesh.add(glow);
 
     // nose tip
-    const tip = new THREE.Mesh(
-      new THREE.SphereGeometry(cfg.tipR, 5, 5),
-      new THREE.MeshBasicMaterial({ color: cfg.tipColor }),
-    );
+    const tip = new THREE.Mesh(d.tipGeo, d.tipMat);
     tip.position.z = -(cfg.coreLen / 2 + cfg.tipR * 0.5);
     tip.layers.enable(BLOOM_LAYER);
     this.mesh.add(tip);
 
     // trail line
     this._trailGeo  = new THREE.BufferGeometry().setFromPoints(this._trailPts);
-    this._trailLine = new THREE.Line(
-      this._trailGeo,
-      new THREE.LineBasicMaterial({
-        color: cfg.trailColor, transparent: true, opacity: cfg.trailOp,
-        depthWrite: false, blending: THREE.AdditiveBlending,
-      }),
-    );
+    this._trailLine = new THREE.Line(this._trailGeo, d.trailMat);
     this._trailLine.layers.enable(BLOOM_LAYER);
   }
 
@@ -110,15 +128,28 @@ export class Projectile extends Entity {
     if (!this._target.active)   { this.active = false; return; }
 
     const targetPos = this._target.position;
-    const dir = new THREE.Vector3().subVectors(targetPos, this.mesh.position).normalize();
-    this.mesh.position.addScaledVector(dir, this._speed * delta);
+    
+    // Optimize: REUSE _tempPos instead of creating new Vector3 every frame
+    this._tempPos.subVectors(targetPos, this.mesh.position).normalize();
+    this.mesh.position.addScaledVector(this._tempPos, this._speed * delta);
     this.mesh.lookAt(targetPos);
 
-    this._trailPts.unshift(this.mesh.position.clone());
-    if (this._trailPts.length > this._trailMax) this._trailPts.pop();
-    this._trailGeo.setFromPoints(this._trailPts);
+    // Optimize array shift by shifting elements manually or re-assigning values (Object Pooling style inside array)
+    const lastPos = this._trailPts.pop();
+    lastPos.copy(this.mesh.position);
+    this._trailPts.unshift(lastPos);
+    
+    // Update geo without instantiating new vectors
+    const positions = this._trailGeo.attributes.position.array;
+    for(let i=0; i<this._trailPts.length; i++) {
+        const pt = this._trailPts[i];
+        positions[i*3]   = pt.x;
+        positions[i*3+1] = pt.y;
+        positions[i*3+2] = pt.z;
+    }
+    this._trailGeo.attributes.position.needsUpdate = true;
 
-    if (this.mesh.position.distanceTo(targetPos) < 1.0) {
+    if (this.mesh.position.distanceToSquared(targetPos) < 1.0) { // distanceToSquared is faster
       this._onHit(); this.active = false;
     }
   }

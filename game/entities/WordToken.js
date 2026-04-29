@@ -16,14 +16,17 @@ export class WordToken {
 
   // Coordenadas de pantalla — calculadas por HUDCanvas con cámara
   screenPos(camera, width, height) {
-    const pos = this.enemy.position.clone();
-    pos.y += 1.2; // offset sobre el enemigo
+    WordToken._tempPos.copy(this.enemy.position);
+    WordToken._tempPos.y += 1.2; // offset sobre el enemigo
 
-    pos.project(camera);
+    WordToken._tempPos.project(camera);
 
     return {
-      x: (pos.x * 0.5 + 0.5) * width,
-      y: (-pos.y * 0.5 + 0.5) * height,
+      x: (WordToken._tempPos.x * 0.5 + 0.5) * width,
+      y: (-WordToken._tempPos.y * 0.5 + 0.5) * height,
     };
   }
 }
+
+import * as THREE from 'three';
+WordToken._tempPos = new THREE.Vector3();

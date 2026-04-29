@@ -333,12 +333,10 @@ export class CombatEnemy extends Entity {
     this._t += delta;
     const cfg = this._cfg;
 
-    const dir = new THREE.Vector3()
-      .subVectors(new THREE.Vector3(0, 0.2, 2), this._group.position)
-      .normalize();
-    this._group.position.addScaledVector(dir, this.speed * cfg.speedMult * delta);
+    CombatEnemy._tempDir.subVectors(CombatEnemy.PLAYER_POS, this._group.position).normalize();
+    this._group.position.addScaledVector(CombatEnemy._tempDir, this.speed * cfg.speedMult * delta);
 
-    this._updateSpecial(delta, dir);
+    this._updateSpecial(delta, CombatEnemy._tempDir);
 
     this._group.rotation.x += delta * cfg.tumble[0];
     this._group.rotation.y += delta * cfg.tumble[1];
@@ -366,6 +364,9 @@ export class CombatEnemy extends Entity {
     }
   }
 
-  get distanceToPlayer() { return this._group.position.distanceTo(new THREE.Vector3(0, 0.2, 2)); }
+  get distanceToPlayer() { return this._group.position.distanceTo(CombatEnemy.PLAYER_POS); }
   get position()         { return this._group.position; }
 }
+
+CombatEnemy.PLAYER_POS = new THREE.Vector3(0, 0.2, 2);
+CombatEnemy._tempDir = new THREE.Vector3();

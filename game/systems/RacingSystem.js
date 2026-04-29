@@ -1,4 +1,4 @@
-﻿import { EventBus } from '../../shared/events.js';
+import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import {
@@ -36,6 +36,19 @@ export class RacingSystem {
     this._timeElapsed    = 0;
 
     this._unsubs = [];
+
+    // Pre-allocated partials — avoids a new object literal every frame.
+    this._stateCountdown     = { countdown: 0 };
+    this._stateCountdownStop = { countdownActive: false, countdown: 0 };
+    this._stateMain = {
+      opponentPhraseProgress: 0,
+      playerPhrasesCompleted: 0,
+      phraseProgress:         0,
+      distanceTraveled:       0,
+      timeRemaining:          0,
+      flowMultiplier:         1.0,
+      flowStreak:             0,
+    };
   }
 
   init() {
@@ -95,11 +108,12 @@ export class RacingSystem {
 
     if (this._countdownActive) {
       this._countdown -= delta;
-      Bridge.setState({ countdown: Math.max(0, Math.ceil(this._countdown)) });
+      this._stateCountdown.countdown = Math.max(0, Math.ceil(this._countdown));
+      Bridge.setState(this._stateCountdown);
       if (this._countdown <= 0) {
         this._countdownActive = false;
         this._active = true;
-        Bridge.setState({ countdownActive: false, countdown: 0 });
+        Bridge.setState(this._stateCountdownStop);
         this._setWord();
       }
       return;
@@ -111,20 +125,19 @@ export class RacingSystem {
     const timeRemaining = Math.max(0, RACE_DURATION - this._timeElapsed);
     const timeProgress  = Math.min(1, this._timeElapsed / RACE_DURATION);
 
-    const wpm = Bridge.getState().wpm;
+    const wpm = Bridge.peekState().wpm;
     if (wpm > this._peakWPM) this._peakWPM = wpm;
 
     this._oppDone += OPP_PHRASES_PER_SEC * delta;
 
-    Bridge.setState({
-      opponentPhraseProgress: this._oppDone,
-      playerPhrasesCompleted: this._playerDone,
-      phraseProgress:         timeProgress,       // drives visual tunnel
-      distanceTraveled:       Math.round(timeProgress * RACE_TARGET_DISTANCE),
-      timeRemaining,
-      flowMultiplier:         this._flowMultiplier,
-      flowStreak:             this._flowStreak,
-    });
+    this._stateMain.opponentPhraseProgress = this._oppDone;
+    this._stateMain.playerPhrasesCompleted = this._playerDone;
+    this._stateMain.phraseProgress         = timeProgress;
+    this._stateMain.distanceTraveled       = Math.round(timeProgress * RACE_TARGET_DISTANCE);
+    this._stateMain.timeRemaining          = timeRemaining;
+    this._stateMain.flowMultiplier         = this._flowMultiplier;
+    this._stateMain.flowStreak             = this._flowStreak;
+    Bridge.setState(this._stateMain);
 
     if (timeRemaining <= 0) this._onTimeUp();
   }
@@ -185,7 +198,7 @@ export class RacingSystem {
   _onTimeUp() {
     this._finished = true;
     this._active   = false;
-    const state    = Bridge.getState();
+    const state    = Bridge.peekState();
     const victory  = this._playerDone > Math.floor(this._oppDone);
 
     const payload = {

@@ -30,6 +30,8 @@ export class RacingSceneManager {
     this._voidAnim=null;
     this._unsubs=[];
     this._rig=null;
+    // Pre-allocated to avoid a new object literal every frame.
+    this._raceState={ t:0, smoothProgress:0, smoothLead:0, smoothBurst:0, progressPush:0, typedAdvance:0, wpm:0 };
   }
   init(){
     this._buildBackground(); this._loadTunnel();
@@ -64,7 +66,7 @@ export class RacingSceneManager {
     // void animation overrides everything
     if(this._voidAnim){ this._updateVoidAnim(delta); return; }
 
-    const state=Bridge.getState(); const wpm=state.wpm||0;
+    const state=Bridge.peekState(); const wpm=state.wpm||0;
     this._playerWordBurst=Math.max(0,this._playerWordBurst-delta*1.8);
     this._playerWordLead=Math.max(0,this._playerWordLead-delta*0.5);
 
@@ -86,17 +88,15 @@ export class RacingSceneManager {
     const progressPush =this._smoothProgress*24;
     const typedAdvance =(this._playerWordLead+this._smoothBurst*0.8)*0.4;
 
-    const raceState={
-      t:this._t,
-      smoothProgress:this._smoothProgress,
-      smoothLead:this._smoothLead,
-      smoothBurst:this._smoothBurst,
-      progressPush,
-      typedAdvance,
-      wpm,
-    };
-    this._playerShip?.setRaceState(raceState);
-    this._opponentShip?.setRaceState(raceState);
+    this._raceState.t             = this._t;
+    this._raceState.smoothProgress = this._smoothProgress;
+    this._raceState.smoothLead     = this._smoothLead;
+    this._raceState.smoothBurst    = this._smoothBurst;
+    this._raceState.progressPush   = progressPush;
+    this._raceState.typedAdvance   = typedAdvance;
+    this._raceState.wpm            = wpm;
+    this._playerShip?.setRaceState(this._raceState);
+    this._opponentShip?.setRaceState(this._raceState);
     this._playerShip?.update(delta);
     this._opponentShip?.update(delta);
 
@@ -157,8 +157,14 @@ export class RacingSceneManager {
     this.scene.background=new THREE.Color(0x000000);
     this.scene.fog=new THREE.FogExp2(0x000000,0.004);
 
-    const bg=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,depthWrite:false});
-    this._addToScene(new THREE.Mesh(new THREE.SphereGeometry(200,16,16),bg));
+    // Background void sphere — material cached for mode re-entry.
+    const bgMatKey='racing-bg-void';
+    let bg=AssetLoader.getMat(bgMatKey);
+    if(!bg){ bg=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,depthWrite:false}); AssetLoader.setMat(bgMatKey,bg); }
+    const bgGeoKey='sphere-bg-200';
+    let bgGeo=AssetLoader.getGeo(bgGeoKey);
+    if(!bgGeo){ bgGeo=new THREE.SphereGeometry(200,16,16); AssetLoader.setGeo(bgGeoKey,bgGeo); }
+    this._addToScene(new THREE.Mesh(bgGeo,bg));
     this._addStarField(1800,350,0.14,0x8f8f8f);
     this._addStarField(500, 200,0.25,0xd6d6d6);
     this._addStarField(60,  100,0.8, 0xffffff);
@@ -169,7 +175,10 @@ export class RacingSceneManager {
   }
   _addNebulaGlow(x,y,z,color,opacity,radius){
     const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false});
-    const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,12,12),mat);
+    // Shared unit sphere scaled to radius — one GPU buffer for all nebula glows.
+    const geo=AssetLoader.getGeo('sphere-12')??new THREE.SphereGeometry(1,12,12);
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.scale.setScalar(radius);
     mesh.layers.enable(BLOOM_LAYER); mesh.position.set(x,y,z); this._addToScene(mesh);
   }
   _addStarField(count,spread,size,color){
@@ -181,7 +190,11 @@ export class RacingSceneManager {
     }
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-    const stars=new THREE.Points(geo,new THREE.PointsMaterial({color,size,sizeAttenuation:true}));
+    // Cache material by color+size key — reused on mode re-entry.
+    const matKey=`stars-${color}-${size}`;
+    let mat=AssetLoader.getMat(matKey);
+    if(!mat){ mat=new THREE.PointsMaterial({color,size,sizeAttenuation:true}); AssetLoader.setMat(matKey,mat); }
+    const stars=new THREE.Points(geo,mat);
     stars.layers.enable(BLOOM_LAYER); this._addToScene(stars);
   }
   _loadTunnel(){

@@ -27,10 +27,6 @@ export class RacingLightingRig {
     rimR.position.set(12, 3, 3);
     this._add(rimR);
 
-    // Opponent dedicated fill — close to ship position, from above-front
-    const oppFill = new THREE.PointLight(0xffeedd, 5.5, 25);
-    oppFill.position.set(5, 5, 8);
-    this._add(oppFill);
   }
 
   dispose() {

@@ -2,14 +2,15 @@
 
 import * as THREE from 'three';
 import { COLORS } from '../../shared/constants.js';
+import { getQualityProfile } from '../../shared/qualitySettings.js';
 
-const MAX_BURSTS  = 12;
-const PER_BURST   = 28;
-const LIFETIME    = 0.9; // segundos
+const LIFETIME           = 0.9;
+const COLLAPSE_LIFETIME_V = 2.5;
 
 class Burst {
-  constructor() {
-    const positions = new Float32Array(PER_BURST * 3);
+  constructor(perBurst) {
+    this._n = perBurst;
+    const positions = new Float32Array(perBurst * 3);
     this.geo = new THREE.BufferGeometry();
     this.geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
@@ -21,11 +22,11 @@ class Burst {
       depthWrite:  false,
     });
 
-    this.points    = new THREE.Points(this.geo, this.mat);
-    this.active    = false;
-    this.age       = 0;
-    this.velocities = new Array(PER_BURST).fill(null).map(() => new THREE.Vector3());
-    this.origin    = new THREE.Vector3();
+    this.points     = new THREE.Points(this.geo, this.mat);
+    this.active     = false;
+    this.age        = 0;
+    this.velocities = Array.from({ length: perBurst }, () => new THREE.Vector3());
+    this.origin     = new THREE.Vector3();
   }
 
   activate(position) {
@@ -36,7 +37,7 @@ class Burst {
     this.mat.opacity = 1;
 
     const pos = this.geo.attributes.position.array;
-    for (let i = 0; i < PER_BURST; i++) {
+    for (let i = 0; i < this._n; i++) {
       pos[i * 3]     = 0;
       pos[i * 3 + 1] = 0;
       pos[i * 3 + 2] = 0;
@@ -66,7 +67,7 @@ class Burst {
     this.mat.opacity = 1 - t;
     const pos = this.geo.attributes.position.array;
 
-    for (let i = 0; i < PER_BURST; i++) {
+    for (let i = 0; i < this._n; i++) {
       pos[i * 3]     += this.velocities[i].x * delta * (1 - t * 0.6);
       pos[i * 3 + 1] += this.velocities[i].y * delta * (1 - t * 0.6);
       pos[i * 3 + 2] += this.velocities[i].z * delta * (1 - t * 0.6);
@@ -97,12 +98,10 @@ function _getGlyphTex() {
   return _glyphTex;
 }
 
-const COLLAPSE_COUNT = 55;
-const COLLAPSE_LIFETIME = 2.5;
-
 class CollapseShipBurst {
-  constructor() {
-    const positions = new Float32Array(COLLAPSE_COUNT * 3);
+  constructor(collapseCount) {
+    this._n = collapseCount;
+    const positions = new Float32Array(collapseCount * 3);
     this.geo = new THREE.BufferGeometry();
     this.geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     this.mat = new THREE.PointsMaterial({
@@ -111,25 +110,23 @@ class CollapseShipBurst {
       transparent: true,
       opacity: 1,
       depthWrite: false,
-      map: null,
+      map: _getGlyphTex(),
       alphaTest: 0.04,
       sizeAttenuation: true,
     });
     this.points = new THREE.Points(this.geo, this.mat);
     this.active = false;
     this.age = 0;
-    this._vels = Array.from({ length: COLLAPSE_COUNT }, () => new THREE.Vector3());
+    this._vels = Array.from({ length: collapseCount }, () => new THREE.Vector3());
   }
 
   activate(position) {
-    this.mat.map = _getGlyphTex();
-    this.mat.needsUpdate = true;
     this.active = true;
     this.age = 0;
     this.points.position.copy(position);
     this.mat.opacity = 1;
     const pos = this.geo.attributes.position.array;
-    for (let i = 0; i < COLLAPSE_COUNT; i++) {
+    for (let i = 0; i < this._n; i++) {
       pos[i * 3] = 0; pos[i * 3 + 1] = 0; pos[i * 3 + 2] = 0;
       const spd = 4 + Math.random() * 12;
       const theta = Math.random() * Math.PI * 2;
@@ -146,12 +143,12 @@ class CollapseShipBurst {
   update(delta) {
     if (!this.active) return;
     this.age += delta;
-    const t = this.age / COLLAPSE_LIFETIME;
+    const t = this.age / COLLAPSE_LIFETIME_V;
     if (t >= 1) { this.active = false; this.mat.opacity = 0; return; }
     // Hold bright for first 0.3t then fade out
     this.mat.opacity = t < 0.30 ? 1 : Math.max(0, 1 - (t - 0.30) / 0.70);
     const pos = this.geo.attributes.position.array;
-    for (let i = 0; i < COLLAPSE_COUNT; i++) {
+    for (let i = 0; i < this._n; i++) {
       pos[i * 3]     += this._vels[i].x * delta * (1 - t * 0.6);
       pos[i * 3 + 1] += this._vels[i].y * delta * (1 - t * 0.6);
       pos[i * 3 + 2] += this._vels[i].z * delta * (1 - t * 0.6);
@@ -164,37 +161,56 @@ class CollapseShipBurst {
 
 export class ParticleEmitter {
   constructor(scene) {
-    this.scene  = scene;
-    this._pool  = Array.from({ length: MAX_BURSTS }, () => {
-      const b = new Burst();
+    const p = getQualityProfile();
+
+    this.scene = scene;
+    this._pool = Array.from({ length: p.particleMaxBursts }, () => {
+      const b = new Burst(p.particlePerBurst);
+      b.points.castShadow = false;
+      b.points.receiveShadow = false;
       scene.add(b.points);
       return b;
     });
-    this._collapsePool = Array.from({ length: 4 }, () => {
-      const b = new CollapseShipBurst();
+    // Free-list: stack of available indices for O(1) acquire/release.
+    this._poolFree = Array.from({ length: p.particleMaxBursts }, (_, i) => i);
+
+    this._collapsePool = Array.from({ length: p.collapsePoolSize }, () => {
+      const b = new CollapseShipBurst(p.collapseParticleCount);
+      b.points.castShadow = false;
+      b.points.receiveShadow = false;
       scene.add(b.points);
       return b;
     });
+    this._collapseFree = Array.from({ length: p.collapsePoolSize }, (_, i) => i);
   }
 
   burst(position) {
     if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number') {
       return;
     }
-    const slot = this._pool.find(b => !b.active);
-    if (!slot) return; // pool lleno, ignorar
-    slot.activate(position);
+    if (this._poolFree.length === 0) return; // pool full
+    this._pool[this._poolFree.pop()].activate(position);
   }
 
   burstCollapse(position) {
     if (!position || typeof position.x !== "number") return;
-    const slot = this._collapsePool.find(b => !b.active) ?? this._collapsePool[0];
-    slot.activate(position);
+    if (this._collapseFree.length === 0) return; // all 4 slots active, skip
+    this._collapsePool[this._collapseFree.pop()].activate(position);
   }
 
   update(delta) {
-    for (const b of this._pool) b.update(delta);
-    for (const b of this._collapsePool) b.update(delta);
+    for (let i = 0; i < this._pool.length; i++) {
+      const b = this._pool[i];
+      if (!b.active) continue;
+      b.update(delta);
+      if (!b.active) this._poolFree.push(i); // just expired — return to free list
+    }
+    for (let i = 0; i < this._collapsePool.length; i++) {
+      const b = this._collapsePool[i];
+      if (!b.active) continue;
+      b.update(delta);
+      if (!b.active) this._collapseFree.push(i);
+    }
   }
 
   dispose() {

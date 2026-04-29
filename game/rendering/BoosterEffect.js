@@ -1,5 +1,6 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { BLOOM_LAYER } from '../../shared/constants.js';
+import { getQualityProfile } from '../../shared/qualitySettings.js';
 
 // --------------------------------------------------------------------------
 // Texture factories (lazily created, globally cached)
@@ -99,6 +100,16 @@ function _getFlame() { return (_flameTex ??= _buildFlameTexture()); }
 function _getInner() { return (_innerTex  ??= _buildInnerTexture()); }
 function _getStar()  { return (_starTex   ??= _buildStarTexture());  }
 
+// Shared cone geometry — identical for every BoosterEffect instance.
+let _coneGeo = null;
+function _getConeGeo() {
+  if (_coneGeo) return _coneGeo;
+  _coneGeo = new THREE.CylinderGeometry(0, 1, 1, 8, 1, true);
+  _coneGeo.rotateX(Math.PI / 2);
+  _coneGeo.translate(0, 0, 0.5);
+  return _coneGeo;
+}
+
 // --------------------------------------------------------------------------
 // Ship preset configs
 // --------------------------------------------------------------------------
@@ -173,10 +184,8 @@ export class BoosterEffect {
     this._root = new THREE.Object3D();
     this._root.name = 'BoosterEffect';
 
-    // Exhaust cone body
-    const coneGeo = new THREE.CylinderGeometry(0, 1, 1, 8, 1, true);
-    coneGeo.rotateX(Math.PI / 2);
-    coneGeo.translate(0, 0, 0.5);
+    // Exhaust cone body — shared geometry across all BoosterEffect instances.
+    const coneGeo = _getConeGeo();
 
     this._bodyMat = new THREE.MeshBasicMaterial({
       color:       0xffffff,
@@ -187,6 +196,8 @@ export class BoosterEffect {
       side:        THREE.BackSide,
     });
     this._body = new THREE.Mesh(coneGeo, this._bodyMat);
+    this._body.castShadow = false;
+    this._body.receiveShadow = false;
     this._body.layers.enable(BLOOM_LAYER);
     this._root.add(this._body);
 
@@ -234,6 +245,12 @@ export class BoosterEffect {
     this._light = new THREE.PointLight(0xffffff, 1, 8);
     this._root.add(this._light);
 
+    // Quality-driven: skip costly star-burst sprite on LOW tier.
+    const profile = getQualityProfile();
+    this._lightMult     = profile.boosterLightMult;
+    this._showStarSprite = profile.boosterStarSprite;
+    if (!this._showStarSprite) this._star.visible = false;
+
     this.setConfig(config);
   }
 
@@ -262,9 +279,11 @@ export class BoosterEffect {
     this._inner.scale.setScalar(cfg.innerSize);
     this._inner.position.set(0, 0, cfg.bodyLength * 0.12);
 
-    this._starMat.color.set(cfg.starColor);
-    this._star.scale.setScalar(cfg.starSize);
-    this._star.position.set(0, 0, cfg.bodyLength * 0.20);
+    if (this._showStarSprite) {
+      this._starMat.color.set(cfg.starColor);
+      this._star.scale.setScalar(cfg.starSize);
+      this._star.position.set(0, 0, cfg.bodyLength * 0.20);
+    }
 
     this._light.color.set(cfg.lightColor);
     this._light.intensity = cfg.lightIntens * 0.35;
@@ -312,21 +331,23 @@ export class BoosterEffect {
     this._inner.scale.setScalar(cfg.innerSize * coreFactor);
     this._innerMat.opacity = 0.55 + s * 0.40 + coreF * 0.05;
 
-    // Star burst sprite — slow rotation + pulse on thrust
-    const starPulse = 0.55 + s * 0.65 + flicker * 0.12;
-    this._star.scale.setScalar(cfg.starSize * starPulse);
-    this._starMat.opacity = isAccelerating
-      ? 0.50 + s * 0.45 + flicker * 0.08
-      : 0.15 + s * 0.20 + flicker * 0.05;
-    this._starMat.rotation += deltaTime * 0.35;
+    // Star burst sprite — slow rotation + pulse on thrust (skipped on LOW quality)
+    if (this._showStarSprite) {
+      const starPulse = 0.55 + s * 0.65 + flicker * 0.12;
+      this._star.scale.setScalar(cfg.starSize * starPulse);
+      this._starMat.opacity = isAccelerating
+        ? 0.50 + s * 0.45 + flicker * 0.08
+        : 0.15 + s * 0.20 + flicker * 0.05;
+      this._starMat.rotation += deltaTime * 0.35;
+    }
 
-    // Point light
-    this._light.intensity = cfg.lightIntens * (0.30 + s * 0.90 + flicker * 0.18);
+    // Point light — intensity scaled by quality tier
+    this._light.intensity = cfg.lightIntens * this._lightMult * (0.30 + s * 0.90 + flicker * 0.18);
   }
 
   dispose() {
     if (this._root.parent) this._root.parent.remove(this._root);
-    this._body.geometry.dispose();
+    // Cone geometry is shared across instances — do NOT dispose it here.
     this._bodyMat.dispose();
     this._flameMat.dispose();
     this._innerMat.dispose();

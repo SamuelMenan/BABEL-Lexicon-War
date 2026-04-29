@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
 import { BLOOM_LAYER } from '../../shared/constants.js';
 
@@ -48,12 +48,13 @@ export class Starfield {
 
   addMilkyWay() {
     const glowTex = getSoftGlowTexture();
-    const addBand = (count, buildPos, matOpts) => {
+    // matOverride: pass an existing PointsMaterial to share it between bands with identical appearance.
+    const addBand = (count, buildPos, matOpts, matOverride = null) => {
       const pos = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) buildPos(pos, i);
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const mat = new THREE.PointsMaterial({
+      const mat = matOverride ?? new THREE.PointsMaterial({
         sizeAttenuation: true, transparent: true,
         map: glowTex, alphaMap: glowTex,
         depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
@@ -63,9 +64,11 @@ export class Starfield {
       band.frustumCulled = false;
       band.layers.enable(BLOOM_LAYER);
       this._scene.add(band);
+      return mat;
     };
 
-    addBand(5000, (pos, i) => {
+    // Bands 1 and 3 share identical material params { color:0xbbccee, size:0.18, opacity:0.55 }.
+    const matBlue = addBand(5000, (pos, i) => {
       const t = (Math.random() - 0.5) * 2, perp = (Math.random() - 0.5) * 55, thick = (Math.random() - 0.5) * 18;
       pos[i*3] = t * 1100 + perp * 0.2; pos[i*3+1] = thick + perp * 0.08; pos[i*3+2] = -500 + t * 80 + perp * 0.4;
     }, { color: 0xbbccee, size: 0.18, opacity: 0.55 });
@@ -75,10 +78,11 @@ export class Starfield {
       pos[i*3] = t * 1100 + perp * 0.1; pos[i*3+1] = thick + perp * 0.04; pos[i*3+2] = -380 + t * 90 + perp * 0.3;
     }, { color: 0xdde8ff, size: 0.30, opacity: 0.75 });
 
+    // Band 3 reuses matBlue — same color/size/opacity, one fewer GPU material object.
     addBand(4000, (pos, i) => {
       const t = (Math.random() - 0.5) * 2, perp = (Math.random() - 0.5) * 55, thick = (Math.random() - 0.5) * 26;
       pos[i*3] = t * 1000 + perp * 0.3; pos[i*3+1] = thick + t * 280; pos[i*3+2] = -300 + t * 140 + perp * 0.5;
-    }, { color: 0xbbccee, size: 0.18, opacity: 0.55 });
+    }, {}, matBlue);
 
     addBand(1200, (pos, i) => {
       const t = (Math.random() - 0.5) * 2, perp = (Math.random() - 0.5) * 20;

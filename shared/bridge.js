@@ -68,12 +68,17 @@ function notifyStateChange() {
 
 export const Bridge = {
   setState(partial) {
-    _state = { ..._state, ...partial };
+    Object.assign(_state, partial);
     notifyStateChange();
   },
 
   getState() {
     return { ..._state };
+  },
+
+  // Zero-copy read — returns internal reference. Game-loop use only; never store across frames.
+  peekState() {
+    return _state;
   },
 
   onStateChange(fn) {

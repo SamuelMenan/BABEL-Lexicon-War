@@ -118,7 +118,8 @@ export const SHIP_BOOSTER_CONFIGS = {
 
   // spaceshipnew.glb  |  targetLength 3.8  |  warm orange emissive on hull
   combatPlayer: {
-    localPosition: new THREE.Vector3(0, 0, 1.85),
+    // lowered slightly (y) and pulled a bit back (z)
+    localPosition: new THREE.Vector3(0, -0.25, 1.55),
     bodyRadius:    0.18,
     bodyLength:    0.70,
     flameSize:     1.40,
@@ -136,7 +137,8 @@ export const SHIP_BOOSTER_CONFIGS = {
 
   // spaceship.glb  |  targetLength 5.0  |  warm orange glow on hull
   racingPlayer: {
-    localPosition: new THREE.Vector3(0, 0, 2.45),
+    // lower racer booster to sit under hull
+    localPosition: new THREE.Vector3(0, -0.18, 2.25),
     bodyRadius:    0.22,
     bodyLength:    0.88,
     flameSize:     1.85,
@@ -154,7 +156,7 @@ export const SHIP_BOOSTER_CONFIGS = {
 
   // spaceship__low_poly.glb  |  targetLength 3.2  |  red hull emissive
   racingOpponent: {
-    localPosition: new THREE.Vector3(0, 0, 1.58),
+    localPosition: new THREE.Vector3(0, -0.16, 1.38),
     bodyRadius:    0.16,
     bodyLength:    0.65,
     flameSize:     1.50,
@@ -261,6 +263,7 @@ export class BoosterEffect {
   attachToShip(shipGroup) {
     if (this._root.parent) this._root.parent.remove(this._root);
     shipGroup.add(this._root);
+    this._shipGroup = shipGroup; // keep ref to respond to lateral motion
   }
 
   setConfig(cfg) {
@@ -314,21 +317,37 @@ export class BoosterEffect {
     this._currentStrength += (targetStrength - this._currentStrength) * alpha;
     const s = this._currentStrength;
 
+    // Lateral/roll response: read ship roll to bias flame left/right
+    let lateral = 0;
+    if (this._shipGroup) {
+      // prefer roll (z) as intuitive lateral cue; scale down so effect is subtle
+      lateral = THREE.MathUtils.clamp(-this._shipGroup.rotation.z * 6.0, -1, 1);
+    }
+
+    // Slight root offset on thrust so flame looks stronger and more arrow-like
+    this._root.position.x = (this._cfg.localPosition.x ?? 0) + lateral * 0.12;
+    this._root.position.y = (this._cfg.localPosition.y ?? 0);
+    this._root.position.z = (this._cfg.localPosition.z ?? 0) - s * 0.18;
+
     // Exhaust cone
     const coneW = cfg.bodyRadius * (0.50 + s * 0.80);
     const coneL = cfg.bodyLength * (0.55 + s * 0.75);
     this._body.scale.set(coneW, coneW, coneL);
     this._bodyMat.opacity = 0.08 + s * 0.36;
 
+    // Tilt cone slightly with lateral input for dynamic look
+    this._body.rotation.z = lateral * 0.35;
+
     // Outer flame sprite
     const flameFactor = 0.60 + s * 0.58 + flicker * 0.14;
-    this._flame.scale.setScalar(cfg.flameSize * flameFactor);
+    // elongate flame along forward axis to create arrow-like silhouette
+    this._flame.scale.set(cfg.flameSize * (1.0 + s * 0.32), cfg.flameSize * (0.7 + s * 0.24), 1);
     this._flameMat.opacity = 0.18 + s * 0.65;
 
     // Inner core sprite
     const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
     const coreFactor = 0.68 + s * 0.42 + coreF * 0.10;
-    this._inner.scale.setScalar(cfg.innerSize * coreFactor);
+    this._inner.scale.setScalar(cfg.innerSize * coreFactor * (0.9 + Math.abs(lateral) * 0.06));
     this._innerMat.opacity = 0.55 + s * 0.40 + coreF * 0.05;
 
     // Star burst sprite — slow rotation + pulse on thrust (skipped on LOW quality)
@@ -343,6 +362,8 @@ export class BoosterEffect {
 
     // Point light — intensity scaled by quality tier
     this._light.intensity = cfg.lightIntens * this._lightMult * (0.30 + s * 0.90 + flicker * 0.18);
+    // nudge light position slightly with lateral motion
+    this._light.position.x = (cfg.lightOffset?.x ?? 0) + lateral * 0.18;
   }
 
   dispose() {

@@ -260,7 +260,7 @@ export class CombatPlayerShip extends ShipBase {
 
     const { flow: _flow, flowActive: _flowActive } = Bridge.peekState();
     this._booster.setThermalColor(this._getThermalColor(_flow, _flowActive));
-    this._booster.update(delta, this._isThrusting);
+    this._booster.update(delta, this._isThrusting, _flowActive ? 1.4 : 1.0, _flowActive ? 1.18 : 1.0, _flowActive);
     if (this._isThrusting) this._isThrusting = false;   // auto-clear; caller sets it each frame
   }
 

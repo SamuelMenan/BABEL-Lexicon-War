@@ -10,6 +10,18 @@ let _flameTex = null;
 let _innerTex = null;
 let _starTex  = null;
 
+const _boostDark  = new THREE.Color(0x102a7a);
+const _boostMid   = new THREE.Color(0x4d7eff);
+const _boostLight = new THREE.Color(0xb8f2ff);
+const _flowDark   = new THREE.Color(0xb400ff); // Extremadamente morado e intenso
+const _flowMid    = new THREE.Color(0xdb00ff); // Destello magenta ultra fuerte
+const _flowLight  = new THREE.Color(0xea00ff); // Núcleo magenta vivo sin lavarlo con blanco
+const _tmpColorA  = new THREE.Color();
+const _tmpColorB  = new THREE.Color();
+const _tmpColorC  = new THREE.Color();
+const _tmpColorD  = new THREE.Color();
+const _tmpColorE  = new THREE.Color();
+
 function _buildFlameTexture() {
   const size   = 256;
   const canvas = document.createElement('canvas');
@@ -128,15 +140,15 @@ export const SHIP_BOOSTER_CONFIGS = {
     flameSize:     0.95,
     innerSize:     0.42,
     starSize:      1.10,
-    lightColor:    0xaa44ff,
+    lightColor:    0x86e8ff,
     lightIntens:   9.0,
     lightDist:     16.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.35),
-    bodyColor:     0xcc55ff,
-    flameColor:    0xaa33ff,
-    innerColor:    0xeeccff,
-    starColor:     0xbb44ff,
-    ringColor:     0xaa33ff,
+    bodyColor:     0x2340b8,
+    flameColor:    0x7fdcff,
+    innerColor:    0xbef2ff,
+    starColor:     0x16368f,
+    ringColor:     0x5d84ff,
   },
 
   // spaceship.glb  |  targetLength 5.0
@@ -148,15 +160,15 @@ export const SHIP_BOOSTER_CONFIGS = {
     flameSize:     1.85,
     innerSize:     0.75,
     starSize:      2.90,
-    lightColor:    0xff9933,
+    lightColor:    0x86e8ff,
     lightIntens:   6.5,
     lightDist:     12.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.45),
-    bodyColor:     0xffaa44,
-    flameColor:    0xff8822,
-    innerColor:    0xfff0dd,
-    starColor:     0xffbb55,
-    ringColor:     0xffaa33,
+    bodyColor:     0x1f3d9f,
+    flameColor:    0x8adfff,
+    innerColor:    0xc7f7ff,
+    starColor:     0x17368f,
+    ringColor:     0x6b8cff,
   },
 
   // spaceship__low_poly.glb  |  targetLength 3.2
@@ -205,7 +217,7 @@ export class BoosterEffect {
     this._bodyMat = new THREE.MeshBasicMaterial({
       color:       0xffffff,
       transparent: true,
-      opacity:     0.35,
+      opacity:     0.65, // Aumentado para mayor presencia de color
       blending:    THREE.AdditiveBlending,
       depthWrite:  false,
       side:        THREE.DoubleSide,
@@ -235,7 +247,7 @@ export class BoosterEffect {
       map:         _getFlame(),
       color:       0xffffff,
       transparent: true,
-      opacity:     0.70,
+      opacity:     0.95, // Aumentado para que el resplandor sea menos opaco/más sólido
       blending:    THREE.AdditiveBlending,
       depthWrite:  false,
     });
@@ -333,12 +345,14 @@ export class BoosterEffect {
     this._light.position.copy(cfg.lightOffset);
   }
 
-  update(deltaTime, isAccelerating) {
+  update(deltaTime, isAccelerating, visualScale = 1, ringScale = 1, flowActive = false) {
     this._t += deltaTime;
 
     const t   = this._t;
     const cfg = this._cfg;
     if (!cfg) return;
+    const sizeMult = Math.max(0.75, Number(visualScale) || 1);
+    const ringMult = Math.max(0.75, Number(ringScale) || 1);
 
     // Multi-frequency flicker
     const f1 = Math.sin(t * 13.1) * 0.5 + 0.5;
@@ -358,6 +372,30 @@ export class BoosterEffect {
     // Decay letter burst (~0.18 s half-life)
     this._letterBurst = Math.max(0, this._letterBurst - deltaTime * 4.5);
     const lb = this._letterBurst; // 0..1
+    const baseMix = THREE.MathUtils.clamp(0.20 + s * 0.45 + flicker * 0.12 + lb * 0.18, 0, 1);
+    const glowMix = THREE.MathUtils.clamp(0.35 + s * 0.50 + lb * 0.22, 0, 1);
+    const flowMix = THREE.MathUtils.clamp(0.55 + s * 0.30 + flicker * 0.10 + lb * 0.25, 0, 1);
+
+    if (flowActive) {
+      _tmpColorA.lerpColors(_flowDark, _flowMid, flowMix);
+      _tmpColorB.lerpColors(_flowMid, _flowLight, THREE.MathUtils.clamp(0.45 + s * 0.35 + lb * 0.20, 0, 1));
+      _tmpColorC.lerpColors(_flowDark, _flowLight, THREE.MathUtils.clamp(0.35 + s * 0.35 + flicker * 0.10, 0, 1));
+      _tmpColorD.lerpColors(_flowDark, _flowMid, THREE.MathUtils.clamp(0.48 + s * 0.38, 0, 1));
+      _tmpColorE.lerpColors(_flowMid, _flowLight, THREE.MathUtils.clamp(0.50 + s * 0.28 + lb * 0.12, 0, 1));
+    } else {
+      _tmpColorA.lerpColors(_boostDark, _boostMid, baseMix);
+      _tmpColorB.lerpColors(_boostMid, _boostLight, glowMix);
+      _tmpColorC.lerpColors(_boostDark, _boostLight, THREE.MathUtils.clamp(0.45 + s * 0.30 + flicker * 0.10, 0, 1));
+      _tmpColorD.lerpColors(_boostDark, _boostMid, THREE.MathUtils.clamp(0.30 + s * 0.42, 0, 1));
+      _tmpColorE.lerpColors(_boostMid, _boostLight, THREE.MathUtils.clamp(0.50 + s * 0.30 + lb * 0.10, 0, 1));
+    }
+
+    this._bodyMat.color.copy(_tmpColorA);
+    this._ringMat.color.copy(_tmpColorD);
+    this._flameMat.color.copy(_tmpColorB);
+    this._innerMat.color.copy(_tmpColorC);
+    if (this._showStarSprite) this._starMat.color.copy(_tmpColorE);
+    this._light.color.copy(_tmpColorB);
 
     // Lateral response: roll + side velocity + yaw rate
     let lateral = 0;
@@ -394,8 +432,8 @@ export class BoosterEffect {
     this._root.position.z = (cfg.localPosition.z ?? 0) - s * 0.18;
 
     // Exhaust cone — grows with burst and lateral movement
-    const coneW = cfg.bodyRadius * (0.45 + s * 0.70) * burstMult;
-    const coneL = cfg.bodyLength * (0.65 + s * 1.0)  * (1.0 + lb * 1.60 + velBoost * 0.60);
+    const coneW = cfg.bodyRadius * (0.45 + s * 0.70) * burstMult * sizeMult;
+    const coneL = cfg.bodyLength * (0.65 + s * 1.0)  * (1.0 + lb * 1.60 + velBoost * 0.60) * sizeMult;
     this._body.scale.set(coneW, coneW, coneL);
     this._bodyMat.opacity = Math.min(0.95, (0.08 + s * 0.32) * (1.0 + lb * 0.80));
     this._body.rotation.z = lateral * 0.55;
@@ -403,26 +441,26 @@ export class BoosterEffect {
 
     // Nozzle ring — bursts wider on correct letter, faster spin when banking
     const ringBreath  = 1.0 + Math.sin(t * 4.8) * 0.04 + s * 0.15;
-    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 1.40 + velBoost * 0.40);
+    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 1.40 + velBoost * 0.40) * sizeMult * ringMult;
     this._ring.scale.setScalar(rr);
     this._ringMat.opacity = Math.min(1.0, (0.55 + s * 0.40 + flicker * 0.10) * (1.0 + lb * 1.40));
     this._ring.rotation.z += deltaTime * (0.8 + s * 1.5 + Math.abs(lateral) * 2.0);
 
     // Outer halo — circular glow, expands on burst
-    const haloScale = cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult;
+    const haloScale = cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult * sizeMult;
     this._flame.scale.setScalar(haloScale);
     this._flameMat.opacity = Math.min(0.95, (0.22 + s * 0.55 + flicker * 0.08) * (1.0 + lb * 2.00));
 
     // Inner core — tight, high-frequency flicker, intense on burst
     const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
     const coreFactor = 0.55 + s * 0.40 + coreF * 0.08;
-    this._inner.scale.setScalar(cfg.innerSize * coreFactor * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 2.20));
+    this._inner.scale.setScalar(cfg.innerSize * coreFactor * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 2.20) * sizeMult);
     this._innerMat.opacity = Math.min(1.0, (0.70 + s * 0.36 + coreF * 0.05) * (1.0 + lb * 1.60));
 
     // Star burst — spikes on letter hit
     if (this._showStarSprite) {
       const starPulse = (0.30 + s * 0.42 + flicker * 0.08) * (1.0 + lb * 3.00);
-      this._star.scale.setScalar(cfg.starSize * starPulse);
+      this._star.scale.setScalar(cfg.starSize * starPulse * sizeMult);
       this._starMat.opacity = isAccelerating
         ? Math.min(1.0, (0.28 + s * 0.32 + flicker * 0.06) * (1.0 + lb * 2.80))
         : Math.min(1.0, (0.08 + s * 0.14 + flicker * 0.04) * (1.0 + lb * 2.80));

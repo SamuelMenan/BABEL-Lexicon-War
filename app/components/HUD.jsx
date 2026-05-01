@@ -173,6 +173,32 @@ function Countdown({ countdown, countdownActive }) {
   );
 }
 
+function FlowModeOverlay({ flowActive }) {
+  const [showPopup, setShowPopup] = useState(false);
+  const prevActive = useRef(false);
+
+  useEffect(() => {
+    if (!prevActive.current && flowActive) {
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 1600);
+    }
+    prevActive.current = flowActive;
+  }, [flowActive]);
+
+  if (!showPopup) return null;
+
+  return (
+    <div className="precombat-overlay" style={{ background: "radial-gradient(circle at center, rgba(153, 0, 255, 0.15) 0%, rgba(0, 0, 0, 0.52) 62%, rgba(0, 0, 0, 0.7) 100%)", zIndex: 40 }}>
+      <div className="precombat-frame" style={{ borderColor: "rgba(204, 0, 255, 0.6)", animation: "precombat-number-pop 0.24s ease-out, flow-frame-pulse-anim 0.4s ease-in-out infinite" }}>
+        <span className="precombat-phase" style={{ color: "rgba(255, 255, 255, 0.8)", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>FLUJO DESBLOQUEADO</span>
+        <span className="precombat-value" style={{ color: "#e888ff", textShadow: "0 0 30px rgba(204, 0, 255, 0.9), 0 0 90px rgba(204, 0, 255, 0.6)" }}>100%</span>
+        <span className="precombat-message" style={{ color: "#fff", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>SINCRONIZACIÓN LÉXICA ACTIVA</span>
+      </div>
+      <div className="precombat-scanline" style={{ background: "rgba(204,0,255,0.4)", boxShadow: "0 0 20px rgba(204,0,255,0.6)" }} />
+    </div>
+  );
+}
+
 // ─── Combat ─────────────────────────────────────────────────────────────────
 
 function CombatTicker() {
@@ -325,17 +351,17 @@ function StatusBar({ label, value, max=100, danger=false, forceColor, flash=fals
 
 function FlowBar({ flow, active, cooldown }) {
   const pct   = Math.max(0, Math.min(100, flow));
-  const color = active        ? '#ff2244'
-    : pct >= 75               ? '#ff7722'
-    : pct >= 50               ? '#ffcc44'
-    : pct >= 25               ? '#00ddff'
-    :                           '#4466ff';
-  const label = active ? '◈ FLUJO·LEX' : cooldown ? '· FLUJO·LEX' : 'FLUJO·LEX';
+  const color = active        ? '#9966ff'
+    : pct >= 75               ? '#8855ff'
+    : pct >= 50               ? '#7744ff'
+    : pct >= 25               ? '#aa77ff'
+    :                           '#cc99ff';
+  const label = 'FLOW';
   return (
     <div style={S.statusBarRow}>
-      <span style={{ ...S.statusBarLabel, color: active ? '#00ff88' : undefined }}>{label}</span>
+      <span style={{ ...S.statusBarLabel, color: 'rgba(255,255,255,0.92)' }}>{label}</span>
       <div style={{ ...S.statusBarTrack, position: 'relative' }}>
-        <div style={{ ...S.statusBarFill, width: pct + '%', background: color, boxShadow: '0 0 6px ' + color,
+        <div style={{ ...S.statusBarFill, width: pct + '%', background: color, boxShadow: '0 0 12px ' + color,
           opacity: cooldown ? 0.4 : 1 }} />
         {active && <div className="flow-bar-active-pulse" style={{ position: 'absolute', inset: 0, background: color, opacity: 0.18 }} />}
       </div>
@@ -353,7 +379,7 @@ function CombatBottomLeft({ hp, flow = 0, flowActive = false, flowCooldown = fal
       : undefined;
   return (
     <div style={S.combatBottomLeft}>
-      <StatusBar label="CASCO" value={hp} danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
+      <StatusBar label="VIDA" value={hp} danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
       <FlowBar flow={flow} active={flowActive} cooldown={flowCooldown} />
       <div style={S.waveBlock}>
         <span style={S.waveLabel}>OLEADA · LEXICA</span>
@@ -415,7 +441,7 @@ function CombatWordPanel({ activeWord, animState }) {
         <span style={S.combatWordHeaderTag}>◊ ENLACE · LEXICO</span>
         <span style={S.transmitting}>● TRANSMITIENDO</span>
       </div>
-      <div style={{ ...S.combatWordBox, borderColor: animState==="wrong" ? "#ff2244" : "rgba(0,255,204,0.35)" }}>
+      <div style={{ ...S.combatWordBox, borderColor: animState=="wrong" ? "#ff2244" : "rgba(0,255,204,0.35)" }}>
         <span style={S.combatWordPrompt}>&gt;</span>
         <div style={S.combatWordLetters}>
           {word ? word.split("").map((ch, i) => {
@@ -587,6 +613,7 @@ export default function HUD() {
         <WaveAnnouncement wave={waveNotice} />
         <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
+        <FlowModeOverlay flowActive={flowActive} />
         {/* Top-left: pilot info */}
         <div style={S.combatTopLeft}>
           <span style={S.pilotName}>KAEL · VOSS</span>
@@ -645,11 +672,18 @@ const S = {
   // ── Combat bottom-left
   combatBottomLeft: { position:"absolute", bottom:"1.8rem", left:"1.6rem",
     display:"flex", flexDirection:"column", gap:"0.65rem", minWidth:"220px" },
-  statusBarRow: { display:"flex", alignItems:"center", gap:"0.7rem" },
-  statusBarLabel: { fontSize:"0.62rem", letterSpacing:"0.22em", color:"rgba(255,255,255,0.35)", width:"5.8rem" },
-  statusBarTrack: { flex:1, height:"5px", background:"rgba(255,255,255,0.07)", borderRadius:"3px", overflow:"hidden", minWidth:"110px" },
-  statusBarFill:  { height:"100%", borderRadius:"2px", transition:"width 0.3s ease" },
-  statusBarValue: { fontSize:"0.86rem", fontWeight:"bold", letterSpacing:"0.04em", width:"2.8rem", textAlign:"right" },
+  statusBarRow: {
+    display:"flex", alignItems:"center", gap:"0.7rem",
+    background:"rgba(0,0,0,0.42)", border:"1px solid rgba(255,255,255,0.12)",
+    padding:"0.28rem 0.5rem", boxShadow:"0 0 12px rgba(0,0,0,0.35)"
+  },
+  statusBarLabel: { fontSize:"0.74rem", fontWeight:"bold", letterSpacing:"0.18em", color:"rgba(255,255,255,0.9)", width:"5.8rem" },
+  statusBarTrack: {
+    flex:1, height:"8px", background:"rgba(255,255,255,0.14)",
+    borderRadius:"4px", overflow:"hidden", minWidth:"130px", border:"1px solid rgba(255,255,255,0.2)"
+  },
+  statusBarFill:  { height:"100%", borderRadius:"3px", transition:"width 0.3s ease" },
+  statusBarValue: { fontSize:"0.94rem", fontWeight:"bold", letterSpacing:"0.04em", width:"2.8rem", textAlign:"right", textShadow:"0 0 8px currentColor" },
   waveBlock: { marginTop:"0.8rem", display:"flex", flexDirection:"column", gap:"0.2rem" },
   waveLabel: { fontSize:"0.56rem", letterSpacing:"0.28em", color:"rgba(255,255,255,0.22)" },
   waveNum:   { fontSize:"3.1rem", fontWeight:"bold", color:"rgba(255,255,255,0.85)", letterSpacing:"-0.02em", lineHeight:1 },
@@ -690,7 +724,7 @@ const S = {
     fontSize:"0.86rem", letterSpacing:"0.04em" },
   deckRowActive: { background:"rgba(0,255,204,0.05)" },
   deckRowBullet: { width:"1rem", fontSize:"0.72rem", color:"var(--col-active)", flexShrink:0 },
-  deckRowWord: { flex:1, transition:"color 0.2s" },
+  deckRowWord: { flex:1, transition:"color 0.2s", color:"#9966ff" },
   deckRowDistWrap: { display:"inline-flex", alignItems:"center", gap:"0.3rem", minWidth:"3.8rem", justifyContent:"flex-end" },
   deckRowDist: { fontSize:"0.66rem", color:"rgba(255,255,255,0.25)", letterSpacing:"0.05em" },
   deckEmpty: { padding:"0.55rem 1rem", fontSize:"0.62rem", color:"rgba(255,255,255,0.15)",
@@ -741,7 +775,7 @@ const S = {
     letterSpacing:"0.05em", width:"1.3ch", textAlign:"center", lineHeight:1,
     transition:"color 0.08s, text-shadow 0.12s" },
   progressTrack: { width:"100%", height:"2px", background:"rgba(255,255,255,0.06)", borderRadius:"1px", overflow:"hidden", minWidth:"180px" },
-  progressFill: { height:"100%", borderRadius:"1px", transition:"width 0.06s linear, background 0.2s, box-shadow 0.2s" },
+  progressFill: { height:"100%", borderRadius:"1px", transition:"width 0.06s linear, background 0.2s, box-shadow 0.2s", background:"#9966ff", boxShadow:"0 0 8px #9966ff" },
   countdownOverlay: { position:"absolute", inset:0, display:"flex", alignItems:"center",
     justifyContent:"center", background:"rgba(0,0,0,0.35)", zIndex:10 },
   countdownNum: { fontSize:"9rem", fontWeight:"bold", letterSpacing:"-0.02em", lineHeight:1 },

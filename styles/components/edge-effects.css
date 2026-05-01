@@ -1,0 +1,8 @@
+.edge-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-edge-flash);
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(255, 51, 51, 0.27) 100%);
+  animation: edge-flash-red 0.35s ease forwards;
+}

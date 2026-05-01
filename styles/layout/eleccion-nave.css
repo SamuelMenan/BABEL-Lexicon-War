@@ -1,0 +1,180 @@
+.ship-select {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-ship-select);
+  background: var(--bg-space);
+  overflow: hidden;
+  user-select: none;
+}
+
+.ship-select__canvas {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  transition: opacity 0.18s ease;
+}
+
+/* ── Loading state ───────────────────────────────────────────── */
+
+.ship-select__loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ship-select__loading-text {
+  font-family: var(--font-mono);
+  color: var(--col-primary);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+}
+
+.ship-select__loading-track {
+  width: 180px;
+  height: 1px;
+  background: #112233;
+  overflow: hidden;
+}
+
+.ship-select__loading-bar {
+  width: 45%;
+  height: 100%;
+  background: var(--col-primary);
+  animation: ship-load-slide 1.4s ease-in-out infinite;
+}
+
+/* ── Ship info header ────────────────────────────────────────── */
+
+.ship-select__info {
+  position: absolute;
+  top: 2rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ship-select__code {
+  font-family: var(--font-mono);
+  color: #223344;
+  font-size: 0.6rem;
+  letter-spacing: 0.4em;
+  margin: 0 0 0.3rem;
+  text-transform: uppercase;
+}
+
+.ship-select__name {
+  font-family: var(--font-hud);
+  color: var(--col-primary);
+  font-size: 1.5rem;
+  letter-spacing: 0.2em;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(0,255,204,0.4);
+}
+
+.ship-select__class {
+  font-family: var(--font-mono);
+  color: #223344;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  margin: 0.4rem 0 0;
+  text-transform: uppercase;
+}
+
+/* ── Navigation buttons ──────────────────────────────────────── */
+
+.ship-select__nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-hud);
+  font-size: 1rem;
+  color: var(--col-primary);
+  background: rgba(2, 2, 8, 0.7);
+  border: 1px solid rgba(0,255,204,0.25);
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+}
+
+.ship-select__nav-btn--left  { left: 1.5rem; }
+.ship-select__nav-btn--right { right: 1.5rem; }
+
+/* ── Bottom HUD ──────────────────────────────────────────────── */
+
+.ship-select__bottom-hud {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  z-index: 2;
+}
+
+.ship-select__pos-indicator {
+  font-family: var(--font-mono);
+  color: #334455;
+  font-size: 0.68rem;
+  letter-spacing: 0.35em;
+}
+
+.ship-select__btn-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ship-select__cancel-btn {
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  color: var(--col-danger);
+  background: transparent;
+  border: 1px solid rgba(255,68,102,0.35);
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ship-select__confirm-btn {
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  color: #000;
+  background: var(--col-primary);
+  border: none;
+  padding: 0.6rem 1.8rem;
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ship-select__toggle-btn {
+  font-family: var(--font-hud);
+  font-size: 0.8rem;
+  color: var(--col-primary);
+  background: transparent;
+  border: 1px solid rgba(0,255,204,0.35);
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ship-select__key-hints {
+  font-family: var(--font-mono);
+  color: #1a2a3a;
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}

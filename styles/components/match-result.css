@@ -1,0 +1,67 @@
+.match-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: var(--bg-overlay-dark);
+  font-family: var(--font-hud);
+}
+
+.match-result__label {
+  font-size: 0.75rem;
+  color: #555;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.match-result__title {
+  font-size: 2.5rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+}
+
+.match-result__title--victory { color: var(--col-primary-alt); }
+.match-result__title--defeat  { color: var(--col-danger); }
+
+.match-result__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.match-result__stat {
+  font-size: 1rem;
+  color: #888;
+  letter-spacing: 0.15em;
+}
+
+.match-result__val {
+  color: var(--col-primary);
+}
+
+.match-result__quote {
+  font-size: 0.8rem;
+  color: #444;
+  font-style: italic;
+  max-width: 380px;
+  text-align: center;
+  line-height: 1.8;
+  margin-top: 0.5rem;
+}
+
+.match-result__btn {
+  margin-top: 1rem;
+  font-family: var(--font-hud);
+  font-size: 0.9rem;
+  color: #000;
+  background: var(--col-primary);
+  border: none;
+  padding: 0.65rem 2rem;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}

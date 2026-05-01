@@ -1,0 +1,49 @@
+.wave-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-wave);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0,255,204,0.2) 0%, rgba(0,8,20,0.76) 45%, rgba(0,0,0,0.92) 100%);
+  animation: wave-fullscreen-in 1.45s ease forwards;
+}
+
+.wave-fullscreen-danger {
+  background: radial-gradient(circle at center, rgba(255,82,82,0.25) 0%, rgba(28,6,8,0.82) 44%, rgba(0,0,0,0.94) 100%);
+}
+
+.wave-fullscreen-inner {
+  text-align: center;
+  color: #e6ffff;
+  text-shadow: 0 0 24px rgba(0,255,204,0.8), 0 0 72px rgba(0,255,204,0.5);
+}
+
+.wave-fullscreen-danger .wave-fullscreen-inner {
+  color: #ffe8ea;
+  text-shadow: 0 0 24px rgba(255,94,110,0.86), 0 0 72px rgba(255,94,110,0.46);
+}
+
+.wave-fullscreen-tag {
+  display: block;
+  font-size: clamp(0.85rem, 1.6vw, 1.3rem);
+  letter-spacing: 0.42em;
+  opacity: 0.85;
+}
+
+.wave-fullscreen-num {
+  display: block;
+  font-size: clamp(4.5rem, 13vw, 11rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  margin: 0.2rem 0;
+}
+
+.wave-fullscreen-sub {
+  display: block;
+  font-size: clamp(0.8rem, 1.4vw, 1.2rem);
+  letter-spacing: 0.32em;
+  opacity: 0.8;
+}

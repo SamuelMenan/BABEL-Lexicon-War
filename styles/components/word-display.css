@@ -1,0 +1,53 @@
+/* ── Letter state classes ────────────────────────────────────── */
+
+.letter-popped {
+  animation: letter-pop 0.18s ease forwards;
+  display: inline-block;
+}
+
+.letter-hit {
+  animation: letter-hit 0.2s ease forwards;
+  display: inline-block;
+}
+
+.letter-wrong {
+  animation: letter-wrong 0.24s ease forwards;
+  display: inline-block;
+}
+
+/* ── Word box states (legacy — kept for compatibility) ───────── */
+
+.word-box-idle {
+  border: 1px solid rgba(0, 255, 204, 0.27);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.13);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.word-box-correct {
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+  transition: none;
+}
+
+.word-box-wrong {
+  animation: box-shake 0.32s ease, box-flash-red 0.32s ease;
+}
+
+/* ── Word area states (v2 — no box borders) ──────────────────── */
+
+.word-area-idle    { }
+
+.word-area-correct { }
+
+.word-area-wrong {
+  animation: word-shake 0.32s ease, word-glitch-color 0.32s ease;
+}
+
+/* ── WPM feedback (applied via JS) ──────────────────────────── */
+
+.wpm-up   { animation: wpm-pulse-up   0.22s ease; }
+.wpm-down { animation: wpm-pulse-down 0.22s ease; }
+
+/* ── Cursor ──────────────────────────────────────────────────── */
+
+.cursor-blink { animation: cursor-blink 1s step-end infinite; }

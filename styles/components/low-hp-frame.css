@@ -1,0 +1,114 @@
+.low-hp-frame {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-low-hp-frame);
+  pointer-events: none;
+}
+
+.low-hp-frame::before {
+  content: "";
+  position: absolute;
+  inset: var(--frame-inset);
+  border: 1px solid rgba(255, 204, 0, 0.16);
+  border-radius: 0.4rem;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+.low-hp-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,204,0,0.08), transparent 18%, transparent 82%, rgba(255,204,0,0.08)),
+    linear-gradient(180deg, rgba(255,204,0,0.05), transparent 12%, transparent 88%, rgba(255,204,0,0.05));
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+/* ── Yellow variant ──────────────────────────────────────────── */
+
+.low-hp-frame-yellow {
+  color: rgba(255, 204, 0, 0.9);
+}
+
+.low-hp-frame-yellow::before {
+  border-color: rgba(255, 204, 0, 0.42);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 204, 0, 0.14),
+    inset 0 0 34px rgba(255, 204, 0, 0.04),
+    0 0 24px rgba(255, 204, 0, 0.06);
+  animation: hull-frame-yellow 0.9s ease-in-out infinite;
+}
+
+.low-hp-frame-yellow::after {
+  opacity: 0.45;
+}
+
+/* ── Red variant ─────────────────────────────────────────────── */
+
+.low-hp-frame-red {
+  color: rgba(255, 68, 102, 0.95);
+}
+
+.low-hp-frame-red::before {
+  border-color: rgba(255, 68, 102, 0.68);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 68, 102, 0.18),
+    inset 0 0 42px rgba(255, 68, 102, 0.12),
+    0 0 30px rgba(255, 68, 102, 0.18);
+  animation: hull-frame-red 0.42s ease-in-out infinite;
+}
+
+.low-hp-frame-red::after {
+  opacity: 0.74;
+  background:
+    linear-gradient(90deg, rgba(255,68,102,0.12), transparent 16%, transparent 84%, rgba(255,68,102,0.12)),
+    linear-gradient(180deg, rgba(255,68,102,0.08), transparent 12%, transparent 88%, rgba(255,68,102,0.08));
+}
+
+/* ── Corner, scan, caption elements ─────────────────────────── */
+
+.low-hp-frame-corner,
+.low-hp-frame-scan,
+.low-hp-frame-caption {
+  position: absolute;
+}
+
+.low-hp-frame-corner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.95;
+}
+
+.low-hp-frame-corner-tl { top: var(--frame-inset); left: var(--frame-inset);   border-top-width: 2px;    border-left-width: 2px; }
+.low-hp-frame-corner-tr { top: var(--frame-inset); right: var(--frame-inset);  border-top-width: 2px;    border-right-width: 2px; }
+.low-hp-frame-corner-bl { bottom: var(--frame-inset); left: var(--frame-inset);  border-bottom-width: 2px; border-left-width: 2px; }
+.low-hp-frame-corner-br { bottom: var(--frame-inset); right: var(--frame-inset); border-bottom-width: 2px; border-right-width: 2px; }
+
+.low-hp-frame-scan {
+  left: var(--frame-inset);
+  right: var(--frame-inset);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.35;
+}
+
+.low-hp-frame-scan-top    { top: 1.6rem; }
+.low-hp-frame-scan-bottom { bottom: 1.6rem; }
+
+.low-hp-frame-caption {
+  left: 1.05rem;
+  top: 0.8rem;
+  font-size: 0.52rem;
+  letter-spacing: 0.34em;
+  color: rgba(255, 255, 255, 0.28);
+  text-transform: uppercase;
+}
+
+.low-hp-frame-red .low-hp-frame-caption {
+  color: rgba(255, 120, 140, 0.72);
+  text-shadow: 0 0 12px rgba(255, 68, 102, 0.5);
+}

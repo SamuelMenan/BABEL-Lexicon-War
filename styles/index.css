@@ -1,0 +1,31 @@
+/* ─────────────────────────────────────────────────────────────
+   BABEL: Lexicon War — Main stylesheet
+   Import order: tokens → reset → animations → layout → components
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. Design tokens */
+@import './utils/variables.css';
+
+/* 2. Base */
+@import './base/typography.css';
+@import './base/reset.css';
+
+/* 3. Animations (keyframes must load before classes that use them) */
+@import './animations/keyframes.css';
+
+/* 4. Layout */
+@import './layout/canvas.css';
+@import './layout/hud.css';
+@import './layout/loading.css';
+@import './layout/eleccion-nave.css';
+
+/* 5. Components */
+@import './components/word-display.css';
+@import './components/edge-effects.css';
+@import './components/flow-frame.css';
+@import './components/low-hp-frame.css';
+@import './components/warnings.css';
+@import './components/precombat.css';
+@import './components/wave.css';
+@import './components/menu.css';
+@import './components/match-result.css';

@@ -1,0 +1,228 @@
+.loading-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loading);
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hud);
+  animation: loading-fade-in 0.55s ease forwards;
+}
+
+/* ── Grid background ─────────────────────────────────────────── */
+
+.loading-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,255,204,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  z-index: 0;
+}
+
+/* ── Content panel ───────────────────────────────────────────── */
+
+.loading-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+  width: clamp(340px, 52vw, 640px);
+  padding: 2.4rem 2.8rem;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-panel-heavy);
+}
+
+/* ── Title ───────────────────────────────────────────────────── */
+
+.loading-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.loading-title__main {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  color: var(--col-primary);
+  text-shadow: 0 0 28px rgba(0,255,204,0.4);
+}
+
+.loading-title__colon {
+  font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+  font-weight: 400;
+  color: rgba(0,255,204,0.4);
+}
+
+.loading-title__sub {
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+}
+
+/* ── Hairline divider ────────────────────────────────────────── */
+
+.loading-hairline {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,204,0.25), transparent);
+}
+
+/* ── Mode badge ──────────────────────────────────────────────── */
+
+.loading-mode-badge {
+  padding: 0.3rem 1.2rem;
+  border: 1px solid rgba(0,255,204,0.22);
+  background: rgba(0,255,204,0.04);
+}
+
+.loading-mode-badge__text {
+  font-size: clamp(0.7rem, 1.4vw, 0.9rem);
+  letter-spacing: 0.35em;
+  color: var(--col-primary);
+  font-weight: 700;
+}
+
+/* ── Status message ──────────────────────────────────────────── */
+
+.loading-message-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 1.4rem;
+}
+
+.loading-message__diamond {
+  font-size: 0.75rem;
+  color: rgba(0,255,204,0.55);
+}
+
+.loading-message__text {
+  font-size: clamp(0.6rem, 1.1vw, 0.74rem);
+  letter-spacing: 0.24em;
+  color: rgba(255,255,255,0.45);
+}
+
+.loading-message__cursor {
+  font-size: 0.65rem;
+  color: rgba(0,255,204,0.7);
+  transition: opacity 0.1s;
+}
+
+/* ── Progress bar ────────────────────────────────────────────── */
+
+.loading-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(0,255,204,0.08);
+}
+
+.loading-bar-fill {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(90deg, #006655, #00ffcc);
+  border-radius: 2px;
+  transition: width 0.22s ease;
+  overflow: hidden;
+}
+
+.loading-bar-scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  animation: loading-scan 2s ease-in-out infinite;
+}
+
+.loading-bar-active {
+  animation: loading-pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Percentage display ──────────────────────────────────────── */
+
+.loading-pct-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+.loading-pct__sep {
+  font-size: 0.55rem;
+  color: rgba(0,255,204,0.18);
+  letter-spacing: 0.05em;
+}
+
+.loading-pct__num {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: color 0.5s, text-shadow 0.5s;
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-pct__symbol {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ── Quote ───────────────────────────────────────────────────── */
+
+.loading-quote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0 0.2rem;
+}
+
+.loading-quote__line {
+  font-size: clamp(0.65rem, 1.2vw, 0.8rem);
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.3);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.loading-quote__attr {
+  margin-top: 0.4rem;
+  font-size: clamp(0.52rem, 0.9vw, 0.64rem);
+  letter-spacing: 0.25em;
+  color: rgba(0,255,204,0.3);
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+
+.loading-footer {
+  position: absolute;
+  bottom: 1.4rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+.loading-footer__text {
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  color: var(--text-faint);
+}
+
+.loading-footer__sep {
+  font-size: 0.56rem;
+  color: rgba(255,255,255,0.1);
+}

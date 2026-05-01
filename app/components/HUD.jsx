@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Bridge } from "../../shared/bridge.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
@@ -23,29 +23,30 @@ function ActiveWord({ activeWord, animState }) {
     return unsub;
   }, []);
   if (!activeWord) {
-    return (<div style={S.wordZone}><span style={S.wordIdle}>_ _ _ _ _ _ _</span></div>);
+    return (<div className="hud__word-zone"><span className="hud__word-idle">_ _ _ _ _ _ _</span></div>);
   }
   const { word, typed } = activeWord;
   const progress = typed.length / word.length;
+  const progressBg    = animState === "wrong" ? "#ff2244" : "var(--col-active)";
+  const progressGlow  = animState === "wrong" ? "0 0 10px #ff2244" : "0 0 8px var(--col-active)";
   return (
-    <div style={S.wordZone}>
-      <div className={"word-area-" + animState} style={S.wordLetters}>
+    <div className="hud__word-zone">
+      <div className={"word-area-" + animState} style={{ display: "flex", gap: "0.04rem", alignItems: "baseline" }}>
         {word.split("").map((ch, i) => {
           const done = i < typed.length; const current = i === typed.length; const popped = i === poppedIdx;
           const wrong = i === wrongIdx;
+          const letterColor = done ? "var(--col-active)" : current ? "var(--col-pending)" : "var(--col-ghost-letter)";
           return (
-            <span key={word+"-"+i} className={wrong ? "letter-wrong" : popped ? "letter-popped" : ""} style={{ ...S.letter,
-              color: done ? "var(--col-active)" : current ? "var(--col-pending)" : "var(--col-ghost-letter)",
-              textShadow: done ? "0 0 14px var(--col-active)" : "none" }}>
+            <span key={word+"-"+i}
+              className={`hud__letter${wrong ? " letter-wrong" : popped ? " letter-popped" : ""}`}
+              style={{ color: letterColor, textShadow: done ? "0 0 14px var(--col-active)" : "none" }}>
               {ch}
             </span>
           );
         })}
       </div>
-      <div style={S.progressTrack}>
-        <div style={{ ...S.progressFill, width: (progress*100)+"%",
-          background: animState==="wrong" ? "#ff2244" : "var(--col-active)",
-          boxShadow: animState==="wrong" ? "0 0 10px #ff2244" : "0 0 8px var(--col-active)" }} />
+      <div className="hud__progress-track">
+        <div className="hud__progress-fill" style={{ width: (progress*100)+"%", background: progressBg, boxShadow: progressGlow }} />
       </div>
     </div>
   );
@@ -57,9 +58,9 @@ function RaceTicker({ timeRemaining, playerPhrasesCompleted }) {
   const s = Math.max(0, Math.round(timeRemaining ?? 60));
   const msg = `◂  PROTOCOLO · SPRINT · ACTIVO  ▸  SECUENCIAS · ${String(playerPhrasesCompleted || 0).padStart(2,"0")} · TRANSMITIDAS  ▸  TIEMPO · ${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")} · RESTANTE  ▸  SISTEMA · FLUJO · ESTABLE  ▸  `;
   return (
-    <div style={S.ticker}>
-      <div style={S.tickerInner}>
-        <span style={S.tickerText}>{msg}{msg}</span>
+    <div className="hud__ticker">
+      <div className="hud__ticker-inner">
+        <span className="hud__ticker-text">{msg}{msg}</span>
       </div>
     </div>
   );
@@ -69,35 +70,34 @@ function RaceBottomLeft({ flowMultiplier, playerPhrasesCompleted, opponentPhrase
   const oppDone = Math.floor(opponentPhraseProgress);
   const winning = playerPhrasesCompleted > oppDone;
   const flowPct = Math.min(100, ((flowMultiplier - 1.0) / 1.0) * 100);
+  const flowColor = flowMultiplier >= 2 ? "#00ff88" : "var(--col-active)";
+  const statusColor = winning ? "#00ff88" : "#ff4466";
   return (
-    <div style={S.combatBottomLeft}>
-      <div style={S.raceStatPanel}>
-        <span style={S.raceStatPanelLabel}>ESTADO · SPRINT</span>
-        <div style={S.raceStatRow}>
-          <span style={S.raceStatRowLabel}>SECUENCIAS</span>
-          <span style={{ ...S.raceStatRowVal, color:"var(--col-active)" }}>{String(playerPhrasesCompleted).padStart(2,"0")}</span>
+    <div className="combat__bottom-left">
+      <div className="race__stat-panel">
+        <span className="race__stat-panel-label">ESTADO · SPRINT</span>
+        <div className="race__stat-row">
+          <span className="race__stat-row-label">SECUENCIAS</span>
+          <span className="race__stat-row-val" style={{ color: "var(--col-active)" }}>{String(playerPhrasesCompleted).padStart(2,"0")}</span>
         </div>
-        <div style={S.raceStatRow}>
-          <span style={S.raceStatRowLabel}>OPONENTE</span>
-          <span style={{ ...S.raceStatRowVal, color: winning ? "rgba(255,255,255,0.4)" : "#ff4466" }}>{String(oppDone).padStart(2,"0")}</span>
+        <div className="race__stat-row">
+          <span className="race__stat-row-label">OPONENTE</span>
+          <span className="race__stat-row-val" style={{ color: winning ? "rgba(255,255,255,0.4)" : "#ff4466" }}>{String(oppDone).padStart(2,"0")}</span>
         </div>
-        <div style={{ ...S.raceStatRow, marginTop:"0.2rem" }}>
-          <span style={{ ...S.raceStatRowLabel, color: winning ? "#00ff88" : "#ff4466", letterSpacing:"0.15em" }}>
+        <div className="race__stat-row" style={{ marginTop: "0.2rem" }}>
+          <span className="race__stat-row-label" style={{ color: statusColor, letterSpacing: "0.15em" }}>
             {winning ? "▲ DELANTE" : "▼ DETRAS"}
           </span>
         </div>
       </div>
       {flowMultiplier > 1.0 && (
-        <div style={S.raceFlowBlock}>
-          <span style={S.raceFlowLabel}>MULTIPLICADOR DE FLUJO</span>
-          <span style={{ ...S.raceFlowVal,
-            color: flowMultiplier>=2 ? "#00ff88" : "var(--col-active)",
-            textShadow: "0 0 16px "+(flowMultiplier>=2?"#00ff88":"var(--col-active)") }}>
+        <div className="race__flow-block">
+          <span className="race__flow-label">MULTIPLICADOR DE FLUJO</span>
+          <span className="race__flow-val" style={{ color: flowColor, textShadow: "0 0 16px " + flowColor }}>
             ×{flowMultiplier.toFixed(1)}
           </span>
-          <div style={S.raceFlowTrack}>
-            <div style={{ ...S.raceFlowFill, width: flowPct+"%",
-              background: flowMultiplier>=2 ? "#00ff88" : "var(--col-active)" }} />
+          <div className="race__flow-track">
+            <div className="race__flow-fill" style={{ width: flowPct+"%", background: flowColor }} />
           </div>
         </div>
       )}
@@ -109,12 +109,12 @@ function RacePhrase({ currentPhrase, currentPhraseWordIndex, activeWord, animSta
   if (!currentPhrase) return null;
   const typed = activeWord?.typed || "";
   return (
-    <div style={S.phraseZone}>
-      <div className={"word-area-" + animState} style={S.phraseWords}>
+    <div className="race__phrase-zone">
+      <div className={"word-area-" + animState + " race__phrase-words"}>
         {currentPhrase.map((word, wi) => {
-          if (wi < currentPhraseWordIndex) return <span key={wi} style={S.phraseDone}>{word}</span>;
+          if (wi < currentPhraseWordIndex) return <span key={wi} className="race__phrase-done">{word}</span>;
           if (wi === currentPhraseWordIndex) return (
-            <span key={wi} style={S.phraseActive}>
+            <span key={wi} className="race__phrase-active">
               {word.split("").map((ch, ci) => (
                 <span key={ci} style={{
                   color: ci<typed.length ? "var(--col-active)" : ci===typed.length ? "var(--col-pending)" : "var(--col-ghost-letter)",
@@ -124,7 +124,7 @@ function RacePhrase({ currentPhrase, currentPhraseWordIndex, activeWord, animSta
               ))}
             </span>
           );
-          return <span key={wi} style={S.phraseUpcoming}>{word}</span>;
+          return <span key={wi} className="race__phrase-upcoming">{word}</span>;
         })}
       </div>
     </div>
@@ -137,22 +137,19 @@ function RaceTimer({ timeRemaining }) {
   const mm = String(Math.floor(s/60)).padStart(2,"0");
   const ss2 = String(s%60).padStart(2,"0");
   const col = s<=10 ? "#ff4466" : s<=20 ? "#ffcc00" : "var(--col-active)";
+  const fillBg = s<=10 ? "#ff4466" : s<=20 ? "#ffcc00" : "linear-gradient(90deg,#00ffcc,#00ff88)";
   return (
-    <div style={S.raceTimerPanel}>
-      <span style={S.raceTimerLabel}>TIEMPO · RESTANTE</span>
-      <span style={{ ...S.raceTimerNum, color: col,
-        textShadow: "0 0 20px "+col,
-        animation: s<=10 ? "blink 0.5s step-end infinite" : "none" }}>
+    <div className="race__timer-panel">
+      <span className="race__timer-label">TIEMPO · RESTANTE</span>
+      <span className="race__timer-num" style={{ color: col, textShadow: "0 0 20px "+col, animation: s<=10 ? "blink 0.5s step-end infinite" : "none" }}>
         {mm}:{ss2}
       </span>
-      <div style={S.raceTimerTrack}>
-        <div style={{ ...S.raceTimerFill, width: (100-timePct)+"%",
-          background: s<=10 ? "#ff4466" : s<=20 ? "#ffcc00" : "linear-gradient(90deg,#00ffcc,#00ff88)" }} />
+      <div className="race__timer-track">
+        <div className="race__timer-fill" style={{ width: (100-timePct)+"%", background: fillBg }} />
       </div>
     </div>
   );
 }
-
 
 function Countdown({ countdown, countdownActive }) {
   const [showGo, setShowGo] = useState(false);
@@ -165,8 +162,8 @@ function Countdown({ countdown, countdownActive }) {
   const label = showGo ? "YA!" : countdown > 0 ? String(countdown) : "";
   const col = showGo ? "#00ff88" : "rgba(255,255,255,0.9)";
   return (
-    <div style={S.countdownOverlay}>
-      <span style={{ ...S.countdownNum, color: col, textShadow: "0 0 60px "+col+", 0 0 120px "+col }}>
+    <div className="hud__countdown-overlay">
+      <span className="hud__countdown-num" style={{ color: col, textShadow: "0 0 60px "+col+", 0 0 120px "+col }}>
         {label}
       </span>
     </div>
@@ -188,11 +185,11 @@ function FlowModeOverlay({ flowActive }) {
   if (!showPopup) return null;
 
   return (
-    <div className="precombat-overlay" style={{ background: "radial-gradient(circle at center, rgba(153, 0, 255, 0.15) 0%, rgba(0, 0, 0, 0.52) 62%, rgba(0, 0, 0, 0.7) 100%)", zIndex: 40 }}>
-      <div className="precombat-frame" style={{ borderColor: "rgba(204, 0, 255, 0.6)", animation: "precombat-number-pop 0.24s ease-out, flow-frame-pulse-anim 0.4s ease-in-out infinite" }}>
-        <span className="precombat-phase" style={{ color: "rgba(255, 255, 255, 0.8)", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>FLUJO DESBLOQUEADO</span>
-        <span className="precombat-value" style={{ color: "#e888ff", textShadow: "0 0 30px rgba(204, 0, 255, 0.9), 0 0 90px rgba(204, 0, 255, 0.6)" }}>100%</span>
-        <span className="precombat-message" style={{ color: "#fff", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>SINCRONIZACIÓN LÉXICA ACTIVA</span>
+    <div className="precombat-overlay" style={{ background: "radial-gradient(circle at center, rgba(153,0,255,0.15) 0%, rgba(0,0,0,0.52) 62%, rgba(0,0,0,0.7) 100%)", zIndex: 40 }}>
+      <div className="precombat-frame" style={{ borderColor: "rgba(204,0,255,0.6)", animation: "precombat-number-pop 0.24s ease-out, flow-frame-pulse-anim 0.4s ease-in-out infinite" }}>
+        <span className="precombat-phase" style={{ color: "rgba(255,255,255,0.8)", textShadow: "0 0 10px rgba(204,0,255,0.6)" }}>FLUJO DESBLOQUEADO</span>
+        <span className="precombat-value" style={{ color: "#e888ff", textShadow: "0 0 30px rgba(204,0,255,0.9), 0 0 90px rgba(204,0,255,0.6)" }}>100%</span>
+        <span className="precombat-message" style={{ color: "#fff", textShadow: "0 0 10px rgba(204,0,255,0.6)" }}>SINCRONIZACIÓN LÉXICA ACTIVA</span>
       </div>
       <div className="precombat-scanline" style={{ background: "rgba(204,0,255,0.4)", boxShadow: "0 0 20px rgba(204,0,255,0.6)" }} />
     </div>
@@ -204,9 +201,9 @@ function FlowModeOverlay({ flowActive }) {
 function CombatTicker() {
   const msg = "◂  FIRMA DEL ENJAMBRE · DETECTADA  ▸  LEXICO · HOSTIL  ▸  PROTOCOLO LEXICO · EN CURSO  ▸  PROGRAMA TYPO · ACTIVO  ▸  ";
   return (
-    <div style={S.ticker}>
-      <div style={S.tickerInner}>
-        <span style={S.tickerText}>{msg}{msg}</span>
+    <div className="hud__ticker">
+      <div className="hud__ticker-inner">
+        <span className="hud__ticker-text">{msg}{msg}</span>
       </div>
     </div>
   );
@@ -215,17 +212,17 @@ function CombatTicker() {
 function CombatTopRight({ wpm, accuracy }) {
   const wpmCol = wpm>=60 ? "var(--col-active)" : wpm>=30 ? "#ffcc00" : wpm>0 ? "#ff6644" : "rgba(255,255,255,0.35)";
   return (
-    <div style={S.combatTopRight}>
-      <div style={S.combatStatBlock}>
-        <span style={{ ...S.combatBigNum, color: wpmCol, textShadow: wpm>=60 ? "0 0 20px "+wpmCol : "none" }}>{wpm}</span>
-        <span style={S.combatStatLabel}>PPM</span>
+    <div className="combat__top-right">
+      <div className="combat__stat-block">
+        <span className="combat__big-num" style={{ color: wpmCol, textShadow: wpm>=60 ? "0 0 20px "+wpmCol : "none" }}>{wpm}</span>
+        <span className="combat__stat-label">PPM</span>
       </div>
-      <div style={{ ...S.combatStatBlock, alignItems:"flex-end" }}>
-        <div style={S.combatAccRow}>
-          <span style={S.combatBigNum2}>{accuracy}</span>
-          <span style={S.combatAccPct}>%</span>
+      <div className="combat__stat-block combat__stat-block--right">
+        <div className="combat__acc-row">
+          <span className="combat__big-num-2">{accuracy}</span>
+          <span className="combat__acc-pct">%</span>
         </div>
-        <span style={S.combatStatLabel}>PRECISION</span>
+        <span className="combat__stat-label">PRECISION</span>
       </div>
     </div>
   );
@@ -245,7 +242,6 @@ function WarningTriangle({ level, size = "1em" }) {
 
 function WarningBox({ level, label, detail }) {
   if (level === 'none') return null;
-
   return (
     <div className={`warning-icon warning-icon-${level}`}>
       <WarningTriangle level={level} size="1.1rem" />
@@ -266,21 +262,11 @@ function WarningIcon({ warnings, flow = 0, flowActive = false, flowCooldown = fa
   const infos = [];
 
   if (proximityLevel !== 'none') {
-    boxes.push({
-      level: proximityLevel,
-      label: proximityLevel === 'red' ? 'OBJETO CERCANO' : 'OBJETO CERCA',
-      detail: `${distance ?? '--'}M`,
-    });
+    boxes.push({ level: proximityLevel, label: proximityLevel === 'red' ? 'OBJETO CERCANO' : 'OBJETO CERCA', detail: `${distance ?? '--'}M` });
   }
-
   if (lowHpLevel !== 'none') {
-    boxes.push({
-      level: lowHpLevel,
-      label: lowHpLevel === 'red' ? 'VIDA BAJA' : 'VIDA MEDIA',
-      detail: null,
-    });
+    boxes.push({ level: lowHpLevel, label: lowHpLevel === 'red' ? 'VIDA BAJA' : 'VIDA MEDIA', detail: null });
   }
-
   if (flowActive) {
     infos.push({ label: 'FLUJO·LEX', detail: 'ACTIVO', color: '#00ff88' });
   } else if (flowCooldown) {
@@ -305,7 +291,6 @@ function WarningIcon({ warnings, flow = 0, flowActive = false, flowCooldown = fa
 
 function LowHpFrame({ level }) {
   if (level === 'none') return null;
-
   return (
     <div className={`low-hp-frame low-hp-frame-${level}`}>
       <div className="low-hp-frame-corner low-hp-frame-corner-tl" />
@@ -326,7 +311,7 @@ function PreCombatOverlay({ active, step, value, message, level }) {
     <div className={`precombat-overlay precombat-overlay-${level}`}>
       <div className={`precombat-frame precombat-frame-${level}`}>
         <span className="precombat-phase">{engage ? 'ENGAGE' : 'PREPARE'}</span>
-        <span className={`precombat-value ${engage ? 'precombat-value-engage' : ''}`}>{value ?? '...'}</span>
+        <span className={`precombat-value${engage ? ' precombat-value-engage' : ''}`}>{value ?? '...'}</span>
         <span className="precombat-message">{message}</span>
       </div>
       <div className="precombat-scanline" />
@@ -339,12 +324,12 @@ function StatusBar({ label, value, max=100, danger=false, forceColor, flash=fals
   const pct = Math.max(0, Math.min(100, (value/max)*100));
   const col = forceColor ?? (danger && pct<=35 ? "#ff4466" : "var(--col-active)");
   return (
-    <div className={flash ? "status-bar-flash" : ""} style={S.statusBarRow}>
-      <span style={S.statusBarLabel}>{label}</span>
-      <div style={S.statusBarTrack}>
-        <div style={{ ...S.statusBarFill, width: pct+"%", background: col, boxShadow: "0 0 5px "+col }} />
+    <div className={flash ? "status-bar__row status-bar-flash" : "status-bar__row"}>
+      <span className="status-bar__label">{label}</span>
+      <div className="status-bar__track">
+        <div className="status-bar__fill" style={{ width: pct+"%", background: col, boxShadow: "0 0 5px "+col }} />
       </div>
-      <span style={{ ...S.statusBarValue, color: col }}>{String(Math.round(value)).padStart(3,"0")}</span>
+      <span className="status-bar__value" style={{ color: col }}>{String(Math.round(value)).padStart(3,"0")}</span>
     </div>
   );
 }
@@ -356,35 +341,29 @@ function FlowBar({ flow, active, cooldown }) {
     : pct >= 50               ? '#7744ff'
     : pct >= 25               ? '#aa77ff'
     :                           '#cc99ff';
-  const label = 'FLOW';
   return (
-    <div style={S.statusBarRow}>
-      <span style={{ ...S.statusBarLabel, color: 'rgba(255,255,255,0.92)' }}>{label}</span>
-      <div style={{ ...S.statusBarTrack, position: 'relative' }}>
-        <div style={{ ...S.statusBarFill, width: pct + '%', background: color, boxShadow: '0 0 12px ' + color,
-          opacity: cooldown ? 0.4 : 1 }} />
+    <div className="status-bar__row">
+      <span className="status-bar__label" style={{ color: 'rgba(255,255,255,0.92)' }}>FLOW</span>
+      <div className="status-bar__track" style={{ position: 'relative' }}>
+        <div className="status-bar__fill" style={{ width: pct + '%', background: color, boxShadow: '0 0 12px ' + color, opacity: cooldown ? 0.4 : 1 }} />
         {active && <div className="flow-bar-active-pulse" style={{ position: 'absolute', inset: 0, background: color, opacity: 0.18 }} />}
       </div>
-      <span style={{ ...S.statusBarValue, color }}>{String(Math.round(pct)).padStart(3, '0')}</span>
+      <span className="status-bar__value" style={{ color }}>{String(Math.round(pct)).padStart(3, '0')}</span>
     </div>
   );
 }
 
 function CombatBottomLeft({ hp, flow = 0, flowActive = false, flowCooldown = false, wave, swarmRemnants, warnings }) {
   const lowHpLevel = warnings?.lowHpLevel ?? 'none';
-  const hpForceColor = lowHpLevel === 'red'
-    ? '#ff4466'
-    : lowHpLevel === 'yellow'
-      ? '#ffcc00'
-      : undefined;
+  const hpForceColor = lowHpLevel === 'red' ? '#ff4466' : lowHpLevel === 'yellow' ? '#ffcc00' : undefined;
   return (
-    <div style={S.combatBottomLeft}>
+    <div className="combat__bottom-left">
       <StatusBar label="VIDA" value={hp} danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
       <FlowBar flow={flow} active={flowActive} cooldown={flowCooldown} />
-      <div style={S.waveBlock}>
-        <span style={S.waveLabel}>OLEADA · LEXICA</span>
-        <span style={S.waveNum}>{String(wave || 0).padStart(2,"0")}</span>
-        <span style={S.swarmRem}>RESTOS DEL ENJAMBRE <span style={{ color:"var(--col-active)" }}>{swarmRemnants}</span></span>
+      <div className="wave-block">
+        <span className="wave-block__label">OLEADA · LEXICA</span>
+        <span className="wave-block__num">{String(wave || 0).padStart(2,"0")}</span>
+        <span className="wave-block__rem">RESTOS DEL ENJAMBRE <span style={{ color: "var(--col-active)" }}>{swarmRemnants}</span></span>
       </div>
     </div>
   );
@@ -434,37 +413,39 @@ function CombatWordPanel({ activeWord, animState }) {
   const wordType = WORD_TYPE_MAP[word.toLowerCase()] || "LEXEMA";
   const hexCore = word ? wordHexCore(word) : "——";
   const freq = word ? (300 + ((word.charCodeAt(0) * 7 + word.length * 43) % 400)) : 0;
+  const boxBorderColor = animState === "wrong" ? "#ff2244" : "rgba(0,255,204,0.35)";
 
   return (
-    <div style={S.combatWordPanel}>
-      <div style={S.combatWordHeader}>
-        <span style={S.combatWordHeaderTag}>◊ ENLACE · LEXICO</span>
-        <span style={S.transmitting}>● TRANSMITIENDO</span>
+    <div className="combat__word-panel">
+      <div className="combat__word-header">
+        <span className="combat__word-header-tag">◊ ENLACE · LEXICO</span>
+        <span className="combat__transmitting">● TRANSMITIENDO</span>
       </div>
-      <div style={{ ...S.combatWordBox, borderColor: animState=="wrong" ? "#ff2244" : "rgba(0,255,204,0.35)" }}>
-        <span style={S.combatWordPrompt}>&gt;</span>
-        <div style={S.combatWordLetters}>
+      <div className="combat__word-box" style={{ borderColor: boxBorderColor }}>
+        <span className="combat__word-prompt">&gt;</span>
+        <div className="combat__word-letters">
           {word ? word.split("").map((ch, i) => {
             const done = i < typed.length; const cur = i === typed.length;
             return (
-              <span key={word+i} className={done ? "letter-hit" : ""} style={{
-                ...S.combatLetter,
-                color: done ? "var(--col-active)" : cur ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)",
-                textShadow: done ? "0 0 12px var(--col-active)" : "none",
-                borderBottom: cur ? "2px solid rgba(255,255,255,0.7)" : "2px solid transparent",
-              }}>{ch}</span>
+              <span key={word+i}
+                className={`combat__letter${done ? " letter-hit" : ""}`}
+                style={{
+                  color: done ? "var(--col-active)" : cur ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)",
+                  textShadow: done ? "0 0 12px var(--col-active)" : "none",
+                  borderBottom: cur ? "2px solid rgba(255,255,255,0.7)" : "2px solid transparent",
+                }}>{ch}</span>
             );
           }) : <span style={{ color:"rgba(255,255,255,0.12)", fontSize:"1.6rem" }}>_ _ _ _ _</span>}
         </div>
       </div>
-      <div style={S.combatWordMeta}>
-        <span style={S.combatMetaTag}>{wordType}</span>
-        <span style={S.combatMetaDivider}>|</span>
-        <span style={S.combatMetaItem}>NUCLEO · <span style={{ color:"var(--col-active)" }}>{hexCore}</span></span>
-        <span style={S.combatMetaDivider}>|</span>
-        <span style={S.combatMetaItem}>LONG · <span style={{ color:"var(--col-active)" }}>{word.length || "—"}</span></span>
-        <span style={S.combatMetaDivider}>|</span>
-        <span style={S.combatMetaItem}>FREC · <span style={{ color:"var(--col-active)" }}>{word ? freq+"HZ" : "—"}</span></span>
+      <div className="combat__word-meta">
+        <span className="combat__meta-tag">{wordType}</span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">NUCLEO · <span style={{ color:"var(--col-active)" }}>{hexCore}</span></span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">LONG · <span style={{ color:"var(--col-active)" }}>{word.length || "—"}</span></span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">FREC · <span style={{ color:"var(--col-active)" }}>{word ? freq+"HZ" : "—"}</span></span>
       </div>
     </div>
   );
@@ -472,33 +453,32 @@ function CombatWordPanel({ activeWord, animState }) {
 
 function LexiconDeck({ combatEnemies, targetId, flowMultiplier }) {
   const sorted = [...(combatEnemies || [])].sort((a,b) => a.distance - b.distance);
+  const flowColor = flowMultiplier >= 2 ? "#00ff88" : "var(--col-active)";
   return (
-    <div style={S.lexiconDeck}>
-      <div style={S.deckHeader}>
-        <span style={S.deckHeaderLabel}>MAZO · LEXICO</span>
-        <span style={S.deckHeaderCount}>{sorted.length}</span>
+    <div className="lexicon-deck">
+      <div className="lexicon-deck__header">
+        <span className="lexicon-deck__header-label">MAZO · LEXICO</span>
+        <span className="lexicon-deck__header-count">{sorted.length}</span>
       </div>
-      <div style={S.deckList}>
+      <div className="lexicon-deck__list">
         {sorted.slice(0,6).map(e => (
-          <div key={e.id} style={{ ...S.deckRow, ...(e.targeted ? S.deckRowActive : {}) }}>
-            <span style={S.deckRowBullet}>{e.targeted ? "▸" : " "}</span>
-            <span style={{ ...S.deckRowWord, color: e.targeted ? "var(--col-active)" : "rgba(255,255,255,0.55)",
-              fontWeight: e.targeted ? "bold" : "normal" }}>{e.word}</span>
-            <span style={S.deckRowDistWrap}>
+          <div key={e.id} className={`lexicon-deck__row${e.targeted ? " lexicon-deck__row--active" : ""}`}>
+            <span className="lexicon-deck__bullet">{e.targeted ? "▸" : " "}</span>
+            <span className="lexicon-deck__word" style={{ color: e.targeted ? "var(--col-active)" : "rgba(255,255,255,0.55)", fontWeight: e.targeted ? "bold" : "normal" }}>{e.word}</span>
+            <span className="lexicon-deck__dist-wrap">
               <WarningTriangle level={getProximityLevel(e.distance)} />
-              <span style={S.deckRowDist}>{e.distance}m</span>
+              <span className="lexicon-deck__dist">{e.distance}m</span>
             </span>
           </div>
         ))}
         {sorted.length === 0 && (
-          <div style={S.deckEmpty}>— LIMPIO —</div>
+          <div className="lexicon-deck__empty">— LIMPIO —</div>
         )}
       </div>
       {flowMultiplier > 1.0 && (
-        <div style={S.deckFlow}>
-          <span style={S.deckFlowLabel}>MULTIPLICADOR DE FLUJO</span>
-          <span style={{ ...S.deckFlowVal, color: flowMultiplier>=2 ? "#00ff88" : "var(--col-active)",
-            textShadow: "0 0 14px "+(flowMultiplier>=2 ? "#00ff88" : "var(--col-active)") }}>
+        <div className="lexicon-deck__flow">
+          <span className="lexicon-deck__flow-label">MULTIPLICADOR DE FLUJO</span>
+          <span className="lexicon-deck__flow-val" style={{ color: flowColor, textShadow: "0 0 14px " + flowColor }}>
             ×{flowMultiplier.toFixed(1)}
           </span>
         </div>
@@ -511,7 +491,7 @@ function WaveAnnouncement({ wave }) {
   if (!wave) return null;
   const isHighWave = wave >= 8;
   return (
-    <div className={"wave-fullscreen" + (isHighWave ? " wave-fullscreen-danger" : "") }>
+    <div className={"wave-fullscreen" + (isHighWave ? " wave-fullscreen-danger" : "")}>
       <div className="wave-fullscreen-inner">
         <span className="wave-fullscreen-tag">{isHighWave ? "ALERTA DE OLEADA" : "NUEVA OLEADA"}</span>
         <span className="wave-fullscreen-num">{String(wave).padStart(2, "0")}</span>
@@ -571,34 +551,22 @@ export default function HUD() {
 
   if (!isRacing) {
     return (
-      <div style={S.hud}>
+      <div className="hud">
         {showFlash && <div className="edge-flash" />}
         {flowActive && <FlowFrame />}
         <LowHpFrame level={lowHpLevel} />
         <div className="hud-safe-zone">
-          <PreCombatOverlay
-            active={preCombatActive}
-            step={preCombatStep}
-            value={preCombatValue}
-            message={preCombatMessage}
-            level={preCombatLevel}
-          />
+          <PreCombatOverlay active={preCombatActive} step={preCombatStep} value={preCombatValue} message={preCombatMessage} level={preCombatLevel} />
           <WaveAnnouncement wave={waveNotice} />
           <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
-          {/* Top-left: pilot info */}
-          <div style={S.combatTopLeft}>
-            <span style={S.pilotName}>KAEL · VOSS</span>
-            <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+          <div className="combat__top-left">
+            <span className="hud__pilot-name">KAEL · VOSS</span>
+            <span className="hud__pilot-sub">TYPO—07 / PILOTO</span>
           </div>
-          {/* Top-center: ticker */}
           <CombatTicker />
-          {/* Top-right: WPM + accuracy */}
           <CombatTopRight wpm={wpm} accuracy={accuracy} />
-          {/* Bottom-left: status bars */}
           <CombatBottomLeft hp={hp} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} wave={wave} swarmRemnants={swarmRemnants} warnings={warnings} />
-          {/* Bottom-center: active word panel */}
           <CombatWordPanel activeWord={activeWord} animState={animState} />
-          {/* Bottom-right: lexicon deck */}
           <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
         </div>
       </div>
@@ -606,7 +574,7 @@ export default function HUD() {
   }
 
   return (
-    <div style={S.hud}>
+    <div className="hud">
       {showFlash && <div className="edge-flash" />}
       <LowHpFrame level={lowHpLevel} />
       <div className="hud-safe-zone">
@@ -614,169 +582,19 @@ export default function HUD() {
         <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
         <FlowModeOverlay flowActive={flowActive} />
-        {/* Top-left: pilot info */}
-        <div style={S.combatTopLeft}>
-          <span style={S.pilotName}>KAEL · VOSS</span>
-          <span style={S.pilotSub}>TYPO—07 / PILOTO</span>
+        <div className="combat__top-left">
+          <span className="hud__pilot-name">KAEL · VOSS</span>
+          <span className="hud__pilot-sub">TYPO—07 / PILOTO</span>
         </div>
-        {/* Top-center: race ticker */}
         <RaceTicker timeRemaining={timeRemaining} playerPhrasesCompleted={playerPhrasesCompleted} />
-        {/* Top-right: WPM + accuracy */}
         <CombatTopRight wpm={wpm} accuracy={accuracy} />
-        {/* Bottom-left: race stats */}
         <RaceBottomLeft wpm={wpm} accuracy={accuracy} flowMultiplier={flowMultiplier}
           playerPhrasesCompleted={playerPhrasesCompleted || 0}
           opponentPhraseProgress={opponentPhraseProgress || 0} />
-        {/* Center: phrase */}
         <RacePhrase currentPhrase={currentPhrase} currentPhraseWordIndex={currentPhraseWordIndex}
           activeWord={activeWord} animState={animState} />
-        {/* Bottom-center: timer */}
         <RaceTimer timeRemaining={timeRemaining ?? 60} />
       </div>
     </div>
   );
 }
-
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
-const S = {
-  hud: { position:"absolute", inset:0, pointerEvents:"none",
-    fontFamily:"'Orbitron', sans-serif",
-    "--col-active":"#00ffcc", "--col-pending":"rgba(255,255,255,0.55)", "--col-ghost-letter":"rgba(255,255,255,0.15)" },
-
-  // ── Combat top-left
-  combatTopLeft: { position:"absolute", top:"1.4rem", left:"1.6rem",
-    display:"flex", flexDirection:"column", gap:"0.1rem" },
-  pilotName: { fontSize:"0.92rem", fontWeight:"bold", letterSpacing:"0.22em", color:"rgba(255,255,255,0.85)" },
-  pilotSub:  { fontSize:"0.68rem", letterSpacing:"0.18em", color:"var(--col-active)", opacity:0.7 },
-
-  // ── Combat ticker
-  ticker: { position:"absolute", top:0, left:"50%", transform:"translateX(-50%)",
-    width:"clamp(360px,58vw,860px)", overflow:"hidden", height:"2.4rem",
-    display:"flex", alignItems:"center" },
-  tickerInner: { width:"100%", overflow:"hidden" },
-  tickerText: { display:"inline-block", whiteSpace:"nowrap", fontSize:"0.62rem",
-    letterSpacing:"0.22em", color:"rgba(0,255,204,0.55)",
-    animation:"tickerScroll 22s linear infinite" },
-
-  // ── Combat top-right
-  combatTopRight: { position:"absolute", top:"1.4rem", right:"1.6rem",
-    display:"flex", flexDirection:"row", alignItems:"flex-end", gap:"1.6rem" },
-  combatStatBlock: { display:"flex", flexDirection:"column", alignItems:"flex-start" },
-  combatBigNum: { fontSize:"3.4rem", fontWeight:"bold", letterSpacing:"-0.03em", lineHeight:1, transition:"color 0.4s" },
-  combatBigNum2: { fontSize:"2.2rem", fontWeight:"bold", letterSpacing:"-0.02em", lineHeight:1, color:"rgba(255,255,255,0.5)" },
-  combatAccRow: { display:"flex", alignItems:"baseline", gap:"0.05rem" },
-  combatAccPct: { fontSize:"1.05rem", color:"rgba(255,255,255,0.35)" },
-  combatStatLabel: { fontSize:"0.66rem", letterSpacing:"0.3em", color:"rgba(255,255,255,0.22)", marginTop:"0.15rem" },
-
-  // ── Combat bottom-left
-  combatBottomLeft: { position:"absolute", bottom:"1.8rem", left:"1.6rem",
-    display:"flex", flexDirection:"column", gap:"0.65rem", minWidth:"220px" },
-  statusBarRow: {
-    display:"flex", alignItems:"center", gap:"0.7rem",
-    background:"rgba(0,0,0,0.42)", border:"1px solid rgba(255,255,255,0.12)",
-    padding:"0.28rem 0.5rem", boxShadow:"0 0 12px rgba(0,0,0,0.35)"
-  },
-  statusBarLabel: { fontSize:"0.74rem", fontWeight:"bold", letterSpacing:"0.18em", color:"rgba(255,255,255,0.9)", width:"5.8rem" },
-  statusBarTrack: {
-    flex:1, height:"8px", background:"rgba(255,255,255,0.14)",
-    borderRadius:"4px", overflow:"hidden", minWidth:"130px", border:"1px solid rgba(255,255,255,0.2)"
-  },
-  statusBarFill:  { height:"100%", borderRadius:"3px", transition:"width 0.3s ease" },
-  statusBarValue: { fontSize:"0.94rem", fontWeight:"bold", letterSpacing:"0.04em", width:"2.8rem", textAlign:"right", textShadow:"0 0 8px currentColor" },
-  waveBlock: { marginTop:"0.8rem", display:"flex", flexDirection:"column", gap:"0.2rem" },
-  waveLabel: { fontSize:"0.56rem", letterSpacing:"0.28em", color:"rgba(255,255,255,0.22)" },
-  waveNum:   { fontSize:"3.1rem", fontWeight:"bold", color:"rgba(255,255,255,0.85)", letterSpacing:"-0.02em", lineHeight:1 },
-  swarmRem:  { fontSize:"0.58rem", letterSpacing:"0.2em", color:"rgba(255,255,255,0.28)" },
-
-  // ── Combat word panel (bottom-center)
-  combatWordPanel: { position:"absolute", bottom:"1.8rem", left:"50%", transform:"translateX(-50%)",
-    display:"flex", flexDirection:"column", gap:"0.55rem", minWidth:"430px", alignItems:"center" },
-  combatWordHeader: { display:"flex", justifyContent:"space-between", width:"100%",
-    fontSize:"0.6rem", letterSpacing:"0.2em" },
-  combatWordHeaderTag: { color:"rgba(255,255,255,0.3)" },
-  transmitting: { color:"var(--col-active)", opacity:0.75 },
-  combatWordBox: { display:"flex", alignItems:"center", gap:"0.8rem", padding:"0.65rem 1.2rem",
-    border:"1px solid rgba(0,255,204,0.35)", background:"rgba(0,0,0,0.55)",
-    minWidth:"350px", justifyContent:"center", transition:"border-color 0.15s" },
-  combatWordPrompt: { fontSize:"1.5rem", color:"rgba(0,255,204,0.4)", userSelect:"none" },
-  combatWordLetters: { display:"flex", gap:"0", alignItems:"baseline" },
-  combatLetter: { display:"inline-block", fontSize:"2.2rem", fontWeight:"bold",
-    letterSpacing:"0.06em", width:"1.25ch", textAlign:"center", lineHeight:1.2,
-    transition:"color 0.08s, text-shadow 0.1s" },
-  combatWordMeta: { display:"flex", alignItems:"center", gap:"0.5rem", fontSize:"0.58rem",
-    flexWrap:"wrap", justifyContent:"center",
-    letterSpacing:"0.15em", color:"rgba(255,255,255,0.28)" },
-  combatMetaTag: { color:"rgba(255,255,255,0.45)", fontWeight:"bold" },
-  combatMetaDivider: { opacity:0.25 },
-  combatMetaItem: { color:"rgba(255,255,255,0.28)" },
-
-  // ── Lexicon Deck (bottom-right)
-  lexiconDeck: { position:"absolute", bottom:"1.8rem", right:"1.6rem",
-    display:"flex", flexDirection:"column", gap:"0", minWidth:"240px",
-    border:"1px solid rgba(255,255,255,0.07)", background:"rgba(0,0,0,0.45)", padding:"0.8rem 0" },
-  deckHeader: { display:"flex", justifyContent:"space-between", alignItems:"center",
-    padding:"0 1rem 0.6rem", borderBottom:"1px solid rgba(255,255,255,0.06)" },
-  deckHeaderLabel: { fontSize:"0.58rem", letterSpacing:"0.25em", color:"rgba(255,255,255,0.3)" },
-  deckHeaderCount: { fontSize:"0.9rem", color:"var(--col-active)", fontWeight:"bold" },
-  deckList: { display:"flex", flexDirection:"column", padding:"0.3rem 0" },
-  deckRow: { display:"flex", alignItems:"center", gap:"0.45rem", padding:"0.3rem 1rem",
-    fontSize:"0.86rem", letterSpacing:"0.04em" },
-  deckRowActive: { background:"rgba(0,255,204,0.05)" },
-  deckRowBullet: { width:"1rem", fontSize:"0.72rem", color:"var(--col-active)", flexShrink:0 },
-  deckRowWord: { flex:1, transition:"color 0.2s", color:"#9966ff" },
-  deckRowDistWrap: { display:"inline-flex", alignItems:"center", gap:"0.3rem", minWidth:"3.8rem", justifyContent:"flex-end" },
-  deckRowDist: { fontSize:"0.66rem", color:"rgba(255,255,255,0.25)", letterSpacing:"0.05em" },
-  deckEmpty: { padding:"0.55rem 1rem", fontSize:"0.62rem", color:"rgba(255,255,255,0.15)",
-    letterSpacing:"0.2em", textAlign:"center" },
-  deckFlow: { display:"flex", flexDirection:"column", alignItems:"flex-end", padding:"0.5rem 0.8rem 0",
-    borderTop:"1px solid rgba(255,255,255,0.06)" },
-  deckFlowLabel: { fontSize:"0.54rem", letterSpacing:"0.22em", color:"rgba(255,255,255,0.22)" },
-  deckFlowVal: { fontSize:"1.8rem", fontWeight:"bold", letterSpacing:"-0.01em", lineHeight:1.1 },
-
-  // ── Racing
-  phraseZone: { position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-    display:"flex", flexDirection:"column", alignItems:"center", gap:"1.2rem", maxWidth:"80vw" },
-  phraseWords: { display:"flex", gap:"1rem", flexWrap:"wrap", justifyContent:"center",
-    fontSize:"clamp(1.6rem, 3vw, 2.4rem)", fontWeight:"bold", letterSpacing:"0.1em" },
-  phraseDone:     { color:"rgba(0,255,140,0.25)" },
-  phraseActive:   { letterSpacing:"0.12em" },
-  phraseUpcoming: { color:"rgba(255,255,255,0.12)" },
-
-  // ── Race bottom-left stat panel
-  raceStatPanel: { display:"flex", flexDirection:"column", gap:"0.3rem" },
-  raceStatPanelLabel: { fontSize:"0.56rem", letterSpacing:"0.28em", color:"rgba(255,255,255,0.2)", marginBottom:"0.2rem" },
-  raceStatRow: { display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:"1rem" },
-  raceStatRowLabel: { fontSize:"0.62rem", letterSpacing:"0.2em", color:"rgba(255,255,255,0.25)" },
-  raceStatRowVal: { fontSize:"1.2rem", fontWeight:"bold", letterSpacing:"0.04em" },
-
-  // ── Race flow block (in bottom-left)
-  raceFlowBlock: { marginTop:"0.8rem", display:"flex", flexDirection:"column", gap:"0.2rem" },
-  raceFlowLabel: { fontSize:"0.52rem", letterSpacing:"0.22em", color:"rgba(255,255,255,0.2)" },
-  raceFlowVal:   { fontSize:"1.9rem", fontWeight:"bold", letterSpacing:"-0.01em", lineHeight:1 },
-  raceFlowTrack: { width:"100%", height:"2px", background:"rgba(255,255,255,0.07)", borderRadius:"1px", overflow:"hidden" },
-  raceFlowFill:  { height:"100%", borderRadius:"1px", transition:"width 0.3s ease" },
-
-  // ── Race timer (bottom-center)
-  raceTimerPanel: { position:"absolute", bottom:"1.8rem", left:"50%", transform:"translateX(-50%)",
-    display:"flex", flexDirection:"column", alignItems:"center", gap:"0.35rem", minWidth:"230px" },
-  raceTimerLabel: { fontSize:"0.54rem", letterSpacing:"0.25em", color:"rgba(255,255,255,0.2)" },
-  raceTimerNum:   { fontSize:"3.3rem", fontWeight:"bold", letterSpacing:"0.04em", lineHeight:1, transition:"color 0.5s" },
-  raceTimerTrack: { width:"240px", height:"3px", background:"rgba(255,255,255,0.07)", borderRadius:"2px", overflow:"hidden" },
-  raceTimerFill:  { height:"100%", borderRadius:"1px", transition:"width 1s linear",
-    boxShadow:"0 0 6px var(--col-active)" },
-
-  // ── Shared leftover (combat reuses these)
-  wordZone: { position:"absolute", bottom:"14%", left:"50%", transform:"translateX(-50%)",
-    display:"flex", flexDirection:"column", alignItems:"center", gap:"0.7rem" },
-  wordLetters: { display:"flex", gap:"0.04rem", alignItems:"baseline" },
-  wordIdle: { fontSize:"clamp(2rem, 4vw, 3.5rem)", color:"rgba(255,255,255,0.08)", letterSpacing:"0.4em", fontWeight:"bold" },
-  letter: { display:"inline-block", fontSize:"clamp(2.4rem, 4.5vw, 4rem)", fontWeight:"bold",
-    letterSpacing:"0.05em", width:"1.3ch", textAlign:"center", lineHeight:1,
-    transition:"color 0.08s, text-shadow 0.12s" },
-  progressTrack: { width:"100%", height:"2px", background:"rgba(255,255,255,0.06)", borderRadius:"1px", overflow:"hidden", minWidth:"180px" },
-  progressFill: { height:"100%", borderRadius:"1px", transition:"width 0.06s linear, background 0.2s, box-shadow 0.2s", background:"#9966ff", boxShadow:"0 0 8px #9966ff" },
-  countdownOverlay: { position:"absolute", inset:0, display:"flex", alignItems:"center",
-    justifyContent:"center", background:"rgba(0,0,0,0.35)", zIndex:10 },
-  countdownNum: { fontSize:"9rem", fontWeight:"bold", letterSpacing:"-0.02em", lineHeight:1 },
-};

@@ -8,95 +8,6 @@ import { Bridge } from '../../shared/bridge.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { SHIPS } from '../../shared/constants.js';
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const S = {
-  root: {
-    position: 'fixed', inset: 0, zIndex: 20,
-    background: '#020208', overflow: 'hidden', userSelect: 'none',
-  },
-  canvas: {
-    position: 'absolute', inset: 0, cursor: 'grab',
-    transition: 'opacity 0.18s ease',
-  },
-  loadingOverlay: {
-    position: 'absolute', inset: 0,
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center',
-    gap: '0.6rem', pointerEvents: 'none', zIndex: 2,
-  },
-  loadingText: {
-    fontFamily: 'monospace', color: '#00ffcc',
-    fontSize: '0.75rem', letterSpacing: '0.3em',
-  },
-  loadingTrack: {
-    width: '180px', height: '1px', background: '#112233', overflow: 'hidden',
-  },
-  loadingBar: { width: '45%', height: '100%', background: '#00ffcc' },
-  shipInfo: {
-    position: 'absolute', top: '2rem', left: 0, right: 0,
-    textAlign: 'center', pointerEvents: 'none', zIndex: 2,
-  },
-  shipCode: {
-    fontFamily: 'monospace', color: '#223344',
-    fontSize: '0.6rem', letterSpacing: '0.4em',
-    margin: '0 0 0.3rem', textTransform: 'uppercase',
-  },
-  shipName: {
-    fontFamily: "'Orbitron', sans-serif",
-    color: '#00ffcc', fontSize: '1.5rem',
-    letterSpacing: '0.2em', margin: 0, textTransform: 'uppercase',
-    textShadow: '0 0 20px rgba(0,255,204,0.4)',
-  },
-  shipClass: {
-    fontFamily: 'monospace', color: '#223344',
-    fontSize: '0.58rem', letterSpacing: '0.18em',
-    margin: '0.4rem 0 0', textTransform: 'uppercase',
-  },
-  navBtn: {
-    position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-    fontFamily: "'Orbitron', sans-serif",
-    fontSize: '1rem', color: '#00ffcc',
-    background: 'rgba(2,2,8,0.7)',
-    border: '1px solid rgba(0,255,204,0.25)',
-    padding: '0.9rem 1.1rem', cursor: 'pointer',
-    zIndex: 3, backdropFilter: 'blur(4px)',
-  },
-  bottomHud: {
-    position: 'absolute', bottom: '2rem', left: 0, right: 0,
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', gap: '0.9rem', zIndex: 2,
-  },
-  posIndicator: {
-    fontFamily: 'monospace', color: '#334455',
-    fontSize: '0.68rem', letterSpacing: '0.35em',
-  },
-  btnRow: { display: 'flex', gap: '0.75rem' },
-  cancelBtn: {
-    fontFamily: "'Orbitron', sans-serif",
-    fontSize: '0.8rem', color: '#ff4466',
-    background: 'transparent',
-    border: '1px solid rgba(255,68,102,0.35)',
-    padding: '0.6rem 1.4rem', cursor: 'pointer',
-    letterSpacing: '0.12em', textTransform: 'uppercase',
-  },
-  confirmBtn: {
-    fontFamily: "'Orbitron', sans-serif",
-    fontSize: '0.8rem', color: '#000', background: '#00ffcc',
-    border: 'none', padding: '0.6rem 1.8rem', cursor: 'pointer',
-    letterSpacing: '0.12em', textTransform: 'uppercase',
-  },
-  toggleBtn: {
-    fontFamily: "'Orbitron', sans-serif",
-    fontSize: '0.8rem', color: '#00ffcc', background: 'transparent',
-    border: '1px solid rgba(0,255,204,0.35)', padding: '0.6rem 1.4rem',
-    cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase',
-  },
-  keyHints: {
-    fontFamily: 'monospace', color: '#1a2a3a',
-    fontSize: '0.52rem', letterSpacing: '0.18em', textTransform: 'uppercase',
-  },
-};
 
 // ── Scene helpers ─────────────────────────────────────────────────────────────
 
@@ -526,37 +437,37 @@ export default function EleccionNave() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={S.root}>
-      <div ref={mountRef} style={{ ...S.canvas, opacity: canvasAlpha }} />
+    <div className="ship-select">
+      <div ref={mountRef} className="ship-select__canvas" style={{ opacity: canvasAlpha }} />
 
       {modelLoading && (
-        <div style={S.loadingOverlay}>
-          <span style={S.loadingText}>CARGANDO MODELO...</span>
-          <div style={S.loadingTrack}>
-            <div style={S.loadingBar} className="ship-loading-bar" />
+        <div className="ship-select__loading-overlay">
+          <span className="ship-select__loading-text">CARGANDO MODELO...</span>
+          <div className="ship-select__loading-track">
+            <div className="ship-select__loading-bar" />
           </div>
         </div>
       )}
 
-      <div style={S.shipInfo}>
-        <p style={S.shipCode}>{ship.code}</p>
-        <h2 style={S.shipName}>{ship.name}</h2>
-        <p style={S.shipClass}>Programa TYPO · Unidad no clasificada</p>
+      <div className="ship-select__info">
+        <p className="ship-select__code">{ship.code}</p>
+        <h2 className="ship-select__name">{ship.name}</h2>
+        <p className="ship-select__class">Programa TYPO · Unidad no clasificada</p>
       </div>
 
-      <button style={{ ...S.navBtn, left: '1.5rem'  }} onClick={() => navigateTo(shipIdx - 1)}>&#60;</button>
-      <button style={{ ...S.navBtn, right: '1.5rem' }} onClick={() => navigateTo(shipIdx + 1)}>&#62;</button>
+      <button className="ship-select__nav-btn ship-select__nav-btn--left" onClick={() => navigateTo(shipIdx - 1)}>&#60;</button>
+      <button className="ship-select__nav-btn ship-select__nav-btn--right" onClick={() => navigateTo(shipIdx + 1)}>&#62;</button>
 
-      <div style={S.bottomHud}>
-        <p style={S.posIndicator}>{shipIdx + 1} / {SHIPS.length}</p>
-        <div style={S.btnRow}>
-          <button style={S.toggleBtn} onClick={toggleAutoRotate}>
+      <div className="ship-select__bottom-hud">
+        <p className="ship-select__pos-indicator">{shipIdx + 1} / {SHIPS.length}</p>
+        <div className="ship-select__btn-row">
+          <button className="ship-select__toggle-btn" onClick={toggleAutoRotate}>
             {autoRotate ? 'DETENER GIRO' : 'INICIAR GIRO'}
           </button>
-          <button style={S.cancelBtn}  onClick={handleCancel}>VOLVER</button>
-          <button style={S.confirmBtn} onClick={handleConfirm}>DESPLEGAR NAVE</button>
+          <button className="ship-select__cancel-btn" onClick={handleCancel}>VOLVER</button>
+          <button className="ship-select__confirm-btn" onClick={handleConfirm}>DESPLEGAR NAVE</button>
         </div>
-        <p style={S.keyHints}>&#8592; &#8594; CAMBIAR &middot; A/D ROTAR &middot; W/S ZOOM &middot; R REINICIAR &middot; ENTER CONFIRMAR</p>
+        <p className="ship-select__key-hints">&#8592; &#8594; CAMBIAR &middot; A/D ROTAR &middot; W/S ZOOM &middot; R REINICIAR &middot; ENTER CONFIRMAR</p>
       </div>
     </div>
   );

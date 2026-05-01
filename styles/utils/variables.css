@@ -1,0 +1,71 @@
+:root {
+  /* ── Palette ──────────────────────────────────── */
+  --col-primary:       #00ffcc;
+  --col-primary-alt:   #00ff88;
+  --col-danger:        #ff4466;
+  --col-danger-alt:    #ff6644;
+  --col-warning:       #ffcc00;
+  --col-flow:          #9966ff;
+
+  /* HUD letter state tokens */
+  --col-active:        #00ffcc;
+  --col-pending:       rgba(255, 255, 255, 0.55);
+  --col-ghost-letter:  rgba(255, 255, 255, 0.15);
+
+  /* ── Backgrounds ──────────────────────────────── */
+  --bg-base:           #000;
+  --bg-space:          #020208;
+  --bg-panel:          rgba(0, 0, 0, 0.55);
+  --bg-panel-light:    rgba(0, 0, 0, 0.45);
+  --bg-panel-heavy:    rgba(0, 0, 0, 0.82);
+  --bg-overlay:        rgba(0, 0, 8, 0.85);
+  --bg-overlay-dark:   rgba(0, 0, 8, 0.92);
+
+  /* ── Text ─────────────────────────────────────── */
+  --text-primary:      #e0e0e0;
+  --text-dim:          rgba(255, 255, 255, 0.55);
+  --text-ghost:        rgba(255, 255, 255, 0.15);
+  --text-label:        rgba(255, 255, 255, 0.22);
+  --text-muted:        rgba(255, 255, 255, 0.28);
+  --text-faint:        rgba(255, 255, 255, 0.18);
+
+  /* ── Borders ──────────────────────────────────── */
+  --border-primary:        rgba(0, 255, 204, 0.14);
+  --border-primary-strong: rgba(0, 255, 204, 0.35);
+  --border-dim:            rgba(255, 255, 255, 0.07);
+  --border-subtle:         rgba(255, 255, 255, 0.12);
+
+  /* ── Z-index stack ────────────────────────────── */
+  --z-canvas:       0;
+  --z-hud:          10;
+  --z-ship-select:  20;
+  --z-flow-frame:   19;
+  --z-edge-flash:   20;
+  --z-low-hp-frame: 21;
+  --z-warnings:     30;
+  --z-precombat:    34;
+  --z-wave:         35;
+  --z-overlay:      40;
+  --z-loading:      50;
+
+  /* ── Spacing ──────────────────────────────────── */
+  --frame-inset:    1rem;
+  --panel-gap:      0.65rem;
+
+  /* ── Typography ───────────────────────────────── */
+  --font-hud:   'Orbitron', sans-serif;
+  --font-mono:  monospace;
+
+  /* ── Shadows ──────────────────────────────────── */
+  --shadow-panel:    0 0 12px rgba(0, 0, 0, 0.35);
+  --glow-primary:    0 0 14px rgba(0, 255, 204, 0.4);
+  --glow-danger:     0 0 14px rgba(255, 68, 102, 0.4);
+  --glow-warning:    0 0 14px rgba(255, 204, 0, 0.4);
+
+  /* ── Animation durations ──────────────────────── */
+  --anim-instant:   0.18s;
+  --anim-fast:      0.32s;
+  --anim-normal:    0.6s;
+  --anim-slow:      0.9s;
+  --anim-very-slow: 1.4s;
+}

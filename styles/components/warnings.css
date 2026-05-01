@@ -1,0 +1,102 @@
+/* ── Warning icon ────────────────────────────────────────────── */
+
+.warning-icon {
+  position: absolute;
+  top: 4.35rem;
+  left: 1.6rem;
+  z-index: var(--z-warnings);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.48rem 0.85rem;
+  border: 1px solid rgba(255, 204, 0, 0.22);
+  background: rgba(0, 0, 0, 0.52);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Warning stack ───────────────────────────────────────────── */
+
+.warning-stack {
+  position: absolute;
+  top: 5.55rem;
+  left: 0.9rem;
+  z-index: var(--z-warnings);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  pointer-events: none;
+}
+
+.warning-stack .warning-icon {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: fit-content;
+  max-width: min(48vw, 360px);
+}
+
+/* ── Severity variants ───────────────────────────────────────── */
+
+.warning-icon-yellow {
+  color: var(--col-warning);
+  animation: warning-pulse-yellow 0.6s ease-in-out infinite;
+  box-shadow: 0 0 14px rgba(255, 204, 0, 0.12);
+}
+
+.warning-icon-red {
+  color: var(--col-danger);
+  border-color: rgba(255, 68, 102, 0.45);
+  animation: warning-pulse-red 0.38s ease-in-out infinite;
+  box-shadow: 0 0 18px rgba(255, 68, 102, 0.24);
+}
+
+/* ── Icon sub-elements ───────────────────────────────────────── */
+
+.warning-icon-mark {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.warning-icon-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  white-space: nowrap;
+}
+
+.warning-icon-title {
+  line-height: 1;
+}
+
+.warning-icon-detail {
+  font-size: 0.58rem;
+  line-height: 1;
+  opacity: 0.82;
+}
+
+/* ── Status bar flash ────────────────────────────────────────── */
+
+.status-bar-flash {
+  animation: status-bar-flash 0.9s ease-in-out infinite;
+}
+
+/* ── Deck warnings (inline in word deck) ─────────────────────── */
+
+.deck-warning-yellow {
+  color: var(--col-warning);
+  font-size: 0.58rem;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 204, 0, 0.38);
+}
+
+.deck-warning-red {
+  color: var(--col-danger);
+  font-size: 0.58rem;
+  line-height: 1;
+  animation: warning-pulse 0.9s ease-in-out infinite;
+  text-shadow: 0 0 12px rgba(255, 68, 102, 0.42);
+}

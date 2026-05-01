@@ -53,6 +53,12 @@ export const EventTypes = {
   FLOW_EXIT:       'flow:exit',        // { duration, wordsTyped }
   FLOW_HEAL:       'flow:heal',        // { amount, hp }
 
+  // --- Seleccion de nave ---
+  SHIP_SELECTION_OPENED:    'ship:selection_opened',
+  SHIP_FOCUS_CHANGED:       'ship:focus_changed',       // { shipId }
+  SHIP_CONFIRMED:           'ship:confirmed',            // { shipId }
+  SHIP_SELECTION_CANCELLED: 'ship:selection_cancelled',
+
   // --- Sistema ---
   SCENE_READY:        'scene:ready',
   ASSETS_LOADED:      'assets:loaded',

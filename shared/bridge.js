@@ -33,6 +33,10 @@ let _state = {
   preCombatValue:   null,
   preCombatMessage: '',
   preCombatLevel:   'yellow',
+  // Ship selection
+  showShipSelection: false,
+  pendingGameMode:   null,
+  selectedShip:      null,
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,
@@ -111,6 +115,22 @@ export const Bridge = {
     beginLoading(mode) {
       _state = { ..._state, isLoading: true, loadingProgress: 0, loadingMode: mode ?? null, loadingMessage: '' };
       notifyStateChange();
+    },
+    openShipSelection(mode) {
+      _state = { ..._state, showShipSelection: true, pendingGameMode: mode ?? null };
+      notifyStateChange();
+    },
+    confirmShip(shipId) {
+      const mode = _state.pendingGameMode;
+      Object.assign(_state, { selectedShip: shipId, showShipSelection: false });
+      notifyStateChange();
+      EventBus.emit(EventTypes.SHIP_CONFIRMED, { shipId });
+      EventBus.emit(EventTypes.GAME_START, { mode });
+    },
+    cancelShipSelection() {
+      _state = { ..._state, showShipSelection: false, pendingGameMode: null };
+      notifyStateChange();
+      EventBus.emit(EventTypes.SHIP_SELECTION_CANCELLED, {});
     },
   },
 };

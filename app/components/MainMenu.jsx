@@ -40,7 +40,7 @@ const styles = {
 };
 
 export default function MainMenu() {
-  const start = (mode) => Bridge.commands.startGame(mode);
+  const start = (mode) => Bridge.commands.openShipSelection(mode);
 
   return (
     <div style={styles.container}>

@@ -780,3 +780,15 @@ html, body {
 .loading-bar-active {
   animation: loading-pulse-glow 2s ease-in-out infinite;
 }
+
+/* ── Pantalla de seleccion de nave ── */
+
+@keyframes ship-load-slide {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(250%); }
+  100% { transform: translateX(-100%); }
+}
+
+.ship-loading-bar {
+  animation: ship-load-slide 1.4s ease-in-out infinite;
+}

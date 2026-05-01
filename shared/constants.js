@@ -205,3 +205,54 @@ export const SPAWN_MIN_WEIGHT_PHANTOM   = 0.10;
 export const SPAWN_MIN_WEIGHT_APEX      = 0.06;
 export const SPAWN_MAX_WEIGHT_APEX      = 0.16;
 export const SPAWN_RARE_PITY_THRESHOLD  = 4;
+
+// --- Flota de naves jugables ---
+export const SHIPS = [
+  {
+    id: 'spaceship',
+    url: '/models/spaceship.glb',
+    name: 'Clase Estandar',
+    code: 'TYPO-STD',
+    // small per-ship tweak: shift and yaw to better sit in the ring
+    spawnOffset: { x: 0.25, y: 0, z: -0.35 },
+    rotationY: Math.PI, // facing direction (radians)
+  },
+  {
+    id: 'spaceshipnew',
+    url: '/models/spaceshipnew.glb',
+    name: 'Nueva Clase',
+    code: 'TYPO-NVC',
+  },
+  {
+    id: 'cb1',
+    url: '/models/spaceship_-_cb1.glb',
+    name: 'CB-1 Phantom',
+    code: 'TYPO-CB1',
+  },
+  {
+    id: 'ig127',
+    url: '/models/ig_127-730-00.glb',
+    name: 'IG-127',
+    code: 'TYPO-IG127',
+  },
+  {
+    id: 'lowpoly',
+    url: '/models/spaceship__low_poly.glb',
+    name: 'Forma Reducida',
+    code: 'TYPO-FRD',
+  },
+  {
+    id: 'colaid1',
+    url: '/models/spaceship_colaid1_50k.glb',
+    name: 'Colaid I',
+    code: 'TYPO-CLD1',
+  },
+  {
+    id: 'waldeinsamkeit',
+    url: '/models/waldeinsamkeit-class_strategic_survey_vessel.glb',
+    name: 'Waldeinsamkeit',
+    code: 'WCS-SSV',
+  },
+];
+export const DEFAULT_SHIP = 'spaceship';
+

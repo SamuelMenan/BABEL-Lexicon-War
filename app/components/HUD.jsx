@@ -173,32 +173,6 @@ function Countdown({ countdown, countdownActive }) {
   );
 }
 
-function FlowModeOverlay({ flowActive }) {
-  const [showPopup, setShowPopup] = useState(false);
-  const prevActive = useRef(false);
-
-  useEffect(() => {
-    if (!prevActive.current && flowActive) {
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 1600);
-    }
-    prevActive.current = flowActive;
-  }, [flowActive]);
-
-  if (!showPopup) return null;
-
-  return (
-    <div className="precombat-overlay" style={{ background: "radial-gradient(circle at center, rgba(153, 0, 255, 0.15) 0%, rgba(0, 0, 0, 0.52) 62%, rgba(0, 0, 0, 0.7) 100%)", zIndex: 40 }}>
-      <div className="precombat-frame" style={{ borderColor: "rgba(204, 0, 255, 0.6)", animation: "precombat-number-pop 0.24s ease-out, flow-frame-pulse-anim 0.4s ease-in-out infinite" }}>
-        <span className="precombat-phase" style={{ color: "rgba(255, 255, 255, 0.8)", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>FLUJO DESBLOQUEADO</span>
-        <span className="precombat-value" style={{ color: "#e888ff", textShadow: "0 0 30px rgba(204, 0, 255, 0.9), 0 0 90px rgba(204, 0, 255, 0.6)" }}>100%</span>
-        <span className="precombat-message" style={{ color: "#fff", textShadow: "0 0 10px rgba(204, 0, 255, 0.6)" }}>SINCRONIZACIÓN LÉXICA ACTIVA</span>
-      </div>
-      <div className="precombat-scanline" style={{ background: "rgba(204,0,255,0.4)", boxShadow: "0 0 20px rgba(204,0,255,0.6)" }} />
-    </div>
-  );
-}
-
 // ─── Combat ─────────────────────────────────────────────────────────────────
 
 function CombatTicker() {
@@ -257,14 +231,12 @@ function WarningBox({ level, label, detail }) {
   );
 }
 
-function WarningIcon({ warnings, flow = 0, flowActive = false, flowCooldown = false }) {
+function WarningIcon({ warnings }) {
   const proximityLevel = warnings?.proximityLevel ?? 'none';
   const lowHpLevel = warnings?.lowHpLevel ?? 'none';
   const distance = warnings?.closestEnemyDistance;
 
   const boxes = [];
-  const infos = [];
-
   if (proximityLevel !== 'none') {
     boxes.push({
       level: proximityLevel,
@@ -281,23 +253,12 @@ function WarningIcon({ warnings, flow = 0, flowActive = false, flowCooldown = fa
     });
   }
 
-  if (flowActive) {
-    infos.push({ label: 'FLUJO·LEX', detail: 'ACTIVO', color: '#00ff88' });
-  } else if (flowCooldown) {
-    infos.push({ label: 'RECARGA·LEX', detail: null, color: '#4466ff' });
-  } else if (flow >= 70) {
-    infos.push({ label: 'FLUJO PRÓXIMO', detail: `${Math.round(flow)}%`, color: '#00ddff' });
-  }
-
-  if (boxes.length === 0 && infos.length === 0) return null;
+  if (boxes.length === 0) return null;
 
   return (
     <div className="warning-stack">
       {boxes.map((box) => (
         <WarningBox key={`${box.label}-${box.detail ?? 'x'}`} level={box.level} label={box.label} detail={box.detail} />
-      ))}
-      {infos.map((info) => (
-        <InfoBox key={info.label} label={info.label} detail={info.detail} color={info.color} />
       ))}
     </div>
   );
@@ -349,28 +310,12 @@ function StatusBar({ label, value, max=100, danger=false, forceColor, flash=fals
   );
 }
 
-function FlowBar({ flow, active, cooldown }) {
-  const pct   = Math.max(0, Math.min(100, flow));
-  const color = active        ? '#9966ff'
-    : pct >= 75               ? '#8855ff'
-    : pct >= 50               ? '#7744ff'
-    : pct >= 25               ? '#aa77ff'
-    :                           '#cc99ff';
-  const label = 'FLOW';
-  return (
-    <div style={S.statusBarRow}>
-      <span style={{ ...S.statusBarLabel, color: 'rgba(255,255,255,0.92)' }}>{label}</span>
-      <div style={{ ...S.statusBarTrack, position: 'relative' }}>
-        <div style={{ ...S.statusBarFill, width: pct + '%', background: color, boxShadow: '0 0 12px ' + color,
-          opacity: cooldown ? 0.4 : 1 }} />
-        {active && <div className="flow-bar-active-pulse" style={{ position: 'absolute', inset: 0, background: color, opacity: 0.18 }} />}
-      </div>
-      <span style={{ ...S.statusBarValue, color }}>{String(Math.round(pct)).padStart(3, '0')}</span>
-    </div>
-  );
-}
-
-function CombatBottomLeft({ hp, flow = 0, flowActive = false, flowCooldown = false, wave, swarmRemnants, warnings }) {
+function CombatBottomLeft({ hp, lexHeat, lexHeatMax = 100, isOverheated, wave, swarmRemnants, warnings }) {
+  const lexHeatPct = (lexHeat / lexHeatMax) * 100;
+  const lexHeatColor = isOverheated ? "#ff4466"
+    : lexHeatPct >= 85 ? "#ff4466"
+    : lexHeatPct >= 60 ? "#ffcc00"
+    : "var(--col-active)";
   const lowHpLevel = warnings?.lowHpLevel ?? 'none';
   const hpForceColor = lowHpLevel === 'red'
     ? '#ff4466'
@@ -379,39 +324,13 @@ function CombatBottomLeft({ hp, flow = 0, flowActive = false, flowCooldown = fal
       : undefined;
   return (
     <div style={S.combatBottomLeft}>
-      <StatusBar label="VIDA" value={hp} danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
-      <FlowBar flow={flow} active={flowActive} cooldown={flowCooldown} />
+      <StatusBar label="CASCO"      value={hp}      danger forceColor={hpForceColor} flash={lowHpLevel === 'red'} />
+      <StatusBar label="CALOR·LEX"  value={lexHeat} max={lexHeatMax} forceColor={lexHeatColor} />
       <div style={S.waveBlock}>
         <span style={S.waveLabel}>OLEADA · LEXICA</span>
         <span style={S.waveNum}>{String(wave || 0).padStart(2,"0")}</span>
         <span style={S.swarmRem}>RESTOS DEL ENJAMBRE <span style={{ color:"var(--col-active)" }}>{swarmRemnants}</span></span>
       </div>
-    </div>
-  );
-}
-
-function FlowFrame() {
-  return (
-    <div className="flow-frame">
-      <div className="flow-frame-corner flow-frame-corner-tl" />
-      <div className="flow-frame-corner flow-frame-corner-tr" />
-      <div className="flow-frame-corner flow-frame-corner-bl" />
-      <div className="flow-frame-corner flow-frame-corner-br" />
-      <div className="flow-frame-scan flow-frame-scan-top" />
-      <div className="flow-frame-scan flow-frame-scan-bottom" />
-      <div className="flow-frame-caption">FLUJO · LEX · ACTIVO</div>
-    </div>
-  );
-}
-
-function InfoBox({ label, detail, color = '#00ff88' }) {
-  return (
-    <div className="info-icon" style={{ borderColor: color + '55', color, boxShadow: `0 0 14px ${color}22` }}>
-      <span className="warning-icon-mark">◈</span>
-      <span className="warning-icon-text">
-        <span className="warning-icon-title">{label}</span>
-        {detail ? <span className="warning-icon-detail">{detail}</span> : null}
-      </span>
     </div>
   );
 }
@@ -441,7 +360,7 @@ function CombatWordPanel({ activeWord, animState }) {
         <span style={S.combatWordHeaderTag}>◊ ENLACE · LEXICO</span>
         <span style={S.transmitting}>● TRANSMITIENDO</span>
       </div>
-      <div style={{ ...S.combatWordBox, borderColor: animState=="wrong" ? "#ff2244" : "rgba(0,255,204,0.35)" }}>
+      <div style={{ ...S.combatWordBox, borderColor: animState==="wrong" ? "#ff2244" : "rgba(0,255,204,0.35)" }}>
         <span style={S.combatWordPrompt}>&gt;</span>
         <div style={S.combatWordLetters}>
           {word ? word.split("").map((ch, i) => {
@@ -561,7 +480,7 @@ export default function HUD() {
     opponentPhraseProgress, currentPhrase, currentPhraseWordIndex,
     playerPhrasesCompleted, countdown, countdownActive, timeRemaining,
     combatEnemies, swarmRemnants, targetId,
-    flow = 0, flowActive = false, flowCooldown = false,
+    lexHeat = 0, lexHeatMax = 100, isOverheated = false,
     warnings = {},
     preCombatActive = false, preCombatStep = null,
     preCombatValue = null, preCombatMessage = '', preCombatLevel = 'yellow' } = state;
@@ -573,7 +492,6 @@ export default function HUD() {
     return (
       <div style={S.hud}>
         {showFlash && <div className="edge-flash" />}
-        {flowActive && <FlowFrame />}
         <LowHpFrame level={lowHpLevel} />
         <div className="hud-safe-zone">
           <PreCombatOverlay
@@ -584,7 +502,7 @@ export default function HUD() {
             level={preCombatLevel}
           />
           <WaveAnnouncement wave={waveNotice} />
-          <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
+          <WarningIcon warnings={warnings} />
           {/* Top-left: pilot info */}
           <div style={S.combatTopLeft}>
             <span style={S.pilotName}>KAEL · VOSS</span>
@@ -595,7 +513,7 @@ export default function HUD() {
           {/* Top-right: WPM + accuracy */}
           <CombatTopRight wpm={wpm} accuracy={accuracy} />
           {/* Bottom-left: status bars */}
-          <CombatBottomLeft hp={hp} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} wave={wave} swarmRemnants={swarmRemnants} warnings={warnings} />
+          <CombatBottomLeft hp={hp} lexHeat={lexHeat} lexHeatMax={lexHeatMax} isOverheated={isOverheated} wave={wave} swarmRemnants={swarmRemnants} warnings={warnings} />
           {/* Bottom-center: active word panel */}
           <CombatWordPanel activeWord={activeWord} animState={animState} />
           {/* Bottom-right: lexicon deck */}
@@ -611,9 +529,8 @@ export default function HUD() {
       <LowHpFrame level={lowHpLevel} />
       <div className="hud-safe-zone">
         <WaveAnnouncement wave={waveNotice} />
-        <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
+        <WarningIcon warnings={warnings} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
-        <FlowModeOverlay flowActive={flowActive} />
         {/* Top-left: pilot info */}
         <div style={S.combatTopLeft}>
           <span style={S.pilotName}>KAEL · VOSS</span>
@@ -672,18 +589,11 @@ const S = {
   // ── Combat bottom-left
   combatBottomLeft: { position:"absolute", bottom:"1.8rem", left:"1.6rem",
     display:"flex", flexDirection:"column", gap:"0.65rem", minWidth:"220px" },
-  statusBarRow: {
-    display:"flex", alignItems:"center", gap:"0.7rem",
-    background:"rgba(0,0,0,0.42)", border:"1px solid rgba(255,255,255,0.12)",
-    padding:"0.28rem 0.5rem", boxShadow:"0 0 12px rgba(0,0,0,0.35)"
-  },
-  statusBarLabel: { fontSize:"0.74rem", fontWeight:"bold", letterSpacing:"0.18em", color:"rgba(255,255,255,0.9)", width:"5.8rem" },
-  statusBarTrack: {
-    flex:1, height:"8px", background:"rgba(255,255,255,0.14)",
-    borderRadius:"4px", overflow:"hidden", minWidth:"130px", border:"1px solid rgba(255,255,255,0.2)"
-  },
-  statusBarFill:  { height:"100%", borderRadius:"3px", transition:"width 0.3s ease" },
-  statusBarValue: { fontSize:"0.94rem", fontWeight:"bold", letterSpacing:"0.04em", width:"2.8rem", textAlign:"right", textShadow:"0 0 8px currentColor" },
+  statusBarRow: { display:"flex", alignItems:"center", gap:"0.7rem" },
+  statusBarLabel: { fontSize:"0.62rem", letterSpacing:"0.22em", color:"rgba(255,255,255,0.35)", width:"5.8rem" },
+  statusBarTrack: { flex:1, height:"5px", background:"rgba(255,255,255,0.07)", borderRadius:"3px", overflow:"hidden", minWidth:"110px" },
+  statusBarFill:  { height:"100%", borderRadius:"2px", transition:"width 0.3s ease" },
+  statusBarValue: { fontSize:"0.86rem", fontWeight:"bold", letterSpacing:"0.04em", width:"2.8rem", textAlign:"right" },
   waveBlock: { marginTop:"0.8rem", display:"flex", flexDirection:"column", gap:"0.2rem" },
   waveLabel: { fontSize:"0.56rem", letterSpacing:"0.28em", color:"rgba(255,255,255,0.22)" },
   waveNum:   { fontSize:"3.1rem", fontWeight:"bold", color:"rgba(255,255,255,0.85)", letterSpacing:"-0.02em", lineHeight:1 },
@@ -724,7 +634,7 @@ const S = {
     fontSize:"0.86rem", letterSpacing:"0.04em" },
   deckRowActive: { background:"rgba(0,255,204,0.05)" },
   deckRowBullet: { width:"1rem", fontSize:"0.72rem", color:"var(--col-active)", flexShrink:0 },
-  deckRowWord: { flex:1, transition:"color 0.2s", color:"#9966ff" },
+  deckRowWord: { flex:1, transition:"color 0.2s" },
   deckRowDistWrap: { display:"inline-flex", alignItems:"center", gap:"0.3rem", minWidth:"3.8rem", justifyContent:"flex-end" },
   deckRowDist: { fontSize:"0.66rem", color:"rgba(255,255,255,0.25)", letterSpacing:"0.05em" },
   deckEmpty: { padding:"0.55rem 1rem", fontSize:"0.62rem", color:"rgba(255,255,255,0.15)",
@@ -775,7 +685,7 @@ const S = {
     letterSpacing:"0.05em", width:"1.3ch", textAlign:"center", lineHeight:1,
     transition:"color 0.08s, text-shadow 0.12s" },
   progressTrack: { width:"100%", height:"2px", background:"rgba(255,255,255,0.06)", borderRadius:"1px", overflow:"hidden", minWidth:"180px" },
-  progressFill: { height:"100%", borderRadius:"1px", transition:"width 0.06s linear, background 0.2s, box-shadow 0.2s", background:"#9966ff", boxShadow:"0 0 8px #9966ff" },
+  progressFill: { height:"100%", borderRadius:"1px", transition:"width 0.06s linear, background 0.2s, box-shadow 0.2s" },
   countdownOverlay: { position:"absolute", inset:0, display:"flex", alignItems:"center",
     justifyContent:"center", background:"rgba(0,0,0,0.35)", zIndex:10 },
   countdownNum: { fontSize:"9rem", fontWeight:"bold", letterSpacing:"-0.02em", lineHeight:1 },

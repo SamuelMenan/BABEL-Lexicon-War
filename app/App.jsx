@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { initGame, destroyGame } from "../game/main.js";
 import MainMenu from "./components/MainMenu.jsx";
 import HUD from "./components/HUD.jsx";
 import MatchResult from "./components/MatchResult.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
-import EleccionNave from "./pages/EleccionNave.jsx";
+import ShipSelect from "./pages/ShipSelect.jsx";
 import { Bridge } from "../shared/bridge.js";
 
 export default function App() {
@@ -41,8 +41,9 @@ export default function App() {
   return (
     <>
       {!isRunning && !showShipSelection && <MainMenu />}
-      {!isRunning && showShipSelection  && <EleccionNave />}
+      {!isRunning && showShipSelection  && <ShipSelect />}
       {isRunning  && <HUD />}
     </>
   );
 }
+

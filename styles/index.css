@@ -17,7 +17,7 @@
 @import './layout/canvas.css';
 @import './layout/hud.css';
 @import './layout/loading.css';
-@import './layout/eleccion-nave.css';
+@import './components/hangar.css';
 
 /* 5. Components */
 @import './components/word-display.css';
@@ -29,3 +29,5 @@
 @import './components/wave.css';
 @import './components/menu.css';
 @import './components/match-result.css';
+
+@import './components/race-hud.css';

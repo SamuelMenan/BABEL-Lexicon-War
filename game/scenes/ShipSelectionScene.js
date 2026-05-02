@@ -1,23 +1,13 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { SHIPS } from '../../shared/constants.js';
 
-const SHIP_SPAWN_OFFSET = { x: -0.725, y: 2.5, z: -2.5 };
-
-function centerModel(model) {
-  const box    = new THREE.Box3().setFromObject(model);
-  const center = new THREE.Vector3();
-  const size   = new THREE.Vector3();
-  box.getCenter(center);
-  box.getSize(size);
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const scale  = 2.2 / maxDim;
-  model.scale.setScalar(scale);
-  model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-}
+// Puedes ajustar la altura (posición vertical) de TODAS las naves cambiando el valor de "y".
+// Valores negativos (ej: -0.5) bajan las naves, valores positivos (ej: 0.5) las suben.
+const SHIP_SPAWN_OFFSET = { x: 0, y: -0.1, z: 0 };
 
 function disposeGroup(group) {
   while (group.children.length) {
@@ -35,25 +25,25 @@ function disposeGroup(group) {
 
 export class ShipSelectionScene {
   constructor(mount, { onLoadStart, onLoadEnd } = {}) {
-    this._mount       = mount;
-    this._onLoadStart = onLoadStart || (() => {});
-    this._onLoadEnd   = onLoadEnd   || (() => {});
-    this._alive       = true;
+    this._mount = mount;
+    this._onLoadStart = onLoadStart || (() => { });
+    this._onLoadEnd = onLoadEnd || (() => { });
+    this._alive = true;
     this._orbit = {
       theta: 0.4, phi: 0.28, radius: 4.5,
       isDragging: false, lastX: 0, lastY: 0,
-      phiMin: -1.0, phiMax: 1.0, radiusMin: 1.8, radiusMax: 9,
+      phiMin: -1.56, phiMax: 1.56, radiusMin: 1.8, radiusMax: 10,
     };
-    this._autoRotate      = true;
+    this._autoRotate = true;
     this._stationRotating = true;
-    this._keys            = new Set();
+    this._keys = new Set();
     this._modelsOriginals = new Map();
-    this._mixers          = [];
-    this._focal           = new THREE.Vector3(0, 0, 0);
-    this._rafId           = null;
-    this._shipGroup       = null;
-    this._stationGroup    = null;
-    this._loader          = new GLTFLoader();
+    this._mixers = [];
+    this._focal = new THREE.Vector3(0, 0, 0);
+    this._rafId = null;
+    this._shipGroup = null;
+    this._stationGroup = null;
+    this._loader = new GLTFLoader();
 
     this._buildScene(mount);
     this._loadStation();
@@ -61,13 +51,13 @@ export class ShipSelectionScene {
   }
 
   _buildScene(mount) {
-    const w = mount.clientWidth  || window.innerWidth;
+    const w = mount.clientWidth || window.innerWidth;
     const h = mount.clientHeight || window.innerHeight;
 
     this._renderer = new THREE.WebGLRenderer({ antialias: true });
     this._renderer.setSize(w, h);
     this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this._renderer.toneMapping        = THREE.ACESFilmicToneMapping;
+    this._renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this._renderer.toneMappingExposure = 1.1;
     mount.appendChild(this._renderer.domElement);
 
@@ -95,12 +85,12 @@ export class ShipSelectionScene {
     this._scene.add(warmFill);
 
     const pCount = 1400;
-    const pPos   = new Float32Array(pCount * 3);
+    const pPos = new Float32Array(pCount * 3);
     for (let i = 0; i < pCount; i++) {
       const theta = Math.random() * Math.PI * 2;
-      const phi   = Math.acos(2 * Math.random() - 1);
-      const r     = 80 + Math.random() * 120;
-      pPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 80 + Math.random() * 120;
+      pPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pPos[i * 3 + 2] = r * Math.cos(phi);
     }
@@ -123,7 +113,7 @@ export class ShipSelectionScene {
 
     this._onResize = () => {
       if (!this._alive) return;
-      const w2 = mount.clientWidth  || window.innerWidth;
+      const w2 = mount.clientWidth || window.innerWidth;
       const h2 = mount.clientHeight || window.innerHeight;
       this._renderer.setSize(w2, h2);
       this._composer.setSize(w2, h2);
@@ -139,16 +129,27 @@ export class ShipSelectionScene {
       (gltf) => {
         if (!this._alive) return;
         const model = gltf.scene;
-        const box    = new THREE.Box3().setFromObject(model);
+        const box = new THREE.Box3().setFromObject(model);
         const center = new THREE.Vector3();
-        const size   = new THREE.Vector3();
+        const size = new THREE.Vector3();
         box.getCenter(center);
         box.getSize(size);
+        // Center mesh at local origin so stationGroup rotates around (0,0,0)
+        model.position.set(-center.x, -center.y, -center.z);
+
+        const wrapper = new THREE.Group();
+        wrapper.add(model);
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale  = 28 / maxDim;
-        model.scale.setScalar(scale);
-        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-        this._stationGroup.add(model);
+        wrapper.scale.setScalar(28 / maxDim);
+
+        // Desplazamos la estación entera para que el anillo coincida exactamente con el origen (0,0,0).
+        // Invertimos el offset original (0.725, -2.5, 2.5)
+        wrapper.position.set(0.46, -2.5, 2.5);
+        wrapper.rotation.x = -0.1;  // Fine-tune: inclinar el anillo arriba/abajo
+        wrapper.rotation.y = 0;    // Fine-tune: orbitar el anillo sobre su eje vertical
+        wrapper.rotation.z = 0;    // Fine-tune: rotar el anillo izquierda/derecha
+
+        this._stationGroup.add(wrapper);
       },
       undefined,
       (err) => console.warn('[ShipSelectionScene] station load failed:', err)
@@ -164,25 +165,42 @@ export class ShipSelectionScene {
       ship.url,
       (gltf) => {
         if (!this._alive) return;
-        centerModel(gltf.scene);
+        // 1. Calcular caja para centrar la malla en su origen local
+        const box = new THREE.Box3().setFromObject(gltf.scene);
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+        box.getCenter(center);
+        box.getSize(size);
+        gltf.scene.position.set(-center.x, -center.y, -center.z);
+
+        // 2. Usar wrapper para escalar y rotar sin arruinar el centro
+        const wrapper = new THREE.Group();
+        wrapper.add(gltf.scene);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 2.2 / maxDim;
+        wrapper.scale.setScalar(scale);
+
         if (typeof ship.rotationY === 'number') {
-          gltf.scene.rotation.set(0, ship.rotationY, 0);
+          wrapper.rotation.set(0, ship.rotationY, 0);
         } else {
-          gltf.scene.rotation.set(0, Math.PI, 0);
+          wrapper.rotation.set(0, 0, 0);
         }
+
         const offset = { ...SHIP_SPAWN_OFFSET };
         if (ship.spawnOffset) {
           offset.x += (ship.spawnOffset.x || 0);
           offset.y += (ship.spawnOffset.y || 0);
           offset.z += (ship.spawnOffset.z || 0);
         }
-        gltf.scene.position.x += offset.x;
-        gltf.scene.position.y += offset.y;
-        gltf.scene.position.z += offset.z;
-        this._shipGroup.add(gltf.scene);
-        this._saveModelOriginals(gltf.scene);
-        const box = new THREE.Box3().setFromObject(this._shipGroup);
-        box.getCenter(this._focal);
+        wrapper.position.set(offset.x, offset.y, offset.z);
+
+        this._shipGroup.add(wrapper);
+        this._saveModelOriginals(wrapper);
+
+        // 3. Fijar cámara rígida al centro del anillo
+        this._focal.set(0, 0, 0);
+
         if (this._alive) this._onLoadEnd();
       },
       undefined,
@@ -198,10 +216,10 @@ export class ShipSelectionScene {
     model.traverse((obj) => {
       if (obj.isMesh || obj.isGroup) {
         originals.push({
-          uuid:     obj.uuid,
+          uuid: obj.uuid,
           position: obj.position.clone(),
           rotation: obj.rotation.clone(),
-          scale:    obj.scale.clone(),
+          scale: obj.scale.clone(),
         });
       }
     });
@@ -257,11 +275,21 @@ export class ShipSelectionScene {
 
   isAutoRotating() { return this._autoRotate; }
 
-  addKey(key)    { this._keys.add(key); }
+  addKey(key) { this._keys.add(key); }
   removeKey(key) { this._keys.delete(key); }
 
   resetOrbit() {
     Object.assign(this._orbit, { theta: 0.4, phi: 0.28, radius: 4.5 });
+  }
+
+  setTopView() {
+    // Fija la cámara en la parte superior (casi 90 grados) mirando el techo
+    Object.assign(this._orbit, { theta: 0.0, phi: 1.56, radius: 6.0 });
+  }
+
+  setBottomView() {
+    // Fija la cámara en la parte inferior (casi -90 grados) mirando desde abajo
+    Object.assign(this._orbit, { theta: 0.0, phi: -1.56, radius: 6.0 });
   }
 
   startDrag(x, y) {
@@ -274,9 +302,9 @@ export class ShipSelectionScene {
     const o = this._orbit;
     if (!o.isDragging) return;
     o.theta -= (x - o.lastX) * 0.008;
-    o.phi    = Math.max(o.phiMin, Math.min(o.phiMax, o.phi + (y - o.lastY) * 0.005));
-    o.lastX  = x;
-    o.lastY  = y;
+    o.phi = Math.max(o.phiMin, Math.min(o.phiMax, o.phi + (y - o.lastY) * 0.005));
+    o.lastX = x;
+    o.lastY = y;
   }
 
   endDrag() { this._orbit.isDragging = false; }
@@ -298,7 +326,7 @@ export class ShipSelectionScene {
       if (k.has('s') || k.has('S')) o.radius = Math.min(o.radiusMax, o.radius + 0.05);
 
       const rotating = k.has('a') || k.has('A') || k.has('d') || k.has('D');
-      if (this._autoRotate && !o.isDragging && !rotating) o.theta += 0.004;
+      if (this._autoRotate && !o.isDragging && !rotating) o.theta += 0;
 
       const { theta, phi, radius } = o;
       const f = this._focal;
@@ -310,7 +338,7 @@ export class ShipSelectionScene {
       this._camera.lookAt(f);
 
       // Station drifts very slowly — gives scene life without distraction
-      if (this._stationRotating) this._stationGroup.rotation.y += 0.00018;
+      if (this._stationRotating) this._stationGroup.rotation.y += 0;
 
       this._composer.render();
     };

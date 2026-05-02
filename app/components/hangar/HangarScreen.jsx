@@ -91,6 +91,8 @@ export default function HangarScreen() {
       if (e.key === 'ArrowLeft')          navigateTo(shipIdxRef.current - 1);
       if (e.key === 'ArrowRight')         navigateTo(shipIdxRef.current + 1);
       if (e.key === 'r' || e.key === 'R') sceneRef.current?.resetOrbit();
+      if (e.key === 'Home')               sceneRef.current?.setTopView();
+      if (e.key === 'End')                sceneRef.current?.setBottomView();
       if (e.key === 'Enter')              handleConfirm();
       if (e.key === 'Escape')             handleCancel();
     }

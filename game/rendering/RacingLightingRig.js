@@ -7,26 +7,30 @@ export class RacingLightingRig {
   }
 
   init() {
-    // Key: front-center, no falloff — base illumination for both ships
-    const key = new THREE.DirectionalLight(0xc8deff, 2.0);
-    key.position.set(0, 3, 10);
+    // Key: cool blue-white from above-front — matches hangar style
+    const key = new THREE.PointLight(0xe6f2ff, 3.2, 18);
+    key.position.set(-1.1, 3.1, 6.2);
     this._add(key);
 
-    // Fill: warm amber from below
-    const fill = new THREE.DirectionalLight(0xff9944, 0.6);
-    fill.position.set(0, -5, 4);
+    // Fill: soft blue from opposite side
+    const fill = new THREE.PointLight(0xb9d4ff, 2.4, 16);
+    fill.position.set(2.5, -0.9, 6.1);
     this._add(fill);
 
-    // Rim left: blue for player silhouette (player at x=-5.2)
-    const rimL = new THREE.PointLight(0x2244bb, 2.2, 32);
-    rimL.position.set(-12, 3, 3);
+    // Rim: cyan-green accent from below (like hangar shipRim)
+    const rim = new THREE.PointLight(0x79ffd6, 1.6, 12);
+    rim.position.set(0, -1.5, 5.5);
+    this._add(rim);
+
+    // Blue rim left for player silhouette (player at x=-5.2)
+    const rimL = new THREE.PointLight(0x2266cc, 2.8, 28);
+    rimL.position.set(-10, 2, 4);
     this._add(rimL);
 
-    // Rim right: red for opponent silhouette (opponent at x=+5.0)
-    const rimR = new THREE.PointLight(0xaa1122, 2.2, 32);
-    rimR.position.set(12, 3, 3);
+    // Warm red rim right for opponent (opponent at x=+5.0)
+    const rimR = new THREE.PointLight(0xaa1122, 1.8, 28);
+    rimR.position.set(10, 2, 4);
     this._add(rimR);
-
   }
 
   dispose() {

@@ -9,6 +9,7 @@ import { EventTypes } from "../../shared/eventTypes.js";
 import { Bridge } from "../../shared/bridge.js";
 import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "../../shared/constants.js";
 import { RacingLightingRig } from "../rendering/RacingLightingRig.js";
+import { getSoftGlowTexture } from "../../shared/softVisuals.js";
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage"];
 
@@ -83,7 +84,8 @@ export class RacingSceneManager {
     this._smoothBurst   +=(this._playerWordBurst-this._smoothBurst)*Math.min(lf*1.2,1);
 
     if(this._tunnelWrapper){
-      this._tunnelWrapper.position.z=-22+this._smoothProgress*55;
+      // Empieza atrás y avanza pero se detiene a una distancia segura (-25 en mundo) para no tragar a la nave prematuramente
+      this._tunnelWrapper.position.z=-35+this._smoothProgress*35;
     }
     const progressPush =this._smoothProgress*24;
     const typedAdvance =(this._playerWordLead+this._smoothBurst*0.8)*0.4;
@@ -112,6 +114,8 @@ export class RacingSceneManager {
       playerStartX: this._playerShip?.mesh?.position.x ?? this._playerBase.x,
       playerStartY: this._playerShip?.mesh?.position.y ?? this._playerBase.y,
       oppStartZ:    this._opponentShip?.mesh?.position.z ?? this._opponentBase.z,
+      oppStartX:    this._opponentShip?.mesh?.position.x ?? this._opponentBase.x,
+      oppStartY:    this._opponentShip?.mesh?.position.y ?? this._opponentBase.y,
     };
   }
   _updateVoidAnim(delta){
@@ -125,24 +129,34 @@ export class RacingSceneManager {
     const winnerStartZ = va.winner==='player' ? va.playerStartZ     : va.oppStartZ;
     const loserStartZ  = va.winner==='player' ? va.oppStartZ        : va.playerStartZ;
 
+    const winnerStartX = va.winner==='player' ? va.playerStartX     : va.oppStartX;
+    const winnerStartY = va.winner==='player' ? va.playerStartY     : va.oppStartY;
+
     if(winnerShip){
-      winnerShip.mesh.position.z = winnerStartZ - ease*55;
-      winnerShip.mesh.position.x = va.winner==='player'
-        ? THREE.MathUtils.lerp(va.playerStartX, 0, p*0.7)
-        : THREE.MathUtils.lerp(va.oppStartZ,    0, p*0.7);
-      winnerShip.mesh.position.y = va.winner==='player'
-        ? THREE.MathUtils.lerp(va.playerStartY, 0, p*0.5)
-        : winnerShip.mesh.position.y;
-      winnerShip.mesh.rotation.x = -ease*0.4;
+      // El agujero negro retrocede ligeramente a Z = -40, así que mandamos la nave a Z = -41
+      const targetZ = -41;
+      const totalDistZ = Math.abs(winnerStartZ - targetZ);
+      
+      winnerShip.mesh.position.z = THREE.MathUtils.lerp(winnerStartZ, targetZ, ease);
+      winnerShip.mesh.position.x = THREE.MathUtils.lerp(winnerStartX, 0, ease);
+      winnerShip.mesh.position.y = THREE.MathUtils.lerp(winnerStartY, 0, ease);
+      
+      // Ángulo de giro exagerado para que sea muy notable
+      const yawAngle = Math.atan2(winnerStartX, totalDistZ) * 2.2;
+      
+      winnerShip.mesh.rotation.x = -ease*0.4; // Pitch hacia abajo
+      winnerShip.mesh.rotation.y = ease * yawAngle; // Yaw pronunciado al centro
+      // Roll dramático al girar
+      winnerShip.mesh.rotation.z += ease * (winnerStartX > 0 ? 0.8 : -0.8);
     }
     if(loserShip){
       loserShip.mesh.position.z = loserStartZ + ease*8; // drifts back
     }
     if(this._tunnelWrapper){
-      this._tunnelWrapper.position.z = (-25 + this._smoothProgress*55) - ease*55;
+      this._tunnelWrapper.position.z = (-35 + this._smoothProgress*35) - ease*15;
     }
     if(this._cam){
-      this._cam.setRacingFOV(THREE.MathUtils.lerp(75, 95, ease));
+      this._cam.setRacingFOV(THREE.MathUtils.lerp(75, 125, ease)); // Aleja drásticamente la cámara para ver la escala
     }
 
     if(p>=1){
@@ -155,7 +169,7 @@ export class RacingSceneManager {
     this._prevSceneFog=this.scene.fog?this.scene.fog.clone():null;
 
     this.scene.background=new THREE.Color(0x000000);
-    this.scene.fog=new THREE.FogExp2(0x000000,0.004);
+    this.scene.fog=null; // no fog — keeps scene crisp like the hangar
 
     // Background void sphere — material cached for mode re-entry.
     const bgMatKey='racing-bg-void';
@@ -165,11 +179,14 @@ export class RacingSceneManager {
     let bgGeo=AssetLoader.getGeo(bgGeoKey);
     if(!bgGeo){ bgGeo=new THREE.SphereGeometry(200,16,16); AssetLoader.setGeo(bgGeoKey,bgGeo); }
     this._addToScene(new THREE.Mesh(bgGeo,bg));
-    this._addStarField(1800,350,0.14,0x8f8f8f);
-    this._addStarField(500, 200,0.25,0xd6d6d6);
-    this._addStarField(60,  100,0.8, 0xffffff);
+    // Starfields matching hangar's Starfield class (soft glow, additive blending)
+    this._addStarField(4000,500,0.28,0x8899bb,0.72);
+    this._addStarField(1500,350,0.20,0xaabbdd,0.82);
+    this._addStarField(500, 200,0.35,0xddeeff,0.95);
+    this._addStarField(80,  150,0.80,0xffffff,1.0);
 
-    const ambient=new THREE.AmbientLight(0x2a3050,1.8);
+    // Dark ambient like hangar scenario 2
+    const ambient=new THREE.AmbientLight(0x1a2538,2.2);
     this._addToScene(ambient);
     // Point lights moved to RacingLightingRig
   }
@@ -181,7 +198,7 @@ export class RacingSceneManager {
     mesh.scale.setScalar(radius);
     mesh.layers.enable(BLOOM_LAYER); mesh.position.set(x,y,z); this._addToScene(mesh);
   }
-  _addStarField(count,spread,size,color){
+  _addStarField(count,spread,size,color,opacity=1){
     const pos=new Float32Array(count*3);
     for(let i=0;i<count;i++){
       pos[i*3]=(Math.random()-0.5)*spread*2;
@@ -190,10 +207,17 @@ export class RacingSceneManager {
     }
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-    // Cache material by color+size key — reused on mode re-entry.
-    const matKey=`stars-${color}-${size}`;
+    // Soft glow material — matches hangar Starfield (round stars, additive blending)
+    const matKey=`stars-soft-${color}-${size}-${opacity}`;
     let mat=AssetLoader.getMat(matKey);
-    if(!mat){ mat=new THREE.PointsMaterial({color,size,sizeAttenuation:true}); AssetLoader.setMat(matKey,mat); }
+    if(!mat){
+      mat=new THREE.PointsMaterial({
+        color,size,sizeAttenuation:true,transparent:true,opacity,
+        map:getSoftGlowTexture(),alphaMap:getSoftGlowTexture(),
+        depthWrite:false,blending:THREE.AdditiveBlending,alphaTest:0.01,
+      });
+      AssetLoader.setMat(matKey,mat);
+    }
     const stars=new THREE.Points(geo,mat);
     stars.layers.enable(BLOOM_LAYER); this._addToScene(stars);
   }

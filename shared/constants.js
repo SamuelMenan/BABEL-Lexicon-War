@@ -338,7 +338,7 @@ export const SHIPS = [
     url: '/models/waldeinsamkeit-class_strategic_survey_vessel.glb',
     name: 'Waldeinsamkeit',
     code: 'WCS-SSV',
-    rotationY: 0,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    rotationY: Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
   },
 ];
 export const DEFAULT_SHIP = 'spaceship';

@@ -1,5 +1,4 @@
 // Loop principal del motor — requestAnimationFrame
-import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 export class GameLoop {
   constructor() {
@@ -7,11 +6,6 @@ export class GameLoop {
     this._rafId     = null;
     this._lastTime  = 0;
     this._systems   = [];
-
-    this._stats = new Stats();
-    this._stats.showPanel(0);
-    this._stats.dom.style.cssText = 'position:fixed;top:0;left:0;z-index:9999;';
-    document.body.appendChild(this._stats.dom);
   }
 
   addSystem(system) {
@@ -33,7 +27,7 @@ export class GameLoop {
 
   _tick(now) {
     if (!this._running) return;
-    this._stats.begin();
+    
     const delta = (now - this._lastTime) / 1000; // segundos
     this._lastTime = now;
 
@@ -41,7 +35,6 @@ export class GameLoop {
       system.update?.(delta);
     }
 
-    this._stats.end();
     this._rafId = requestAnimationFrame((t) => this._tick(t));
   }
 }

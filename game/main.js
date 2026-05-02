@@ -11,6 +11,7 @@ import { EventBus } from '../shared/events.js';
 import { EventTypes } from '../shared/eventTypes.js';
 import { Bridge } from '../shared/bridge.js';
 import { GAME_MODES } from '../shared/constants.js';
+import { initAutoTyper, destroyAutoTyper } from './systems/AutoTyper.js';
 
 let engine       = null;
 let _lexicon     = null;
@@ -100,12 +101,14 @@ export async function initGame(mountEl) {
   });
 
   engine.start();
+  initAutoTyper();
 
   // Initial shared preload — shows LoadingScreen until done, then MainMenu appears
   await AssetLoader.preload(null, engine.renderer);
 }
 
 export function destroyGame() {
+  destroyAutoTyper();
   _activeScene?.destroy();
   engine?.destroy();
   EventBus.off();

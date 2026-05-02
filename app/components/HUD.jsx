@@ -10,10 +10,14 @@ import CombatBottomLeft from "./hud/combat/CombatBottomLeft.jsx";
 import CombatWordPanel from "./hud/combat/CombatWordPanel.jsx";
 import LexiconDeck from "./hud/combat/LexiconDeck.jsx";
 
-import RaceTicker from "./hud/racing/RaceTicker.jsx";
-import RaceBottomLeft from "./hud/racing/RaceBottomLeft.jsx";
-import RacePhrase from "./hud/racing/RacePhrase.jsx";
-import RaceTimer from "./hud/racing/RaceTimer.jsx";
+import RacePilotTag from "./hud/racing/RacePilotTag.jsx";
+import RaceTopStatus from "./hud/racing/RaceTopStatus.jsx";
+import RaceStatsTopRight from "./hud/racing/RaceStatsTopRight.jsx";
+import RaceDistanceBar from "./hud/racing/RaceDistanceBar.jsx";
+import RaceParagraphBlock from "./hud/racing/RaceParagraphBlock.jsx";
+import RaceFlowBlock from "./hud/racing/RaceFlowBlock.jsx";
+import RaceRunStats from "./hud/racing/RaceRunStats.jsx";
+import RaceSpeedLines from "./hud/racing/RaceSpeedLines.jsx";
 
 import Countdown from "./hud/overlays/Countdown.jsx";
 import FlowFrame from "./hud/overlays/FlowFrame.jsx";
@@ -59,10 +63,13 @@ export default function HUD() {
 
   const {
     wpm, accuracy, hp, activeWord, wave, gameMode, flowMultiplier,
-    opponentPhraseProgress, currentPhrase, currentPhraseWordIndex,
-    playerPhrasesCompleted, countdown, countdownActive, timeRemaining,
+    currentPhrase, currentPhraseWordIndex,
+    playerPhrasesCompleted, totalPhrases,
+    countdown, countdownActive, timeRemaining,
+    distanceTraveled, targetDistance,
     combatEnemies, swarmRemnants, targetId,
     flow = 0, flowActive = false, flowCooldown = false,
+    flowStreak = 0,
     warnings = {},
     preCombatActive = false, preCombatStep = null,
     preCombatValue = null, preCombatMessage = "", preCombatLevel = "yellow",
@@ -105,27 +112,36 @@ export default function HUD() {
     <div className="hud">
       {showFlash && <div className="edge-flash" />}
       <LowHpFrame level={lowHpLevel} />
+      <div className="r-vignette" />
+      <RaceSpeedLines flowActive={flowActive} />
       <div className="hud-safe-zone">
         <WaveAnnouncement wave={waveNotice} />
         <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
         <FlowModeOverlay flowActive={flowActive} />
-        <div className="combat__top-left">
-          <span className="hud__pilot-name">KAEL · VOSS</span>
-          <span className="hud__pilot-sub">TYPO—07 / PILOTO</span>
-        </div>
-        <RaceTicker timeRemaining={timeRemaining} playerPhrasesCompleted={playerPhrasesCompleted} />
-        <CombatTopRight wpm={wpm} accuracy={accuracy} />
-        <RaceBottomLeft
+        <RacePilotTag />
+        <RaceTopStatus wave={wave} playerPhrasesCompleted={playerPhrasesCompleted} />
+        <RaceStatsTopRight wpm={wpm} accuracy={accuracy} />
+        <RaceDistanceBar
+          distanceTraveled={distanceTraveled}
+          targetDistance={targetDistance}
+          timeRemaining={timeRemaining}
+        />
+        <RaceParagraphBlock
+          currentPhrase={currentPhrase}
+          currentPhraseWordIndex={currentPhraseWordIndex}
+          activeWord={activeWord}
+          animState={animState}
+          playerPhrasesCompleted={playerPhrasesCompleted}
+          totalPhrases={totalPhrases}
+        />
+        <RaceFlowBlock
           flowMultiplier={flowMultiplier}
-          playerPhrasesCompleted={playerPhrasesCompleted || 0}
-          opponentPhraseProgress={opponentPhraseProgress || 0}
+          flowStreak={flowStreak}
+          flow={flow}
+          flowActive={flowActive}
         />
-        <RacePhrase
-          currentPhrase={currentPhrase} currentPhraseWordIndex={currentPhraseWordIndex}
-          activeWord={activeWord} animState={animState}
-        />
-        <RaceTimer timeRemaining={timeRemaining ?? 60} />
+        <RaceRunStats playerPhrasesCompleted={playerPhrasesCompleted} wpm={wpm} />
       </div>
     </div>
   );

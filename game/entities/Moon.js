@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
@@ -99,7 +99,7 @@ export class Moon {
 
     const coreMesh = new THREE.Mesh(
       new THREE.SphereGeometry(2.2, 10, 10),
-      new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 2.5, transparent: true, opacity: 0.7 })
+      new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 1.5, transparent: true, opacity: 0.7 })
     );
     coreMesh.layers.enable(BLOOM_LAYER);
     coreGroup.add(coreMesh);
@@ -203,11 +203,11 @@ export class Moon {
 
     makeRing(600,  13, 20,  Math.PI / 2.6, 0.07, 0.85, 0xaaddff, 'circle');
     makeRing(800,  21, 31,  Math.PI / 2.4, 0.28, 0.88, 0xfff4e0, 'square');
-    addTorus(34.0, 0.28, 0xfff8ee, 0.88, -4);
+    addTorus(34.0, 0.28, 0xfff8ee, 0.40, -4);
     makeRing(500,  33, 42,  Math.PI / 2.2, 0.16, 0.72, 0xffffff, 'diamond');
     makeRing(700,  44, 56,  Math.PI / 2.0, 0.06, 0.65, 0xc8d8ff, 'cross');
     makeRing(400,  58, 68,  Math.PI / 1.85, 0.22, 0.45, 0xe0eeff, 'star');
-    makeRing(2200, 54, 65,  Math.PI / 2.3, 0.85, 0.82, 0xffffff, 'circle');
+    makeRing(2200, 54, 65,  Math.PI / 2.3, 0.50, 0.30, 0xffffff, 'circle');
     addTorus(51.0, 0.22, 0xfff8ee, 0.75, -10);
     addTorus(52.2, 0.12, 0xffeedd, 0.45, -10);
   }

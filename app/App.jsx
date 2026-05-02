@@ -4,7 +4,7 @@ import MainMenu from "./components/MainMenu.jsx";
 import HUD from "./components/HUD.jsx";
 import MatchResult from "./components/MatchResult.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
-import ShipSelect from "./pages/ShipSelect.jsx";
+import HangarScreen from "./components/hangar/HangarScreen.jsx";
 import { Bridge } from "../shared/bridge.js";
 
 export default function App() {
@@ -41,7 +41,7 @@ export default function App() {
   return (
     <>
       {!isRunning && !showShipSelection && <MainMenu />}
-      {!isRunning && showShipSelection  && <ShipSelect />}
+      {!isRunning && showShipSelection  && <HangarScreen />}
       {isRunning  && <HUD />}
     </>
   );

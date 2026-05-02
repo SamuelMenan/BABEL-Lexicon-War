@@ -109,7 +109,7 @@ export class PostProcessing {
     this._bloomComposer.setSize(bw, bh);
     this._bloomComposer.addPass(renderPass);
 
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.55, 0.28, 0.28);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.40, 0.20, 0.75);
     this._bloomComposer.addPass(bloomPass);
 
     const mixPass = new ShaderPass(

@@ -1,0 +1,55 @@
+﻿import React from "react";
+import { wordHexCore, WORD_TYPE_MAP } from "../../../../game/systems/hudUtils.js";
+
+export default function CombatWordPanel({ activeWord, animState }) {
+  const word = activeWord?.word || "";
+  const typed = activeWord?.typed || "";
+  const wordType = WORD_TYPE_MAP[word.toLowerCase()] || "LEXEMA";
+  const hexCore = word ? wordHexCore(word) : "——";
+  const freq = word ? 300 + ((word.charCodeAt(0) * 7 + word.length * 43) % 400) : 0;
+  const boxBorderColor = animState === "wrong" ? "#ff2244" : "rgba(0,255,204,0.35)";
+
+  return (
+    <div className="combat__word-panel">
+      <div className="combat__word-header">
+        <span className="combat__word-header-tag">◊ ENLACE · LEXICO</span>
+        <span className="combat__transmitting">● TRANSMITIENDO</span>
+      </div>
+      <div className="combat__word-box" style={{ borderColor: boxBorderColor }}>
+        <span className="combat__word-prompt">&gt;</span>
+        <div className="combat__word-letters">
+          {word ? (
+            word.split("").map((ch, i) => {
+              const done = i < typed.length;
+              const cur = i === typed.length;
+              return (
+                <span
+                  key={word + i}
+                  className={`combat__letter${done ? " letter-hit" : ""}`}
+                  style={{
+                    color: done ? "var(--col-active)" : cur ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)",
+                    textShadow: done ? "0 0 12px var(--col-active)" : "none",
+                    borderBottom: cur ? "2px solid rgba(255,255,255,0.7)" : "2px solid transparent",
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })
+          ) : (
+            <span style={{ color: "rgba(255,255,255,0.12)", fontSize: "1.6rem" }}>_ _ _ _ _</span>
+          )}
+        </div>
+      </div>
+      <div className="combat__word-meta">
+        <span className="combat__meta-tag">{wordType}</span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">NUCLEO · <span style={{ color: "var(--col-active)" }}>{hexCore}</span></span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-active)" }}>{word.length || "—"}</span></span>
+        <span className="combat__meta-divider">|</span>
+        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-active)" }}>{word ? freq + "HZ" : "—"}</span></span>
+      </div>
+    </div>
+  );
+}

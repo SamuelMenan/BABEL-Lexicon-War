@@ -18,6 +18,8 @@ export class BoosterEffect {
     this._lateralState = createLateralState();
     this._shipGroup    = null;
 
+    this._hangarMode = false;
+
     this._colors = {
       body:  new THREE.Color(),
       flame: new THREE.Color(),
@@ -122,6 +124,10 @@ export class BoosterEffect {
     this._light.position.copy(cfg.lightOffset);
   }
 
+  setHangarMode(enabled) {
+    this._hangarMode = enabled;
+  }
+
   update(deltaTime, isAccelerating, visualScale = 1, ringScale = 1, flowActive = false) {
     this._t += deltaTime;
     const cfg = this._cfg;
@@ -140,14 +146,23 @@ export class BoosterEffect {
     this._letterBurst = Math.max(0, this._letterBurst - deltaTime * 4.5);
     const lb = this._letterBurst;
 
-    computeColors(s, flicker, lb, flowActive, BOOST_PALETTE, FLOW_PALETTE, this._colors);
-    const col = this._colors;
-    this._bodyMat.color.copy(col.body);
-    this._ringMat.color.copy(col.ring);
-    this._flameMat.color.copy(col.flame);
-    this._innerMat.color.copy(col.inner);
-    if (this._showStarSprite) this._starMat.color.copy(col.star);
-    this._light.color.copy(col.flame);
+    if (this._hangarMode) {
+      this._bodyMat.color.set(cfg.bodyColor);
+      this._ringMat.color.set(cfg.ringColor ?? cfg.bodyColor);
+      this._flameMat.color.set(cfg.flameColor);
+      this._innerMat.color.set(cfg.innerColor);
+      if (this._showStarSprite) this._starMat.color.set(cfg.starColor);
+      this._light.color.set(cfg.lightColor);
+    } else {
+      computeColors(s, flicker, lb, flowActive, BOOST_PALETTE, FLOW_PALETTE, this._colors);
+      const col = this._colors;
+      this._bodyMat.color.copy(col.body);
+      this._ringMat.color.copy(col.ring);
+      this._flameMat.color.copy(col.flame);
+      this._innerMat.color.copy(col.inner);
+      if (this._showStarSprite) this._starMat.color.copy(col.star);
+      this._light.color.copy(col.flame);
+    }
 
     const lateral   = updateLateral(this._lateralState, this._shipGroup, deltaTime);
     const velBoost  = Math.abs(lateral) * 1.10;

@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { SHIPS } from '../../shared/constants.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 // Puedes ajustar la altura (posición vertical) de TODAS las naves cambiando el valor de "y".
 // Valores negativos (ej: -0.5) bajan las naves, valores positivos (ej: 0.5) las suben.
@@ -39,6 +40,7 @@ export class ShipSelectionScene {
     this._keys = new Set();
     this._modelsOriginals = new Map();
     this._mixers = [];
+    this._boosters = [];
     this._focal = new THREE.Vector3(0, 0, 0);
     this._rafId = null;
     this._shipGroup = null;
@@ -144,7 +146,7 @@ export class ShipSelectionScene {
 
         // Desplazamos la estación entera para que el anillo coincida exactamente con el origen (0,0,0).
         // Invertimos el offset original (0.725, -2.5, 2.5)
-        wrapper.position.set(0.46, -2.5, 2.5);
+        wrapper.position.set(0.45, -2.5, 2.5);
         wrapper.rotation.x = -0.1;  // Fine-tune: inclinar el anillo arriba/abajo
         wrapper.rotation.y = 0;    // Fine-tune: orbitar el anillo sobre su eje vertical
         wrapper.rotation.z = 0;    // Fine-tune: rotar el anillo izquierda/derecha
@@ -196,6 +198,75 @@ export class ShipSelectionScene {
         wrapper.position.set(offset.x, offset.y, offset.z);
 
         this._shipGroup.add(wrapper);
+
+        // === DEBUG: axis markers — remove when boosters are calibrated ===
+        {
+          const r = Math.max(size.x, size.y, size.z) * 0.035;
+          const geo = new THREE.SphereGeometry(r, 8, 8);
+          const halfX = size.x / 2, halfY = size.y / 2, halfZ = size.z / 2;
+          [
+            { pos: [ halfX,  0,      0     ], color: 0xff0000 }, // +X rojo
+            { pos: [-halfX,  0,      0     ], color: 0x880000 }, // -X rojo oscuro
+            { pos: [0,       halfY,  0     ], color: 0x00ff00 }, // +Y verde
+            { pos: [0,      -halfY,  0     ], color: 0x008800 }, // -Y verde oscuro
+            { pos: [0,       0,      halfZ ], color: 0x4488ff }, // +Z azul
+            { pos: [0,       0,     -halfZ ], color: 0x112255 }, // -Z azul oscuro
+          ].forEach(({ pos, color }) => {
+            const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color }));
+            m.position.set(...pos);
+            m.name = 'debug_axis';
+            m.visible = false;
+            wrapper.add(m);
+          });
+          console.log(`[HANGAR DEBUG] ${ship.id} | bbox: x=${size.x.toFixed(2)} y=${size.y.toFixed(2)} z=${size.z.toFixed(2)} | scale=${scale.toFixed(3)} | rotationY=${ship.rotationY}`);
+        }
+        // === FIN DEBUG ===
+
+        // Clear previous boosters and mixers
+        this._boosters.forEach(b => b.dispose());
+        this._boosters = [];
+        this._mixers = [];
+
+        if (ship.id === 'cb1' || ship.id === 'colaid1') {
+          const mixer = new THREE.AnimationMixer(gltf.scene);
+          gltf.animations.forEach(clip => mixer.clipAction(clip).play());
+          this._mixers.push(mixer);
+        } else {
+          const prefix = `hangar_${ship.id}_`;
+          const halfSize = size.clone().multiplyScalar(0.5);
+          // invScale compensates wrapper.scale so visual sizes appear in scene units,
+          // same convention as combat configs (bodyRadius, flameSize, etc. in scene units).
+          const invScale = 1 / scale;
+          Object.entries(SHIP_BOOSTER_CONFIGS)
+            .filter(([key]) => key.startsWith(prefix))
+            .forEach(([, config]) => {
+              // localPosition: fraction of model half-size (±1 = bounding box edge)
+              const scaledPos = new THREE.Vector3(
+                config.localPosition.x * halfSize.x,
+                config.localPosition.y * halfSize.y,
+                config.localPosition.z * halfSize.z,
+              );
+              const hangarConfig = {
+                ...config,
+                localPosition: scaledPos,
+                bodyRadius:  config.bodyRadius  * invScale,
+                bodyLength:  config.bodyLength  * invScale,
+                ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * invScale,
+                flameSize:   config.flameSize   * invScale,
+                innerSize:   config.innerSize   * invScale,
+                starSize:    config.starSize    * invScale,
+                lightDist:   config.lightDist   * invScale,
+                lightOffset: config.lightOffset.clone().multiplyScalar(invScale),
+              };
+              const booster = new BoosterEffect(hangarConfig);
+              booster.attachToShip(wrapper);
+              if (config.rootRotY !== undefined) booster._root.rotation.y = config.rootRotY;
+              else if (config.flipZ) booster._root.rotation.y = Math.PI;
+              booster.setHangarMode(true);
+              this._boosters.push(booster);
+            });
+        }
+
         this._saveModelOriginals(wrapper);
 
         // 3. Fijar cámara rígida al centro del anillo
@@ -292,6 +363,22 @@ export class ShipSelectionScene {
     Object.assign(this._orbit, { theta: 0.0, phi: -1.56, radius: 6.0 });
   }
 
+  setRearView() {
+    // Vista trasera: cámara detrás de la nave mirando los motores
+    Object.assign(this._orbit, { theta: Math.PI, phi: 0.0, radius: 5.0 });
+  }
+
+  setSideView() {
+    // Vista lateral: cámara al costado derecho de la nave
+    Object.assign(this._orbit, { theta: Math.PI / 2, phi: 0.0, radius: 5.0 });
+  }
+
+  toggleDebugMarkers() {
+    this._shipGroup.traverse(obj => {
+      if (obj.name === 'debug_axis') obj.visible = !obj.visible;
+    });
+  }
+
   startDrag(x, y) {
     this._orbit.isDragging = true;
     this._orbit.lastX = x;
@@ -340,6 +427,9 @@ export class ShipSelectionScene {
       // Station drifts very slowly — gives scene life without distraction
       if (this._stationRotating) this._stationGroup.rotation.y += 0;
 
+      this._boosters.forEach(b => b.update(0.016, false, 0.8, 0.8, false));
+      this._mixers.forEach(m => m?.update(0.016));
+
       this._composer.render();
     };
     animate();
@@ -349,6 +439,8 @@ export class ShipSelectionScene {
     this._alive = false;
     if (this._rafId) cancelAnimationFrame(this._rafId);
     window.removeEventListener('resize', this._onResize);
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
     disposeGroup(this._shipGroup);
     disposeGroup(this._stationGroup);
     this._pGeo.dispose();

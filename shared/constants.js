@@ -303,7 +303,7 @@ export const SHIPS = [
     url: '/models/spaceshipnew.glb',
     name: 'Nueva Clase',
     code: 'TYPO-NVC',
-    rotationY: 0.77,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    rotationY: 0.79,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
   },
   {
     id: 'cb1',
@@ -322,7 +322,7 @@ export const SHIPS = [
   {
     id: 'lowpoly',
     url: '/models/spaceship__low_poly.glb',
-    name: 'Forma Reducida',
+    name: 'Acechador Nocturno',
     code: 'TYPO-FRD',
     rotationY: Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
   },

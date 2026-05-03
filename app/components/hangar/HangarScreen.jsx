@@ -93,6 +93,9 @@ export default function HangarScreen() {
       if (e.key === 'r' || e.key === 'R') sceneRef.current?.resetOrbit();
       if (e.key === 'Home')               sceneRef.current?.setTopView();
       if (e.key === 'End')                sceneRef.current?.setBottomView();
+      if (e.key === 'PageUp')             sceneRef.current?.setRearView();
+      if (e.key === 'PageDown')           sceneRef.current?.setSideView();
+      if (e.key === 'Pause')              sceneRef.current?.toggleDebugMarkers();
       if (e.key === 'Enter')              handleConfirm();
       if (e.key === 'Escape')             handleCancel();
     }

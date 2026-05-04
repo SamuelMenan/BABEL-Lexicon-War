@@ -28,9 +28,10 @@ export default function HangarScreen() {
   const [phase,        setPhase]        = useState('loading');
   const [loadProgress, setLoadProgress] = useState(0);
 
-  const sceneReadyRef = useRef(false);
-  const minTimeRef    = useRef(false);
-  const progressRef   = useRef(0);
+  const sceneReadyRef  = useRef(false);
+  const minTimeRef     = useRef(false);
+  const progressRef    = useRef(0);
+  const deployingRef   = useRef(false);
 
   const tryReady = useCallback(() => {
     if (sceneReadyRef.current && minTimeRef.current) {
@@ -96,6 +97,7 @@ export default function HangarScreen() {
       if (e.key === 'PageUp')             sceneRef.current?.setRearView();
       if (e.key === 'PageDown')           sceneRef.current?.setSideView();
       if (e.key === 'Pause')              sceneRef.current?.toggleDebugMarkers();
+      if (e.key === 'Delete')             sceneRef.current?.detonateCurrentShip();
       if (e.key === 'Enter')              handleConfirm();
       if (e.key === 'Escape')             handleCancel();
     }
@@ -129,7 +131,15 @@ export default function HangarScreen() {
     };
   }, []);
 
-  function handleConfirm() { Bridge.commands.confirmShip(SHIPS[shipIdxRef.current].id); }
+  async function handleConfirm() {
+    if (deployingRef.current) return;
+    deployingRef.current = true;
+    const scene = sceneRef.current;
+    if (scene) {
+      await scene.triggerDeployment();
+    }
+    Bridge.commands.confirmShip(SHIPS[shipIdxRef.current].id);
+  }
   function handleCancel()  { Bridge.commands.cancelShipSelection(); }
 
   function toggleAutoRotate() {

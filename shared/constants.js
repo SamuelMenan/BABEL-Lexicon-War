@@ -303,14 +303,16 @@ export const SHIPS = [
     url: '/models/spaceshipnew.glb',
     name: 'Nueva Clase',
     code: 'TYPO-NVC',
-    rotationY: 0.79,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    rotationY: -Math.PI/2,
+    noseAxis: '+x',   // model nose points toward local +X
   },
   {
     id: 'cb1',
     url: '/models/spaceship_-_cb1.glb',
     name: 'CB-1 Phantom',
     code: 'TYPO-CB1',
-    rotationY: -Math.PI/2,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    rotationY: -Math.PI/2,
+    noseAxis: '+x',   // model nose points toward local +X
   },
   {
     id: 'ig127',

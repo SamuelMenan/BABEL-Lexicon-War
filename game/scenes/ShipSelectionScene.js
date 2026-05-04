@@ -5,6 +5,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { SHIPS } from '../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
+import { ShipDestroyFx } from '../rendering/fx/ShipDestroyFx.js';
 
 // Puedes ajustar la altura (posición vertical) de TODAS las naves cambiando el valor de "y".
 // Valores negativos (ej: -0.5) bajan las naves, valores positivos (ej: 0.5) las suben.
@@ -33,7 +34,7 @@ export class ShipSelectionScene {
     this._orbit = {
       theta: 0.4, phi: 0.28, radius: 4.5,
       isDragging: false, lastX: 0, lastY: 0,
-      phiMin: -1.56, phiMax: 1.56, radiusMin: 1.8, radiusMax: 10,
+      phiMin: -1.56, phiMax: 1.56, radiusMin: 1.8, radiusMax: 9,
     };
     this._autoRotate = true;
     this._stationRotating = true;
@@ -46,6 +47,10 @@ export class ShipSelectionScene {
     this._shipGroup = null;
     this._stationGroup = null;
     this._loader = new GLTFLoader();
+    this._currentShipIndex = 0;
+    this._destroyFx = null;
+    this._deployState = null;
+    this._lastTime = performance.now();
 
     this._buildScene(mount);
     this._loadStation();
@@ -160,6 +165,7 @@ export class ShipSelectionScene {
 
   loadShip(index) {
     if (!this._alive) return;
+    this._currentShipIndex = index;
     this._onLoadStart();
     disposeGroup(this._shipGroup);
     const ship = SHIPS[index];
@@ -231,41 +237,41 @@ export class ShipSelectionScene {
           const mixer = new THREE.AnimationMixer(gltf.scene);
           gltf.animations.forEach(clip => mixer.clipAction(clip).play());
           this._mixers.push(mixer);
-        } else {
-          const prefix = `hangar_${ship.id}_`;
-          const halfSize = size.clone().multiplyScalar(0.5);
-          // invScale compensates wrapper.scale so visual sizes appear in scene units,
-          // same convention as combat configs (bodyRadius, flameSize, etc. in scene units).
-          const invScale = 1 / scale;
-          Object.entries(SHIP_BOOSTER_CONFIGS)
-            .filter(([key]) => key.startsWith(prefix))
-            .forEach(([, config]) => {
-              // localPosition: fraction of model half-size (±1 = bounding box edge)
-              const scaledPos = new THREE.Vector3(
-                config.localPosition.x * halfSize.x,
-                config.localPosition.y * halfSize.y,
-                config.localPosition.z * halfSize.z,
-              );
-              const hangarConfig = {
-                ...config,
-                localPosition: scaledPos,
-                bodyRadius:  config.bodyRadius  * invScale,
-                bodyLength:  config.bodyLength  * invScale,
-                ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * invScale,
-                flameSize:   config.flameSize   * invScale,
-                innerSize:   config.innerSize   * invScale,
-                starSize:    config.starSize    * invScale,
-                lightDist:   config.lightDist   * invScale,
-                lightOffset: config.lightOffset.clone().multiplyScalar(invScale),
-              };
-              const booster = new BoosterEffect(hangarConfig);
-              booster.attachToShip(wrapper);
-              if (config.rootRotY !== undefined) booster._root.rotation.y = config.rootRotY;
-              else if (config.flipZ) booster._root.rotation.y = Math.PI;
-              booster.setHangarMode(true);
-              this._boosters.push(booster);
-            });
         }
+        
+        const prefix = `hangar_${ship.id}_`;
+        const halfSize = size.clone().multiplyScalar(0.5);
+        // invScale compensates wrapper.scale so visual sizes appear in scene units,
+        // same convention as combat configs (bodyRadius, flameSize, etc. in scene units).
+        const invScale = 1 / scale;
+        Object.entries(SHIP_BOOSTER_CONFIGS)
+          .filter(([key]) => key.startsWith(prefix))
+          .forEach(([, config]) => {
+            // localPosition: fraction of model half-size (±1 = bounding box edge)
+            const scaledPos = new THREE.Vector3(
+              config.localPosition.x * halfSize.x,
+              config.localPosition.y * halfSize.y,
+              config.localPosition.z * halfSize.z,
+            );
+            const hangarConfig = {
+              ...config,
+              localPosition: scaledPos,
+              bodyRadius:  config.bodyRadius  * invScale,
+              bodyLength:  config.bodyLength  * invScale,
+              ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * invScale,
+              flameSize:   config.flameSize   * invScale,
+              innerSize:   config.innerSize   * invScale,
+              starSize:    config.starSize    * invScale,
+              lightDist:   config.lightDist   * invScale,
+              lightOffset: config.lightOffset.clone().multiplyScalar(invScale),
+            };
+            const booster = new BoosterEffect(hangarConfig);
+            booster.attachToShip(wrapper);
+            if (config.rootRotY !== undefined) booster._root.rotation.y = config.rootRotY;
+            else if (config.flipZ) booster._root.rotation.y = Math.PI;
+            booster.setHangarMode(true);
+            this._boosters.push(booster);
+          });
 
         this._saveModelOriginals(wrapper);
 
@@ -379,6 +385,21 @@ export class ShipSelectionScene {
     });
   }
 
+  detonateCurrentShip() {
+    if (this._destroyFx && !this._destroyFx.done) {
+      this._destroyFx.cleanup();
+    }
+    const currentShip = SHIPS[this._currentShipIndex ?? 0];
+    const word = currentShip?.name ?? 'BABEL';
+    const pos  = new THREE.Vector3(0, SHIP_SPAWN_OFFSET.y, 0);
+    this._destroyFx = new ShipDestroyFx(this._scene, pos, {
+      color: 0x00eeff,
+      word,
+      intensity: 1.2,
+    });
+    this._destroyFx.spawn();
+  }
+
   startDrag(x, y) {
     this._orbit.isDragging = true;
     this._orbit.lastX = x;
@@ -404,16 +425,24 @@ export class ShipSelectionScene {
   _startLoop() {
     const animate = () => {
       this._rafId = requestAnimationFrame(animate);
+
+      const now = performance.now();
+      const dt = Math.min((now - this._lastTime) / 1000, 0.05);
+      this._lastTime = now;
+
       const o = this._orbit;
       const k = this._keys;
 
-      if (k.has('a') || k.has('A')) o.theta -= 0.022;
-      if (k.has('d') || k.has('D')) o.theta += 0.022;
-      if (k.has('w') || k.has('W')) o.radius = Math.max(o.radiusMin, o.radius - 0.05);
-      if (k.has('s') || k.has('S')) o.radius = Math.min(o.radiusMax, o.radius + 0.05);
+      if (!this._deployState?.active) {
+        if (k.has('a') || k.has('A')) o.theta -= 0.022;
+        if (k.has('d') || k.has('D')) o.theta += 0.022;
+        if (k.has('w') || k.has('W')) o.radius = Math.max(o.radiusMin, o.radius - 0.05);
+        if (k.has('s') || k.has('S')) o.radius = Math.min(o.radiusMax, o.radius + 0.05);
+      }
 
-      const rotating = k.has('a') || k.has('A') || k.has('d') || k.has('D');
-      if (this._autoRotate && !o.isDragging && !rotating) o.theta += 0;
+      if (this._deployState?.active) {
+        this._updateDeployment(dt);
+      }
 
       const { theta, phi, radius } = o;
       const f = this._focal;
@@ -422,23 +451,265 @@ export class ShipSelectionScene {
         f.y + radius * Math.sin(phi),
         f.z + radius * Math.cos(phi) * Math.cos(theta),
       );
+      // Camera shake injected by deployment animation
+      if (this._deployState?.shakeAmp > 0) {
+        const amp = this._deployState.shakeAmp;
+        const te  = this._deployState.elapsed;
+        this._camera.position.x += Math.sin(te * 47.3) * amp;
+        this._camera.position.y += Math.cos(te * 61.7) * amp;
+        this._camera.position.z += Math.sin(te * 53.1 + 1.3) * amp;
+      }
       this._camera.lookAt(f);
 
-      // Station drifts very slowly — gives scene life without distraction
       if (this._stationRotating) this._stationGroup.rotation.y += 0;
 
-      this._boosters.forEach(b => b.update(0.016, false, 0.8, 0.8, false));
-      this._mixers.forEach(m => m?.update(0.016));
+      const isDeploying = !!this._deployState?.active;
+      this._boosters.forEach(b => b.update(dt, isDeploying, 0.8, 0.8, false));
+      this._mixers.forEach(m => m?.update(dt));
+
+      if (this._destroyFx && !this._destroyFx.done) {
+        this._destroyFx.update(dt);
+      }
 
       this._composer.render();
     };
     animate();
   }
 
+  // ─── Deployment animation ─────────────────────────────────────────────────
+
+  /**
+   * Animates the ship launching out of the hangar toward space.
+   * Returns a Promise that resolves when the animation finishes.
+   *
+   * Phases:
+   *   0.0 – 0.6s  buildup: boosters warm up, ship quivers
+   *   0.6 – 2.2s  acceleration: ship surges forward then pitches up
+   *   2.2 – 3.6s  escape: full speed exit, camera chases
+   *   3.6s        resolve
+   */
+  triggerDeployment() {
+    return new Promise((resolve) => {
+      const wrapper = this._shipGroup?.children[0];
+      if (!wrapper) { resolve(); return; }
+
+      // Compute the world direction the ship's nose points.
+      // Ships with noseAxis '+x' have their model nose at local +X;
+      // all others use the Three.js convention of local -Z as forward.
+      const ship = SHIPS[this._currentShipIndex];
+      const localNose = ship?.noseAxis === '+x'
+        ? new THREE.Vector3(1, 0, 0)
+        : new THREE.Vector3(0, 0, 1);
+      const forward = localNose.applyQuaternion(wrapper.quaternion).normalize();
+
+      // Pitch axis = world right of the ship = worldUp × forward.
+      // Rotating around this axis by a negative angle tilts the nose upward.
+      const pitchAxis = new THREE.Vector3()
+        .crossVectors(new THREE.Vector3(0, 1, 0), forward)
+        .normalize();
+
+      // Trail: circular buffer of Points
+      const TRAIL_MAX = 120;
+      const trailPos = new Float32Array(TRAIL_MAX * 3);
+      const trailGeo = new THREE.BufferGeometry();
+      trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+      trailGeo.setDrawRange(0, 0);
+      const trailMat = new THREE.PointsMaterial({
+        color: 0x44ccff,
+        size: 0.07,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+      });
+      const trailMesh = new THREE.Points(trailGeo, trailMat);
+      this._scene.add(trailMesh);
+
+      this._deployState = {
+        active: true,
+        elapsed: 0,
+        resolve,
+        wrapper,
+        forward,
+        pitchAxis,
+        startQuat:    wrapper.quaternion.clone(),
+        startPos:     wrapper.position.clone(),
+        forwardAccum: 0,
+        startFov:     this._camera.fov,
+        shakeAmp:     0,
+        velocity:     new THREE.Vector3(),
+        trailPos,
+        trailGeo,
+        trailMat,
+        trailMesh,
+        trailCount:   0,
+        trailHead:    0,
+        trailTimer:   0,
+        TRAIL_MAX_CONST: TRAIL_MAX,
+      };
+    });
+  }
+
+  _updateDeployment(dt) {
+    const s = this._deployState;
+    if (!s || !s.active) return;
+
+    s.elapsed += dt;
+    const t = s.elapsed;
+    const w = s.wrapper;
+
+    // ── Timing constants ──────────────────────────────────────────────────
+    const T1 = 1.5;  // end of ignition / suspension
+    const T2 = 1.8;  // end of recoil
+    const T3 = 3.5;  // end of hangar exit
+    const T4 = 4.5;  // warp complete → resolve
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const ss      = v => v * v * (3 - 2 * v);                      // smoothstep
+    const phaseT  = (a, b) => ss(clamp01((t - a) / (b - a)));      // eased phase progress
+
+    // ─────────────────────────────────────────────────────────────────────
+    // PHASE 1: Ignition / Suspension (0 → T1)
+    // Ship levitates slowly off the pad. Damped roll simulates mass inertia.
+    // ─────────────────────────────────────────────────────────────────────
+    const liftAmt  = 0.55 * ss(clamp01(t / T1));
+    const rollAngle = 0.07 * Math.sin(t * 5.0) * Math.exp(-t * 2.2);
+
+    // Slow orbital pan while suspended — scene stays alive
+    if (t < T1) this._orbit.theta += 0.18 * dt;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // PHASE 2: Max Ignition / Recoil (T1 → T2)
+    // Brief backward lurch from engine thrust. Camera starts shaking.
+    // ─────────────────────────────────────────────────────────────────────
+    const recoilProgress = phaseT(T1, T2);
+    const recoilOffset   = -0.28 * Math.sin(Math.PI * recoilProgress);
+
+    s.shakeAmp = t >= T1 && t <= T2 + 0.35
+      ? 0.048 * Math.sin(Math.PI * clamp01((t - T1) / 0.5))
+      : 0;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // PHASE 3: Hangar Exit (T2 → T3)
+    // Exponential acceleration, aggressive pitch up then level.
+    // ─────────────────────────────────────────────────────────────────────
+    let speed = 0;
+    if (t >= T2 && t < T3) {
+      const tE = t - T2;
+      speed = 1.2 * tE * tE + 3.5 * tE;
+    } else if (t >= T3) {
+      // Phase 4 speed: continuous from T3
+      const speedAtT3 = 1.2 * (T3 - T2) ** 2 + 3.5 * (T3 - T2);
+      const tW = t - T3;
+      speed = speedAtT3 + 55.0 * tW * tW + 18.0 * tW;
+    }
+    s.forwardAccum += speed * dt;
+
+    // Extra upward drift reinforces the climb-to-orbit arc
+    const exitLift = t >= T2 ? 0.40 * ss(clamp01((t - T2) / (T3 - T2))) : 0;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // POSITION: startPos + forward displacement + vertical offsets
+    // Decomposed so each component is independent and clean.
+    // ─────────────────────────────────────────────────────────────────────
+    w.position
+      .copy(s.startPos)
+      .addScaledVector(s.forward, s.forwardAccum + recoilOffset)
+      .setY(s.startPos.y + liftAmt + exitLift);
+
+    // ─────────────────────────────────────────────────────────────────────
+    // ROTATION: pitch + roll via world-space quaternion composition.
+    // Works for any ship orientation — no euler axis assumptions.
+    // ─────────────────────────────────────────────────────────────────────
+    let pitchAngle = 0;
+    if (t >= T2 && t <= T3) {
+      const peakT = T2 + (T3 - T2) * 0.50;
+      pitchAngle = t <= peakT
+        ? ss(clamp01((t - T2)    / (peakT - T2)))    * 0.44
+        : (1 - ss(clamp01((t - peakT) / (T3 - peakT)))) * 0.44;
+    }
+
+    const pitchQuat = new THREE.Quaternion().setFromAxisAngle(s.pitchAxis, -pitchAngle);
+    const rollQuat  = new THREE.Quaternion().setFromAxisAngle(s.forward,   rollAngle);
+    w.quaternion.copy(s.startQuat).premultiply(pitchQuat).premultiply(rollQuat);
+
+    // ─────────────────────────────────────────────────────────────────────
+    // CAMERA FOCAL chase — lag increases with speed so ship feels faster
+    // ─────────────────────────────────────────────────────────────────────
+    const focalLag = t < T1 ? 0.012
+      : t < T2              ? 0.035
+      : t < T3              ? Math.min(0.05 + (t - T2) * 0.025, 0.18)
+      :                       0.035;
+    this._focal.lerp(w.position, focalLag);
+
+    // ─────────────────────────────────────────────────────────────────────
+    // ORBIT RADIUS — tight during suspension, pulls back on exit, rockets at warp
+    // ─────────────────────────────────────────────────────────────────────
+    if (t >= T2) {
+      const pullRate = t >= T3
+        ? Math.min((t - T3) * 25 + 4.5, 45.0)
+        : (t - T2) * 1.2;
+      this._orbit.radius = Math.min(this._orbit.radiusMax, this._orbit.radius + pullRate * dt);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // FOV STRETCH — warp tunnel effect (Phase 4 only)
+    // ─────────────────────────────────────────────────────────────────────
+    if (t >= T3) {
+      const warpT = ss(clamp01((t - T3) / (T4 - T3)));
+      this._camera.fov = s.startFov + warpT * 58;  // 45 → 103
+      this._camera.updateProjectionMatrix();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // TRAIL — starts at exit, brightens to white-hot at warp
+    // ─────────────────────────────────────────────────────────────────────
+    s.trailTimer += dt;
+    if (t >= T2 && s.trailTimer >= 0.013) {
+      s.trailTimer = 0;
+      const wp = w.position;
+      const i  = s.trailHead % s.TRAIL_MAX_CONST;
+      s.trailPos[i * 3]     = wp.x;
+      s.trailPos[i * 3 + 1] = wp.y;
+      s.trailPos[i * 3 + 2] = wp.z;
+      s.trailHead++;
+      s.trailCount = Math.min(s.trailHead, s.TRAIL_MAX_CONST);
+      s.trailGeo.setDrawRange(0, s.trailCount);
+      s.trailGeo.attributes.position.needsUpdate = true;
+      const norm           = Math.min(speed / 28, 1);
+      s.trailMat.opacity   = 0.35 + norm * 0.60;
+      s.trailMat.size      = 0.07 + norm * 0.20;
+      s.trailMat.color.lerpColors(
+        new THREE.Color(0x44ccff),
+        new THREE.Color(0xffffff),
+        norm,
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // DONE
+    // ─────────────────────────────────────────────────────────────────────
+    if (t >= T4) {
+      s.active = false;
+      setTimeout(() => {
+        if (s.trailMesh) {
+          this._scene.remove(s.trailMesh);
+          s.trailGeo.dispose();
+          s.trailMat.dispose();
+        }
+      }, 300);
+      s.resolve();
+      this._deployState = null;
+    }
+  }
+
   destroy() {
     this._alive = false;
     if (this._rafId) cancelAnimationFrame(this._rafId);
     window.removeEventListener('resize', this._onResize);
+    this._destroyFx?.cleanup();
+    this._destroyFx = null;
     this._boosters.forEach(b => b.dispose());
     this._boosters = [];
     disposeGroup(this._shipGroup);

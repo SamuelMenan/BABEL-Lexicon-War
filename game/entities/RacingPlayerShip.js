@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, RACING_MATERIALS, SHIPS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, SHIPS } from '../../shared/constants.js';
 import { Bridge } from '../../shared/bridge.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
@@ -30,7 +30,6 @@ export class RacingPlayerShip extends ShipBase {
     this._boosters    = [];
     this._basePosition = basePosition.clone();
     this._raceState   = null;
-    this._light       = null;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -43,9 +42,6 @@ export class RacingPlayerShip extends ShipBase {
     glow.position.set(0, 0, 1.08);
     glow.layers.enable(BLOOM_LAYER);
     this._group.add(glow);
-
-    this._light = this._makePointLight(0xffd3a0, 3.2, 11.5, new THREE.Vector3(-0.18, 1.05, -0.42));
-    this._group.add(this._light);
   }
 
   _buildFallbackShip() {
@@ -84,21 +80,7 @@ export class RacingPlayerShip extends ShipBase {
     node.layers.set(0);
   }
 
-  _tuneLoadedMesh(node) {
-    if (!node.material) return;
-    const mat = RACING_MATERIALS.PLAYER;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material) => {
-      if (!material) return;
-      if ('emissive' in material && material.emissive) {
-        material.emissive.setRGB(mat.emissiveR, mat.emissiveG, mat.emissiveB);
-        material.emissiveIntensity = mat.emissiveIntensity;
-      }
-      if ('metalness' in material) material.metalness = mat.metalness;
-      if ('roughness' in material) material.roughness = mat.roughness;
-      material.needsUpdate = true;
-    });
-  }
+  _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
 
   _afterLoadedModel(modelRoot) {
     // ── Booster setup ─────────────────────────────────────────────────────────
@@ -193,10 +175,8 @@ export class RacingPlayerShip extends ShipBase {
     this._group.rotation.y = Math.PI + Math.sin(t * 0.92) * 0.08;
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
 
-    this._light.intensity = 2.1 + Math.sin(t * 3.0) * 0.08 + smoothBurst * 0.03;
-
     const isThrusting = smoothBurst > 0.05;
-    this._boosters.forEach(b => b.update(delta, isThrusting));
+    this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
   }
 
   dispose() {

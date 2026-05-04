@@ -1,23 +1,22 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
-const ENEMY_MODEL_URL    = '/models/spaceship_-_cb1.glb';
 const TARGET_MODEL_LENGTH = 3.2;
 
-// cb1 noseAxis='+x': yaw=-π/2 maps +X → group +Z.
+// cb1 noseAxis='+x': yaw=+π/2 maps +X → group -Z.
 // Opponent update uses rotation.y ≈ 0 (small oscillation),
-// so group +Z → world +Z = racing forward direction.
-const OPPONENT_YAW = -Math.PI / 2;
+// so group -Z → world -Z = racing forward direction.
+const OPPONENT_YAW = Math.PI / 2;
 
 export class RacingOpponentShip extends ShipBase {
-  constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8)) {
-    super({ modelUrl: ENEMY_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: OPPONENT_YAW });
+  constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8), shipModel = 'cb1') {
+    super({ modelUrl: `/models/spaceship_-_${shipModel}.glb`, targetLength: TARGET_MODEL_LENGTH, yaw: OPPONENT_YAW });
+    this._shipModel    = shipModel; // 'cb1', 'spaceship', 'ig127', etc.
     this._basePosition = basePosition.clone();
     this._raceState    = null;
     this._boosters     = [];
-    this._light        = null;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -30,9 +29,6 @@ export class RacingOpponentShip extends ShipBase {
     glow.position.set(0, 0, 1.08);
     glow.layers.enable(BLOOM_LAYER);
     this._group.add(glow);
-
-    this._light = this._makePointLight(0xffffff, 5.5, 14.0, new THREE.Vector3(0, 0.4, -0.3));
-    this._group.add(this._light);
   }
 
   _buildFallbackShip() {
@@ -71,21 +67,7 @@ export class RacingOpponentShip extends ShipBase {
     node.layers.set(0);
   }
 
-  _tuneLoadedMesh(node) {
-    if (!node.material) return;
-    const mat = RACING_MATERIALS.OPPONENT;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material) => {
-      if (!material) return;
-      if ('emissive' in material && material.emissive) {
-        material.emissive.setRGB(mat.emissiveR, mat.emissiveG, mat.emissiveB);
-        material.emissiveIntensity = mat.emissiveIntensity;
-      }
-      if ('metalness' in material) material.metalness = mat.metalness;
-      if ('roughness' in material) material.roughness = mat.roughness;
-      material.needsUpdate = true;
-    });
-  }
+  _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
 
   _afterLoadedModel(modelRoot) {
     const modelScale = modelRoot.scale.x;
@@ -102,9 +84,10 @@ export class RacingOpponentShip extends ShipBase {
     this._boosters = [];
 
     const racingSF = TARGET_MODEL_LENGTH / 2.2;
+    const prefix   = `hangar_${this._shipModel}_`;
 
     Object.entries(SHIP_BOOSTER_CONFIGS)
-      .filter(([key]) => key.startsWith('hangar_cb1_'))
+      .filter(([key]) => key.startsWith(prefix))
       .forEach(([, config]) => {
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
@@ -124,6 +107,8 @@ export class RacingOpponentShip extends ShipBase {
           innerSize:   config.innerSize   * racingSF,
           starSize:    config.starSize    * racingSF,
           lightDist:   config.lightDist   * racingSF,
+          normalRamp: config.normalRamp,  // Preserve gradient ramps
+          flowRamp:   config.flowRamp,
           lightOffset: config.lightOffset.clone().multiplyScalar(racingSF),
         };
 
@@ -137,7 +122,7 @@ export class RacingOpponentShip extends ShipBase {
 
         this._boosters.push(booster);
       });
-
+`[RacingOpponentShip] No hangar_${this._shipModel}_* booster configs found.`
     if (this._boosters.length === 0) {
       console.warn('[RacingOpponentShip] No hangar_cb1_* booster configs found.');
     }
@@ -164,10 +149,8 @@ export class RacingOpponentShip extends ShipBase {
     this._group.rotation.y = Math.sin(t * 0.75 + 0.6) * 0.07;
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;
 
-    this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
-
     const isThrusting = smoothLead > -0.5;
-    this._boosters.forEach(b => b.update(delta, isThrusting));
+    this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
   }
 
   dispose() {

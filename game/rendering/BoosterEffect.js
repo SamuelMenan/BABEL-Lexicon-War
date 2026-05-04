@@ -8,12 +8,24 @@ import { computeFlicker, computeColors, createLateralState, updateLateral } from
 
 export { SHIP_BOOSTER_CONFIGS } from './booster/BoosterConfig.js';
 
+/** Interpolate a numeric ramp of any length at t∈[0,1]. */
+function sampleScalarRamp(ramp, t) {
+  if (!ramp || ramp.length < 2) return 1;
+  const c   = Math.max(0, Math.min(1, t));
+  const n   = ramp.length - 1;
+  const seg = Math.min(n - 1, Math.floor(c * n));
+  const frac = c * n - seg;
+  return ramp[seg] + (ramp[seg + 1] - ramp[seg]) * frac;
+}
+
 export class BoosterEffect {
   constructor(config) {
     this._t               = 0;
     this._currentStrength = 0.28;
     this._cfg             = null;
     this._letterBurst     = 0;
+    this._smoothFlowSize    = 1.0;  // lerped size multiplier from sizeRamp
+    this._smoothFlowOpacity = 1.0;  // lerped opacity multiplier from opacityRamp
 
     this._lateralState = createLateralState();
     this._shipGroup    = null;
@@ -128,7 +140,7 @@ export class BoosterEffect {
     this._hangarMode = enabled;
   }
 
-  update(deltaTime, isAccelerating, visualScale = 1, ringScale = 1, flowActive = false) {
+  update(deltaTime, isAccelerating, visualScale = 1, ringScale = 1, flowRatio = 0) {
     this._t += deltaTime;
     const cfg = this._cfg;
     if (!cfg) return;
@@ -154,7 +166,7 @@ export class BoosterEffect {
       if (this._showStarSprite) this._starMat.color.set(cfg.starColor);
       this._light.color.set(cfg.lightColor);
     } else {
-      computeColors(s, flicker, lb, flowActive, BOOST_PALETTE, FLOW_PALETTE, this._colors);
+      computeColors(s, flicker, lb, flowRatio, BOOST_PALETTE, FLOW_PALETTE, this._colors, this._cfg);
       const col = this._colors;
       this._bodyMat.color.copy(col.body);
       this._ringMat.color.copy(col.ring);
@@ -164,46 +176,63 @@ export class BoosterEffect {
       this._light.color.copy(col.flame);
     }
 
+    // Flow size + opacity multipliers — both locked to 1.0 in hangar mode.
+    const targetFlowSize    = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.sizeRamp,    flowRatio);
+    const targetFlowOpacity = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.opacityRamp, flowRatio);
+    this._smoothFlowSize    += (targetFlowSize    - this._smoothFlowSize)    * Math.min(deltaTime * 4,   1);
+    this._smoothFlowOpacity += (targetFlowOpacity - this._smoothFlowOpacity) * Math.min(deltaTime * 3.0, 1);
+    const fsm = this._smoothFlowSize;
+    const fop = this._smoothFlowOpacity;
+
     const lateral   = updateLateral(this._lateralState, this._shipGroup, deltaTime);
     const velBoost  = Math.abs(lateral) * 1.10;
-    const burstMult = 1.0 + lb * 2.20 + velBoost * 0.60;
+    const burstMult = 1.0 + lb * 0.45 + velBoost * 0.40;
 
     this._root.position.x = (cfg.localPosition.x ?? 0) + lateral * 0.20;
     this._root.position.y = (cfg.localPosition.y ?? 0) - s * 0.025;
     this._root.position.z = (cfg.localPosition.z ?? 0) - s * 0.18;
 
-    const coneW = cfg.bodyRadius * (0.45 + s * 0.70) * burstMult * sizeMult;
-    const coneL = cfg.bodyLength * (0.65 + s * 1.0) * (1.0 + lb * 1.60 + velBoost * 0.60) * sizeMult;
+    const sm = sizeMult * fsm;  // combined size multiplier
+    const rm = ringMult * fsm;
+
+    const coneW = cfg.bodyRadius * (0.45 + s * 0.70) * burstMult * sm;
+    const coneL = cfg.bodyLength * (0.65 + s * 1.0) * (1.0 + lb * 0.65 + velBoost * 0.40) * sm;
     this._body.scale.set(coneW, coneW, coneL);
-    this._bodyMat.opacity = Math.min(0.95, (0.08 + s * 0.32) * (1.0 + lb * 0.80));
+    const rawBodyOp  = Math.min(0.95, (0.08 + s * 0.32) * (1.0 + lb * 0.80));
+    this._bodyMat.opacity = rawBodyOp + (1.0 - rawBodyOp) * fop;
     this._body.rotation.z = lateral * 0.55;
     this._body.rotation.y = -lateral * 0.20;
 
     const ringBreath = 1.0 + Math.sin(t * 4.8) * 0.04 + s * 0.15;
-    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 1.40 + velBoost * 0.40) * sizeMult * ringMult;
+    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 0.55 + velBoost * 0.25) * sm * rm;
     this._ring.scale.setScalar(rr);
-    this._ringMat.opacity = Math.min(1.0, (0.55 + s * 0.40 + flicker * 0.10) * (1.0 + lb * 1.40));
+    const rawRingOp  = Math.min(1.0, (0.55 + s * 0.40 + flicker * 0.10) * (1.0 + lb * 1.40));
+    this._ringMat.opacity = rawRingOp + (1.0 - rawRingOp) * fop;
     this._ring.rotation.z += deltaTime * (0.8 + s * 1.5 + Math.abs(lateral) * 2.0);
 
-    this._flame.scale.setScalar(cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult * sizeMult);
-    this._flameMat.opacity = Math.min(0.95, (0.22 + s * 0.55 + flicker * 0.08) * (1.0 + lb * 2.00));
+    this._flame.scale.setScalar(cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult * sm);
+    const rawFlameOp = Math.min(0.95, (0.22 + s * 0.55 + flicker * 0.08) * (1.0 + lb * 0.75));
+    this._flameMat.opacity = rawFlameOp + (1.0 - rawFlameOp) * fop;
 
     const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
-    this._inner.scale.setScalar(cfg.innerSize * (0.55 + s * 0.40 + coreF * 0.08) * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 2.20) * sizeMult);
-    this._innerMat.opacity = Math.min(1.0, (0.70 + s * 0.36 + coreF * 0.05) * (1.0 + lb * 1.60));
+    this._inner.scale.setScalar(cfg.innerSize * (0.55 + s * 0.40 + coreF * 0.08) * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 0.85) * sm);
+    const rawInnerOp = Math.min(1.0, (0.70 + s * 0.36 + coreF * 0.05) * (1.0 + lb * 1.60));
+    this._innerMat.opacity = rawInnerOp + (1.0 - rawInnerOp) * fop;
 
     if (this._showStarSprite) {
       const starPulse = (0.30 + s * 0.42 + flicker * 0.08) * (1.0 + lb * 3.00);
-      this._star.scale.setScalar(cfg.starSize * starPulse * sizeMult);
-      this._starMat.opacity = isAccelerating
-        ? Math.min(1.0, (0.28 + s * 0.32 + flicker * 0.06) * (1.0 + lb * 2.80))
-        : Math.min(1.0, (0.08 + s * 0.14 + flicker * 0.04) * (1.0 + lb * 2.80));
+      this._star.scale.setScalar(cfg.starSize * starPulse * sm);
+      const rawStarOp = isAccelerating
+        ? Math.min(1.0, (0.28 + s * 0.32 + flicker * 0.06) * (1.0 + lb * 1.10))
+        : Math.min(1.0, (0.08 + s * 0.14 + flicker * 0.04) * (1.0 + lb * 1.10));
+      this._starMat.opacity = rawStarOp + (1.0 - rawStarOp) * fop;
       this._starMat.rotation += deltaTime * 0.35;
     }
 
     this._light.intensity = cfg.lightIntens * this._lightMult
       * (0.30 + s * 0.90 + flicker * 0.18)
-      * (1.0 + lb * 3.00);
+      * (1.0 + lb * 1.20)
+      * fsm;
     this._light.position.x = (cfg.lightOffset?.x ?? 0) + lateral * 0.25;
   }
 

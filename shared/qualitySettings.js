@@ -7,8 +7,10 @@ export const QUALITY_PROFILES = Object.freeze({
   low: {
     particleMaxBursts:     6,
     particlePerBurst:      14,
-    collapsePoolSize:      2,
-    collapseParticleCount: 28,
+
+    destroyPoolSize:       2,
+    destroyLetterCount:    4,
+
     boosterStarSprite:     false,
     boosterLightMult:      0.55,
     bloomEnabled:          false, // skip UnrealBloomPass entirely — saves ~2 full scene renders/frame
@@ -17,8 +19,10 @@ export const QUALITY_PROFILES = Object.freeze({
   mid: {
     particleMaxBursts:     12,
     particlePerBurst:      28,
-    collapsePoolSize:      4,
-    collapseParticleCount: 55,
+
+    destroyPoolSize:       4,
+    destroyLetterCount:    8,
+
     boosterStarSprite:     true,
     boosterLightMult:      1.0,
     bloomEnabled:          true,
@@ -27,8 +31,10 @@ export const QUALITY_PROFILES = Object.freeze({
   high: {
     particleMaxBursts:     20,
     particlePerBurst:      40,
-    collapsePoolSize:      6,
-    collapseParticleCount: 80,
+
+    destroyPoolSize:       6,
+    destroyLetterCount:    12,
+
     boosterStarSprite:     true,
     boosterLightMult:      1.0,
     bloomEnabled:          true,

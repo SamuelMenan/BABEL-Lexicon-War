@@ -226,3 +226,7 @@
   font-size: 0.56rem;
   color: rgba(255,255,255,0.1);
 }
+
+.loading-scan {
+  animation: loading-scan 2s ease-in-out infinite;
+}

@@ -1,12 +1,9 @@
 import React from "react";
 
 export default function FlowBar({ flow, active, cooldown }) {
-  const pct = Math.max(0, Math.min(100, flow));
-  const color = active ? "#9966ff"
-    : pct >= 75 ? "#8855ff"
-    : pct >= 50 ? "#7744ff"
-    : pct >= 25 ? "#aa77ff"
-    : "#cc99ff";
+  const pct   = Math.max(0, Math.min(100, flow));
+  // Inherit --hud-accent from the HUD root (set in HUD.jsx based on flow level).
+  const color = "var(--hud-accent, #4d7eff)";
   return (
     <div className="status-bar__row">
       <span className="status-bar__label" style={{ color: "rgba(255,255,255,0.92)" }}>FLOW</span>

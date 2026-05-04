@@ -10,20 +10,37 @@ import {
   FLOW_STEPS,
 } from '../../shared/constants.js';
 
+const BUFFER_SIZE    = 300; // visible word pool (90s × 120 WPM = 180 words max)
+const REFILL_AT      = 60;  // refill when fewer than this many words remain ahead
+
 const AVG_WORDS = PHRASE_POOL_ES.reduce((s, p) => s + p.length, 0) / PHRASE_POOL_ES.length;
 // opponent phrases completed per second
 const OPP_PHRASES_PER_SEC = (RACE_OPPONENT_WPM / 60) / AVG_WORDS;
+
+/** Flat word array from a shuffled copy of the pool. */
+function buildWordStream() {
+  const pool = [...PHRASE_POOL_ES];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  // flatten all phrases into one word list, repeated 6x so we never run out
+  return [...pool, ...pool, ...pool, ...pool, ...pool, ...pool].flat();
+}
 
 export class RacingSystem {
   constructor(lexicon) {
     this._lexicon = lexicon;
 
-    this._phrases   = [];
-    this._phraseIdx = 0;
-    this._wordIdx   = 0;
+    // Continuous word buffer
+    this._stream        = [];   // infinite word source
+    this._streamIdx     = 0;   // next word to pull from _stream
+    this._wordBuffer    = [];   // currently displayed buffer (slice shown to UI)
+    this._globalIdx     = 0;   // index into _wordBuffer of current word
+    this._wordsCompleted = 0;
 
     this._playerDone    = 0;
-    this._oppDone       = 0; // fractional opponent phrases
+    this._oppDone       = 0;
 
     this._countdown       = RACE_COUNTDOWN_SECS;
     this._countdownActive = false;
@@ -37,7 +54,6 @@ export class RacingSystem {
 
     this._unsubs = [];
 
-    // Pre-allocated partials — avoids a new object literal every frame.
     this._stateCountdown     = { countdown: 0 };
     this._stateCountdownStop = { countdownActive: false, countdown: 0 };
     this._stateMain = {
@@ -52,27 +68,24 @@ export class RacingSystem {
   }
 
   init() {
-    // build infinite-enough phrase queue from shuffled pool
-    const pool = [...PHRASE_POOL_ES];
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    // loop the pool 4x so we never run out in 60 seconds
-    this._phrases = [...pool, ...pool, ...pool, ...pool];
-
-    this._phraseIdx       = 0;
-    this._wordIdx         = 0;
-    this._playerDone      = 0;
-    this._oppDone         = 0;
-    this._countdown       = RACE_COUNTDOWN_SECS;
+    this._stream         = buildWordStream();
+    this._streamIdx      = 0;
+    this._wordBuffer     = [];
+    this._globalIdx      = 0;
+    this._wordsCompleted = 0;
+    this._playerDone     = 0;
+    this._oppDone        = 0;
+    this._countdown      = RACE_COUNTDOWN_SECS;
     this._countdownActive = true;
-    this._active          = false;
-    this._finished        = false;
-    this._flowStreak      = 0;
-    this._flowMultiplier  = 1.0;
-    this._peakWPM         = 0;
-    this._timeElapsed     = 0;
+    this._active         = false;
+    this._finished       = false;
+    this._flowStreak     = 0;
+    this._flowMultiplier = 1.0;
+    this._peakWPM        = 0;
+    this._timeElapsed    = 0;
+
+    // Pre-fill buffer
+    this._fillBuffer();
 
     this._unsubs.push(
       EventBus.on(EventTypes.WORD_COMPLETED, () => this._onWordCompleted()),
@@ -84,15 +97,16 @@ export class RacingSystem {
       countdownActive:        true,
       phraseProgress:         0,
       opponentPhraseProgress: 0,
-      currentPhrase:          this._phrases[0],
-      currentPhraseWordIndex: 0,
-      totalPhrases:           null, // time-based — no fixed total
+      totalPhrases:           null,
       playerPhrasesCompleted: 0,
+      wordsCompleted:         0,
       distanceTraveled:       0,
       targetDistance:         RACE_TARGET_DISTANCE,
       timeRemaining:          RACE_DURATION,
       flowMultiplier:         1.0,
       flowStreak:             0,
+      wordBuffer:             this._wordBuffer.slice(),
+      globalWordIndex:        0,
     });
   }
 
@@ -142,42 +156,49 @@ export class RacingSystem {
     if (timeRemaining <= 0) this._onTimeUp();
   }
 
-  _setWord() {
-    if (this._phraseIdx >= this._phrases.length) {
-      this._phrases.push(...PHRASE_POOL_ES);
+  /** Pull words from stream into _wordBuffer until it has BUFFER_SIZE words. */
+  _fillBuffer() {
+    while (this._wordBuffer.length < BUFFER_SIZE && this._streamIdx < this._stream.length) {
+      this._wordBuffer.push(this._stream[this._streamIdx++]);
     }
-    const phrase = this._phrases[this._phraseIdx];
-    const word   = phrase?.[this._wordIdx];
+  }
+
+  _setWord() {
+    const word = this._wordBuffer[this._globalIdx];
     if (!word) {
-      console.warn('[RacingSystem] _setWord: no word at', this._phraseIdx, this._wordIdx);
+      console.warn('[RacingSystem] _setWord: buffer exhausted at', this._globalIdx);
       return;
     }
-    this._lexicon.setTarget(`race_${this._phraseIdx}_${this._wordIdx}`, word);
-    Bridge.setState({
-      currentPhrase:          phrase,
-      currentPhraseWordIndex: this._wordIdx,
-    });
+    this._lexicon.setTarget(`race_${this._globalIdx}`, word);
   }
 
   _onWordCompleted() {
     this._flowStreak++;
+    this._wordsCompleted++;
+    this._playerDone++;
     this._updateFlow();
 
-    const phrase = this._phrases[this._phraseIdx];
-    if (this._wordIdx < phrase.length - 1) {
-      this._wordIdx++;
-      if (this._active && !this._finished) this._setWord();
-    } else {
-      this._wordIdx = 0;
-      this._phraseIdx++;
-      this._playerDone++;
-      Bridge.setState({ playerPhrasesCompleted: this._playerDone });
-      EventBus.emit(EventTypes.RACE_PHRASE_COMPLETED, {
-        phraseIndex: this._phraseIdx - 1,
-        playerDone:  this._playerDone,
-      });
-      if (this._active && !this._finished) this._setWord();
+    this._globalIdx++;
+
+    // Refill look-ahead when running low
+    const remaining = this._wordBuffer.length - this._globalIdx;
+    if (remaining < REFILL_AT) {
+      this._fillBuffer();
     }
+
+    Bridge.setState({
+      globalWordIndex:        this._globalIdx,
+      wordBuffer:             this._wordBuffer.slice(),
+      wordsCompleted:         this._wordsCompleted,
+      playerPhrasesCompleted: this._playerDone,
+    });
+
+    EventBus.emit(EventTypes.RACE_PHRASE_COMPLETED, {
+      wordIndex:  this._globalIdx - 1,
+      playerDone: this._playerDone,
+    });
+
+    if (this._active && !this._finished) this._setWord();
   }
 
   _onWordProgress({ correct }) {

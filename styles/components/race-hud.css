@@ -332,7 +332,7 @@
   left: 50%;
   bottom: 36px;
   transform: translateX(-50%);
-  width: min(680px, 52vw);
+  width: min(720px, 56vw);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -361,21 +361,23 @@
 }
 
 .r-ph-num   { color: var(--col-active); font-variant-numeric: tabular-nums; }
-.r-ph-sep   { color: rgba(232, 236, 240, 0.2); margin: 0 4px; }
+.r-ph-sep   { color: rgba(232, 236, 240, 0.25); margin: 0 2px; }
 .r-ph-total { color: rgba(232, 236, 240, 0.35); font-variant-numeric: tabular-nums; }
 
+/* Outer container: clips to exactly 3 visible lines */
 .r-paragraph {
   font-family: var(--font-mono);
-  font-size: 1.4rem;
-  line-height: 1.4;
+  font-size: 1.35rem;
+  line-height: 1.75;
   letter-spacing: 0.02em;
-  text-align: left;
-  padding: 0.65rem 1.2rem;
-  border: 1px solid rgba(0, 255, 204, 0.35);
-  background: rgba(0, 0, 0, 0.55);
-  white-space: nowrap;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid rgba(0, 255, 204, 0.30);
+  background: rgba(0, 0, 0, 0.58);
+  /* exactly 2 lines: line-height 1.75 × font × 2 + vertical padding */
+  height: calc(1.35rem * 1.75 * 2 + 1rem);
   overflow: hidden;
   transition: border-color 0.15s;
+  position: relative;
 }
 
 .r-paragraph--error {
@@ -383,6 +385,36 @@
   border-bottom-color: rgba(255, 68, 102, 0.5);
 }
 
+/* Inner scrolling wrapper — translates upward on line change */
+.r-paragraph__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0 0.55em;
+  transition: transform 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* Word containers — each word is one flex item */
+.r-word {
+  display: inline-flex;
+  white-space: nowrap;
+  position: relative;
+}
+
+.r-word--done {
+  color: rgba(0, 255, 204, 0.45);
+}
+
+.r-word--pending {
+  color: rgba(232, 236, 240, 0.32);
+}
+
+.r-word--active {
+  color: #e8ecf0;
+}
+
+/* Character-level spans */
 .r-pc {
   display: inline-block;
   position: relative;
@@ -396,7 +428,7 @@
 
 .r-pc--pending {
   color: #e8ecf0;
-  opacity: 0.38;
+  opacity: 0.55;
 }
 
 .r-pc--cursor {
@@ -408,7 +440,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -3px;
+  bottom: -2px;
   height: 2px;
   background: var(--col-active);
   box-shadow: 0 0 8px var(--col-active);

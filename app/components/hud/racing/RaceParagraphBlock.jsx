@@ -1,14 +1,35 @@
-import React from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
+
+const LINE_HEIGHT_PX = 44; // debe coincidir con font-size * line-height en CSS
 
 export default function RaceParagraphBlock({
-  currentPhrase,
-  currentPhraseWordIndex,
+  wordBuffer,
+  globalWordIndex,
   activeWord,
   animState,
-  playerPhrasesCompleted,
-  totalPhrases,
+  wordsCompleted,
 }) {
-  if (!currentPhrase) return null;
+  const activeRef   = useRef(null);
+  const [offsetY, setOffsetY] = useState(0);
+  const lastLineRef = useRef(0);
+
+  // Cuando cambia la palabra activa, mira si saltó de línea
+  const measureScroll = useCallback(() => {
+    const el = activeRef.current;
+    if (!el) return;
+    const top = el.offsetTop;
+    if (top !== lastLineRef.current) {
+      lastLineRef.current = top;
+      setOffsetY(top);
+    }
+  }, []);
+
+  useEffect(() => {
+    measureScroll();
+  }, [globalWordIndex, measureScroll]);
+
+  if (!wordBuffer || wordBuffer.length === 0) return null;
+
   const typed = activeWord?.typed || "";
 
   return (
@@ -16,43 +37,48 @@ export default function RaceParagraphBlock({
       <div className="r-paragraph-head">
         <span className="r-paragraph-head__tag">◊ TRANSMISION · ACTIVA</span>
         <span className="r-paragraph-head__progress">
-          <span className="r-ph-num">{playerPhrasesCompleted || 0}</span>
-          <span className="r-ph-sep">/</span>
-          <span className="r-ph-total">{totalPhrases || "?"}</span>
+          <span className="r-ph-num">{wordsCompleted || 0}</span>
+          <span className="r-ph-sep"> palabras</span>
         </span>
       </div>
+
       <div className={`r-paragraph${animState === "wrong" ? " r-paragraph--error" : ""}`}>
-        {currentPhrase.map((word, wi) => {
-          if (wi < currentPhraseWordIndex) {
+        <div
+          className="r-paragraph__inner"
+          style={{ transform: `translateY(-${offsetY}px)` }}
+        >
+          {wordBuffer.map((word, wi) => {
+            const isDone   = wi < globalWordIndex;
+            const isActive = wi === globalWordIndex;
+
+            if (isActive) {
+              return (
+                <span key={wi} ref={activeRef} className="r-word r-word--active">
+                  {word.split("").map((ch, ci) => {
+                    let cls = "r-pc ";
+                    if (ci < typed.length) {
+                      cls += typed[ci] === ch ? "r-pc--done" : "r-pc--error";
+                    } else if (ci === typed.length) {
+                      cls += "r-pc--cursor";
+                    } else {
+                      cls += "r-pc--pending";
+                    }
+                    return <span key={ci} className={cls}>{ch}</span>;
+                  })}
+                </span>
+              );
+            }
+
             return (
-              <React.Fragment key={wi}>
-                <span className="r-pc r-pc--done">{word}</span>{" "}
-              </React.Fragment>
+              <span
+                key={wi}
+                className={`r-word ${isDone ? "r-word--done" : "r-word--pending"}`}
+              >
+                {word}
+              </span>
             );
-          }
-          if (wi === currentPhraseWordIndex) {
-            return (
-              <React.Fragment key={wi}>
-                {word.split("").map((ch, ci) => {
-                  let cls = "r-pc ";
-                  if (ci < typed.length) {
-                    cls += typed[ci] === ch ? "r-pc--done" : "r-pc--error";
-                  } else if (ci === typed.length) {
-                    cls += "r-pc--cursor";
-                  } else {
-                    cls += "r-pc--pending";
-                  }
-                  return <span key={ci} className={cls}>{ch}</span>;
-                })}{" "}
-              </React.Fragment>
-            );
-          }
-          return (
-            <React.Fragment key={wi}>
-              <span className="r-pc r-pc--pending">{word}</span>{" "}
-            </React.Fragment>
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );

@@ -64,6 +64,7 @@ export default function HUD() {
   const {
     wpm, accuracy, hp, activeWord, wave, gameMode, flowMultiplier,
     currentPhrase, currentPhraseWordIndex,
+    wordBuffer, globalWordIndex, wordsCompleted,
     playerPhrasesCompleted, totalPhrases,
     countdown, countdownActive, timeRemaining,
     distanceTraveled, targetDistance,
@@ -78,9 +79,18 @@ export default function HUD() {
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? "none";
 
+  // CSS variable interpolated from blue (idle) → purple (flow building) → intense purple (flow active).
+  // Components can consume var(--hud-accent) for reactive tinting.
+  const hudAccent = flowActive ? '#cc00ff'
+    : flow >= 80 ? '#9900ff'
+    : flow >= 60 ? '#7722ee'
+    : flow >= 40 ? '#6633cc'
+    : flow >= 20 ? '#5544bb'
+    : '#4d7eff';
+
   if (!isRacing) {
     return (
-      <div className="hud">
+      <div className="hud" style={{ '--hud-accent': hudAccent }}>
         {showFlash && <div className="edge-flash" />}
         {flowActive && <FlowFrame />}
         <LowHpFrame level={lowHpLevel} />
@@ -109,7 +119,7 @@ export default function HUD() {
   }
 
   return (
-    <div className="hud">
+    <div className="hud" style={{ '--hud-accent': hudAccent }}>
       {showFlash && <div className="edge-flash" />}
       <LowHpFrame level={lowHpLevel} />
       <div className="r-vignette" />
@@ -128,12 +138,11 @@ export default function HUD() {
           timeRemaining={timeRemaining}
         />
         <RaceParagraphBlock
-          currentPhrase={currentPhrase}
-          currentPhraseWordIndex={currentPhraseWordIndex}
+          wordBuffer={wordBuffer}
+          globalWordIndex={globalWordIndex}
           activeWord={activeWord}
           animState={animState}
-          playerPhrasesCompleted={playerPhrasesCompleted}
-          totalPhrases={totalPhrases}
+          wordsCompleted={wordsCompleted}
         />
         <RaceFlowBlock
           flowMultiplier={flowMultiplier}

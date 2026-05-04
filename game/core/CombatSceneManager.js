@@ -226,7 +226,11 @@ export class CombatSceneManager {
   _onWordCompleted({ enemyId }) {
     const enemy = this.enemies.find(e => e.id === enemyId);
     if (!enemy) return;
-    this._particles.burst(enemy.position.clone());
+    this._particles.burstDestroy(enemy.position.clone(), {
+      color: enemy._cfg?.color ?? 0x00ffcc,
+      word:  enemy.word,
+      intensity: 1.0,
+    });
     enemy.active = false; enemy.setTargeted(false); enemy.removeFromScene(this.scene);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
@@ -239,6 +243,11 @@ export class CombatSceneManager {
     const enemy = this.enemies.find(e => e.id === id);
     if (!enemy || !enemy.active) return;
     this._particles.burst(enemy.position.clone());
+    this._particles.burstDestroy(enemy.position.clone(), {
+      color: 0xff4444,
+      word:  enemy.word,
+      intensity: 0.7,
+    });
     enemy.active = false; enemy.removeFromScene(this.scene);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);

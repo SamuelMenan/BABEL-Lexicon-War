@@ -79,21 +79,22 @@ export class Arena {
     this._sf.addStarCluster(-450, 80, -320, 120, 30, 0.32, 0xffffff, 0.70);
     this._sf.addMilkyWay();
     this._moon.load();
-    const shipKey = new THREE.PointLight(0xe6f2ff, 3.2, 18);
-    shipKey.position.set(-1.1, 3.1, 6.2);
-    this._scene.add(shipKey);
-    this._sceneLights.push(shipKey);
-    const shipFill = new THREE.PointLight(0xb9d4ff, 2.4, 16);
-    shipFill.position.set(2.5, -0.9, 6.1);
-    this._scene.add(shipFill);
-    this._sceneLights.push(shipFill);
-    const shipRim = new THREE.PointLight(0x79ffd6, 1.6, 12);
-    shipRim.position.set(0, -1.5, 5.5);
-    this._scene.add(shipRim);
-    this._sceneLights.push(shipRim);
-    const shipAmb = new THREE.AmbientLight(0x1a2538, 2.2);
-    this._scene.add(shipAmb);
-    this._sceneLights.push(shipAmb);
+    // Exact hangar lighting — ship materials render true to Blender.
+    const ambient = new THREE.AmbientLight(0x060c1a, 1.0);
+    this._scene.add(ambient);
+    this._sceneLights.push(ambient);
+    const starLight = new THREE.DirectionalLight(0xc8d8ff, 3.5);
+    starLight.position.set(-10, 8, 12);
+    this._scene.add(starLight);
+    this._sceneLights.push(starLight);
+    const rimLight = new THREE.DirectionalLight(0x00ccee, 2.2);
+    rimLight.position.set(0, 4, -12);
+    this._scene.add(rimLight);
+    this._sceneLights.push(rimLight);
+    const warmFill = new THREE.DirectionalLight(0x3a2810, 1.2);
+    warmFill.position.set(8, -3, 6);
+    this._scene.add(warmFill);
+    this._sceneLights.push(warmFill);
   }
 
   _loadBackdropScenario1() {

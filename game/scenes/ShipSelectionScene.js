@@ -493,20 +493,10 @@ export class ShipSelectionScene {
       const wrapper = this._shipGroup?.children[0];
       if (!wrapper) { resolve(); return; }
 
-      // Compute the world direction the ship's nose points.
-      // Ships with noseAxis '+x' have their model nose at local +X;
-      // all others use the Three.js convention of local -Z as forward.
-      const ship = SHIPS[this._currentShipIndex];
-      const localNose = ship?.noseAxis === '+x'
-        ? new THREE.Vector3(1, 0, 0)
-        : new THREE.Vector3(0, 0, 1);
-      const forward = localNose.applyQuaternion(wrapper.quaternion).normalize();
-
-      // Pitch axis = world right of the ship = worldUp × forward.
-      // Rotating around this axis by a negative angle tilts the nose upward.
-      const pitchAxis = new THREE.Vector3()
-        .crossVectors(new THREE.Vector3(0, 1, 0), forward)
-        .normalize();
+      // Hangar exit door is always at world +Z. All ships are pre-rotated (startQuat)
+      // to face +Z in hangar space, so these world-space constants are universal.
+      const forward   = new THREE.Vector3(0, 0, 1);
+      const pitchAxis = new THREE.Vector3(1, 0, 0);
 
       // Trail: circular buffer of Points
       const TRAIL_MAX = 120;

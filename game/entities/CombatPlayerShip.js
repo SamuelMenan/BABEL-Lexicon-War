@@ -1,19 +1,33 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { COLORS } from '../../shared/constants.js';
+import { COLORS, SHIPS } from '../../shared/constants.js';
 import { Bridge } from '../../shared/bridge.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
-import { createShipCollapseFx } from '../rendering/fx/shipCollapseFx.js';
 import { tuneLoadedMesh, afterLoadedModel } from '../rendering/modelTuning/combatShipModelTuning.js';
 import { getThermalColor } from '../rendering/colors/thermalRamp.js';
 
-const COMBAT_MODEL_URL    = '/models/spaceshipnew.glb';
 const TARGET_MODEL_LENGTH = 3.8;
-const COMBAT_MODEL_YAW    = Math.PI + 0.75;
+
+// Combat forward = -Z (nose points away from camera toward enemies).
+// The hangar rotationY aligns the ship to face +Z (hangar opening), so adding π
+// flips it to face -Z for combat. Works for any ship regardless of noseAxis.
+function getCombatYaw(ship) {
+  return (ship?.rotationY ?? 0) + Math.PI;
+}
 
 export class CombatPlayerShip extends ShipBase {
   constructor() {
-    super({ modelUrl: COMBAT_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: COMBAT_MODEL_YAW });
+    const { selectedShip } = Bridge.peekState();
+    const ship = SHIPS.find(s => s.id === selectedShip) ?? SHIPS[0];
+
+    super({
+      modelUrl:     ship.url,
+      targetLength: TARGET_MODEL_LENGTH,
+      yaw:          getCombatYaw(ship),
+    });
+
+    this._ship      = ship;
+    this._boosters  = [];
     this._recoil    = 0;
     this._hitShake  = 0;
     this._targetPos = null;
@@ -26,8 +40,6 @@ export class CombatPlayerShip extends ShipBase {
     this._lightFill = null;
     this._lightBack = null;
 
-    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.combatPlayer);
-    this._booster.attachToShip(this._group);
     this._isThrusting = false;
 
     this._buildFxNodes();
@@ -35,12 +47,6 @@ export class CombatPlayerShip extends ShipBase {
     this._loadModel();
 
     this._group.position.copy(this._basePosition);
-    this._collapsing     = false;
-    this._collapseT      = 0;
-    this._collapseOnDone = null;
-    this._collapseDone   = false;
-    this._collapseScene  = null;
-    this._collapseFx     = null;
   }
 
   get position() { return this._group.position; }
@@ -107,7 +113,78 @@ export class CombatPlayerShip extends ShipBase {
   _tuneLoadedMesh(node) { tuneLoadedMesh(node); }
 
   _afterLoadedModel(modelRoot) {
+    // Standard tuning: hide helper artifacts, compute socket positions from final bbox.
     afterLoadedModel(modelRoot, (sockets) => this._setSocketPositions(sockets));
+
+    // ── Booster setup ─────────────────────────────────────────────────────────
+    //
+    // The hangar booster configs store localPosition as fractions of the raw
+    // (pre-rotation, pre-scale) model half-bbox. Sizes are in hangar world units
+    // where the ship fits inside a 2.2-unit cube.
+    //
+    // To place boosters in this._group's coordinate space we:
+    //   1. Get the raw half-bbox by temporarily zeroing rotation + scale on modelRoot.
+    //   2. Multiply fraction × rawHalfSize → position in raw model space.
+    //   3. Apply combat yaw rotation (same rotation modelRoot has) → correct orientation.
+    //   4. Multiply by modelRoot scale → convert from raw model units to world units.
+    //   5. Scale booster sizes by (targetLength / 2.2) for proportional sizing.
+    //
+    // Flame direction: the default BoosterEffect root points its flame along +Z.
+    // After the position math, +Z in group space = tail direction in combat. ✓
+    // rootRotY/flipZ were calibrated for the hangar's wrapper space — do NOT apply here.
+
+    const combatScale = modelRoot.scale.x;
+    const combatRotY  = modelRoot.rotation.y;
+
+    // Temporarily reset to read pre-rotation, pre-scale bbox
+    modelRoot.rotation.y = 0;
+    modelRoot.scale.setScalar(1);
+    const rawBox      = new THREE.Box3().setFromObject(modelRoot);
+    const rawHalfSize = rawBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+    modelRoot.rotation.y = combatRotY;
+    modelRoot.scale.setScalar(combatScale);
+
+    // Dispose any boosters from a previous reload
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
+
+    const prefix   = `hangar_${this._ship.id}_`;
+    const combatSF = TARGET_MODEL_LENGTH / 2.2; // size scale factor: hangar → combat
+
+    Object.entries(SHIP_BOOSTER_CONFIGS)
+      .filter(([key]) => key.startsWith(prefix))
+      .forEach(([, config]) => {
+        // Step 1-4: position in group space
+        const rawPos = new THREE.Vector3(
+          config.localPosition.x * rawHalfSize.x,
+          config.localPosition.y * rawHalfSize.y,
+          config.localPosition.z * rawHalfSize.z,
+        );
+        rawPos.applyEuler(new THREE.Euler(0, combatRotY, 0));
+        rawPos.multiplyScalar(combatScale);
+
+        // Step 5: scale all dimensional properties
+        const combatConfig = {
+          ...config,
+          localPosition: rawPos,
+          bodyRadius:  config.bodyRadius  * combatSF,
+          bodyLength:  config.bodyLength  * combatSF,
+          ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * combatSF,
+          flameSize:   config.flameSize   * combatSF,
+          innerSize:   config.innerSize   * combatSF,
+          starSize:    config.starSize    * combatSF,
+          lightDist:   config.lightDist   * combatSF,
+          lightOffset: config.lightOffset.clone().multiplyScalar(combatSF),
+        };
+
+        const booster = new BoosterEffect(combatConfig);
+        booster.attachToShip(this._group);
+        this._boosters.push(booster);
+      });
+
+    if (this._boosters.length === 0) {
+      console.warn(`[CombatPlayerShip] No hangar booster config found for ship "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
+    }
   }
 
   setTarget(pos) { this._targetPos = pos; }
@@ -136,11 +213,9 @@ export class CombatPlayerShip extends ShipBase {
   }
 
   update(delta) {
-    if (this._collapsing) { this._updateCollapse(delta); return; }
     super.update(delta);
 
     const floatY   = Math.sin(this._t * 1.2) * 0.12;
-    // Sinusoidal roll — wings rise and fall at ~0.85 Hz
     const wingRoll = Math.sin(this._t * 0.85) * 0.045;
     this._shipRoot.rotation.z = wingRoll;
     const shakeY = this._hitShake > 0 ? Math.sin(this._t * 28) * this._hitShake * 0.35 : 0;
@@ -174,9 +249,16 @@ export class CombatPlayerShip extends ShipBase {
     if (this._lightBack) this._lightBack.intensity = 3.4 + Math.sin(this._t * 2.2) * 0.16 + this._recoil * 0.4;
 
     const { flow, flowActive } = Bridge.peekState();
-    this._booster.setThermalColor(getThermalColor(flow, flowActive));
-    this._booster.update(delta, this._isThrusting, flowActive ? 1.4 : 1.0, flowActive ? 1.18 : 1.0, flowActive);
-    if (this._isThrusting) this._isThrusting = false;   // auto-clear; caller sets it each frame
+    const thermal = getThermalColor(flow, flowActive);
+    const vScale  = flowActive ? 1.4  : 1.0;
+    const rScale  = flowActive ? 1.18 : 1.0;
+
+    this._boosters.forEach(b => {
+      b.setThermalColor(thermal);
+      b.update(delta, this._isThrusting, vScale, rScale, flowActive);
+    });
+
+    if (this._isThrusting) this._isThrusting = false;
   }
 
   get thermalColor() {
@@ -184,100 +266,18 @@ export class CombatPlayerShip extends ShipBase {
     return getThermalColor(flow, flowActive);
   }
 
-  /** Call each frame while the engines are firing (e.g. when targeting, boosting, or recoiling). */
   setThrusting(on) { this._isThrusting = on; }
 
-  /** Booster burst on correct letter typed. */
   onLetterCorrect(intensity = 1.0) {
-    this._booster.triggerLetterHit(intensity);
+    this._boosters.forEach(b => b.triggerLetterHit(intensity));
     this._isThrusting = true;
   }
 
-  startCollapse(scene, onDone) {
-    if (this._collapsing) return;
-    this._collapsing     = true;
-    this._collapseT      = 0;
-    this._collapseDone   = false;
-    this._collapseScene  = scene;
-    this._collapseOnDone = onDone ?? null;
-
-    this._group.traverse(node => {
-      if (!node.isMesh) return;
-      const mats = Array.isArray(node.material) ? node.material : [node.material];
-      mats.forEach(mat => { mat.transparent = true; mat.needsUpdate = true; });
-    });
-
-    this._collapseFx = createShipCollapseFx({ scene, origin: this._group.position });
-    this._collapseFx.spawn();
-  }
-
-  _updateCollapse(delta) {
-    if (this._collapseDone) return;
-    const TOTAL = 2.8;
-    this._collapseT += delta;
-    const t = Math.min(this._collapseT / TOTAL, 1);
-
-    this._collapseFx?.update(delta, this._collapseT);
-
-    // Ship hull: small scale pulse then sine wobble (NOT random jitter)
-    if (t < 0.12) {
-      this._group.scale.setScalar(1 + (t / 0.12) * 0.30);
-    } else if (t < 0.26) {
-      this._group.scale.setScalar(1.30 - ((t - 0.12) / 0.14) * 0.30);
-    }
-
-    if (t >= 0.10) {
-      const wAmp = Math.min(0.55, (t - 0.10) / 0.35 * 0.55);
-      const f1 = 16 + t * 28;
-      const f2 = 21 + t * 34;
-      this._group.position.x = this._basePosition.x + Math.sin(this._collapseT * f1) * wAmp * 0.40;
-      this._group.position.y = this._basePosition.y + Math.sin(this._collapseT * f2) * wAmp * 0.32;
-      this._group.rotation.z = Math.sin(this._collapseT * (f1 * 0.65)) * wAmp * 0.50;
-      this._group.rotation.x = Math.sin(this._collapseT * (f2 * 0.55)) * wAmp * 0.22;
-    }
-
-    // Ship stays opaque until t=0.55, then fades
-    const opacity = t < 0.55 ? 1 : Math.max(0, 1 - (t - 0.55) / 0.45);
-
-    // Softer lexical shimmer to avoid harsh strobe while collapsing
-    const shimmer = t > 0.12 && t < 0.92
-      ? 1.1 + 0.55 * Math.sin(this._collapseT * 24) + 0.2 * Math.sin(this._collapseT * 9)
-      : 0.95;
-    const emissiveFactor = Math.max(0.35, shimmer);
-
-    this._group.traverse(node => {
-      if (!node.isMesh) return;
-      const mats = Array.isArray(node.material) ? node.material : [node.material];
-      mats.forEach(mat => {
-        mat.opacity = opacity;
-        if ('emissiveIntensity' in mat) mat.emissiveIntensity = emissiveFactor * Math.max(0.15, 1 - t * 0.7);
-      });
-    });
-    if (this._light)     this._light.intensity     = (4.2 + 0.8 * Math.sin(this._collapseT * 18)) * opacity;
-    if (this._lightRim)  this._lightRim.intensity  = (2.8 + 0.5 * Math.sin(this._collapseT * 22)) * opacity;
-    if (this._lightFill) this._lightFill.intensity = (3.2 + 0.6 * Math.sin(this._collapseT * 14)) * opacity;
-    if (this._lightBack) this._lightBack.intensity = (3.6 + 0.7 * Math.sin(this._collapseT * 17)) * opacity;
-
-    if (t >= 1) {
-      this._collapseDone = true;
-      this._collapseFx?.cleanup();
-      this._collapseFx = null;
-      const cb = this._collapseOnDone;
-      this._collapseOnDone = null;
-      cb?.();
-    }
-  }
-
-  dispose(scene = null) {
+  dispose() {
     clearTimeout(this._fireAnimTimer);
     this._fireAnimTimer = null;
-    if (this._collapseFx) {
-      this._collapseFx.cleanup();
-      this._collapseFx = null;
-    }
-    this._collapseScene  = null;
-    this._collapseOnDone = null;
-    this._booster.dispose();
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
     super.dispose();
   }
 }

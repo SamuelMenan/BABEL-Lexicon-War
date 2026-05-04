@@ -51,7 +51,6 @@ export class ShipBase extends Entity {
 
     const modelRoot = new THREE.Group();
     modelRoot.add(modelScene);
-    modelRoot.rotation.y = this._yaw;
 
     modelRoot.traverse((node) => {
       if (!node.isMesh) return;
@@ -62,10 +61,13 @@ export class ShipBase extends Entity {
     });
 
     const initialBox = new THREE.Box3().setFromObject(modelRoot);
-    if (initialBox.isEmpty()) return;
+    if (!initialBox.isEmpty()) {
+      const center = initialBox.getCenter(new THREE.Vector3());
+      modelScene.position.sub(center);
+    }
 
-    const center = initialBox.getCenter(new THREE.Vector3());
-    modelScene.position.sub(center);
+    // Apply yaw AFTER centering
+    modelRoot.rotation.y = this._yaw;
 
     const centeredBox = new THREE.Box3().setFromObject(modelRoot);
     const size = centeredBox.getSize(new THREE.Vector3());

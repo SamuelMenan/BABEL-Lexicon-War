@@ -3,19 +3,21 @@ import { ShipBase } from './ShipBase.js';
 import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
-const ENEMY_MODEL_URL = '/models/waldeinsamkeit-class_strategic_survey_vessel.glb';
+const ENEMY_MODEL_URL    = '/models/spaceship_-_cb1.glb';
 const TARGET_MODEL_LENGTH = 3.2;
+
+// cb1 noseAxis='+x': yaw=-π/2 maps +X → group +Z.
+// Opponent update uses rotation.y ≈ 0 (small oscillation),
+// so group +Z → world +Z = racing forward direction.
+const OPPONENT_YAW = -Math.PI / 2;
 
 export class RacingOpponentShip extends ShipBase {
   constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8)) {
-    super({ modelUrl: ENEMY_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: 0 });
+    super({ modelUrl: ENEMY_MODEL_URL, targetLength: TARGET_MODEL_LENGTH, yaw: OPPONENT_YAW });
     this._basePosition = basePosition.clone();
-    this._raceState = null;
-
-    this._light = null;
-
-    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingOpponent);
-    this._booster.attachToShip(this._group);
+    this._raceState    = null;
+    this._boosters     = [];
+    this._light        = null;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -85,11 +87,63 @@ export class RacingOpponentShip extends ShipBase {
     });
   }
 
-  _afterLoadedModel(_modelRoot) {}
+  _afterLoadedModel(modelRoot) {
+    const modelScale = modelRoot.scale.x;
+    const modelRotY  = modelRoot.rotation.y;
 
-  setRaceState(state) {
-    this._raceState = state;
+    modelRoot.rotation.y = 0;
+    modelRoot.scale.setScalar(1);
+    const rawBox      = new THREE.Box3().setFromObject(modelRoot);
+    const rawHalfSize = rawBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+    modelRoot.rotation.y = modelRotY;
+    modelRoot.scale.setScalar(modelScale);
+
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
+
+    const racingSF = TARGET_MODEL_LENGTH / 2.2;
+
+    Object.entries(SHIP_BOOSTER_CONFIGS)
+      .filter(([key]) => key.startsWith('hangar_cb1_'))
+      .forEach(([, config]) => {
+        const rawPos = new THREE.Vector3(
+          config.localPosition.x * rawHalfSize.x,
+          config.localPosition.y * rawHalfSize.y,
+          config.localPosition.z * rawHalfSize.z,
+        );
+        rawPos.applyEuler(new THREE.Euler(0, modelRotY, 0));
+        rawPos.multiplyScalar(modelScale);
+
+        const racingConfig = {
+          ...config,
+          localPosition: rawPos,
+          bodyRadius:  config.bodyRadius  * racingSF,
+          bodyLength:  config.bodyLength  * racingSF,
+          ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * racingSF,
+          flameSize:   config.flameSize   * racingSF,
+          innerSize:   config.innerSize   * racingSF,
+          starSize:    config.starSize    * racingSF,
+          lightDist:   config.lightDist   * racingSF,
+          lightOffset: config.lightOffset.clone().multiplyScalar(racingSF),
+        };
+
+        const booster = new BoosterEffect(racingConfig);
+        booster.attachToShip(this._group);
+
+        if (rawPos.lengthSq() > 0) {
+          const flameDir = rawPos.clone().normalize();
+          booster._root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), flameDir);
+        }
+
+        this._boosters.push(booster);
+      });
+
+    if (this._boosters.length === 0) {
+      console.warn('[RacingOpponentShip] No hangar_cb1_* booster configs found.');
+    }
   }
+
+  setRaceState(state) { this._raceState = state; }
 
   setBasePosition(position) {
     this._basePosition.copy(position);
@@ -112,13 +166,13 @@ export class RacingOpponentShip extends ShipBase {
 
     this._light.intensity = 5.5 + Math.sin(t * 2.4) * 0.08;
 
-    // Opponent is "always" accelerating from the player's perspective;
-    // tie it to smoothLead so it dims when the player is winning.
-    this._booster.update(delta, smoothLead > -0.5);
+    const isThrusting = smoothLead > -0.5;
+    this._boosters.forEach(b => b.update(delta, isThrusting));
   }
 
   dispose() {
-    this._booster.dispose();
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
     super.dispose();
   }
 }

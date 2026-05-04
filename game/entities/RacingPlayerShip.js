@@ -1,21 +1,36 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, RACING_MATERIALS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, RACING_MATERIALS, SHIPS } from '../../shared/constants.js';
+import { Bridge } from '../../shared/bridge.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
-const CAREER_MODEL_URL = '/models/spaceship.glb';
 const TARGET_MODEL_LENGTH = 5.0;
+
+// Racing forward = -Z (ship moves by decreasing z each frame).
+// The update() forces group.rotation.y = π, which maps group +Z → world -Z.
+// So we need the model nose to point group +Z after modelRoot.rotation.y = racingYaw.
+//   +X-nose ship: rotY(-π/2) maps +X → +Z  ✓
+//   +Z-nose ship: no rotation needed         ✓
+function getRacingYaw(ship) {
+  return ship?.noseAxis === '+x' ? -Math.PI / 2 : 0;
+}
 
 export class RacingPlayerShip extends ShipBase {
   constructor(basePosition = new THREE.Vector3(-5.2, -1.35, 2.2)) {
-    super({ modelUrl: CAREER_MODEL_URL, targetLength: TARGET_MODEL_LENGTH });
+    const { selectedShip } = Bridge.peekState();
+    const ship = SHIPS.find(s => s.id === selectedShip) ?? SHIPS[0];
+
+    super({
+      modelUrl:     ship.url,
+      targetLength: TARGET_MODEL_LENGTH,
+      yaw:          getRacingYaw(ship),
+    });
+
+    this._ship        = ship;
+    this._boosters    = [];
     this._basePosition = basePosition.clone();
-    this._raceState = null;
-
-    this._light = null;
-
-    this._booster = new BoosterEffect(SHIP_BOOSTER_CONFIGS.racingPlayer);
-    this._booster.attachToShip(this._group);
+    this._raceState   = null;
+    this._light       = null;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -85,11 +100,79 @@ export class RacingPlayerShip extends ShipBase {
     });
   }
 
-  _afterLoadedModel(_modelRoot) {}
+  _afterLoadedModel(modelRoot) {
+    // ── Booster setup ─────────────────────────────────────────────────────────
+    //
+    // Same bounding-box math as CombatPlayerShip, adapted for racing:
+    //   rawPos = fraction × rawHalfSize (raw model space, pre-rotation, pre-scale)
+    //   →  applyEuler(racingYaw)  →  ×modelScale  →  group-space position
+    //
+    // The flame is auto-oriented to point away from the ship center via
+    // setFromUnitVectors(+Z, rawPos.normalize()). This avoids manually translating
+    // rootRotY/flipZ (which were calibrated for hangar wrapper space).
+    //
+    // ShipBase._applyLoadedModel already handles cb1-style GLB animations
+    // (creates this._mixer, plays all clips). No duplication needed here.
 
-  setRaceState(state) {
-    this._raceState = state;
+    const modelScale = modelRoot.scale.x;
+    const modelRotY  = modelRoot.rotation.y;
+
+    // Temporarily reset to read pre-rotation, pre-scale bbox
+    modelRoot.rotation.y = 0;
+    modelRoot.scale.setScalar(1);
+    const rawBox      = new THREE.Box3().setFromObject(modelRoot);
+    const rawHalfSize = rawBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+    modelRoot.rotation.y = modelRotY;
+    modelRoot.scale.setScalar(modelScale);
+
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
+
+    const prefix   = `hangar_${this._ship.id}_`;
+    const racingSF = TARGET_MODEL_LENGTH / 2.2;
+
+    Object.entries(SHIP_BOOSTER_CONFIGS)
+      .filter(([key]) => key.startsWith(prefix))
+      .forEach(([, config]) => {
+        const rawPos = new THREE.Vector3(
+          config.localPosition.x * rawHalfSize.x,
+          config.localPosition.y * rawHalfSize.y,
+          config.localPosition.z * rawHalfSize.z,
+        );
+        rawPos.applyEuler(new THREE.Euler(0, modelRotY, 0));
+        rawPos.multiplyScalar(modelScale);
+
+        const racingConfig = {
+          ...config,
+          localPosition: rawPos,
+          bodyRadius:  config.bodyRadius  * racingSF,
+          bodyLength:  config.bodyLength  * racingSF,
+          ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * racingSF,
+          flameSize:   config.flameSize   * racingSF,
+          innerSize:   config.innerSize   * racingSF,
+          starSize:    config.starSize    * racingSF,
+          lightDist:   config.lightDist   * racingSF,
+          lightOffset: config.lightOffset.clone().multiplyScalar(racingSF),
+        };
+
+        const booster = new BoosterEffect(racingConfig);
+        booster.attachToShip(this._group);
+
+        // Auto-orient flame to point away from ship center (general, no rootRotY needed)
+        if (rawPos.lengthSq() > 0) {
+          const flameDir = rawPos.clone().normalize();
+          booster._root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), flameDir);
+        }
+
+        this._boosters.push(booster);
+      });
+
+    if (this._boosters.length === 0) {
+      console.warn(`[RacingPlayerShip] No hangar booster config for "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
+    }
   }
+
+  setRaceState(state) { this._raceState = state; }
 
   setBasePosition(position) {
     this._basePosition.copy(position);
@@ -101,7 +184,7 @@ export class RacingPlayerShip extends ShipBase {
 
     if (!this._raceState) return;
 
-    const { t, smoothLead, smoothBurst, smoothProgress, typedAdvance, progressPush } = this._raceState;
+    const { t, smoothLead, smoothBurst, typedAdvance, progressPush } = this._raceState;
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.45) * 0.28 + Math.cos(t * 0.68) * 0.14 + smoothLead * 0.06;
     this._group.position.y = this._basePosition.y + Math.sin(t * 2.1) * 0.24 + Math.cos(t * 1.3) * 0.11 + smoothBurst * 0.12;
@@ -112,11 +195,13 @@ export class RacingPlayerShip extends ShipBase {
 
     this._light.intensity = 2.1 + Math.sin(t * 3.0) * 0.08 + smoothBurst * 0.03;
 
-    this._booster.update(delta, smoothBurst > 0.05);
+    const isThrusting = smoothBurst > 0.05;
+    this._boosters.forEach(b => b.update(delta, isThrusting));
   }
 
   dispose() {
-    this._booster.dispose();
+    this._boosters.forEach(b => b.dispose());
+    this._boosters = [];
     super.dispose();
   }
 }

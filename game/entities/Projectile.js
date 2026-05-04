@@ -74,7 +74,7 @@ function getProjData(type) {
 }
 
 export class Projectile extends Entity {
-  constructor(origin, target, onHit, type = PROJECTILE_TYPES.STANDARD, colorOverride = null) {
+  constructor(origin, target, onHit, type = PROJECTILE_TYPES.STANDARD, colorOverride = null, flowBoost = false) {
     super();
     this._target   = target;
     this._onHit    = onHit;
@@ -84,7 +84,7 @@ export class Projectile extends Entity {
     this._life     = cfg.life;
     this._trailMax = cfg.trail;
     this._tempPos  = origin.clone();
-    
+
     // We try to fill trail point arrays initially rather than allocating inside loop
     this._trailPts = Array.from({ length: cfg.trail }, () => origin.clone());
 
@@ -95,11 +95,13 @@ export class Projectile extends Entity {
 
     let coreMat, glowMat, tipMat, trailMat;
     if (colorOverride) {
-      const col = new THREE.Color(colorOverride);
+      const col      = new THREE.Color(colorOverride);
+      const glowOpF  = flowBoost ? Math.min(1, cfg.glowOp * 1.8) : cfg.glowOp;
+      const trailOpF = flowBoost ? Math.min(1, cfg.trailOp * 1.3) : cfg.trailOp;
       coreMat  = new THREE.MeshBasicMaterial({ color: col });
-      glowMat  = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: cfg.glowOp, depthWrite: false, blending: THREE.AdditiveBlending });
-      tipMat   = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      trailMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: cfg.trailOp, depthWrite: false, blending: THREE.AdditiveBlending });
+      glowMat  = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: glowOpF, depthWrite: false, blending: THREE.AdditiveBlending });
+      tipMat   = new THREE.MeshBasicMaterial({ color: flowBoost ? 0xffffff : 0xffffff });
+      trailMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: trailOpF, depthWrite: false, blending: THREE.AdditiveBlending });
       this._ownsMats = [coreMat, glowMat, tipMat, trailMat];
     } else {
       coreMat = d.coreMat; glowMat = d.glowMat; tipMat = d.tipMat; trailMat = d.trailMat;

@@ -33,12 +33,8 @@ export class CombatPlayerShip extends ShipBase {
     this._targetPos = null;
     this._basePosition = new THREE.Vector3(0, 0.2, 2.85);
 
-    this._muzzle    = null;
-    this._flash     = null;
-    this._light     = null;
-    this._lightRim  = null;
-    this._lightFill = null;
-    this._lightBack = null;
+    this._muzzle = null;
+    this._flash  = null;
 
     this._isThrusting = false;
 
@@ -66,12 +62,6 @@ export class CombatPlayerShip extends ShipBase {
     });
     this._flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), flashMat);
     this._group.add(this._flash);
-
-    this._light     = this._makePointLight(0xd8e8ff, 3.8, 13, new THREE.Vector3(-0.2, 1.2, -0.45));
-    this._lightRim  = this._makePointLight(0x79ffd6, 2.6, 11, new THREE.Vector3(0.12, -0.3, 1.4));
-    this._lightFill = this._makePointLight(0xffffff, 3.0, 11, new THREE.Vector3(0, 0.35, -1.35));
-    this._lightBack = this._makePointLight(0xfff1d8, 3.4, 12, new THREE.Vector3(0, 0.35, 1.95));
-    this._group.add(this._light, this._lightRim, this._lightFill, this._lightBack);
 
     this._setSocketPositions({ centerX: 0, centerY: 0, frontZ: -0.95 });
   }
@@ -175,6 +165,8 @@ export class CombatPlayerShip extends ShipBase {
           starSize:    config.starSize    * combatSF,
           lightDist:   config.lightDist   * combatSF,
           lightOffset: config.lightOffset.clone().multiplyScalar(combatSF),
+          normalRamp: config.normalRamp,  // Preserve gradient ramps for animated colors
+          flowRamp:   config.flowRamp,
         };
 
         const booster = new BoosterEffect(combatConfig);
@@ -243,19 +235,13 @@ export class CombatPlayerShip extends ShipBase {
       this._group.position.z = this._basePosition.z + Math.sin(this._t * 0.35) * 0.02;
     }
 
-    this._light.intensity     = 3.8 + Math.sin(this._t * 3)   * 0.18 + this._recoil * 0.6;
-    this._lightRim.intensity  = 2.6 + Math.sin(this._t * 4)   * 0.14 + this._recoil * 0.4;
-    if (this._lightFill) this._lightFill.intensity = 3.0 + Math.sin(this._t * 2.4) * 0.14 + this._recoil * 0.3;
-    if (this._lightBack) this._lightBack.intensity = 3.4 + Math.sin(this._t * 2.2) * 0.16 + this._recoil * 0.4;
-
     const { flow, flowActive } = Bridge.peekState();
-    const thermal = getThermalColor(flow, flowActive);
-    const vScale  = flowActive ? 1.4  : 1.0;
-    const rScale  = flowActive ? 1.18 : 1.0;
+    const vScale     = flowActive ? 1.4  : 1.0;
+    const rScale     = flowActive ? 1.18 : 1.0;
+    const flowRatio  = flowActive ? 1.0 : flow / 100;
 
     this._boosters.forEach(b => {
-      b.setThermalColor(thermal);
-      b.update(delta, this._isThrusting, vScale, rScale, flowActive);
+      b.update(delta, this._isThrusting, vScale, rScale, flowRatio);
     });
 
     if (this._isThrusting) this._isThrusting = false;

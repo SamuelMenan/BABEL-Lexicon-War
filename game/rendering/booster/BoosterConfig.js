@@ -15,8 +15,10 @@ export const FLOW_PALETTE = {
 export const SHIP_BOOSTER_CONFIGS = {
 
   // spaceshipnew.glb  |  targetLength 3.8
+  // Combat: booster attached to _group (no rotation). Model yaw=π/2 maps nose(+X)→world -Z,
+  // tail(-X)→world +Z. So booster sits at +Z in group space; flame points +Z by default (no rootRotY).
   combatPlayer: {
-    localPosition: new THREE.Vector3(0, -0.18, 2.10),
+    localPosition: new THREE.Vector3(0, -0.15, 1.65),
     bodyRadius:    0.14,
     bodyLength:    1.20,
     ringRadius:    0.26,
@@ -122,10 +124,13 @@ export const SHIP_BOOSTER_CONFIGS = {
     ringColor:     0xffcc44,
   },
 
-  // spaceshipnew.glb — mismo booster que combatPlayer (misma nave, misma config)
+  // spaceshipnew.glb — hangar (misma nave que combatPlayer, distinto sistema de coordenadas)
+  // Hangar: wrapper.rotation.y = -π/2 → morro(+X) apunta world -Z, cola(-X) apunta world -Z opuesto.
+  // localPosition es fracción de halfSize. x=-0.85 → cola en -X. rootRotY=-π/2 → llama apunta -X.
+  // Calibrar x/y/z con los debug markers hasta que el fuego salga de la tobera.
   hangar_spaceshipnew_0: {
-    localPosition: new THREE.Vector3(0.565, -0.15, -0.6),
-    rootRotY:      2.4,
+    localPosition: new THREE.Vector3(-0.94, -0.15, 0),
+    rootRotY:      -1.5708,
     bodyRadius:    0.14,
     bodyLength:    1.20,
     ringRadius:    0.26,
@@ -143,7 +148,49 @@ export const SHIP_BOOSTER_CONFIGS = {
     ringColor:     0x5d84ff,
   },
 
-  // cb1 — sin boosters, usa animaciones integradas del .glb
+  // cb1 — 2 propulsores morados, simétricos a cada lado del motor central
+  // bbox: x=58.44 y=11.81 z=50.62 | scale=0.038 | rotationY=-π/2
+  // x_half=1.110  y_half=0.224  z_half=0.962
+  hangar_cb1_0: {
+    localPosition: new THREE.Vector3(-0.7, -0.1, -0.3935),
+    rootRotY:      -1.5708, // Rota el propulsor 90 grados para que apunte hacia atrás
+    hangarColor:   0xffc4ff,
+    bodyRadius:    0.07,
+    bodyLength:    0.40,
+    ringRadius:    0.14,
+    flameSize:     0.75,
+    innerSize:     0.28,
+    starSize:      1.10,
+    lightColor:    0xffc4ff,
+    lightIntens:   4.5,
+    lightDist:     8.5,
+    lightOffset:   new THREE.Vector3(0, 0, 0.25),
+    bodyColor:     0x993399,
+    flameColor:    0xffc4ff,
+    innerColor:    0xfff0ff,
+    starColor:     0xee88ff,
+    ringColor:     0xddaaff,
+  },
+  hangar_cb1_1: {
+    localPosition: new THREE.Vector3(-0.7, -0.1, 0.3935),
+    rootRotY:      -1.5708,
+    hangarColor:   0xffc4ff,
+    bodyRadius:    0.07,
+    bodyLength:    0.40,
+    ringRadius:    0.14,
+    flameSize:     0.75,
+    innerSize:     0.28,
+    starSize:      1.10,
+    lightColor:    0xffc4ff,
+    lightIntens:   4.5,
+    lightDist:     8.5,
+    lightOffset:   new THREE.Vector3(0, 0, 0.25),
+    bodyColor:     0x993399,
+    flameColor:    0xffc4ff,
+    innerColor:    0xfff0ff,
+    starColor:     0xee88ff,
+    ringColor:     0xddaaff,
+  },
 
   // ig127.glb — 4 boosters rojos, formación cuadrada (2 arriba + 2 abajo)
   hangar_ig127_0: {

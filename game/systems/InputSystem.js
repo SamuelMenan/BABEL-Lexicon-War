@@ -32,6 +32,13 @@ export class InputSystem {
   _onKeyDown(e) {
     if (!this._active) return;
 
+    // F9 alterna el modo de rendimiento: desactiva/activa el postprocesado pesado.
+    if (e.key === 'F9' || e.code === 'F9') {
+      e.preventDefault();
+      EventBus.emit(EventTypes.PERFORMANCE_TOGGLE);
+      return;
+    }
+
     const isDeleteKey =
       e.key === 'Delete' ||
       e.key === 'Del' ||

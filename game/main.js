@@ -17,6 +17,7 @@ let engine       = null;
 let _lexicon     = null;
 let _physics     = null;
 let _activeScene = null;
+let _performanceModeEnabled = true;
 
 export async function initGame(mountEl) {
   engine = new Engine(mountEl);
@@ -98,6 +99,12 @@ export async function initGame(mountEl) {
 
   EventBus.on(EventTypes.PLAYER_HIT, ({ damage }) => {
     engine?.onPlayerDamage?.(damage ?? 0);
+  });
+
+  EventBus.on(EventTypes.PERFORMANCE_TOGGLE, () => {
+    _performanceModeEnabled = !_performanceModeEnabled;
+    engine?.setBloomEnabled?.(_performanceModeEnabled);
+    console.log(`[BABEL] Performance mode ${_performanceModeEnabled ? 'ON' : 'OFF'} (F9)`);
   });
 
   engine.start();

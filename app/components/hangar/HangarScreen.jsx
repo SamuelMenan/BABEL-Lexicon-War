@@ -65,6 +65,11 @@ export default function HangarScreen() {
     scene.loadShip(0);
     Bridge.emit(EventTypes.SHIP_SELECTION_OPENED, {});
 
+    // PRELOAD COMBAT ASSETS WHILE IN HANGAR
+    import('../../../game/core/AssetLoader.js').then(({ AssetLoader }) => {
+      AssetLoader.preload('combat').catch(err => console.error("Preload error:", err));
+    });
+
     return () => {
       clearInterval(tickId);
       clearTimeout(minTimer);

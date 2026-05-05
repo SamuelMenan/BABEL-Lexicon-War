@@ -61,7 +61,7 @@ export class ShipSelectionScene {
     const w = mount.clientWidth || window.innerWidth;
     const h = mount.clientHeight || window.innerHeight;
 
-    this._renderer = new THREE.WebGLRenderer({ antialias: true });
+    this._renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     this._renderer.setSize(w, h);
     this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this._renderer.toneMapping = THREE.ACESFilmicToneMapping;

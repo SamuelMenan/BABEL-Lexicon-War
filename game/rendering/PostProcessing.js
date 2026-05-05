@@ -158,10 +158,16 @@ export class PostProcessing {
     const w = window.innerWidth;
     const h = window.innerHeight;
     if (this._bloomEnabled) {
+      if (!this._bloomComposer || !this._finalComposer) {
+        return;
+      }
       const scale = getQualityProfile().bloomResScale;
       this._bloomComposer.setSize(Math.floor(w * scale), Math.floor(h * scale));
       this._finalComposer.setSize(w, h);
     } else {
+      if (!this._simpleComposer) {
+        return;
+      }
       this._simpleComposer.setSize(w, h);
     }
   }
@@ -176,6 +182,7 @@ export class PostProcessing {
     // If switching to bloom but bloomComposer was never built (LOW tier), silently ignore.
     if (enabled && !this._bloomComposer) return;
     this._bloomEnabled = enabled;
+    this._onResize();
   }
 
   onPlayerDamage(amount = 0) {
@@ -201,7 +208,20 @@ export class PostProcessing {
 
   render() {
     if (!this._bloomEnabled) {
-      this._simpleComposer.render();
+      if (this._simpleComposer) {
+        this._simpleComposer.render();
+      } else {
+        this._renderer.render(this._scene, this._camera);
+      }
+      return;
+    }
+
+    if (!this._bloomComposer || !this._finalComposer) {
+      if (this._simpleComposer) {
+        this._simpleComposer.render();
+      } else {
+        this._renderer.render(this._scene, this._camera);
+      }
       return;
     }
 

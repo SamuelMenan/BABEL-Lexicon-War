@@ -132,6 +132,28 @@ export function pickEnemyType(word = '', wave = 1) {
   return ENEMY_TYPES.SCOUT;
 }
 
+// Caches locales para no regenerar geometrías en cada spawn (evita drop de FPS al cambiar oleada)
+const _sharedEdges = {};
+function getSharedEdges(type, factory) {
+  if (!_sharedEdges[type]) {
+    const geo = factory();
+    _sharedEdges[type] = new THREE.EdgesGeometry(geo);
+    geo.dispose();
+  }
+  return _sharedEdges[type];
+}
+
+const _sharedCore = new THREE.SphereGeometry(1, 8, 8); // Se escala con cfg.coreR
+
+const _sharedRings = {};
+function getSharedRing(r, tube) {
+  const key = `${r}_${tube}`;
+  if (!_sharedRings[key]) {
+    _sharedRings[key] = new THREE.TorusGeometry(r, tube, 6, 24);
+  }
+  return _sharedRings[key];
+}
+
 export class CombatEnemy extends Entity {
   constructor(word, position, speed = ENEMY_BASE_SPEED, type = ENEMY_TYPES.SCOUT) {
     super();
@@ -161,23 +183,22 @@ export class CombatEnemy extends Entity {
     const cfg   = this._cfg;
     const color = cfg.color;
 
-    // hull edges
-    const geo   = cfg.geo();
-    const edges = new THREE.EdgesGeometry(geo);
+    // hull edges - USE CACHE
+    const edges = getSharedEdges(this._type, cfg.geo);
     this._lineMat = new THREE.LineBasicMaterial({
       color, transparent: true, opacity: cfg.hullOpacity ?? 0.9,
     });
     const hull = new THREE.LineSegments(edges, this._lineMat);
     hull.layers.enable(BLOOM_LAYER);
     this._group.add(hull);
-    geo.dispose();
 
-    // core
+    // core - USE CACHE
     this._coreMat = new THREE.MeshStandardMaterial({
       color, emissive: color, emissiveIntensity: cfg.emissiveInt,
       transparent: true, opacity: 0.55,
     });
-    this._core = new THREE.Mesh(new THREE.SphereGeometry(cfg.coreR, 8, 8), this._coreMat);
+    this._core = new THREE.Mesh(_sharedCore, this._coreMat);
+    this._core.scale.setScalar(cfg.coreR); // scale the unit sphere
     this._core.layers.enable(BLOOM_LAYER);
     this._group.add(this._core);
 
@@ -191,10 +212,9 @@ export class CombatEnemy extends Entity {
     this._glow.layers.enable(BLOOM_LAYER);
     this._group.add(this._glow);
 
-    // rings
-    const ringGeo = new THREE.TorusGeometry(1, 1, 6, 24); // placeholder — scaled per ring
+    // rings - USE CACHE
     cfg.rings.forEach(rd => {
-      const rg  = new THREE.TorusGeometry(rd.r, rd.tube, 6, 24);
+      const rg  = getSharedRing(rd.r, rd.tube);
       const mat = new THREE.MeshStandardMaterial({
         color, emissive: color, emissiveIntensity: cfg.emissiveInt * 0.6,
       });
@@ -209,7 +229,6 @@ export class CombatEnemy extends Entity {
       this._ringMats.push(mat);
       this._group.add(grp);
     });
-    ringGeo.dispose();
   }
 
   // Applies this frame's special ability. dir = normalized vector toward target center.

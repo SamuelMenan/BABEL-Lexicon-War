@@ -7,6 +7,7 @@ export const EventTypes = {
   KEY_BACKSPACE:      'key:backspace',
   INPUT_CLEARED:      'input:cleared',
   DEBUG_FORCE_PLAYER_DEATH: 'debug:force_player_death',
+  PERFORMANCE_TOGGLE:  'debug:performance_toggle',
 
   // --- Lexicon / Palabras ---
   WORD_PROGRESS:      'word:progress',     // { word, typed, correct }

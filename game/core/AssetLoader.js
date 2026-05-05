@@ -96,30 +96,34 @@ export const AssetLoader = {
    * Pass renderer to pre-upload textures to GPU — eliminates first-frame stutter.
    */
   async preload(mode, renderer = null) {
-    Bridge.setState({ isLoading: true, loadingMode: mode ?? null, loadingProgress: 0, loadingMessage: '' });
+    if (this._preloadPromise) return this._preloadPromise;
+    this._preloadPromise = (async () => {
+      Bridge.setState({ isLoading: true, loadingMode: mode ?? null, loadingProgress: 0, loadingMessage: '' });
 
-    await _stage('INIT', 0, 15, _jitter(320, 60), () => _sleep(0));
+      await _stage('INIT', 0, 15, _jitter(320, 60), () => _sleep(0));
 
-    await _stage('GEOMETRY', 15, 35, _jitter(380, 90), () => {
-      _buildGeometryCache();
-    });
+      await _stage('GEOMETRY', 15, 35, _jitter(380, 90), () => {
+        _buildGeometryCache();
+      });
 
-    // Load all GLTFs for shared + this mode
-    await _stage('SCENE', 35, 68, _jitter(520, 110), async () => {
-      const keys = ['shared'];
-      if (mode) keys.push(mode);
-      await _loadManifest(keys);
-    });
+      // Load all GLTFs for shared + this mode
+      await _stage('SCENE', 35, 68, _jitter(520, 110), async () => {
+        const keys = ['shared'];
+        if (mode) keys.push(mode);
+        await _loadManifest(keys);
+      });
 
-    // Upload every cached texture to GPU — no stall on first render frame
-    await _stage('WARMUP', 68, 90, _jitter(460, 100), () => {
-      _warmupGPU(renderer);
-    });
+      // Upload every cached texture to GPU — no stall on first render frame
+      await _stage('WARMUP', 68, 90, _jitter(460, 100), () => {
+        _warmupGPU(renderer);
+      });
 
-    await _stage('READY', 90, 100, _jitter(260, 60), () => _sleep(0));
+      await _stage('READY', 90, 100, _jitter(260, 60), () => _sleep(0));
 
-    Bridge.setState({ isLoading: false, loadingProgress: 100 });
-    EventBus.emit(EventTypes.LOADING_COMPLETE, { mode });
+      Bridge.setState({ isLoading: false, loadingProgress: 100 });
+      EventBus.emit(EventTypes.LOADING_COMPLETE, { mode });
+    })();
+    return this._preloadPromise;
   },
 
   // ── Cache read/write ──────────────────────────────────────────────────────
@@ -136,3 +140,6 @@ export const AssetLoader = {
   setMat(key, mat)       { _matCache.set(key, mat); },
   setGeo(key, geo)       { _geoCache.set(key, geo); },
 };
+
+// Resetea el promise de preload al desmontar o destruir la escena si fuera necesario
+AssetLoader.resetPreload = () => { AssetLoader._preloadPromise = null; };

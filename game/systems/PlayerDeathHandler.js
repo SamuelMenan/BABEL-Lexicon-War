@@ -1,17 +1,14 @@
-import * as THREE from 'three';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
-import { SHIP_BOOSTER_CONFIGS } from '../rendering/booster/BoosterConfig.js';
+import { SHIP_PALETTES } from '../../shared/constants.js';
 
 const CINEMATIC_DELAY_MS = 1800; // breathing room after destruction before Game Over
 
-// Extract normalRamp from the first hangar booster config for the selected ship.
-// Falls back to spaceshipnew if the ship has no dedicated config.
+// Read normalRamp from SHIP_PALETTES — single source of truth for ship colors.
+// Falls back to spaceshipnew if the ship ID has no palette entry.
 function _getRampForShip(shipId) {
-  const key    = `hangar_${shipId}_0`;
-  const config = SHIP_BOOSTER_CONFIGS[key] ?? SHIP_BOOSTER_CONFIGS['hangar_spaceshipnew_0'];
-  return config?.normalRamp ?? null;
+  return (SHIP_PALETTES[shipId] ?? SHIP_PALETTES.spaceshipnew).normalRamp;
 }
 
 export class PlayerDeathHandler {
@@ -59,7 +56,7 @@ export class PlayerDeathHandler {
     // Screen shake starts immediately with the ship trembling
     this._cam?.shake(1.1, 0.9);
 
-    // Resolve ship color palette from booster config
+    // Resolve ship color palette from SHIP_PALETTES (single source of truth)
     const { selectedShip } = Bridge.peekState();
     const colorRamp = _getRampForShip(selectedShip);
 

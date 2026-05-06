@@ -345,3 +345,203 @@ export const SHIPS = [
 ];
 export const DEFAULT_SHIP = 'spaceship';
 
+// ─── Paletas de color por nave ──────────────────────────────────────────────
+//
+// Fuente de verdad única para todos los colores de cada nave jugable.
+// Indexado por ship ID (ver SHIPS array).
+//
+// Cada paleta define:
+//   Propulsor  — lightColor, bodyColor, flameColor, innerColor, starColor,
+//                ringColor, hangarColor, normalRamp, flowRamp
+//   Futuro HUD — hudColor (CSS string), laserColor (hex), shotColor (hex)
+//
+// BoosterConfig.js importa este objeto y hace spread en cada config `hangar_*`.
+// PlayerDeathHandler lee normalRamp desde aquí para colorear la explosión.
+// Los futuros sistemas de láser/HUD por nave también leerán de aquí.
+//
+export const SHIP_PALETTES = {
+
+  // ── spaceship.glb — propulsor amarillo/ámbar ─────────────────────────────
+  spaceship: {
+    lightColor:  0xffcc44,
+    bodyColor:   0xcc8800,
+    flameColor:  0xffcc44,
+    innerColor:  0xffeeaa,
+    starColor:   0xff9900,
+    ringColor:   0xffcc44,
+    hangarColor: 0xffcc44,
+    normalRamp: [
+      0xfffbe6, // 1. Amarillo muy pálido
+      0xffe499, // 2. Amarillo pastel
+      0xffcc44, // 3. Amarillo brillante
+      0xffbb22, // 4. Amarillo dorado
+      0xffaa00, // 5. Amarillo anaranjado
+      0xe68800, // 6. Naranja medio
+      0xcc6600, // 7. Naranja tostado
+      0x994400, // 8. Marrón anaranjado
+      0x662200, // 9. Marrón oscuro
+    ],
+    flowRamp:   0x330f00,
+    hudColor:   '#ffcc44',
+    laserColor: 0xffdd66,
+    shotColor:  0xffaa22,
+  },
+
+  // ── spaceshipnew.glb — propulsor azul/cyan ───────────────────────────────
+  spaceshipnew: {
+    lightColor:  0x86e8ff,
+    bodyColor:   0x5d84ff,
+    flameColor:  0x7fdcff,
+    innerColor:  0xbef2ff,
+    starColor:   0x5d84ff,
+    ringColor:   0x5d84ff,
+    hangarColor: 0x7fdcff,
+    normalRamp: [
+      0xf0f8ff, // 1. Azul muy pálido
+      0xd4e6ff, // 2. Azul pastel claro
+      0xb8d9ff, // 3. Azul pastel
+      0x7fdcff, // 4. Azul suave
+      0x5d84ff, // 5. Azul brillante
+      0x4d7eff, // 6. Azul medio
+      0x3d5fa8, // 7. Azul oscuro
+      0x2d4180, // 8. Azul muy oscuro
+      0x1a2555, // 9. Azul casi negro
+    ],
+    flowRamp:   0x0f1633,
+    hudColor:   '#7fdcff',
+    laserColor: 0x86e8ff,
+    shotColor:  0x4d7eff,
+  },
+
+  // ── spaceship_-_cb1.glb — propulsor morado/violeta ───────────────────────
+  cb1: {
+    lightColor:  0xffc4ff,
+    bodyColor:   0x993399,
+    flameColor:  0xffc4ff,
+    innerColor:  0xfff0ff,
+    starColor:   0xee88ff,
+    ringColor:   0xddaaff,
+    hangarColor: 0xffc4ff,
+    normalRamp: [
+      0xfff0ff, // 1. Morado muy pálido
+      0xf5e0ff, // 2. Morado pastel claro
+      0xf0ccff, // 3. Morado pastel
+      0xee88ff, // 4. Morado suave
+      0xe066ff, // 5. Morado brillante
+      0xdd44ff, // 6. Morado medio
+      0xbb22dd, // 7. Morado oscuro
+      0x881199, // 8. Morado muy oscuro
+      0x440055, // 9. Morado casi negro
+    ],
+    flowRamp:   0x220033,
+    hudColor:   '#ee88ff',
+    laserColor: 0xdd44ff,
+    shotColor:  0xbb22dd,
+  },
+
+  // ── ig_127-730-00.glb — propulsor rojo ───────────────────────────────────
+  ig127: {
+    lightColor:  0xff4422,
+    bodyColor:   0xff5533,
+    flameColor:  0xff3311,
+    innerColor:  0xffd0c0,
+    starColor:   0xff6644,
+    ringColor:   0xff4422,
+    hangarColor: 0xff4422,
+    normalRamp: [
+      0xffe6e0, // 1. Rojo muy pálido
+      0xffcccc, // 2. Rojo pastel claro
+      0xffb3b3, // 3. Rojo pastel
+      0xffaa99, // 4. Rojo suave
+      0xff7755, // 5. Rojo brillante
+      0xff5533, // 6. Rojo medio
+      0xdd4422, // 7. Rojo oscuro
+      0xaa2211, // 8. Rojo muy oscuro
+      0x660000, // 9. Rojo casi negro
+    ],
+    flowRamp:   0x330000,
+    hudColor:   '#ff7755',
+    laserColor: 0xff5533,
+    shotColor:  0xdd4422,
+  },
+
+  // ── spaceship__low_poly.glb — propulsor beige/dorado ─────────────────────
+  lowpoly: {
+    lightColor:  0xfff6cc,
+    bodyColor:   0xd4c888,
+    flameColor:  0xfff6cc,
+    innerColor:  0xfffdf0,
+    starColor:   0xffe8aa,
+    ringColor:   0xfff6cc,
+    hangarColor: 0xfff6cc,
+    normalRamp: [
+      0xfffdf0, // 1. Beige muy pálido
+      0xfffbde, // 2. Beige pastel claro
+      0xfffbcc, // 3. Beige pastel
+      0xfff6cc, // 4. Beige suave
+      0xffe8aa, // 5. Beige brillante
+      0xf0daa8, // 6. Beige medio
+      0xd4c888, // 7. Beige oscuro
+      0xa89860, // 8. Beige muy oscuro
+      0x7a6c40, // 9. Beige casi negro
+    ],
+    flowRamp:   0x3d3620,
+    hudColor:   '#fff6cc',
+    laserColor: 0xffe8aa,
+    shotColor:  0xd4c888,
+  },
+
+  // ── spaceship_colaid1_50k.glb — propulsor teal/esmeralda ─────────────────
+  // Nave con animaciones integradas en GLTF (sin booster config dedicado).
+  // Paleta definida para explosiones, HUD y futuros sistemas de color.
+  colaid1: {
+    lightColor:  0x00ffcc,
+    bodyColor:   0x00aa88,
+    flameColor:  0x00ffcc,
+    innerColor:  0xccffee,
+    starColor:   0x00ddaa,
+    ringColor:   0x00ffcc,
+    hangarColor: 0x00ffcc,
+    normalRamp: [
+      0xeaffff, // 1. Teal muy pálido
+      0xccffee, // 2. Teal pastel claro
+      0x99ffdd, // 3. Teal pastel
+      0x66ffcc, // 4. Teal suave
+      0x33ffaa, // 5. Teal brillante
+      0x00ddaa, // 6. Teal medio
+      0x00aa88, // 7. Teal oscuro
+      0x007766, // 8. Teal muy oscuro
+      0x004433, // 9. Teal casi negro
+    ],
+    flowRamp:   0x002211,
+    hudColor:   '#00ffcc',
+    laserColor: 0x00ffaa,
+    shotColor:  0x00aa88,
+  },
+
+  // ── waldeinsamkeit-class.glb — propulsor naranja intenso ─────────────────
+  waldeinsamkeit: {
+    lightColor:  0xff6622,
+    bodyColor:   0xcc4400,
+    flameColor:  0xff6622,
+    innerColor:  0xffddaa,
+    starColor:   0xff3300,
+    ringColor:   0xff6622,
+    hangarColor: 0xff6622,
+    normalRamp: [
+      0xffe6cc, // 1. Naranja muy pálido
+      0xffd9b3, // 2. Naranja pastel claro
+      0xffcc99, // 3. Naranja pastel
+      0xffbb77, // 4. Naranja suave
+      0xffaa55, // 5. Naranja brillante
+      0xff8844, // 6. Naranja medio
+      0xff6622, // 7. Naranja oscuro
+      0xdd4411, // 8. Naranja muy oscuro
+      0xaa2200, // 9. Naranja casi negro
+    ],
+    flowRamp:   0x551100,
+    hudColor:   '#ff8844',
+    laserColor: 0xff6622,
+    shotColor:  0xdd4411,
+  },
+};

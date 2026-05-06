@@ -18,6 +18,7 @@ let _lexicon     = null;
 let _physics     = null;
 let _activeScene = null;
 let _performanceModeEnabled = true;
+let _pauseSnapshot = null;
 
 export async function initGame(mountEl) {
   engine = new Engine(mountEl);
@@ -84,13 +85,32 @@ export async function initGame(mountEl) {
   });
 
   EventBus.on(EventTypes.GAME_PAUSE, () => {
+    _pauseSnapshot = {
+      isRunning: Bridge.peekState().isRunning,
+      showShipSelection: Bridge.peekState().showShipSelection,
+      pendingGameMode: Bridge.peekState().pendingGameMode,
+      gameMode: Bridge.peekState().gameMode,
+    };
     engine.loop.stop();
     Bridge.setState({ isRunning: false, isPaused: true });
   });
 
   EventBus.on(EventTypes.GAME_RESUME, () => {
+    const pauseSnapshot = _pauseSnapshot;
+    _pauseSnapshot = null;
+
+    if (pauseSnapshot?.showShipSelection) {
+      Bridge.setState({
+        isRunning: false,
+        isPaused: false,
+        showShipSelection: true,
+        pendingGameMode: pauseSnapshot.pendingGameMode ?? Bridge.peekState().pendingGameMode,
+      });
+      return;
+    }
+
     engine.loop.start();
-    Bridge.setState({ isRunning: true, isPaused: false });
+    Bridge.setState({ isRunning: true, isPaused: false, showShipSelection: false });
   });
 
   EventBus.on(EventTypes.GAME_OVER, (result) => {

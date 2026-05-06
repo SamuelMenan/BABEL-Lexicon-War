@@ -23,12 +23,18 @@ export default function App() {
     const onKey = (e) => {
       if (e.code !== 'Escape') return;
       const { isRunning, isPaused, gameOver, isLoading, showShipSelection } = Bridge.getState();
-      if (isLoading || gameOver || showShipSelection) return;
+      if (isLoading || gameOver) return;
+      if (showShipSelection) {
+        e.__babelPauseToggle = true;
+        if (isPaused) Bridge.commands.resumeGame();
+        else Bridge.commands.pauseGame();
+        return;
+      }
       if (isRunning)  Bridge.commands.pauseGame();
       if (isPaused)   Bridge.commands.resumeGame();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, { capture: true });
+    return () => window.removeEventListener('keydown', onKey, { capture: true });
   }, []);
 
   const {
@@ -62,9 +68,9 @@ export default function App() {
   return (
     <>
       {!isRunning && !isPaused && !showShipSelection && <MainMenu />}
-      {!isRunning && !isPaused &&  showShipSelection && <HangarScreen />}
-      {isRunning  && !isPaused && <HUD />}
-      {isPaused   && <PauseMenu />}
+      {!isRunning && showShipSelection && <HangarScreen />}
+      {isRunning && <HUD />}
+      {isPaused && <PauseMenu />}
     </>
   );
 }

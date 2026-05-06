@@ -104,7 +104,7 @@ export default function HangarScreen() {
       if (e.key === 'Pause')              sceneRef.current?.toggleDebugMarkers();
       if (e.key === 'Delete')             sceneRef.current?.detonateCurrentShip();
       if (e.key === 'Enter')              handleConfirm();
-      if (e.key === 'Escape')             handleCancel();
+      if (e.key === 'Escape' && !e.__babelPauseToggle) handleCancel();
     }
     function onKeyUp(e) { sceneRef.current?.removeKey(e.key); }
 

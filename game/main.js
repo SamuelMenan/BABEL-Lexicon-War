@@ -49,7 +49,7 @@ export async function initGame(mountEl) {
     // Show loading for this mode (cache makes re-entry fast)
     await AssetLoader.preload(mode, engine.renderer);
 
-    Bridge.setState({ isRunning: true, gameMode: mode });
+    Bridge.setState({ isRunning: true, isPaused: false, gameMode: mode });
 
     if (mode === GAME_MODES.RACING) {
       engine.camController.setRacingMode(true);
@@ -85,16 +85,16 @@ export async function initGame(mountEl) {
 
   EventBus.on(EventTypes.GAME_PAUSE, () => {
     engine.loop.stop();
-    Bridge.setState({ isRunning: false });
+    Bridge.setState({ isRunning: false, isPaused: true });
   });
 
   EventBus.on(EventTypes.GAME_RESUME, () => {
     engine.loop.start();
-    Bridge.setState({ isRunning: true });
+    Bridge.setState({ isRunning: true, isPaused: false });
   });
 
   EventBus.on(EventTypes.GAME_OVER, (result) => {
-    Bridge.setState({ isRunning: false, gameOver: true, ...result });
+    Bridge.setState({ isRunning: false, isPaused: false, gameOver: true, ...result });
   });
 
   EventBus.on(EventTypes.PLAYER_HIT, ({ damage }) => {

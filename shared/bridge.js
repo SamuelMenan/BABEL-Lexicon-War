@@ -27,6 +27,7 @@ let _state = {
   wave:             0,
   gameMode:         null,
   isRunning:        false,
+  isPaused:         false,
   gameOver:         false,
   preCombatActive:  false,
   preCombatStep:    null,

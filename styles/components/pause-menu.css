@@ -1,0 +1,184 @@
+/* ── Pause Menu ──────────────────────────────────────────────── */
+
+.pause-menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 8, 0.82);
+  backdrop-filter: blur(2px);
+  font-family: var(--font-hud);
+  z-index: var(--z-overlay);
+  animation: pause-menu-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes pause-menu-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Scanlines over overlay */
+.pause-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0, 255, 204, 0.01) 2px, rgba(0, 255, 204, 0.01) 4px
+  );
+  pointer-events: none;
+}
+
+/* ── Panel ───────────────────────────────────────────────────── */
+
+.pause-menu__panel {
+  position: relative;
+  z-index: 1;
+  width: min(360px, 90vw);
+  background: rgba(0, 6, 18, 0.96);
+  border: 1px solid var(--border-primary-strong);
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  padding: 2rem 2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Corner accents */
+.pause-menu__panel::before,
+.pause-menu__panel::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border-style: solid;
+  border-color: var(--col-primary);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.pause-menu__panel::before { top: 0; left: 0; border-width: 1px 0 0 1px; }
+.pause-menu__panel::after  { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+/* Moving scan line */
+.pause-menu__scan {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, rgba(0, 255, 204, 0.02), transparent);
+  animation: pause-scan 5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes pause-scan {
+  from { transform: translateY(-80px); }
+  to   { transform: translateY(400px); }
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.pause-menu__header {
+  margin-bottom: 0.6rem;
+}
+
+.pause-menu__header-label {
+  font-size: 0.54rem;
+  letter-spacing: 0.4em;
+  color: var(--col-primary);
+  opacity: 0.45;
+  text-transform: uppercase;
+}
+
+/* ── Title ───────────────────────────────────────────────────── */
+
+.pause-menu__title {
+  font-size: 1.8rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 1.8rem;
+  line-height: 1;
+}
+
+/* ── Actions ─────────────────────────────────────────────────── */
+
+.pause-menu__actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pause-menu__btn {
+  width: 100%;
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: filter 0.18s, transform 0.1s, background 0.18s, color 0.18s;
+  outline: none;
+}
+
+.pause-menu__btn:hover  { transform: translateY(-1px); }
+.pause-menu__btn:active { transform: translateY(0); }
+
+/* Reanudar — primary, most prominent */
+.pause-menu__btn--primary {
+  background: var(--col-primary);
+  color: #000;
+  font-size: 0.88rem;
+  padding: 0.95rem 1rem;
+}
+.pause-menu__btn--primary:hover  { filter: brightness(1.22); }
+.pause-menu__btn--primary:focus-visible {
+  outline: 2px solid rgba(0, 255, 204, 0.7);
+  outline-offset: 2px;
+}
+
+.pause-menu__btn-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+/* Configuración — outlined */
+.pause-menu__btn--secondary {
+  background: transparent;
+  color: var(--col-primary);
+  border: 1px solid var(--border-primary-strong);
+}
+.pause-menu__btn--secondary:hover {
+  background: rgba(0, 255, 204, 0.07);
+  filter: none;
+}
+
+/* Volver — subdued, destructive-ish */
+.pause-menu__btn--ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+}
+.pause-menu__btn--ghost:hover {
+  color: var(--col-danger);
+  border-color: rgba(255, 68, 102, 0.35);
+  background: rgba(255, 68, 102, 0.05);
+  filter: none;
+}
+
+/* ── Hint ────────────────────────────────────────────────────── */
+
+.pause-menu__hint {
+  margin-top: 1.2rem;
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.14);
+}

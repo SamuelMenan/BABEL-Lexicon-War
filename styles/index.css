@@ -30,5 +30,6 @@
 @import './components/menu.css';
 @import './components/match-result.css';
 @import './components/settings.css';
+@import './components/pause-menu.css';
 
 @import './components/race-hud.css';

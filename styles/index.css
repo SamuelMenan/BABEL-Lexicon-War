@@ -29,5 +29,6 @@
 @import './components/wave.css';
 @import './components/menu.css';
 @import './components/match-result.css';
+@import './components/settings.css';
 
 @import './components/race-hud.css';

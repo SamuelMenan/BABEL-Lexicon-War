@@ -46,9 +46,36 @@
   cursor: pointer;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: filter 0.18s, transform 0.1s;
 }
+
+.main-menu__btn:hover  { filter: brightness(1.2); transform: translateY(-1px); }
+.main-menu__btn:active { transform: translateY(0); }
 
 .main-menu__btn--race {
   background: var(--col-danger);
   color: #fff;
+}
+
+/* Settings ghost button */
+.main-menu__secondary-row {
+  margin-top: -0.75rem;
+}
+
+.main-menu__btn--ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  padding: 0.5rem 1.5rem;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.main-menu__btn--ghost:hover {
+  color: var(--col-primary);
+  border-color: var(--border-primary-strong);
+  background: rgba(0, 255, 204, 0.04);
+  filter: none;
 }

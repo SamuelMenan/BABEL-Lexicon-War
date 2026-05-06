@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bridge } from '../../shared/bridge.js';
 import { GAME_MODES } from '../../shared/constants.js';
+import Settings from './Settings.jsx';
 
 export default function MainMenu() {
+  const [showSettings, setShowSettings] = useState(false);
   const start = (mode) => Bridge.commands.openShipSelection(mode);
+
+  if (showSettings) {
+    return <Settings onClose={() => setShowSettings(false)} />;
+  }
 
   return (
     <div className="main-menu">
@@ -18,6 +24,11 @@ export default function MainMenu() {
         </button>
         <button className="main-menu__btn main-menu__btn--race" onClick={() => start(GAME_MODES.RACING)}>
           Carrera
+        </button>
+      </div>
+      <div className="main-menu__secondary-row">
+        <button className="main-menu__btn main-menu__btn--ghost" onClick={() => setShowSettings(true)}>
+          Configuración
         </button>
       </div>
     </div>

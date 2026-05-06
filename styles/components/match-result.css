@@ -1,67 +1,351 @@
-.match-result {
+/* ── Match Result — Post-Mission Analysis Dashboard ─────────── */
+
+.mr {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  background: var(--bg-overlay-dark);
+  background: rgba(0, 0, 8, 0.96);
   font-family: var(--font-hud);
+  z-index: var(--z-overlay);
+  animation: mr-bg-in 0.4s ease forwards;
 }
 
-.match-result__label {
-  font-size: 0.75rem;
-  color: #555;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
+/* Scanlines */
+.mr::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 204, 0.013) 2px,
+    rgba(0, 255, 204, 0.013) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
-.match-result__title {
-  font-size: 2.5rem;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-}
-
-.match-result__title--victory { color: var(--col-primary-alt); }
-.match-result__title--defeat  { color: var(--col-danger); }
-
-.match-result__stats {
+.mr__board {
+  position: relative;
+  z-index: 1;
+  width: min(940px, 96vw);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.7rem;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.mr__header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border-primary-strong);
+  opacity: 0;
+  animation: mr-slide-down 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
 }
 
-.match-result__stat {
-  font-size: 1rem;
-  color: #888;
-  letter-spacing: 0.15em;
-}
-
-.match-result__val {
+.mr__header-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.42em;
   color: var(--col-primary);
-}
-
-.match-result__quote {
-  font-size: 0.8rem;
-  color: #444;
-  font-style: italic;
-  max-width: 380px;
-  text-align: center;
-  line-height: 1.8;
-  margin-top: 0.5rem;
-}
-
-.match-result__btn {
-  margin-top: 1rem;
-  font-family: var(--font-hud);
-  font-size: 0.9rem;
-  color: #000;
-  background: var(--col-primary);
-  border: none;
-  padding: 0.65rem 2rem;
-  cursor: pointer;
-  letter-spacing: 0.15em;
   text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.mr__header-id {
+  font-size: 0.52rem;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Title row ───────────────────────────────────────────────── */
+
+.mr__title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  opacity: 0;
+  animation: mr-slide-down 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.22s forwards;
+}
+
+.mr__title {
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  line-height: 1;
+  margin: 0 0 0.55rem;
+}
+
+.mr__title--defeat {
+  color: var(--col-danger);
+  text-shadow: 0 0 28px rgba(255, 68, 102, 0.5), 0 0 60px rgba(255, 68, 102, 0.18);
+}
+
+.mr__title--victory {
+  color: var(--col-primary-alt);
+  text-shadow: 0 0 28px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.18);
+}
+
+.mr__grade-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mr__grade {
+  font-size: 4rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.mr__grade-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.22);
+  text-transform: uppercase;
+}
+
+.mr__grade--s { color: #ffdd00; text-shadow: 0 0 22px rgba(255, 221, 0, 0.65); }
+.mr__grade--a { color: var(--col-primary-alt); text-shadow: 0 0 22px rgba(0, 255, 136, 0.6); }
+.mr__grade--b { color: var(--col-primary); text-shadow: 0 0 22px rgba(0, 255, 204, 0.5); }
+.mr__grade--c { color: var(--col-warning); text-shadow: 0 0 20px rgba(255, 204, 0, 0.45); }
+.mr__grade--d { color: var(--col-danger); text-shadow: 0 0 18px rgba(255, 68, 102, 0.45); }
+
+/* Core status badge */
+.mr__core {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid currentColor;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  text-transform: uppercase;
+}
+
+.mr__core--critical {
+  color: var(--col-danger);
+  border-color: rgba(255, 68, 102, 0.38);
+  background: rgba(255, 68, 102, 0.06);
+}
+
+.mr__core--stable {
+  color: var(--col-primary-alt);
+  border-color: rgba(0, 255, 136, 0.32);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+/* ── Stats grid ──────────────────────────────────────────────── */
+
+.mr__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  opacity: 0;
+  animation: mr-fade-up 0.5s ease 0.38s forwards;
+}
+
+.mr__stat-panel {
+  background: rgba(0, 255, 204, 0.028);
+  border: 1px solid var(--border-primary);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  padding: 0.9rem 1.1rem;
+  position: relative;
+  transition: background 0.22s, border-color 0.22s;
+}
+
+/* Corner pip */
+.mr__stat-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 12px; height: 12px;
+  border-top: 1px solid var(--col-primary);
+  border-left: 1px solid var(--col-primary);
+  opacity: 0.4;
+}
+
+.mr__stat-panel:hover {
+  background: rgba(0, 255, 204, 0.055);
+  border-color: var(--border-primary-strong);
+}
+
+.mr__stat-label {
+  display: block;
+  font-size: 0.52rem;
+  letter-spacing: 0.35em;
+  color: rgba(255, 255, 255, 0.26);
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.mr__stat-value {
+  display: block;
+  font-size: 1.9rem;
+  color: var(--col-primary);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.mr__stat-value--dim {
+  font-size: 1.2rem;
+  color: rgba(0, 255, 204, 0.65);
+}
+
+.mr__stat-value--grade {
+  font-size: 2rem;
+}
+
+.mr__stat-sub {
+  display: block;
+  font-size: 0.48rem;
+  color: rgba(255, 255, 255, 0.14);
+  letter-spacing: 0.22em;
+  margin-top: 0.35rem;
+}
+
+/* ── Bar stats ───────────────────────────────────────────────── */
+
+.mr__bar-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(0, 255, 204, 0.022);
+  border: 1px solid var(--border-primary);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  opacity: 0;
+  animation: mr-slide-left 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.52s forwards;
+}
+
+.mr__bar-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 60px;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mr__bar-name {
+  font-size: 0.56rem;
+  letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.32);
+  text-transform: uppercase;
+}
+
+.mr__bar-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.mr__bar-fill {
+  position: absolute;
+  inset: 0;
+  right: auto;
+  background: var(--col-primary);
+  box-shadow: 0 0 8px var(--col-primary);
+  width: 0%;
+  transition: width 1.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mr__bar-fill--danger  { background: var(--col-danger);      box-shadow: 0 0 8px var(--col-danger); }
+.mr__bar-fill--warning { background: var(--col-warning);     box-shadow: 0 0 8px var(--col-warning); }
+.mr__bar-fill--victory { background: var(--col-primary-alt); box-shadow: 0 0 8px var(--col-primary-alt); }
+
+.mr__bar-val {
+  font-size: 0.68rem;
+  color: var(--col-primary);
+  text-align: right;
+  letter-spacing: 0.1em;
+}
+
+/* ── Divider ─────────────────────────────────────────────────── */
+
+.mr__divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-primary-strong), transparent);
+  margin: 0;
+}
+
+/* ── Bottom row ──────────────────────────────────────────────── */
+
+.mr__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  opacity: 0;
+  animation: mr-fade-up 0.5s ease 0.68s forwards;
+}
+
+.mr__quote {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.16);
+  font-style: italic;
+  letter-spacing: 0.12em;
+  line-height: 1.9;
+  max-width: 340px;
+}
+
+.mr__actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.mr__btn {
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  padding: 0.68rem 1.5rem;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: filter 0.18s, transform 0.1s;
+}
+
+.mr__btn:hover  { filter: brightness(1.28); transform: translateY(-1px); }
+.mr__btn:active { transform: translateY(0); filter: brightness(0.9); }
+
+.mr__btn--primary {
+  background: var(--col-primary);
+  color: #000;
+}
+
+.mr__btn--secondary {
+  background: transparent;
+  color: var(--col-primary);
+  border: 1px solid var(--border-primary-strong);
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+
+@keyframes mr-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes mr-slide-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mr-slide-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes mr-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

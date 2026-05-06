@@ -1,10 +1,20 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
+import { SHIP_BOOSTER_CONFIGS } from '../rendering/booster/BoosterConfig.js';
+
+const CINEMATIC_DELAY_MS = 1800; // breathing room after destruction before Game Over
+
+// Extract normalRamp from the first hangar booster config for the selected ship.
+// Falls back to spaceshipnew if the ship has no dedicated config.
+function _getRampForShip(shipId) {
+  const key    = `hangar_${shipId}_0`;
+  const config = SHIP_BOOSTER_CONFIGS[key] ?? SHIP_BOOSTER_CONFIGS['hangar_spaceshipnew_0'];
+  return config?.normalRamp ?? null;
+}
 
 export class PlayerDeathHandler {
-  // All deps as getters/callbacks so the handler can be constructed before init()
   constructor({ getParticles, getPlayer, getLexicon, getProjectiles, clearProjectiles,
                 getEnemies, hudCanvas, cam, scene, getWave, onPublish }) {
     this._getParticles     = getParticles;
@@ -46,14 +56,21 @@ export class PlayerDeathHandler {
     this._onPublish();
     EventBus.emit(EventTypes.PLAYER_DIED);
 
-    const colPos = this._getPlayer()?.position.clone();
-    if (colPos) {
-      this._emitBursts(colPos);
-      this._getParticles().burst(colPos.clone());
-      this._getParticles().burst(colPos.clone());
-    }
+    // Screen shake starts immediately with the ship trembling
+    this._cam?.shake(1.1, 0.9);
 
+    // Resolve ship color palette from booster config
+    const { selectedShip } = Bridge.peekState();
+    const colorRamp = _getRampForShip(selectedShip);
+
+    const colPos = this._getPlayer()?.position.clone();
+
+    // Ship shakes for ~0.85s, then onDone fires → particles + Game Over timer
     this._getPlayer()?.startCollapse(this._scene, () => {
+      if (colPos) {
+        this._getParticles().playerDeathSequence(colPos, colorRamp);
+      }
+
       this._gameOverTimer = setTimeout(() => {
         this._gameOverTimer = null;
         EventBus.emit(EventTypes.GAME_OVER, {
@@ -61,7 +78,7 @@ export class PlayerDeathHandler {
           wpm:      Bridge.getState().wpm,
           accuracy: Bridge.getState().accuracy,
         });
-      }, 600);
+      }, CINEMATIC_DELAY_MS);
     });
   }
 
@@ -70,22 +87,5 @@ export class PlayerDeathHandler {
     this._burstTimers.forEach(t => clearTimeout(t));
     this._burstTimers = [];
     this._started = false;
-  }
-
-  _emitBursts(origin) {
-    const offsets = [
-      new THREE.Vector3( 0,     0,     0    ),
-      new THREE.Vector3(-0.45,  0.22, -0.12 ),
-      new THREE.Vector3( 0.52, -0.08,  0.16 ),
-      new THREE.Vector3( 0.0,   0.36, -0.24 ),
-      new THREE.Vector3(-0.22, -0.28,  0.1  ),
-    ];
-    offsets.forEach((off, i) => {
-      const t = setTimeout(() => {
-        this._burstTimers = this._burstTimers.filter(x => x !== t);
-        this._getParticles().burstCollapse(origin.clone().add(off));
-      }, i * 140);
-      this._burstTimers.push(t);
-    });
   }
 }

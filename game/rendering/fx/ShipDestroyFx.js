@@ -8,13 +8,14 @@ const FALLBACK_GLYPHS = ['>', '_', '<', '|', '#', '/', '!', '?'];
 
 const _glyphCache = new Map();
 
+// Glyphs are drawn in white so SpriteMaterial.color can tint them freely.
 function _getGlyphTexture(char) {
   if (_glyphCache.has(char)) return _glyphCache.get(char);
   const size   = 64;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle    = '#00ffcc';
+  ctx.fillStyle    = '#ffffff';
   ctx.font         = `bold ${Math.floor(size * 0.75)}px monospace`;
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
@@ -25,6 +26,16 @@ function _getGlyphTexture(char) {
   _glyphCache.set(char, tex);
   return tex;
 }
+
+// Pick a random hex color from a ramp array, or return the fallback scalar.
+function _randomFromRamp(ramp, fallback) {
+  if (Array.isArray(ramp) && ramp.length > 0) {
+    return ramp[Math.floor(Math.random() * ramp.length)];
+  }
+  return fallback;
+}
+
+const _tmpColor = new THREE.Color();
 
 export class ShipDestroyFx {
   // Direct / hangar use: new ShipDestroyFx(scene, pos, opts) → spawn()
@@ -40,20 +51,23 @@ export class ShipDestroyFx {
     this._activeLetters = 0;
     this._flashDone     = false;
 
-    // Layer 1 — point particles
+    // Layer 1 — point particles with per-vertex color
     const pArr = new Float32Array(particleCount * 3);
+    const cArr = new Float32Array(particleCount * 3);
     this._pGeo  = new THREE.BufferGeometry();
     this._pGeo.setAttribute('position', new THREE.BufferAttribute(pArr, 3));
+    this._pGeo.setAttribute('color',    new THREE.BufferAttribute(cArr, 3));
     this._pMat  = new THREE.PointsMaterial({
-      color: 0x00ffcc, size: 0.15,
+      size: 0.15,
       transparent: true, opacity: 1,
       depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexColors: true,
     });
     this._points = new THREE.Points(this._pGeo, this._pMat);
     this._points.layers.enable(BLOOM_LAYER);
     this._pVels  = Array.from({ length: particleCount }, () => new THREE.Vector3());
 
-    // Layer 2 — letter sprites
+    // Layer 2 — letter sprites (white texture, tinted via material.color)
     this._letters    = [];
     this._letterVels = [];
     this._letterRot  = [];
@@ -81,17 +95,17 @@ export class ShipDestroyFx {
 
   spawn(position = null, options = null) {
     const pos  = position ?? this._defPosition;
-    const { color = 0x00ffcc, word = '', intensity = 1.0 } = options ?? this._defOptions;
+    const { color = 0x00ffcc, colorRamp = null, word = '', intensity = 1.0 } = options ?? this._defOptions;
 
     this._age       = 0;
     this._active    = true;
     this._flashDone = false;
 
-    // Layer 1
-    this._pMat.color.setHex(color);
+    // Layer 1 — assign a random ramp color per particle via vertex colors
     this._pMat.opacity = 1;
     this._points.position.copy(pos);
     const pArr = this._pGeo.attributes.position.array;
+    const cArr = this._pGeo.attributes.color.array;
     for (let i = 0; i < this._particleCount; i++) {
       pArr[i * 3] = pArr[i * 3 + 1] = pArr[i * 3 + 2] = 0;
       const spd = (2.5 + Math.random() * 4.5) * intensity;
@@ -100,11 +114,16 @@ export class ShipDestroyFx {
         (Math.random() - 0.5) * spd,
         (Math.random() - 0.5) * spd,
       );
+      _tmpColor.setHex(_randomFromRamp(colorRamp, color));
+      cArr[i * 3]     = _tmpColor.r;
+      cArr[i * 3 + 1] = _tmpColor.g;
+      cArr[i * 3 + 2] = _tmpColor.b;
     }
     this._pGeo.attributes.position.needsUpdate = true;
+    this._pGeo.attributes.color.needsUpdate    = true;
     this._scene.add(this._points);
 
-    // Layer 2
+    // Layer 2 — letters tinted with random ramp colors
     const rawChars = word.length > 0
       ? [...word].slice(0, this._maxLetters)
       : FALLBACK_GLYPHS.slice(0, this._maxLetters);
@@ -117,6 +136,7 @@ export class ShipDestroyFx {
         s.material.map         = tex;
         s.material.opacity     = 1;
         s.material.rotation    = 0;
+        s.material.color.setHex(_randomFromRamp(colorRamp, color));
         s.material.needsUpdate = true;
         s.position.copy(pos);
         const sc = (0.35 + Math.random() * 0.25) * intensity;
@@ -134,8 +154,9 @@ export class ShipDestroyFx {
       }
     }
 
-    // Layer 3
-    const flashC = new THREE.Color(color);
+    // Layer 3 — flash uses brightest ramp color (index 0) or fallback, lerped to white
+    const flashHex = Array.isArray(colorRamp) && colorRamp.length > 0 ? colorRamp[0] : color;
+    const flashC = new THREE.Color(flashHex);
     flashC.lerp(new THREE.Color(0xffffff), 0.7);
     this._flashMat.color.copy(flashC);
     this._flashMat.opacity = 1;

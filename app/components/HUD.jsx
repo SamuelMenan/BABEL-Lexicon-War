@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Bridge } from "../../shared/bridge.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
-import { GAME_MODES } from "../../shared/constants.js";
+import { GAME_MODES, SHIP_PALETTES } from "../../shared/constants.js";
 
 import CombatTicker from "./hud/combat/CombatTicker.jsx";
 import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
@@ -62,7 +62,7 @@ export default function HUD() {
   }, []);
 
   const {
-    wpm, accuracy, hp, activeWord, wave, gameMode, flowMultiplier,
+    wpm, accuracy, hp, activeWord, wave, gameMode, flowMultiplier, selectedShip,
     currentPhrase, currentPhraseWordIndex,
     wordBuffer, globalWordIndex, wordsCompleted,
     playerPhrasesCompleted, totalPhrases,
@@ -79,18 +79,19 @@ export default function HUD() {
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? "none";
 
-  // CSS variable interpolated from blue (idle) → purple (flow building) → intense purple (flow active).
-  // Components can consume var(--hud-accent) for reactive tinting.
+  // Base color from ship palette; flow state shifts it toward purple.
+  const shipHudColor = SHIP_PALETTES[selectedShip]?.hudColor ?? '#4d7eff';
   const hudAccent = flowActive ? '#cc00ff'
     : flow >= 80 ? '#9900ff'
     : flow >= 60 ? '#7722ee'
     : flow >= 40 ? '#6633cc'
     : flow >= 20 ? '#5544bb'
-    : '#4d7eff';
+    : shipHudColor;
+  const hudVars = { '--hud-accent': hudAccent, '--col-active': shipHudColor };
 
   if (!isRacing) {
     return (
-      <div className="hud" style={{ '--hud-accent': hudAccent }}>
+      <div className="hud" style={hudVars}>
         {showFlash && <div className="edge-flash" />}
         {flowActive && <FlowFrame />}
         <LowHpFrame level={lowHpLevel} />
@@ -119,7 +120,7 @@ export default function HUD() {
   }
 
   return (
-    <div className="hud" style={{ '--hud-accent': hudAccent }}>
+    <div className="hud" style={hudVars}>
       {showFlash && <div className="edge-flash" />}
       <LowHpFrame level={lowHpLevel} />
       <div className="r-vignette" />

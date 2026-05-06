@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { COLORS, SHIPS } from '../../shared/constants.js';
+import { COLORS, SHIPS, SHIP_PALETTES } from '../../shared/constants.js';
 import { Bridge } from '../../shared/bridge.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 import { tuneLoadedMesh, afterLoadedModel } from '../rendering/modelTuning/combatShipModelTuning.js';
@@ -8,9 +8,6 @@ import { getThermalColor } from '../rendering/colors/thermalRamp.js';
 
 const TARGET_MODEL_LENGTH = 3.8;
 
-// Combat forward = -Z (nose points away from camera toward enemies).
-// The hangar rotationY aligns the ship to face +Z (hangar opening), so adding π
-// flips it to face -Z for combat. Works for any ship regardless of noseAxis.
 function getCombatYaw(ship) {
   return (ship?.rotationY ?? 0) + Math.PI;
 }
@@ -103,30 +100,11 @@ export class CombatPlayerShip extends ShipBase {
   _tuneLoadedMesh(node) { tuneLoadedMesh(node); }
 
   _afterLoadedModel(modelRoot) {
-    // Standard tuning: hide helper artifacts, compute socket positions from final bbox.
     afterLoadedModel(modelRoot, (sockets) => this._setSocketPositions(sockets));
-
-    // ── Booster setup ─────────────────────────────────────────────────────────
-    //
-    // The hangar booster configs store localPosition as fractions of the raw
-    // (pre-rotation, pre-scale) model half-bbox. Sizes are in hangar world units
-    // where the ship fits inside a 2.2-unit cube.
-    //
-    // To place boosters in this._group's coordinate space we:
-    //   1. Get the raw half-bbox by temporarily zeroing rotation + scale on modelRoot.
-    //   2. Multiply fraction × rawHalfSize → position in raw model space.
-    //   3. Apply combat yaw rotation (same rotation modelRoot has) → correct orientation.
-    //   4. Multiply by modelRoot scale → convert from raw model units to world units.
-    //   5. Scale booster sizes by (targetLength / 2.2) for proportional sizing.
-    //
-    // Flame direction: the default BoosterEffect root points its flame along +Z.
-    // After the position math, +Z in group space = tail direction in combat. ✓
-    // rootRotY/flipZ were calibrated for the hangar's wrapper space — do NOT apply here.
 
     const combatScale = modelRoot.scale.x;
     const combatRotY  = modelRoot.rotation.y;
 
-    // Temporarily reset to read pre-rotation, pre-scale bbox
     modelRoot.rotation.y = 0;
     modelRoot.scale.setScalar(1);
     const rawBox      = new THREE.Box3().setFromObject(modelRoot);
@@ -134,17 +112,15 @@ export class CombatPlayerShip extends ShipBase {
     modelRoot.rotation.y = combatRotY;
     modelRoot.scale.setScalar(combatScale);
 
-    // Dispose any boosters from a previous reload
     this._boosters.forEach(b => b.dispose());
     this._boosters = [];
 
     const prefix   = `hangar_${this._ship.id}_`;
-    const combatSF = TARGET_MODEL_LENGTH / 2.2; // size scale factor: hangar → combat
+    const combatSF = TARGET_MODEL_LENGTH / 2.2;
 
     Object.entries(SHIP_BOOSTER_CONFIGS)
       .filter(([key]) => key.startsWith(prefix))
       .forEach(([, config]) => {
-        // Step 1-4: position in group space
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
           config.localPosition.y * rawHalfSize.y,
@@ -153,7 +129,6 @@ export class CombatPlayerShip extends ShipBase {
         rawPos.applyEuler(new THREE.Euler(0, combatRotY, 0));
         rawPos.multiplyScalar(combatScale);
 
-        // Step 5: scale all dimensional properties
         const combatConfig = {
           ...config,
           localPosition: rawPos,
@@ -165,8 +140,8 @@ export class CombatPlayerShip extends ShipBase {
           starSize:    config.starSize    * combatSF,
           lightDist:   config.lightDist   * combatSF,
           lightOffset: config.lightOffset.clone().multiplyScalar(combatSF),
-          normalRamp: config.normalRamp,  // Preserve gradient ramps for animated colors
-          flowRamp:   config.flowRamp,
+          normalRamp:  config.normalRamp,
+          flowRamp:    config.flowRamp,
         };
 
         const booster = new BoosterEffect(combatConfig);
@@ -186,6 +161,19 @@ export class CombatPlayerShip extends ShipBase {
     const pos = new THREE.Vector3();
     this._muzzle.getWorldPosition(pos);
     return pos;
+  }
+
+  // Ship-specific laser color from SHIP_PALETTES. Falls back to thermalColor if no palette.
+  get laserColor() {
+    const palette = SHIP_PALETTES[this._ship?.id];
+    if (!palette) return this.thermalColor;
+    return '#' + new THREE.Color(palette.laserColor).getHexString();
+  }
+
+  // Flow-reactive color used for visual feedback (shifts to purple during flow buildup).
+  get thermalColor() {
+    const { flow, flowActive } = Bridge.peekState();
+    return getThermalColor(flow, flowActive);
   }
 
   fireAnim() {
@@ -236,20 +224,15 @@ export class CombatPlayerShip extends ShipBase {
     }
 
     const { flow, flowActive } = Bridge.peekState();
-    const vScale     = flowActive ? 1.4  : 1.0;
-    const rScale     = flowActive ? 1.18 : 1.0;
-    const flowRatio  = flowActive ? 1.0 : flow / 100;
+    const vScale    = flowActive ? 1.4  : 1.0;
+    const rScale    = flowActive ? 1.18 : 1.0;
+    const flowRatio = flowActive ? 1.0 : flow / 100;
 
     this._boosters.forEach(b => {
       b.update(delta, this._isThrusting, vScale, rScale, flowRatio);
     });
 
     if (this._isThrusting) this._isThrusting = false;
-  }
-
-  get thermalColor() {
-    const { flow, flowActive } = Bridge.peekState();
-    return getThermalColor(flow, flowActive);
   }
 
   setThrusting(on) { this._isThrusting = on; }

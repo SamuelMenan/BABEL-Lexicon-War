@@ -184,7 +184,7 @@ export class CombatSceneManager {
     const { flowActive } = Bridge.peekState();
     const shot  = flowActive
       ? new LexBeam(this._player.muzzlePosition, enemy, onHit)
-      : new Projectile(this._player.muzzlePosition, enemy, onHit, pickProjectileType(), this._player.thermalColor, flowActive);
+      : new Projectile(this._player.muzzlePosition, enemy, onHit, pickProjectileType(), this._player.laserColor, flowActive);
     shot.addToScene(this.scene);
     this.projectiles.push(shot);
     this._player.fireAnim();

@@ -3,6 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { Entity } from './Entity.js';
 
+const COLLAPSE_SHAKE_DURATION = 0.85; // seconds of trembling
+const COLLAPSE_FADE_DURATION  = 0.18; // fast scale-out after shake
+
 export class ShipBase extends Entity {
   constructor({ modelUrl, targetLength, yaw = 0 } = {}) {
     super();
@@ -13,6 +16,11 @@ export class ShipBase extends Entity {
     this._mixer = null;
     this._actions = [];
     this._t = 0;
+
+    this._collapseActive   = false;
+    this._collapseT        = 0;
+    this._collapsePhase    = 'idle'; // 'shake' | 'fade' | 'idle'
+    this._collapseOnDone   = null;
 
     this._group = new THREE.Group();
     this._shipRoot = new THREE.Group();
@@ -66,7 +74,6 @@ export class ShipBase extends Entity {
       modelScene.position.sub(center);
     }
 
-    // Apply yaw AFTER centering
     modelRoot.rotation.y = this._yaw;
 
     const centeredBox = new THREE.Box3().setFromObject(modelRoot);
@@ -108,7 +115,6 @@ export class ShipBase extends Entity {
   }
 
   _makeGlow(color, opacity, radius) {
-    // Shared unit sphere scaled to radius — avoids a unique GPU buffer per glow sphere.
     const geo = AssetLoader.getGeo('sphere-8') ?? new THREE.SphereGeometry(1, 8, 8);
     const glowMat = new THREE.MeshBasicMaterial({
       color,
@@ -122,6 +128,17 @@ export class ShipBase extends Entity {
     return mesh;
   }
 
+  // Phase 1 — ship trembles violently for COLLAPSE_SHAKE_DURATION seconds.
+  // Phase 2 — rapid scale-to-zero (visually covered by the particle flash).
+  // onDone fires at the boundary between phase 1 and 2, so particles start
+  // exactly when the ship begins to vanish.
+  startCollapse(_scene, onDone) {
+    this._collapseActive = true;
+    this._collapseT      = 0;
+    this._collapsePhase  = 'shake';
+    this._collapseOnDone = onDone ?? null;
+  }
+
   dispose() {
     this._clearAnimations();
   }
@@ -129,5 +146,41 @@ export class ShipBase extends Entity {
   update(delta) {
     this._t += delta;
     this._mixer?.update(delta);
+
+    if (!this._collapseActive) return;
+    this._collapseT += delta;
+
+    if (this._collapsePhase === 'shake') {
+      const t   = Math.min(this._collapseT / COLLAPSE_SHAKE_DURATION, 1);
+      // Escalating intensity: starts moderate, peaks near end
+      const amp = 0.08 + t * 0.18;
+      this._shipRoot.position.set(
+        Math.sin(this._t * 61) * amp,
+        Math.sin(this._t * 47) * amp * 0.7,
+        Math.sin(this._t * 53) * amp * 0.4,
+      );
+      this._shipRoot.rotation.z = Math.sin(this._t * 37) * amp * 0.22;
+
+      if (t >= 1) {
+        // Transition to fade — fire onDone so particles+flash trigger now
+        this._collapsePhase = 'fade';
+        this._collapseT     = 0;
+        const cb = this._collapseOnDone;
+        this._collapseOnDone = null;
+        cb?.();
+      }
+
+    } else if (this._collapsePhase === 'fade') {
+      const p = Math.min(this._collapseT / COLLAPSE_FADE_DURATION, 1);
+      this._group.scale.setScalar(1 - p);
+      if (p >= 1) {
+        this._collapseActive = false;
+        this._collapsePhase  = 'idle';
+        this._group.visible  = false;
+        this._group.scale.setScalar(1);
+        this._shipRoot.position.set(0, 0, 0);
+        this._shipRoot.rotation.z = 0;
+      }
+    }
   }
 }

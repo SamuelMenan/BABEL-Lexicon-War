@@ -24,8 +24,8 @@ export class BoosterEffect {
     this._currentStrength = 0.28;
     this._cfg             = null;
     this._letterBurst     = 0;
-    this._smoothFlowSize    = 1.0;  // lerped size multiplier from sizeRamp
-    this._smoothFlowOpacity = 1.0;  // lerped opacity multiplier from opacityRamp
+    this._smoothFlowSize    = 0.0;  // lerped size multiplier from sizeRamp
+    this._smoothFlowOpacity = 0.0;  // lerped opacity multiplier from opacityRamp
 
     this._lateralState = createLateralState();
     this._shipGroup    = null;

@@ -79,15 +79,107 @@ export default function HUD() {
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? "none";
 
-  // Base color from ship palette; flow state shifts it toward purple.
-  const shipHudColor = SHIP_PALETTES[selectedShip]?.hudColor ?? '#4d7eff';
-  const hudAccent = flowActive ? '#cc00ff'
-    : flow >= 80 ? '#9900ff'
-    : flow >= 60 ? '#7722ee'
-    : flow >= 40 ? '#6633cc'
-    : flow >= 20 ? '#5544bb'
-    : shipHudColor;
-  const hudVars = { '--hud-accent': hudAccent, '--col-active': shipHudColor };
+  const pal = SHIP_PALETTES[selectedShip] ?? SHIP_PALETTES.spaceshipnew;
+
+  // hex number (0xRRGGBB) → '#rrggbb'
+  const hexOf = (n) => '#' + (n & 0xFFFFFF).toString(16).padStart(6, '0');
+  // hex number → 'r, g, b' string (for use inside rgba(...))
+  const rgbOf = (n) => `${(n >> 16) & 0xFF}, ${(n >> 8) & 0xFF}, ${n & 0xFF}`;
+  // CSS color string '#rrggbb' → 'r, g, b'
+  const cssToRgb = (s) => {
+    const h = s.replace('#', '');
+    return `${parseInt(h.slice(0,2),16)}, ${parseInt(h.slice(2,4),16)}, ${parseInt(h.slice(4,6),16)}`;
+  };
+
+  const shipHudColor   = pal.hudColor;
+  const shipFlameHex   = hexOf(pal.flameColor);
+  const shipLaserHex   = hexOf(pal.laserColor);
+  const shipRingHex    = hexOf(pal.ringColor);
+  const shipInnerHex   = hexOf(pal.innerColor);
+  const shipBodyHex    = hexOf(pal.bodyColor);
+  const shipNorm2Hex   = hexOf(pal.normalRamp[2]);
+  const shipNorm4Hex   = hexOf(pal.normalRamp[4]);
+  const shipNorm6Hex   = hexOf(pal.normalRamp[6]);
+
+  const shipHudRgb     = cssToRgb(shipHudColor);
+  const shipFlameRgb   = rgbOf(pal.flameColor);
+  const shipLaserRgb   = rgbOf(pal.laserColor);
+  const shipRingRgb    = rgbOf(pal.ringColor);
+  const shipInnerRgb   = rgbOf(pal.innerColor);
+  const shipFlowRgb    = rgbOf(pal.flowRamp);
+
+  // Ship vars always exposed (flow bar, flow frame, booster feedback)
+  const shipVars = {
+    '--hud-accent':      shipHudColor,
+    '--ship-primary':    shipHudColor,
+    '--ship-flame':      shipFlameHex,
+    '--ship-laser':      shipLaserHex,
+    '--ship-ring':       shipRingHex,
+    '--ship-inner':      shipInnerHex,
+    '--ship-body':       shipBodyHex,
+    '--ship-norm2':      shipNorm2Hex,
+    '--ship-norm4':      shipNorm4Hex,
+    '--ship-norm6':      shipNorm6Hex,
+    '--ship-hud-rgb':    shipHudRgb,
+    '--ship-flame-rgb':  shipFlameRgb,
+    '--ship-laser-rgb':  shipLaserRgb,
+    '--ship-ring-rgb':   shipRingRgb,
+    '--ship-inner-rgb':  shipInnerRgb,
+    '--ship-flow-rgb':   shipFlowRgb,
+  };
+
+  // Normal mode: cyan. Flow mode: full ship palette, each role gets a distinct color.
+  const hudVars = flowActive ? {
+    ...shipVars,
+    // ── letra/acento principal ──────────────────────
+    '--col-active':           shipHudColor,
+    '--col-active-rgb':       shipHudRgb,
+    '--col-flow':             shipFlameHex,
+    // ── estadísticas (WPM grande / precisión) ───────
+    '--col-stat-primary':     shipFlameHex,        // WPM — más brillante y vibrante
+    '--col-stat-secondary':   shipLaserHex,        // precisión / secundario
+    // ── barras de estado ────────────────────────────
+    '--col-hp-fill':          shipRingHex,         // barra HP fill
+    '--col-hp-glow':          `rgba(${shipRingRgb}, 0.6)`,
+    // ── panel de palabra ────────────────────────────
+    '--flow-border':          `rgba(${shipRingRgb}, 0.55)`,
+    '--flow-panel-bg':        `rgba(${shipRingRgb}, 0.08)`,
+    '--flow-word-prompt':     `rgba(${shipFlameRgb}, 0.55)`,
+    '--col-meta-val':         shipNorm2Hex,        // NUCLEO / LONG / FREC valores
+    '--col-transmitting':     shipNorm2Hex,        // ● TRANSMITIENDO
+    // ── lexicon deck ────────────────────────────────
+    '--col-deck-count':       shipLaserHex,        // número de enemigos
+    '--col-bullet':           shipFlameHex,        // ▸ flecha objetivo activo
+    '--col-multiplier':       shipFlameHex,        // ×2.0 multiplicador
+    // ── wave block ──────────────────────────────────
+    '--col-wave-num':         shipNorm4Hex,        // "03" número de oleada
+    '--col-wave-remnants':    shipLaserHex,        // contador restos del enjambre
+    // ── pilot info ──────────────────────────────────
+    '--col-pilot-sub':        shipInnerHex,        // TYPO-07 / PILOTO subtítulo
+    // ── ticker / misc ───────────────────────────────
+    '--flow-ticker':          `rgba(${shipLaserRgb}, 0.6)`,
+  } : {
+    ...shipVars,
+    '--col-active':           '#00ffcc',
+    '--col-active-rgb':       '0, 255, 204',
+    '--col-flow':             '#9966ff',
+    '--col-stat-primary':     '#00ffcc',
+    '--col-stat-secondary':   'rgba(255,255,255,0.5)',
+    '--col-hp-fill':          '#00ffcc',
+    '--col-hp-glow':          'rgba(0,255,204,0.5)',
+    '--flow-border':          'rgba(0, 255, 204, 0.35)',
+    '--flow-panel-bg':        'rgba(0, 255, 204, 0.05)',
+    '--flow-word-prompt':     'rgba(0, 255, 204, 0.4)',
+    '--col-meta-val':         '#00ffcc',
+    '--col-transmitting':     '#00ffcc',
+    '--col-deck-count':       '#00ffcc',
+    '--col-bullet':           '#00ffcc',
+    '--col-multiplier':       '#00ffcc',
+    '--col-wave-num':         'rgba(255,255,255,0.85)',
+    '--col-wave-remnants':    '#00ffcc',
+    '--col-pilot-sub':        '#00ffcc',
+    '--flow-ticker':          'rgba(0, 255, 204, 0.55)',
+  };
 
   if (!isRacing) {
     return (
@@ -104,7 +196,7 @@ export default function HUD() {
           <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
           <div className="combat__top-left">
             <span className="hud__pilot-name">KAEL · VOSS</span>
-            <span className="hud__pilot-sub">TYPO—07 / PILOTO</span>
+            <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>TYPO—07 / PILOTO</span>
           </div>
           <CombatTicker />
           <CombatTopRight wpm={wpm} accuracy={accuracy} />

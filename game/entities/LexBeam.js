@@ -6,16 +6,18 @@ const BEAM_LIFE = 0.10;
 const BEAM_GLOW_RADIUS = 0.12;
 
 export class LexBeam extends Entity {
-  constructor(origin, target, onHit) {
+  constructor(origin, target, onHit, shipColor = null) {
     super();
     this._origin = origin.clone();
     this._target = target;
     this._age    = 0;
 
+    const beamColor = shipColor ?? COLORS_FLOW.BEAM;
+
     const points = [this._origin.clone(), target.position.clone()];
     this._geo = new THREE.BufferGeometry().setFromPoints(points);
     this._mat = new THREE.LineBasicMaterial({
-      color: COLORS_FLOW.BEAM, transparent: true, opacity: 0.9,
+      color: beamColor, transparent: true, opacity: 0.9,
       depthWrite: false, blending: THREE.AdditiveBlending,
     });
     this._line = new THREE.Line(this._geo, this._mat);
@@ -23,7 +25,7 @@ export class LexBeam extends Entity {
 
     this._glowGeo = new THREE.CylinderGeometry(BEAM_GLOW_RADIUS, BEAM_GLOW_RADIUS, 1, 10, 1, true);
     this._glowMat = new THREE.MeshBasicMaterial({
-      color: COLORS_FLOW.BEAM,
+      color: beamColor,
       transparent: true,
       opacity: 0.48,
       depthWrite: false,

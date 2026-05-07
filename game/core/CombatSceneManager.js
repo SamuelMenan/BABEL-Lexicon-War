@@ -157,6 +157,7 @@ export class CombatSceneManager {
     this._player = new CombatPlayerShip();
     this._player.addToScene(this.scene);
     this.hudCanvas?.setOccluders?.([{ object: this._player.mesh, radiusPx: 180 }]);
+    this.hudCanvas?.setShipColor?.(this._player.laserColor);
   }
 
   _startWave() {
@@ -183,7 +184,7 @@ export class CombatSceneManager {
     const onHit = () => enemy.hitFlash?.();
     const { flowActive } = Bridge.peekState();
     const shot  = flowActive
-      ? new LexBeam(this._player.muzzlePosition, enemy, onHit)
+      ? new LexBeam(this._player.muzzlePosition, enemy, onHit, this._player.laserColor)
       : new Projectile(this._player.muzzlePosition, enemy, onHit, pickProjectileType(), this._player.laserColor, flowActive);
     shot.addToScene(this.scene);
     this.projectiles.push(shot);

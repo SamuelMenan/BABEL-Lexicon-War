@@ -16,7 +16,7 @@ coverage/
 
 # Project idea/documentation (not part of game source)
 idea/
-
+commit-msg-mcp.txt
 # MCP server - local dev tooling, not part of the game source
 mcp-server/
 .mcp.json

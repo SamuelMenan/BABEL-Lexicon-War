@@ -180,7 +180,12 @@ export class BoosterEffect {
     const targetFlowSize    = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.sizeRamp,    flowRatio);
     const targetFlowOpacity = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.opacityRamp, flowRatio);
     this._smoothFlowSize    += (targetFlowSize    - this._smoothFlowSize)    * Math.min(deltaTime * 4,   1);
-    this._smoothFlowOpacity += (targetFlowOpacity - this._smoothFlowOpacity) * Math.min(deltaTime * 3.0, 1);
+    // Snap to full opacity immediately when in Flow state — no lerp delay.
+    if (flowRatio >= 1.0) {
+      this._smoothFlowOpacity = 1.0;
+    } else {
+      this._smoothFlowOpacity += (targetFlowOpacity - this._smoothFlowOpacity) * Math.min(deltaTime * 3.0, 1);
+    }
     const fsm = this._smoothFlowSize;
     const fop = this._smoothFlowOpacity;
 
@@ -199,7 +204,7 @@ export class BoosterEffect {
     const coneL = cfg.bodyLength * (0.65 + s * 1.0) * (1.0 + lb * 0.65 + velBoost * 0.40) * sm;
     this._body.scale.set(coneW, coneW, coneL);
     const rawBodyOp  = Math.min(0.95, (0.08 + s * 0.32) * (1.0 + lb * 0.80));
-    this._bodyMat.opacity = rawBodyOp + (1.0 - rawBodyOp) * fop;
+    this._bodyMat.opacity = rawBodyOp; // Mantiene la opacidad original del cono
     this._body.rotation.z = lateral * 0.55;
     this._body.rotation.y = -lateral * 0.20;
 
@@ -207,17 +212,17 @@ export class BoosterEffect {
     const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 0.55 + velBoost * 0.25) * sm * rm;
     this._ring.scale.setScalar(rr);
     const rawRingOp  = Math.min(1.0, (0.55 + s * 0.40 + flicker * 0.10) * (1.0 + lb * 1.40));
-    this._ringMat.opacity = rawRingOp + (1.0 - rawRingOp) * fop;
+    this._ringMat.opacity = flowRatio >= 1.0 ? 1.0 : rawRingOp + (1.0 - rawRingOp) * fop;
     this._ring.rotation.z += deltaTime * (0.8 + s * 1.5 + Math.abs(lateral) * 2.0);
 
     this._flame.scale.setScalar(cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult * sm);
     const rawFlameOp = Math.min(0.95, (0.22 + s * 0.55 + flicker * 0.08) * (1.0 + lb * 0.75));
-    this._flameMat.opacity = rawFlameOp + (1.0 - rawFlameOp) * fop;
+    this._flameMat.opacity = rawFlameOp;
 
     const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
     this._inner.scale.setScalar(cfg.innerSize * (0.55 + s * 0.40 + coreF * 0.08) * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 0.85) * sm);
     const rawInnerOp = Math.min(1.0, (0.70 + s * 0.36 + coreF * 0.05) * (1.0 + lb * 1.60));
-    this._innerMat.opacity = rawInnerOp + (1.0 - rawInnerOp) * fop;
+    this._innerMat.opacity = rawInnerOp;
 
     if (this._showStarSprite) {
       const starPulse = (0.30 + s * 0.42 + flicker * 0.08) * (1.0 + lb * 3.00);

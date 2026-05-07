@@ -7,13 +7,13 @@ export default function CombatWordPanel({ activeWord, animState }) {
   const wordType = WORD_TYPE_MAP[word.toLowerCase()] || "LEXEMA";
   const hexCore = word ? wordHexCore(word) : "——";
   const freq = word ? 300 + ((word.charCodeAt(0) * 7 + word.length * 43) % 400) : 0;
-  const boxBorderColor = animState === "wrong" ? "#ff2244" : "rgba(0,255,204,0.35)";
+  const boxBorderColor = animState === "wrong" ? "#ff2244" : "var(--flow-border, rgba(0,255,204,0.35))";
 
   return (
     <div className="combat__word-panel">
       <div className="combat__word-header">
         <span className="combat__word-header-tag">◊ ENLACE · LEXICO</span>
-        <span className="combat__transmitting">● TRANSMITIENDO</span>
+        <span className="combat__transmitting" style={{ color: "var(--col-transmitting, var(--col-active))" }}>● TRANSMITIENDO</span>
       </div>
       <div className="combat__word-box" style={{ borderColor: boxBorderColor }}>
         <span className="combat__word-prompt">&gt;</span>
@@ -44,11 +44,11 @@ export default function CombatWordPanel({ activeWord, animState }) {
       <div className="combat__word-meta">
         <span className="combat__meta-tag">{wordType}</span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">NUCLEO · <span style={{ color: "var(--col-active)" }}>{hexCore}</span></span>
+        <span className="combat__meta-item">NUCLEO · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{hexCore}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-active)" }}>{word.length || "—"}</span></span>
+        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word.length || "—"}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-active)" }}>{word ? freq + "HZ" : "—"}</span></span>
+        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word ? freq + "HZ" : "—"}</span></span>
       </div>
     </div>
   );

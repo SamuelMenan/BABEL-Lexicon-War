@@ -16,14 +16,14 @@
 .r-speed-lines__ln {
   position: absolute;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.35));
+  background: linear-gradient(90deg, transparent, rgba(var(--col-active-rgb, 0, 255, 204), 0.35));
   animation: r-streak 1.4s linear infinite;
 }
 
 .r-speed-lines__ln--right {
   right: 0;
   left: auto;
-  background: linear-gradient(90deg, rgba(0, 255, 204, 0.35), transparent);
+  background: linear-gradient(90deg, rgba(var(--col-active-rgb, 0, 255, 204), 0.35), transparent);
   animation: r-streak-r 1.4s linear infinite;
 }
 
@@ -371,7 +371,7 @@
   line-height: 1.75;
   letter-spacing: 0.02em;
   padding: 0.5rem 1.1rem;
-  border: 1px solid rgba(0, 255, 204, 0.30);
+  border: 1px solid var(--flow-border, rgba(0, 255, 204, 0.30));
   background: rgba(0, 0, 0, 0.58);
   /* exactly 2 lines: line-height 1.75 × font × 2 + vertical padding */
   height: calc(1.35rem * 1.75 * 2 + 1rem);
@@ -403,7 +403,7 @@
 }
 
 .r-word--done {
-  color: rgba(0, 255, 204, 0.45);
+  color: rgba(var(--col-active-rgb, 0, 255, 204), 0.45);
 }
 
 .r-word--pending {
@@ -423,7 +423,7 @@
 
 .r-pc--done {
   color: var(--col-active);
-  text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+  text-shadow: 0 0 8px rgba(var(--col-active-rgb, 0, 255, 204), 0.4);
 }
 
 .r-pc--pending {
@@ -495,7 +495,7 @@
 
 .r-flow-block__x--active {
   color: var(--col-active);
-  text-shadow: 0 0 14px rgba(0, 255, 204, 0.5);
+  text-shadow: 0 0 14px rgba(var(--col-active-rgb, 0, 255, 204), 0.5);
 }
 
 .r-flow-block__x--peak {

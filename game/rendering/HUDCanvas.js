@@ -9,6 +9,7 @@ export class HUDCanvas {
     this.tokens  = [];   // WordToken[]
     this.camera  = null;
     this.occluders = []; // [{ object: THREE.Object3D, radiusPx?: number }]
+    this._typedColor = '#00ffcc';  // ship palette primary — set via setShipColor()
 
     Object.assign(this.canvas.style, {
       position:      'fixed',
@@ -35,6 +36,7 @@ export class HUDCanvas {
   setCamera(camera) { this.camera = camera; }
   setTokens(tokens) { this.tokens = tokens; }
   setOccluders(occluders) { this.occluders = Array.isArray(occluders) ? occluders : []; }
+  setShipColor(cssColor) { this._typedColor = cssColor || '#00ffcc'; }
 
   update(_delta) {
     if (!this.camera) return;
@@ -71,12 +73,13 @@ export class HUDCanvas {
       this.ctx.lineWidth = 2;
       this.ctx.strokeStyle = 'rgba(3,8,12,0.95)';
       this.ctx.shadowBlur = isDone ? 11 : isCurrent ? 8 : 5;
+      const col = this._typedColor;
       this.ctx.shadowColor = isDone
-        ? (isTargeted ? 'rgba(0,255,204,0.88)' : 'rgba(0,255,204,0.6)')
+        ? col
         : isCurrent
-          ? 'rgba(130,255,234,0.45)'
+          ? col + '88'
           : 'rgba(178,205,230,0.26)';
-      this.ctx.fillStyle = isDone ? '#00ffcc' : isCurrent ? '#b9fff3' : 'rgba(205,220,235,0.82)';
+      this.ctx.fillStyle = isDone ? col : isCurrent ? col + 'cc' : 'rgba(205,220,235,0.82)';
       this.ctx.strokeText(word[i], startX + i * charW, drawY);
       this.ctx.fillText(word[i], startX + i * charW, drawY);
     }

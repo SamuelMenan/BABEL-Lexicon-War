@@ -34,6 +34,7 @@ export class CombatPlayerShip extends ShipBase {
     this._flash  = null;
 
     this._isThrusting = false;
+    this._prevFlowActive = false;
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -228,11 +229,35 @@ export class CombatPlayerShip extends ShipBase {
     const rScale    = flowActive ? 1.18 : 1.0;
     const flowRatio = flowActive ? 1.0 : flow / 100;
 
+    if (flowActive !== this._prevFlowActive) {
+      this._prevFlowActive = flowActive;
+      this._applyFlowOpacity(flowActive);
+    }
+
     this._boosters.forEach(b => {
       b.update(delta, this._isThrusting, vScale, rScale, flowRatio);
     });
 
     if (this._isThrusting) this._isThrusting = false;
+  }
+
+  // Force all ship model mesh materials to opacity=1.0 when entering Flow state.
+  // Restores original opacity values on exit.
+  _applyFlowOpacity(active) {
+    this._shipRoot.traverse((node) => {
+      if (!node.isMesh) return;
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach((m) => {
+        if (!m || !m.transparent) return;
+        if (active) {
+          m._preFlowOpacity = m.opacity;
+          m.opacity = 1.0;
+        } else if (m._preFlowOpacity !== undefined) {
+          m.opacity = m._preFlowOpacity;
+          delete m._preFlowOpacity;
+        }
+      });
+    });
   }
 
   setThrusting(on) { this._isThrusting = on; }

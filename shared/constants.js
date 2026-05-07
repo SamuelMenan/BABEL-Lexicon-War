@@ -320,6 +320,7 @@ export const SHIPS = [
     name: 'IG-127',
     code: 'TYPO-IG127',
     rotationY: -Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '-z',
   },
   {
     id: 'lowpoly',
@@ -327,6 +328,7 @@ export const SHIPS = [
     name: 'Acechador Nocturno',
     code: 'TYPO-FRD',
     rotationY: Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '-z',
   },
   {
     id: 'colaid1',
@@ -341,6 +343,7 @@ export const SHIPS = [
     name: 'Waldeinsamkeit',
     code: 'WCS-SSV',
     rotationY: Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '-z',
   },
 ];
 export const DEFAULT_SHIP = 'spaceship';

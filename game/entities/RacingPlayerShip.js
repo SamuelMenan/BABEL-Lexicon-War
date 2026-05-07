@@ -15,6 +15,7 @@ function getRacingYaw(ship) {
   switch (ship?.noseAxis) {
     case '+x': return -Math.PI / 2;
     case '-x': return  Math.PI / 2;
+    case '-z': return Math.PI;
     default:   return 0;
   }
 }

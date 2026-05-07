@@ -14,7 +14,7 @@ const TARGET_MODEL_LENGTH = 5.0;
 function getRacingYaw(ship) {
   switch (ship?.noseAxis) {
     case '+x': return -Math.PI / 2;
-    case '-x': return  Math.PI / 2;
+    case '-x': return -Math.PI / 2;
     default:   return 0;
   }
 }

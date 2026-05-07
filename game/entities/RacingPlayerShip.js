@@ -12,8 +12,11 @@ const TARGET_MODEL_LENGTH = 5.0;
 //   +X-nose ship: rotY(-π/2) maps +X → +Z  ✓
 //   +Z-nose ship: no rotation needed         ✓
 function getRacingYaw(ship) {
-  return ship?.noseAxis === '+x' ? -Math.PI / 2 : 0;
-  return spaceship__low_poly.glb.noseAxis === '+x' ? Math.PI / 2 : 0;
+  switch (ship?.noseAxis) {
+    case '+x': return -Math.PI / 2;
+    case '-x': return  Math.PI / 2;
+    default:   return 0;
+  }
 }
 
 export class RacingPlayerShip extends ShipBase {

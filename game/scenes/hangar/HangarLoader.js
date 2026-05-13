@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { SHIPS } from '../../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../../rendering/BoosterEffect.js';
+import { SHIP_MUZZLE_CONFIGS } from '../../rendering/booster/MuzzleConfig.js';
 
 // Adjusts vertical position of all ships. Negative = lower, positive = higher.
 const SHIP_SPAWN_OFFSET = { x: 0, y: -0.1, z: 0 };
@@ -35,6 +36,7 @@ export class HangarLoader {
     this._scene.add(this.shipGroup);
 
     this.boosters         = [];
+    this.muzzles          = [];
     this.mixers           = [];
     this.currentShipIndex = 0;
   }
@@ -75,6 +77,7 @@ export class HangarLoader {
     disposeGroup(this.shipGroup);
     this.boosters.forEach(b => b.dispose());
     this.boosters = [];
+    this.muzzles  = [];
     this.mixers   = [];
 
     const ship = SHIPS[index];
@@ -112,6 +115,10 @@ export class HangarLoader {
         wrapper.position.set(offset.x, offset.y, offset.z);
 
         this.shipGroup.add(wrapper);
+
+        if (ship.id === 'lowpoly') {
+          this._sanitizeGlassMaterials(gltf.scene);
+        }
 
         // === DEBUG: axis markers — remove when boosters are calibrated ===
         {
@@ -176,6 +183,27 @@ export class HangarLoader {
             this.boosters.push(booster);
           });
 
+        Object.entries(SHIP_MUZZLE_CONFIGS)
+          .filter(([key]) => key.startsWith(prefix))
+          .forEach(([, config]) => {
+            const anchor = new THREE.Object3D();
+            anchor.name = 'muzzle_anchor';
+            anchor.position.set(
+              config.localPosition.x * halfSize.x,
+              config.localPosition.y * halfSize.y,
+              config.localPosition.z * halfSize.z,
+            );
+            wrapper.add(anchor);
+            this.muzzles.push({
+              anchor,
+              forwardLocal: config.forwardLocal.clone().normalize(),
+              wrapper,
+              color:    config.color,
+              emissive: config.emissive,
+              scale:    config.scale ?? 1.0,
+            });
+          });
+
         this._saveModelOriginals(wrapper);
         this._onLoadEnd();
       },
@@ -212,6 +240,86 @@ export class HangarLoader {
         obj.rotation.copy(o.rotation);
         obj.scale.copy(o.scale);
       }
+    });
+  }
+
+  getMuzzleShots() {
+    const out = [];
+    const tmpPos = new THREE.Vector3();
+    const tmpDir = new THREE.Vector3();
+    const tmpQuat = new THREE.Quaternion();
+    const tmpScl = new THREE.Vector3();
+    for (const m of this.muzzles) {
+      m.wrapper.updateWorldMatrix(true, false);
+      m.anchor.getWorldPosition(tmpPos);
+      m.wrapper.matrixWorld.decompose(new THREE.Vector3(), tmpQuat, tmpScl);
+      tmpDir.copy(m.forwardLocal).applyQuaternion(tmpQuat).normalize();
+      out.push({
+        origin:   tmpPos.clone(),
+        dir:      tmpDir.clone(),
+        color:    m.color,
+        emissive: m.emissive,
+        scale:    m.scale ?? 1.0,
+      });
+    }
+    return out;
+  }
+
+  _sanitizeGlassMaterials(root) {
+    const isGlassName = (n) => {
+      n = (n || '').toLowerCase();
+      return n.includes('glass')  || n.includes('cristal') ||
+             n.includes('cabin')  || n.includes('cockpit') ||
+             n.includes('canopy') || n.includes('window')  ||
+             n.includes('visor');
+    };
+
+    root.traverse(obj => {
+      if (!obj.isMesh || !obj.material) return;
+
+      const meshNameMatch = isGlassName(obj.name);
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+
+      const newMats = mats.map(m => {
+        const matMatch = isGlassName(m.name);
+        const lowOpacity = m.opacity != null && m.opacity < 1;
+        const hasTransmission = (m.transmission ?? 0) > 0;
+        const looksGlass = meshNameMatch || matMatch || hasTransmission || lowOpacity;
+
+        if (!looksGlass) return m;
+
+        // Promote to MeshPhysicalMaterial if not already — proper glass needs it.
+        let target = m;
+        if (!m.isMeshPhysicalMaterial) {
+          target = new THREE.MeshPhysicalMaterial({
+            color:         m.color ? m.color.clone() : new THREE.Color(0x88aabb),
+            map:           m.map         || null,
+            normalMap:     m.normalMap   || null,
+            roughnessMap:  m.roughnessMap || null,
+            metalnessMap:  m.metalnessMap || null,
+            emissive:      m.emissive    ? m.emissive.clone() : new THREE.Color(0x000000),
+            emissiveMap:   m.emissiveMap || null,
+            roughness:     m.roughness != null ? m.roughness : 0.05,
+            metalness:     m.metalness != null ? m.metalness : 0.0,
+            name:          m.name || 'glass',
+          });
+          m.dispose?.();
+        }
+
+        target.transparent  = true;
+        target.depthWrite   = false;
+        target.side         = THREE.DoubleSide;
+        target.transmission = Math.max(target.transmission ?? 0, 0.92);
+        target.thickness    = target.thickness && target.thickness > 0 ? target.thickness : 0.25;
+        target.ior          = target.ior || 1.5;
+        target.roughness    = Math.min(target.roughness ?? 0.05, 0.1);
+        target.opacity      = target.opacity != null && target.opacity > 0.05 ? target.opacity : 0.85;
+        target.needsUpdate  = true;
+        return target;
+      });
+
+      obj.material   = Array.isArray(obj.material) ? newMats : newMats[0];
+      obj.renderOrder = Math.max(obj.renderOrder, 1);
     });
   }
 

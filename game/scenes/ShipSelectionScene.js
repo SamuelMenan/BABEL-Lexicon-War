@@ -5,6 +5,11 @@ import { HangarRenderer } from './hangar/HangarRenderer.js';
 import { HangarCameraController } from './hangar/HangarCameraController.js';
 import { HangarLoader } from './hangar/HangarLoader.js';
 import { DeploymentAnimator } from './hangar/DeploymentAnimator.js';
+import { HangarProjectiles } from './hangar/HangarProjectiles.js';
+import { HangarLaser } from './hangar/HangarLaser.js';
+
+const FIRE_COOLDOWN_MS      = 150;
+const AUTO_FIRE_INTERVAL_MS = 110; // cadencia ráfaga K (corto, continuo)
 
 // Adjusts vertical spawn position of all ships. Negative = lower, positive = higher.
 const SHIP_SPAWN_OFFSET = { x: 0, y: -0.1, z: 0 };
@@ -22,6 +27,11 @@ export class ShipSelectionScene {
     this._cam    = new HangarCameraController(this._env.camera);
     this._loader = new HangarLoader(this._env.scene, { onLoadStart, onLoadEnd });
     this._deploy = new DeploymentAnimator(this._env.scene, this._env.camera, this._cam);
+    this._projectiles = new HangarProjectiles(this._env.scene);
+    this._laser       = new HangarLaser(this._env.scene);
+    this._lastShotAt  = 0;
+    this._autoFiring  = false;  // K hold
+    this._laserOn     = false;  // L toggle
 
     this._loader.loadStation();
     this._startLoop();
@@ -31,13 +41,34 @@ export class ShipSelectionScene {
 
   loadShip(index) {
     if (!this._alive) return;
+    this._stopAllFire();
     this._loader.loadShip(index);
     this._cam.focal.set(0, 0, 0);
   }
 
   triggerDeployment() {
+    this._stopAllFire();
     const wrapper = this._loader.shipGroup.children[0];
     return this._deploy.triggerDeployment(wrapper);
+  }
+
+  startAutoFire() {
+    if (this._deploy.isActive) return;
+    this._autoFiring = true;
+  }
+  stopAutoFire() {
+    this._autoFiring = false;
+  }
+  toggleLaser() {
+    if (this._deploy.isActive) return;
+    this._laserOn = !this._laserOn;
+    if (!this._laserOn) this._laser.clear();
+  }
+  _stopAllFire() {
+    this._autoFiring = false;
+    this._laserOn    = false;
+    this._laser.clear();
+    this._projectiles.clear();
   }
 
   detonateCurrentShip() {
@@ -79,10 +110,29 @@ export class ShipSelectionScene {
 
   toggleDebugMarkers() { this._loader.toggleDebugMarkers(); }
 
+  fireWeapon(cooldownMs = FIRE_COOLDOWN_MS) {
+    if (this._deploy.isActive) return;
+    if (this._laserOn) return; // laser activo: no mezclar ráfaga
+    const now = performance.now();
+    if (now - this._lastShotAt < cooldownMs) return;
+    const shots = this._loader.getMuzzleShots();
+    if (!shots.length) return;
+    this._lastShotAt = now;
+    shots.forEach(s => {
+      this._projectiles.spawn(s.origin, s.dir, {
+        color:    s.color,
+        emissive: s.emissive,
+        scale:    s.scale,
+      });
+    });
+  }
+
   destroy() {
     this._alive = false;
     if (this._rafId) cancelAnimationFrame(this._rafId);
     this._destroyFx?.cleanup();
+    this._projectiles.dispose();
+    this._laser.dispose();
     this._loader.dispose();
     this._env.destroy();
   }
@@ -128,6 +178,17 @@ export class ShipSelectionScene {
       const isDeploying = this._deploy.isActive;
       this._loader.boosters.forEach(b => b.update(dt, isDeploying, 0.8, 0.8, false));
       this._loader.mixers.forEach(m => m?.update(dt));
+
+      // Modo láser tiene prioridad sobre ráfaga K.
+      if (isDeploying) {
+        this._laser.clear();
+      } else if (this._laserOn) {
+        this._laser.update(this._loader.getMuzzleShots(), dt);
+      } else if (this._autoFiring) {
+        this.fireWeapon(AUTO_FIRE_INTERVAL_MS);
+      }
+
+      this._projectiles.update(dt);
 
       if (this._destroyFx && !this._destroyFx.done) {
         this._destroyFx.update(dt);

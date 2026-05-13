@@ -17,6 +17,25 @@ const MIN_LOADING_MS = 1800;
 const PROGRESS_TICK  = 80;
 const PROGRESS_STEP  = 3.5;
 
+const RESERVED_KEYS = new Set([
+  'ArrowLeft', 'ArrowRight',
+  'Home', 'End', 'PageUp', 'PageDown',
+  'Pause', 'Delete', 'Enter', 'Escape',
+  'k', 'K', 'l', 'L', // K = auto-fire hold, L = laser toggle
+]);
+const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph']);
+const PREVENT_DEFAULT_KEYS = new Set(['Tab', ' ', 'Spacebar']);
+
+function isFireKey(e) {
+  if (e.repeat) return false;
+  const k = e.key;
+  if (!k) return false;
+  if (RESERVED_KEYS.has(k)) return false;
+  if (MODIFIER_KEYS.has(k)) return false;
+  if (k.length === 1 && /[a-zA-Z]/.test(k)) return false;
+  return true;
+}
+
 export default function HangarScreen() {
   const mountRef   = useRef(null);
   const sceneRef   = useRef(null);
@@ -105,8 +124,19 @@ export default function HangarScreen() {
       if (e.key === 'Delete')             sceneRef.current?.detonateCurrentShip();
       if (e.key === 'Enter')              handleConfirm();
       if (e.key === 'Escape' && !e.__babelPauseToggle) handleCancel();
+      if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire();
+      if ((e.key === 'l' || e.key === 'L') && !e.repeat) sceneRef.current?.toggleLaser();
+      if (isFireKey(e)) {
+        if (PREVENT_DEFAULT_KEYS.has(e.key) || /^F\d{1,2}$/.test(e.key)) {
+          e.preventDefault();
+        }
+        sceneRef.current?.fireWeapon();
+      }
     }
-    function onKeyUp(e) { sceneRef.current?.removeKey(e.key); }
+    function onKeyUp(e) {
+      sceneRef.current?.removeKey(e.key);
+      if (e.key === 'k' || e.key === 'K') sceneRef.current?.stopAutoFire();
+    }
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup',   onKeyUp);

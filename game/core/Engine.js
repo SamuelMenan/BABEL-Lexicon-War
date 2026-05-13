@@ -53,6 +53,8 @@ export class Engine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(COLORS.BACKGROUND);
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.1;
     this.mountEl.appendChild(this.renderer.domElement);
   }
 
@@ -74,31 +76,39 @@ export class Engine {
   }
 
   _initLights() {
-    const ambient = new THREE.AmbientLight(0x202020, 0.9);
+    // Mirror HangarRenderer rig so ships look identical across hangar/combat/race.
+    const ambient = new THREE.AmbientLight(0x060c1a, 1.0);
     this.scene.add(ambient);
     this._globalAmbient = ambient;
 
-    const front = new THREE.PointLight(0xffffff, 1.2, 26);
-    front.position.set(0, 2, 10);
+    const front = new THREE.DirectionalLight(0xc8d8ff, 3.5);
+    front.position.set(-10, 8, 12);
     this.scene.add(front);
     this._globalFront = front;
 
-    const back = new THREE.PointLight(0x667788, 0.55, 32);
-    back.position.set(0, -3, -15);
+    const back = new THREE.DirectionalLight(0x00ccee, 2.2);
+    back.position.set(0, 4, -12);
     this.scene.add(back);
     this._globalBack = back;
+
+    const warm = new THREE.DirectionalLight(0x3a2810, 1.2);
+    warm.position.set(8, -3, 6);
+    this.scene.add(warm);
+    this._globalWarm = warm;
   }
 
   suppressGlobalLights() {
     if (this._globalAmbient) this._globalAmbient.intensity = 0;
     if (this._globalFront)   this._globalFront.intensity   = 0;
     if (this._globalBack)    this._globalBack.intensity    = 0;
+    if (this._globalWarm)    this._globalWarm.intensity    = 0;
   }
 
   restoreGlobalLights() {
-    if (this._globalAmbient) this._globalAmbient.intensity = 0.9;
-    if (this._globalFront)   this._globalFront.intensity   = 1.2;
-    if (this._globalBack)    this._globalBack.intensity    = 0.55;
+    if (this._globalAmbient) this._globalAmbient.intensity = 1.0;
+    if (this._globalFront)   this._globalFront.intensity   = 3.5;
+    if (this._globalBack)    this._globalBack.intensity    = 2.2;
+    if (this._globalWarm)    this._globalWarm.intensity    = 1.2;
   }
 
   _bindResize() {

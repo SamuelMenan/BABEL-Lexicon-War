@@ -46,7 +46,7 @@ export class PostProcessing {
     const vignettePass = this._buildVignettePass();
 
     if (this._bloomEnabled) {
-      this._initBloomPath(w, h, profile.bloomResScale, vignettePass);
+      this._initBloomPath(w, h, 1.0, vignettePass);
     } else {
       this._initSimplePath(vignettePass);
     }
@@ -109,7 +109,7 @@ export class PostProcessing {
     this._bloomComposer.setSize(bw, bh);
     this._bloomComposer.addPass(renderPass);
 
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.40, 0.20, 0.75);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.18, 0.06, 0.92);
     this._bloomComposer.addPass(bloomPass);
 
     const mixPass = new ShaderPass(
@@ -161,8 +161,7 @@ export class PostProcessing {
       if (!this._bloomComposer || !this._finalComposer) {
         return;
       }
-      const scale = getQualityProfile().bloomResScale;
-      this._bloomComposer.setSize(Math.floor(w * scale), Math.floor(h * scale));
+      this._bloomComposer.setSize(w, h);
       this._finalComposer.setSize(w, h);
     } else {
       if (!this._simpleComposer) {
@@ -175,6 +174,13 @@ export class PostProcessing {
   // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
+
+  setBloomResScale(scale) {
+    if (!this._bloomComposer || !this._bloomEnabled) return;
+    const w = Math.floor(window.innerWidth  * scale);
+    const h = Math.floor(window.innerHeight * scale);
+    this._bloomComposer.setSize(w, h);
+  }
 
   setBloomEnabled(enabled) {
     if (this._bloomEnabled === enabled) return;

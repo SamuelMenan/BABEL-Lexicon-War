@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { BLOOM_LAYER } from '../../shared/constants.js';
 import { getQualityProfile } from '../../shared/qualitySettings.js';
 import { getFlameTexture, getInnerTexture, getStarTexture } from './booster/BoosterTextures.js';
 import { getConeGeometry, getRingGeometry } from './booster/BoosterGeometry.js';
@@ -50,7 +49,6 @@ export class BoosterEffect {
     this._body = new THREE.Mesh(getConeGeometry(), this._bodyMat);
     this._body.castShadow = false;
     this._body.receiveShadow = false;
-    this._body.layers.enable(BLOOM_LAYER);
     this._root.add(this._body);
 
     this._ringMat = new THREE.MeshBasicMaterial({
@@ -60,7 +58,6 @@ export class BoosterEffect {
     this._ring = new THREE.Mesh(getRingGeometry(), this._ringMat);
     this._ring.castShadow = false;
     this._ring.receiveShadow = false;
-    this._ring.layers.enable(BLOOM_LAYER);
     this._root.add(this._ring);
 
     this._flameMat = new THREE.SpriteMaterial({
@@ -68,7 +65,6 @@ export class BoosterEffect {
       blending: THREE.AdditiveBlending, depthWrite: false,
     });
     this._flame = new THREE.Sprite(this._flameMat);
-    this._flame.layers.enable(BLOOM_LAYER);
     this._root.add(this._flame);
 
     this._innerMat = new THREE.SpriteMaterial({
@@ -76,7 +72,6 @@ export class BoosterEffect {
       blending: THREE.AdditiveBlending, depthWrite: false,
     });
     this._inner = new THREE.Sprite(this._innerMat);
-    this._inner.layers.enable(BLOOM_LAYER);
     this._root.add(this._inner);
 
     this._starMat = new THREE.SpriteMaterial({
@@ -84,10 +79,9 @@ export class BoosterEffect {
       blending: THREE.AdditiveBlending, depthWrite: false, rotation: 0,
     });
     this._star = new THREE.Sprite(this._starMat);
-    this._star.layers.enable(BLOOM_LAYER);
     this._root.add(this._star);
 
-    this._light = new THREE.PointLight(0xffffff, 1, 8);
+    this._light = new THREE.PointLight(0xffffff, 0.45, 4);
     this._root.add(this._light);
 
     const profile = getQualityProfile();

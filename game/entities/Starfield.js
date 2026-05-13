@@ -146,8 +146,8 @@ export class Starfield {
   // Returns mesh so caller can track it for animation
   addDecorRing(x, y, z, radius, color) {
     const mesh = new THREE.Mesh(
-      new THREE.TorusGeometry(radius, 0.08, 6, 48),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4 })
+      new THREE.TorusGeometry(radius, 0.06, 6, 48),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18 })
     );
     mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x, y, z);

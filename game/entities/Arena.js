@@ -165,7 +165,7 @@ export class Arena {
       mats.forEach((mat) => {
         if (!mat) return;
         mat.fog = false; mat.depthWrite = false; mat.side = THREE.DoubleSide; mat.toneMapped = false;
-        if ('emissiveIntensity' in mat) mat.emissiveIntensity = Math.max(mat.emissiveIntensity ?? 0, 1.2);
+        if ('emissiveIntensity' in mat) mat.emissiveIntensity = Math.min(Math.max(mat.emissiveIntensity ?? 0, 0.5), 0.7);
         if ('emissive' in mat && mat.emissive) mat.emissive.copy(mat.color?.clone?.() ?? new THREE.Color(0x8844ff));
         mat.needsUpdate = true;
       });

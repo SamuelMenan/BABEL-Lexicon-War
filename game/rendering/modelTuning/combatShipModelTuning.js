@@ -3,8 +3,17 @@ import * as THREE from 'three';
 const CYAN_ARTIFACT_MAX_SIZE = 0.62;
 const CYAN_ARTIFACT_MIN_Y    = 0.35;
 
-export function tuneLoadedMesh(_node) {
-  // No material overrides — let GLTF use its original Blender materials unchanged.
+export function tuneLoadedMesh(node) {
+  // Clamp PBR materials so background does not bleed through reflections.
+  if (!node?.isMesh || !node.material) return;
+  const mats = Array.isArray(node.material) ? node.material : [node.material];
+  for (const m of mats) {
+    if (!m) continue;
+    if ('envMapIntensity' in m) m.envMapIntensity = 0;
+    if ('metalness' in m) m.metalness = Math.min(m.metalness ?? 0, 0.10);
+    if ('roughness' in m) m.roughness = Math.max(m.roughness ?? 1, 0.85);
+    m.needsUpdate = true;
+  }
 }
 
 // setSocketPositions receives { centerX, centerY, frontZ } and is provided by the ship class.

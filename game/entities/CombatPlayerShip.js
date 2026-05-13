@@ -78,8 +78,8 @@ export class CombatPlayerShip extends ShipBase {
     const bodyGeo = new THREE.ConeGeometry(0.42, 1.8, 6);
     bodyGeo.rotateX(Math.PI / 2);
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: cyan, emissive: cyan, emissiveIntensity: 0.35,
-      metalness: 0.7, roughness: 0.25,
+      color: cyan, emissive: cyan, emissiveIntensity: 0.5,
+      metalness: 1, roughness: 0.3,
     });
     this._shipRoot.add(new THREE.Mesh(bodyGeo, bodyMat));
 
@@ -90,8 +90,8 @@ export class CombatPlayerShip extends ShipBase {
     ]), 3));
     wingGeo.computeVertexNormals();
     const wingMat = new THREE.MeshStandardMaterial({
-      color: cyan, emissive: cyan, emissiveIntensity: 0.15,
-      side: THREE.DoubleSide, metalness: 0.8, roughness: 0.2,
+      color: cyan, emissive: cyan, emissiveIntensity: 0.10,
+      side: THREE.DoubleSide, metalness: 0.4, roughness: 0.5,
     });
     this._shipRoot.add(new THREE.Mesh(wingGeo, wingMat));
 

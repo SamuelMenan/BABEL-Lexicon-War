@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
-import { BLOOM_LAYER } from '../../shared/constants.js';
 
 export class Moon {
   constructor(scene) {
@@ -35,7 +34,6 @@ export class Moon {
     }
     root.traverse((node) => {
       if (!node.isMesh) return;
-      node.layers.enable(BLOOM_LAYER);
       const mats = Array.isArray(node.material) ? node.material : [node.material];
       mats.forEach((mat) => {
         if (!mat) return;
@@ -93,7 +91,6 @@ export class Moon {
       new THREE.EdgesGeometry(hullGeo),
       new THREE.LineBasicMaterial({ color: 0xffdd44, transparent: true, opacity: 0.9 })
     );
-    hullMesh.layers.enable(BLOOM_LAYER);
     coreGroup.add(hullMesh);
     hullGeo.dispose();
 
@@ -101,7 +98,6 @@ export class Moon {
       new THREE.SphereGeometry(2.2, 10, 10),
       new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 1.5, transparent: true, opacity: 0.7 })
     );
-    coreMesh.layers.enable(BLOOM_LAYER);
     coreGroup.add(coreMesh);
 
     const glowSpr = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -109,7 +105,6 @@ export class Moon {
       transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending
     }));
     glowSpr.scale.set(28, 28, 1);
-    glowSpr.layers.enable(BLOOM_LAYER);
     coreGroup.add(glowSpr);
 
     const ringDefs = [
@@ -124,7 +119,6 @@ export class Moon {
         new THREE.TorusGeometry(rd.r, rd.tube, 6, 32),
         new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 1.8 })
       );
-      rmesh.layers.enable(BLOOM_LAYER);
       const grp = new THREE.Group();
       grp.add(rmesh);
       if (rd.rotX !== undefined) grp.rotation.x = rd.rotX;
@@ -185,7 +179,6 @@ export class Moon {
         blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0.01, map: tex, alphaMap: tex
       }));
       pts.position.set(0, 0, -78); pts.rotation.x = tiltX; pts.frustumCulled = false;
-      pts.layers.enable(BLOOM_LAYER);
       this._scene.add(pts);
       this._moonRings.push(pts);
     };
@@ -196,7 +189,6 @@ export class Moon {
         new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })
       );
       mesh.position.set(0, yOff, -78); mesh.rotation.x = 0.15;
-      mesh.layers.enable(BLOOM_LAYER);
       this._scene.add(mesh);
       this._torusRings.push(mesh);
     };
@@ -242,7 +234,6 @@ export class Moon {
       color: 0x8899cc, size: 0.18, sizeAttenuation: true, transparent: true, opacity: 0.7,
       blending: THREE.AdditiveBlending, depthWrite: false
     }));
-    debris.layers.enable(BLOOM_LAYER);
     this._scene.add(debris);
   }
 }

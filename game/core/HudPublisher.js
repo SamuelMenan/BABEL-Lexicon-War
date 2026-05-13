@@ -11,6 +11,17 @@ export class HudPublisher {
     this._prevWarningGlobal = 'none';
     this._throttleAcc       = 0;
     this._lastPublishMs     = 0;
+    // Pre-allocated buffers — reuse, no per-frame allocation.
+    this._activeBuf   = [];
+    this._seenIds     = new Set();
+    this._entryPool   = []; // {id,word,distance,targeted} reusables
+    this._warningsBuf = {
+      proximityLevel: 'none',
+      closestEnemyDistance: null,
+      lowHpLevel: 'none',
+      lowHp: false,
+      globalLevel: 'none',
+    };
   }
 
   // Llamado desde update(); throttled internamente.
@@ -37,50 +48,57 @@ export class HudPublisher {
   }
 
   _publishImmediate(enemies, currentTargetId) {
-    // Strict filter: vivos, no parked en pool, con id válido.
-    const seen   = new Set();
-    const active = [];
-    for (const e of enemies) {
+    // Reusable internal buffer (no React impact).
+    this._activeBuf.length = 0;
+    this._seenIds.clear();
+    let minDist = Infinity;
+
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
       if (!e || !e.active) continue;
       if (!e.id || !e.word) continue;
-      if (typeof e.distanceToPlayer !== 'number' || e.distanceToPlayer <= 0) continue;
-      if (e.distanceToPlayer > 5000) continue; // park sentinel
-      if (seen.has(e.id)) continue;
-      seen.add(e.id);
-      active.push(e);
+      const d = e.distanceToPlayer;
+      if (typeof d !== 'number' || d <= 0 || d > 5000) continue;
+      if (this._seenIds.has(e.id)) continue;
+      this._seenIds.add(e.id);
+      this._activeBuf.push(e);
+      if (d < minDist) minDist = d;
     }
 
-    const minDist = active.length > 0
-      ? Math.min(...active.map(e => e.distanceToPlayer))
-      : Infinity;
+    const proximityLevel = this._deriveProximityLevel(minDist);
+    const prevWarnings   = Bridge.peekState().warnings;
+    const lowHpLevel     = prevWarnings?.lowHpLevel ?? 'none';
+    const globalLevel    = this._deriveGlobalWarningLevel(proximityLevel, lowHpLevel);
 
-    const previousWarnings = Bridge.getState().warnings ?? {};
-    const proximityLevel   = this._deriveProximityLevel(minDist);
-    const lowHpLevel       = previousWarnings.lowHpLevel ?? 'none';
-    const globalLevel      = this._deriveGlobalWarningLevel(proximityLevel, lowHpLevel);
-
-    const warnings = {
-      ...previousWarnings,
-      proximityLevel,
-      closestEnemyDistance: Number.isFinite(minDist) ? Math.round(minDist) : null,
-      lowHpLevel,
-      lowHp: lowHpLevel !== 'none',
-      globalLevel,
-    };
-
-    Bridge.setState({
-      combatEnemies: active.map(e => ({
+    // React necesita refs nuevas para reconciliar — pero solo allocamos lo
+    // que React inspecciona. Sin Set/spread/map intermedios.
+    const n = this._activeBuf.length;
+    const payload = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const e = this._activeBuf[i];
+      payload[i] = {
         id: e.id, word: e.word,
         distance: Math.round(e.distanceToPlayer),
         targeted: e.id === currentTargetId,
-      })),
-      swarmRemnants: active.length,
-      warnings,
+      };
+    }
+
+    Bridge.setState({
+      combatEnemies: payload,
+      swarmRemnants: n,
+      warnings: {
+        ...(prevWarnings || {}),
+        proximityLevel,
+        closestEnemyDistance: Number.isFinite(minDist) ? Math.round(minDist) : null,
+        lowHpLevel,
+        lowHp: lowHpLevel !== 'none',
+        globalLevel,
+      },
     });
 
     if (this._prevWarningGlobal !== globalLevel) {
       this._prevWarningGlobal = globalLevel;
-      EventBus.emit(EventTypes.WARNING_CHANGED, { source: 'combat', warnings });
+      EventBus.emit(EventTypes.WARNING_CHANGED, { source: 'combat', warnings: Bridge.peekState().warnings });
     }
   }
 

@@ -3,6 +3,7 @@ import { ShipBase } from './ShipBase.js';
 import { COLORS, SHIPS, SHIP_PALETTES } from '../../shared/constants.js';
 import { Bridge } from '../../shared/bridge.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
+import { SHIP_MUZZLE_CONFIGS } from '../rendering/booster/MuzzleConfig.js';
 import { tuneLoadedMesh, afterLoadedModel } from '../rendering/modelTuning/combatShipModelTuning.js';
 import { getThermalColor } from '../rendering/colors/thermalRamp.js';
 
@@ -25,18 +26,15 @@ export class CombatPlayerShip extends ShipBase {
 
     this._ship      = ship;
     this._boosters  = [];
+    this._muzzles   = [];
     this._recoil    = 0;
     this._hitShake  = 0;
     this._targetPos = null;
     this._basePosition = new THREE.Vector3(0, 0.2, 2.85);
 
-    this._muzzle = null;
-    this._flash  = null;
-
     this._isThrusting = false;
     this._prevFlowActive = false;
 
-    this._buildFxNodes();
     this._buildFallbackShip();
     this._loadModel();
 
@@ -44,30 +42,6 @@ export class CombatPlayerShip extends ShipBase {
   }
 
   get position() { return this._group.position; }
-
-  _buildFxNodes() {
-    const cyan = COLORS.PLAYER;
-
-    this._muzzle = new THREE.Object3D();
-    this._group.add(this._muzzle);
-
-    const flashMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: cyan,
-      emissiveIntensity: 2.2,
-      transparent: true,
-      opacity: 0,
-    });
-    this._flash = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), flashMat);
-    this._group.add(this._flash);
-
-    this._setSocketPositions({ centerX: 0, centerY: 0, frontZ: -0.95 });
-  }
-
-  _setSocketPositions({ centerX, centerY, frontZ }) {
-    this._muzzle.position.set(centerX, centerY, frontZ);
-    this._flash.position.set(centerX, centerY, frontZ);
-  }
 
   _buildFallbackShip() {
     this._clearAnimations();
@@ -94,14 +68,12 @@ export class CombatPlayerShip extends ShipBase {
       side: THREE.DoubleSide, metalness: 0.4, roughness: 0.5,
     });
     this._shipRoot.add(new THREE.Mesh(wingGeo, wingMat));
-
-    this._setSocketPositions({ centerX: 0, centerY: 0, frontZ: -0.95 });
   }
 
   _tuneLoadedMesh(node) { tuneLoadedMesh(node); }
 
   _afterLoadedModel(modelRoot) {
-    afterLoadedModel(modelRoot, (sockets) => this._setSocketPositions(sockets));
+    afterLoadedModel(modelRoot);
 
     const combatScale = modelRoot.scale.x;
     const combatRotY  = modelRoot.rotation.y;
@@ -153,15 +125,66 @@ export class CombatPlayerShip extends ShipBase {
     if (this._boosters.length === 0) {
       console.warn(`[CombatPlayerShip] No hangar booster config found for ship "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
     }
+
+    // ── Muzzles (cañones) — replicar layout del hangar en combate ─────────
+    this._muzzles.forEach(m => this._group.remove(m.anchor));
+    this._muzzles = [];
+
+    Object.entries(SHIP_MUZZLE_CONFIGS)
+      .filter(([key]) => key.startsWith(prefix))
+      .forEach(([, config]) => {
+        const rawPos = new THREE.Vector3(
+          config.localPosition.x * rawHalfSize.x,
+          config.localPosition.y * rawHalfSize.y,
+          config.localPosition.z * rawHalfSize.z,
+        );
+        rawPos.applyEuler(new THREE.Euler(0, combatRotY, 0));
+        rawPos.multiplyScalar(combatScale);
+
+        const anchor = new THREE.Object3D();
+        anchor.position.copy(rawPos);
+        this._group.add(anchor);
+
+        const forwardLocal = config.forwardLocal.clone().normalize();
+        forwardLocal.applyEuler(new THREE.Euler(0, combatRotY, 0));
+
+        this._muzzles.push({
+          anchor,
+          forwardLocal,
+          color:    config.color,
+          emissive: config.emissive,
+          scale:    config.scale ?? 1.0,
+        });
+      });
   }
 
   setTarget(pos) { this._targetPos = pos; }
   clearTarget()  { this._targetPos = null; }
 
-  get muzzlePosition() {
-    const pos = new THREE.Vector3();
-    this._muzzle.getWorldPosition(pos);
-    return pos;
+  // Replica de HangarLoader.getMuzzleShots: devuelve un shot por cañón con
+  // origen, anchor vivo, dirección en mundo, color y scale de la paleta.
+  getMuzzleShots() {
+    if (!this._muzzles.length) return [];
+    const out = [];
+    const tmpQuat = new THREE.Quaternion();
+    const tmpScl  = new THREE.Vector3();
+    const tmpPosD = new THREE.Vector3();
+    for (const m of this._muzzles) {
+      this._group.updateWorldMatrix(true, false);
+      const origin = new THREE.Vector3();
+      m.anchor.getWorldPosition(origin);
+      this._group.matrixWorld.decompose(tmpPosD, tmpQuat, tmpScl);
+      const dir = m.forwardLocal.clone().applyQuaternion(tmpQuat).normalize();
+      out.push({
+        origin,
+        anchor:   m.anchor,   // referencia viva para origen dinámico (laser).
+        dir,
+        color:    m.color,
+        emissive: m.emissive,
+        scale:    m.scale,
+      });
+    }
+    return out;
   }
 
   // Ship-specific laser color from SHIP_PALETTES. Falls back to thermalColor if no palette.
@@ -179,12 +202,6 @@ export class CombatPlayerShip extends ShipBase {
 
   fireAnim() {
     this._recoil = 1;
-    this._flash.material.opacity = 0.8;
-    clearTimeout(this._fireAnimTimer);
-    this._fireAnimTimer = setTimeout(() => {
-      this._fireAnimTimer = null;
-      if (this._flash?.material) this._flash.material.opacity = 0;
-    }, 80);
   }
 
   takeHit(strength = 1) {
@@ -268,10 +285,10 @@ export class CombatPlayerShip extends ShipBase {
   }
 
   dispose() {
-    clearTimeout(this._fireAnimTimer);
-    this._fireAnimTimer = null;
     this._boosters.forEach(b => b.dispose());
     this._boosters = [];
+    this._muzzles.forEach(m => this._group.remove(m.anchor));
+    this._muzzles = [];
     super.dispose();
   }
 }

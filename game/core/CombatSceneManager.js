@@ -15,7 +15,7 @@ import { HudPublisher } from './HudPublisher.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
 import { PreCombatController } from '../systems/PreCombatController.js';
 import { PlayerDeathHandler } from '../systems/PlayerDeathHandler.js';
-import { pickProjectileType } from './CombatHelpers.js';
+import { waveTrace } from '../debug/WaveTrace.js';
 import {
   ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES,
   WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
@@ -157,6 +157,51 @@ export class CombatSceneManager {
     this._preCombat.start(this._death.started);
   }
 
+  // Pre-compila programas WebGL + uploads de geometry para cada tipo de enemy.
+  // renderer.compile() solo procesa programs si el objeto está visible+inFrustum,
+  // por eso forzamos `frustumCulled=false` y posición frente a la cámara.
+  // Además hacemos un render real a una RT temporal para garantizar JIT completo
+  // (upload de VBOs, init de uniforms, link de programa, evaluación de defines).
+  warmShaders(renderer, camera) {
+    if (!renderer || !camera) return;
+    const t0 = performance.now();
+
+    // Posición frente a la cámara — dentro del frustum garantizado.
+    const camPos  = camera.position;
+    const fwd     = new THREE.Vector3();
+    camera.getWorldDirection(fwd);
+    const warmBase = camPos.clone().addScaledVector(fwd, 8);
+
+    const acquired = [];
+    Object.values(ENEMY_TYPES).forEach((type, i) => {
+      const pos = warmBase.clone();
+      pos.x += (i - 5) * 1.5; // spread lateral para que cada uno tenga su propio AABB
+      const e = this._pool.acquire('warm', pos, type, 0);
+      // Forzar inclusión en render list: visible + sin culling.
+      e._group.visible = true;
+      e._group.traverse(obj => { obj.frustumCulled = false; });
+      acquired.push(e);
+    });
+
+    try {
+      // Pass 1: compile programs.
+      renderer.compile(this.scene, camera);
+      // Pass 2: render real → fuerza upload de VBOs + ejecución del program GL.
+      // Usamos una WebGLRenderTarget temporal para no flashear pantalla.
+      const rt = new THREE.WebGLRenderTarget(64, 64);
+      const prevTarget = renderer.getRenderTarget();
+      renderer.setRenderTarget(rt);
+      renderer.render(this.scene, camera);
+      renderer.setRenderTarget(prevTarget);
+      rt.dispose();
+    } catch (err) {
+      console.warn('[warmShaders] render warm falló:', err);
+    }
+
+    for (const e of acquired) this._pool.release(e);
+    console.info(`[warmShaders] precompilados ${acquired.length} tipos en ${(performance.now() - t0).toFixed(1)}ms`);
+  }
+
   // ── Internal ──────────────────────────────────────────────────────────────
 
   _buildPlayer() {
@@ -168,31 +213,47 @@ export class CombatSceneManager {
 
   _startWave() {
     this.wave++;
-    const speed = ENEMY_BASE_SPEED + (this.wave - 1) * ENEMY_SPEED_SCALE;
+    waveTrace.beginWave(this.wave);
+    // Speed casi plana — la dificultad real viene de spawn density + word length.
+    // Wave1=2.0, wave10≈2.14, wave30≈2.20. Cap MAX=2.6 nunca dispara con scout (1.25×).
+    const speed = ENEMY_BASE_SPEED + Math.min(0.25, Math.log2(this.wave + 1) * 0.05);
     EventBus.emit(EventTypes.WAVE_START, { waveNumber: this.wave });
     Bridge.setState({ wave: this.wave });
-    this._spawn.beginWave(speed, () => this._death.started || this._preCombat.isActive);
+    waveTrace.bracket('SpawnDirector.beginWave', () =>
+      this._spawn.beginWave(speed, () => this._death.started || this._preCombat.isActive)
+    );
   }
 
   _spawnOne(type, speed, word, pos) {
-    const enemy = this._pool.acquire(word, pos, type, speed);
-    const token = new WordToken(enemy);
+    const t0 = performance.now();
+    const enemy = waveTrace.bracket('Pool.acquire', () => this._pool.acquire(word, pos, type, speed), { type });
+    if (this.enemies.includes(enemy)) return;
+    const token = waveTrace.bracket('new WordToken', () => new WordToken(enemy));
     this.enemies.push(enemy);
     this.tokens.push(token);
-    this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
+    waveTrace.bracket('hudCanvas.setTokens', () =>
+      this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active))
+    );
     EventBus.emit(EventTypes.ENEMY_SPAWNED, { id: enemy.id, word, position: pos });
-    this._hud.publish(this.enemies, this.lexicon.currentTargetId);
+    waveTrace.bracket('hud.publish', () =>
+      this._hud.publish(this.enemies, this.lexicon.currentTargetId)
+    );
+    waveTrace.mark('_spawnOne.total', { type, ms: +(performance.now() - t0).toFixed(3) });
   }
 
   _fireAt(enemy) {
     if (!this._player || !enemy?.active) return;
-    const onHit = () => enemy.hitFlash?.();
     const { flowActive } = Bridge.peekState();
-    const shot  = flowActive
-      ? new LexBeam(this._player.muzzlePosition, enemy, onHit, this._player.laserColor)
-      : new Projectile(this._player.muzzlePosition, enemy, onHit, pickProjectileType(), this._player.laserColor, flowActive);
-    shot.addToScene(this.scene);
-    this.projectiles.push(shot);
+    const shots = this._player.getMuzzleShots();
+    shots.forEach((m, i) => {
+      // Solo el primer cañón dispara hitFlash para evitar N flashes por ráfaga.
+      const onHit = (i === 0) ? () => enemy.hitFlash?.() : () => {};
+      const shot  = flowActive
+        ? new LexBeam(m.anchor ?? m.origin, enemy, onHit, m.color, m.scale)
+        : new Projectile(m.origin, enemy, onHit, m.color, m.scale);
+      shot.addToScene(this.scene);
+      this.projectiles.push(shot);
+    });
     this._player.fireAnim();
   }
 
@@ -239,7 +300,7 @@ export class CombatSceneManager {
       intensity: 1.0,
     });
     enemy.setTargeted(false);
-    this._pool.release(enemy);
+    this._releaseEnemy(enemy);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     this._player?.clearTarget();
@@ -256,7 +317,7 @@ export class CombatSceneManager {
       word:  enemy.word,
       intensity: 0.7,
     });
-    this._pool.release(enemy);
+    this._releaseEnemy(enemy);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     if (id === this.lexicon.currentTargetId) {
@@ -275,9 +336,25 @@ export class CombatSceneManager {
     this._death.start();
   }
 
+  // Release helper: remueve enemy del array activo Y del token list ANTES
+  // de devolverlo al pool. Sin esto, pool reuses la misma instancia y push
+  // duplica refs en `this.enemies` → PhysicsSystem.update lo mueve N veces/frame.
+  _releaseEnemy(enemy) {
+    const idx = this.enemies.indexOf(enemy);
+    if (idx !== -1) this.enemies.splice(idx, 1);
+    // Dedupe defensivo — si el mismo enemy ya estaba duplicado, limpia todas las refs.
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      if (this.enemies[i] === enemy) this.enemies.splice(i, 1);
+    }
+    // Tokens: remueve los apuntando a este enemy.
+    this.tokens = this.tokens.filter(t => t.enemy !== enemy);
+    this._pool.release(enemy);
+  }
+
   _pruneDeadEnemies() {
-    if (this.enemies.length     > 200) this.enemies     = this.enemies.filter(e => e.active);
-    if (this.tokens.length      > 200) this.tokens      = this.tokens.filter(t => t.enemy.active);
+    // Safety net: filtra inactivos si por alguna razón quedaron en el array.
+    if (this.enemies.length     > 100) this.enemies     = this.enemies.filter(e => e.active);
+    if (this.tokens.length      > 100) this.tokens      = this.tokens.filter(t => t.enemy.active);
     if (this.projectiles.length > 100) this.projectiles = this.projectiles.filter(pp => pp.active);
   }
 }

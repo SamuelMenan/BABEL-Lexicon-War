@@ -2,6 +2,7 @@
 // Mide FPS y tiempo de bloqueo del main thread (frame work duration en ms).
 
 import { Bridge } from '../../shared/bridge.js';
+import { waveTrace } from '../debug/WaveTrace.js';
 
 const PERF_PUBLISH_MS = 250; // 4 Hz
 
@@ -46,6 +47,8 @@ export class GameLoop {
       system.update?.(delta);
     }
     const workMs = performance.now() - workStart;
+    // Real frame duration = delta*1000 (incluye GPU del frame anterior + JS).
+    waveTrace.recordFrame(delta * 1000);
 
     this._frameCount++;
     this._publishAcc += (delta * 1000);

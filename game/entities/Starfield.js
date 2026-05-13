@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
-import { BLOOM_LAYER } from '../../shared/constants.js';
 
 export class Starfield {
   constructor(scene) {
@@ -21,7 +20,6 @@ export class Starfield {
       map: getSoftGlowTexture(), alphaMap: getSoftGlowTexture(),
       depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
     }));
-    stars.layers.enable(BLOOM_LAYER);
     this._scene.add(stars);
   }
 
@@ -42,7 +40,6 @@ export class Starfield {
       map: getSoftGlowTexture(), alphaMap: getSoftGlowTexture(),
       depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
     }));
-    pts.layers.enable(BLOOM_LAYER);
     this._scene.add(pts);
   }
 
@@ -62,7 +59,6 @@ export class Starfield {
       });
       const band = new THREE.Points(geo, mat);
       band.frustumCulled = false;
-      band.layers.enable(BLOOM_LAYER);
       this._scene.add(band);
       return mat;
     };
@@ -98,7 +94,6 @@ export class Starfield {
   addNebula(x, y, z, color, opacity, radius, side = THREE.FrontSide) {
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side, depthWrite: false });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), mat);
-    mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x, y, z);
     this._scene.add(mesh);
   }
@@ -116,7 +111,6 @@ export class Starfield {
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide,
     });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), mat);
-    mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x, y, z);
     this._scene.add(mesh);
   }
@@ -139,7 +133,6 @@ export class Starfield {
       new THREE.MeshBasicMaterial({ color: colorTop, transparent: true, opacity: 0.18, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending })
     );
     atm.position.set(x, y, z);
-    atm.layers.enable(BLOOM_LAYER);
     this._scene.add(atm);
   }
 
@@ -149,7 +142,6 @@ export class Starfield {
       new THREE.TorusGeometry(radius, 0.06, 6, 48),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18 })
     );
-    mesh.layers.enable(BLOOM_LAYER);
     mesh.position.set(x, y, z);
     mesh.rotation.x = Math.PI / 2;
     this._scene.add(mesh);

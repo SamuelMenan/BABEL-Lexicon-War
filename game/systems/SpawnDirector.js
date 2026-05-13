@@ -26,17 +26,26 @@ export class SpawnDirector {
     this._consecutiveCount    = 0;
     this._apexSpawnedThisWave = 0;
     this._recentWords         = [];
+    // Budget de palabras largas (>=9 chars) por oleada — anti-castigo injusto.
+    this._longInWaveMax       = 2;
+    this._longInWave          = 0;
+    this._longCooldownSpawns  = 2;
+    this._sinceLastLong       = 999;
+    this._waveSpawnPositions  = []; // posiciones de la oleada — evita overlap
     // Staggered spawn queue (frame-based, no setTimeout)
     this._spawnQueue   = []; // [{type, speed}]
     this._spawnAcc     = 0;
-    this._spawnIntervalMs = 90;   // ms entre spawns dentro de una oleada
-    this._maxPerTick      = 6;    // hard cap por frame
+    this._spawnIntervalMs = 450;  // ms entre spawns — cadencia original
+    this._maxPerTick      = 2;    // hard cap por frame
     this._isBlocked       = () => false;
   }
 
   // isBlocked: () => bool — checked at each staggered spawn tick
   beginWave(speed, isBlocked) {
     this._apexSpawnedThisWave = 0;
+    this._longInWave          = 0;
+    this._sinceLastLong       = 999;
+    this._waveSpawnPositions.length = 0;
     const wave        = this._getWave();
     const factors     = this._computePlayerFactors();
     const budget      = this._computeSpawnBudget(factors, wave);
@@ -208,10 +217,19 @@ export class SpawnDirector {
   _spawnOneEntry({ type, speed }) {
     const activeWords = this._getActiveWords();
     const exclude     = [...new Set([...this._recentWords, ...activeWords])];
-    const word        = randomWord(this._getWave(), exclude);
+    // Decide tier hint: si ya hay 2 largas o cooldown activo, forzar short/medium.
+    const blockLong = this._longInWave >= this._longInWaveMax
+                   || this._sinceLastLong < this._longCooldownSpawns;
+    const tierHint = blockLong ? (Math.random() < 0.55 ? 'medium' : 'short') : null;
+    const word     = randomWord(this._getWave(), exclude, tierHint);
+    if (word.length >= 9) { this._longInWave++; this._sinceLastLong = 0; }
+    else                  { this._sinceLastLong++; }
     this._recentWords.push(word);
     if (this._recentWords.length > 10) this._recentWords.shift();
-    const pos = randomSpawnPosition();
+    const pos = randomSpawnPosition(this._waveSpawnPositions);
+    this._waveSpawnPositions.push(pos.clone());
+    // Cap memoria — solo trackear las últimas 24 posiciones (suficiente para wave size).
+    if (this._waveSpawnPositions.length > 24) this._waveSpawnPositions.shift();
     this._spawnOne(type, speed, word, pos);
   }
 }

@@ -75,6 +75,7 @@ export async function initGame(mountEl) {
 
       const sm = new CombatSceneManager(engine.scene, _lexicon, _physics, hudCanvas, engine.camController);
       sm.init();
+      sm.warmShaders(engine.renderer, engine.camera);
       engine.invalidateBloomCache();
 
       _physics.setEnemies(sm.enemies);

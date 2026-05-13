@@ -16,8 +16,9 @@ export function tuneLoadedMesh(node) {
   }
 }
 
-// setSocketPositions receives { centerX, centerY, frontZ } and is provided by the ship class.
-export function afterLoadedModel(modelRoot, setSocketPositions) {
+// Limpia helpers/planos sueltos del GLB. Sockets de muzzle/flash legacy
+// eliminados: los cañones ahora salen de SHIP_MUZZLE_CONFIGS (hangar).
+export function afterLoadedModel(modelRoot) {
   const rootBox    = new THREE.Box3().setFromObject(modelRoot);
   const rootCenter = rootBox.getCenter(new THREE.Vector3());
   const rootSize   = rootBox.getSize(new THREE.Vector3());
@@ -58,8 +59,4 @@ export function afterLoadedModel(modelRoot, setSocketPositions) {
     }
   });
 
-  const finalBox = new THREE.Box3().setFromObject(modelRoot);
-  if (!finalBox.isEmpty()) {
-    setSocketPositions({ centerX: 0, centerY: 0, frontZ: finalBox.min.z - 0.15 });
-  }
 }

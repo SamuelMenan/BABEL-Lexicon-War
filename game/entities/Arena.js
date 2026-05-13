@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
-import { BLOOM_LAYER } from '../../shared/constants.js';
 import { Moon } from './Moon.js';
 import { Starfield } from './Starfield.js';
 
@@ -160,7 +159,6 @@ export class Arena {
     sceneRoot.traverse((node) => {
       if (!node.isMesh) return;
       node.castShadow = false; node.receiveShadow = false; node.frustumCulled = false;
-      node.layers.enable(BLOOM_LAYER);
       const mats = Array.isArray(node.material) ? node.material : [node.material];
       mats.forEach((mat) => {
         if (!mat) return;

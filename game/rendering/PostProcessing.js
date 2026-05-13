@@ -46,7 +46,7 @@ export class PostProcessing {
     const vignettePass = this._buildVignettePass();
 
     if (this._bloomEnabled) {
-      this._initBloomPath(w, h, 1.0, vignettePass);
+      this._initBloomPath(w, h, profile.bloomResScale ?? 1.0, vignettePass);
     } else {
       this._initSimplePath(vignettePass);
     }
@@ -109,7 +109,8 @@ export class PostProcessing {
     this._bloomComposer.setSize(bw, bh);
     this._bloomComposer.addPass(renderPass);
 
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.18, 0.06, 0.92);
+    // Bloom muy suave — solo halos brillantes en VFX, sin lavar geometría de naves.
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.06, 0.04, 0.96);
     this._bloomComposer.addPass(bloomPass);
 
     const mixPass = new ShaderPass(
@@ -231,32 +232,12 @@ export class PostProcessing {
       return;
     }
 
-    // Rebuild non-bloom object list once per scene setup, never per frame.
-    if (this._nonBloomCacheDirty) {
-      this._nonBloomCache = [];
-      this._scene.traverse((obj) => {
-        if ((obj.isMesh || obj.isLine || obj.isPoints) && !this._bloomLayer.test(obj.layers)) {
-          this._nonBloomCache.push(obj);
-        }
-      });
-      this._nonBloomCacheDirty = false;
-    }
-
-    const cache = this._nonBloomCache;
-    const len   = cache.length;
-    if (this._cachedMaterials.length < len) this._cachedMaterials.length = len;
-
-    for (let i = 0; i < len; i++) {
-      const obj = cache[i];
-      this._cachedMaterials[i] = obj.material;
-      obj.material = obj.isPoints ? this._darkPointsMaterial
-        : obj.isLine ? this._darkLineMaterial
-        : this._darkMeshMaterial;
-    }
+    // Bloom selectivo via camera layer mask: solo objetos con BLOOM_LAYER habilitada
+    // contribuyen al glow. Resto se renderiza black-clear en el bloom RT (sin material swap).
+    const prevMask = this._camera.layers.mask;
+    this._camera.layers.set(BLOOM_LAYER);
     this._bloomComposer.render();
-    for (let i = 0; i < len; i++) {
-      cache[i].material = this._cachedMaterials[i];
-    }
+    this._camera.layers.mask = prevMask;
     this._finalComposer.render();
   }
 }

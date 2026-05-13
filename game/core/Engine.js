@@ -50,7 +50,9 @@ export class Engine {
 
   _initRenderer() {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Cap pixelRatio a 1.5: retina renderea 2.25× píxeles vs 4× con cap 2.
+    // ~45% menos fragment work, diferencia visual sutil (texto/UI siguen nítidos via DOM).
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(COLORS.BACKGROUND);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;

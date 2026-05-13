@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { BLOOM_LAYER, COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
+import { COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
 import { getSoftGlowTexture } from '../../shared/softVisuals.js';
 import {
   CFGS,
@@ -14,6 +14,8 @@ import {
   sharedCore,
 } from '../rendering/EnemyGeometryCache.js';
 import { createBehavior } from './enemyBehaviors/index.js';
+import { QUALITY, getQualityTier } from '../../shared/qualitySettings.js';
+import { waveTrace } from '../debug/WaveTrace.js';
 
 // Re-exports — preserve external import surface (SpawnDirector, CombatSceneManager).
 export { ENEMY_TYPES, TYPE_META, pickEnemyType } from '../data/enemyConfigs.js';
@@ -28,8 +30,9 @@ export class CombatEnemy extends Entity {
     this.reset(word, position, type, speed);
   }
 
-  // Re-init para Object Pooling: reutiliza Group + behaviors slots, recrea materiales
-  // (geometrías permanecen cacheadas en EnemyGeometryCache — sin GC pressure).
+  // Re-init para Object Pooling. Fast path: si el type no cambió desde el último
+  // build, reusamos materiales/meshes — solo restauramos estado (color, opacidad,
+  // intensidad). Evita dispose+rebuild de N materiales en cada acquire del pool.
   reset(word, position, type = ENEMY_TYPES.SCOUT, speed = ENEMY_BASE_SPEED) {
     this.id        = crypto.randomUUID();
     this.word      = word;
@@ -40,18 +43,51 @@ export class CombatEnemy extends Entity {
     this._cfg      = CFGS[type] ?? CFGS.scout;
     this._t        = Math.random() * Math.PI * 2;
 
-    this._disposeOwnMaterials();
-    this._group.clear();
+    if (this._lastBuiltType !== type) {
+      waveTrace.bracket('reset.fullRebuild', () => {
+        this._disposeOwnMaterials();
+        this._group.clear();
+        this._rings.length    = 0;
+        this._ringMats.length = 0;
+        this._behavior = createBehavior(type);
+        this._build();
+        this._lastBuiltType = type;
+      }, { type, prev: this._lastBuiltType });
+    } else {
+      waveTrace.bracket('reset.fastPath', () => {
+        this._behavior = createBehavior(type);
+        this._restoreMaterialState();
+        // Restaurar frustumCulled (warmShaders puede haberlo desactivado).
+        this._group.traverse(o => { o.frustumCulled = true; });
+      }, { type });
+    }
+
     this._group.scale.setScalar(1);
     this._group.rotation.set(0, 0, 0);
-    this._rings.length    = 0;
-    this._ringMats.length = 0;
-
-    this._behavior = createBehavior(type);
-    this._build();
     if (position) this._group.position.copy(position);
     this._group.visible = true;
     return this;
+  }
+
+  // Restaura color/opacidad/intensidad a valores del cfg — limpia mutaciones
+  // dejadas por behaviors (phantom phase, sentinel pulse) o setTargeted previo.
+  _restoreMaterialState() {
+    const cfg = this._cfg;
+    const c   = cfg.color;
+    if (this._lineMat) {
+      this._lineMat.color.set(c);
+      this._lineMat.opacity = cfg.hullOpacity ?? 0.9;
+    }
+    if (this._coreMat) {
+      this._coreMat.color.set(c);
+      this._coreMat.emissive.set(c);
+      this._coreMat.emissiveIntensity = cfg.emissiveInt;
+    }
+    for (const m of this._ringMats) {
+      m.color.set(c); m.emissive.set(c);
+      m.emissiveIntensity = cfg.emissiveInt * 0.6;
+    }
+    if (this._glow?.material) this._glow.material.opacity = cfg.glowOp;
   }
 
   _disposeOwnMaterials() {
@@ -72,37 +108,51 @@ export class CombatEnemy extends Entity {
     const cfg   = this._cfg;
     const color = cfg.color;
 
-    // hull edges - USE CACHE
-    const edges = getSharedEdges(this._type, cfg.geo);
+    // hull edges - USE CACHE (tesseract usa prebuiltEdges)
+    const edges = waveTrace.bracket('_build.getSharedEdges',
+      () => getSharedEdges(this._type, cfg.geo, !!cfg.prebuiltEdges),
+      { type: this._type });
+    // Solo marca transparent si opacity<1 (alpha sort cuesta — evitar cuando es opaco).
+    const hullOp = cfg.hullOpacity ?? 0.9;
     this._lineMat = new THREE.LineBasicMaterial({
-      color, transparent: true, opacity: cfg.hullOpacity ?? 0.9,
+      color,
+      transparent: hullOp < 0.98,
+      opacity: hullOp,
     });
     const hull = new THREE.LineSegments(edges, this._lineMat);
     this._group.add(hull);
 
-    // core - USE CACHE
+    // core: nodo wireframe sólido (sin esfera opaca lavando geometría interna).
     this._coreMat = new THREE.MeshStandardMaterial({
       color, emissive: color, emissiveIntensity: cfg.emissiveInt,
-      transparent: true, opacity: 0.55,
+      roughness: 0.6, metalness: 0.25, flatShading: true,
+      wireframe: true,
     });
     this._core = new THREE.Mesh(sharedCore, this._coreMat);
-    this._core.scale.setScalar(cfg.coreR); // scale the unit sphere
+    this._core.scale.setScalar(cfg.coreR * 0.55); // núcleo más pequeño = lectura limpia
     this._group.add(this._core);
 
-    // glow sprite
-    this._glow = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: getSoftGlowTexture(), color: cfg.glowColor,
-      transparent: true, opacity: cfg.glowOp,
-      depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
-    this._glow.scale.set(cfg.glowSize, cfg.glowSize, 1);
-    this._group.add(this._glow);
+    // Glow sprite recortado: evita la lectura de esfera. Se reserva para apex en tier HIGH.
+    const tier = getQualityTier();
+    const showGlow = this._type === 'apex' && tier === QUALITY.HIGH;
+    if (showGlow) {
+      this._glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: getSoftGlowTexture(), color: cfg.glowColor,
+        transparent: true, opacity: cfg.glowOp,
+        depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      this._glow.scale.set(cfg.glowSize, cfg.glowSize, 1);
+      this._group.add(this._glow);
+    } else {
+      this._glow = null;
+    }
 
     // rings - USE CACHE
     cfg.rings.forEach(rd => {
       const rg  = getSharedRing(rd.r, rd.tube);
       const mat = new THREE.MeshStandardMaterial({
         color, emissive: color, emissiveIntensity: cfg.emissiveInt * 0.6,
+        roughness: 0.5, metalness: 0.12, flatShading: true,
       });
       const mesh = new THREE.Mesh(rg, mat);
       const grp = new THREE.Group();
@@ -166,7 +216,12 @@ export class CombatEnemy extends Entity {
     const cfg = this._cfg;
 
     CombatEnemy._tempDir.subVectors(CombatEnemy.PLAYER_POS, this._group.position).normalize();
-    this._group.position.addScaledVector(CombatEnemy._tempDir, this.speed * cfg.speedMult * delta);
+    // Clamp velocidad efectiva: [MIN, MAX]. Stored para que behaviors NO usen
+    // `this.speed` directo (eso bypassa cap en waves altas).
+    const raw      = this.speed * cfg.speedMult;
+    this._effSpeed = Math.min(CombatEnemy.MAX_APPROACH_SPEED,
+                              Math.max(CombatEnemy.MIN_APPROACH_SPEED, raw));
+    this._group.position.addScaledVector(CombatEnemy._tempDir, this._effSpeed * delta);
 
     this._behavior.update(this, delta, CombatEnemy._tempDir);
 
@@ -202,3 +257,7 @@ export class CombatEnemy extends Entity {
 
 CombatEnemy.PLAYER_POS = new THREE.Vector3(0, 0.2, 2);
 CombatEnemy._tempDir = new THREE.Vector3();
+// Clamp velocidad efectiva (units/s). Playable a 80-100 wpm. MAX bajo a propósito
+// — dificultad escala con cantidad/longitud de palabras, no con velocidad.
+CombatEnemy.MIN_APPROACH_SPEED = 1.2;
+CombatEnemy.MAX_APPROACH_SPEED = 2.6;

@@ -8,6 +8,9 @@
   justify-content: center;
   background: radial-gradient(circle at center, rgba(0,255,204,0.2) 0%, rgba(0,8,20,0.76) 45%, rgba(0,0,0,0.92) 100%);
   animation: wave-fullscreen-in 1.45s ease forwards;
+  /* Forzar GPU layer — animar solo composite (opacity/transform), nunca paint */
+  will-change: opacity, transform;
+  transform: translateZ(0);
 }
 
 .wave-fullscreen-danger {
@@ -17,12 +20,13 @@
 .wave-fullscreen-inner {
   text-align: center;
   color: #e6ffff;
-  text-shadow: 0 0 24px rgba(0,255,204,0.8), 0 0 72px rgba(0,255,204,0.5);
+  /* text-shadow grande (72px) era costoso en iGPU — reducido manteniendo glow */
+  text-shadow: 0 0 18px rgba(0,255,204,0.8), 0 0 36px rgba(0,255,204,0.45);
 }
 
 .wave-fullscreen-danger .wave-fullscreen-inner {
   color: #ffe8ea;
-  text-shadow: 0 0 24px rgba(255,94,110,0.86), 0 0 72px rgba(255,94,110,0.46);
+  text-shadow: 0 0 18px rgba(255,94,110,0.86), 0 0 36px rgba(255,94,110,0.42);
 }
 
 .wave-fullscreen-tag {

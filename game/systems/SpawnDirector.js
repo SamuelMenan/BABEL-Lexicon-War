@@ -26,7 +26,12 @@ export class SpawnDirector {
     this._consecutiveCount    = 0;
     this._apexSpawnedThisWave = 0;
     this._recentWords         = [];
-    this._spawnTimers         = [];
+    // Staggered spawn queue (frame-based, no setTimeout)
+    this._spawnQueue   = []; // [{type, speed}]
+    this._spawnAcc     = 0;
+    this._spawnIntervalMs = 90;   // ms entre spawns dentro de una oleada
+    this._maxPerTick      = 6;    // hard cap por frame
+    this._isBlocked       = () => false;
   }
 
   // isBlocked: () => bool — checked at each staggered spawn tick
@@ -38,12 +43,30 @@ export class SpawnDirector {
     const weights     = this._computeDynamicWeights(factors, wave);
     const adjusted    = this._applyAntiRng(weights, wave);
     const composition = this._buildWaveComposition(adjusted, budget);
-    this._scheduleSpawns(composition, speed, isBlocked);
+    this._enqueueSpawns(composition, speed, isBlocked);
+  }
+
+  // CombatSceneManager invoca esto cada frame con delta(s).
+  tick(delta) {
+    if (this._spawnQueue.length === 0) return;
+    this._spawnAcc += delta * 1000;
+    let spawned = 0;
+    while (
+      this._spawnQueue.length > 0 &&
+      this._spawnAcc >= this._spawnIntervalMs &&
+      spawned < this._maxPerTick
+    ) {
+      this._spawnAcc -= this._spawnIntervalMs;
+      const next = this._spawnQueue.shift();
+      if (this._isBlocked()) { this._spawnQueue.length = 0; this._spawnAcc = 0; return; }
+      this._spawnOneEntry(next);
+      spawned++;
+    }
   }
 
   dispose() {
-    this._spawnTimers.forEach(t => clearTimeout(t));
-    this._spawnTimers = [];
+    this._spawnQueue.length = 0;
+    this._spawnAcc = 0;
   }
 
   // ── Player factors ────────────────────────────────────────────────────────
@@ -175,20 +198,20 @@ export class SpawnDirector {
     return composition;
   }
 
-  _scheduleSpawns(composition, speed, isBlocked) {
-    composition.forEach((type, i) => {
-      const t = setTimeout(() => {
-        this._spawnTimers = this._spawnTimers.filter(x => x !== t);
-        if (isBlocked()) return;
-        const activeWords = this._getActiveWords();
-        const exclude     = [...new Set([...this._recentWords, ...activeWords])];
-        const word        = randomWord(this._getWave(), exclude);
-        this._recentWords.push(word);
-        if (this._recentWords.length > 10) this._recentWords.shift();
-        const pos = randomSpawnPosition();
-        this._spawnOne(type, speed, word, pos);
-      }, i * 450);
-      this._spawnTimers.push(t);
-    });
+  _enqueueSpawns(composition, speed, isBlocked) {
+    this._isBlocked = isBlocked;
+    for (const type of composition) this._spawnQueue.push({ type, speed });
+    // primer spawn casi inmediato
+    this._spawnAcc = this._spawnIntervalMs;
+  }
+
+  _spawnOneEntry({ type, speed }) {
+    const activeWords = this._getActiveWords();
+    const exclude     = [...new Set([...this._recentWords, ...activeWords])];
+    const word        = randomWord(this._getWave(), exclude);
+    this._recentWords.push(word);
+    if (this._recentWords.length > 10) this._recentWords.shift();
+    const pos = randomSpawnPosition();
+    this._spawnOne(type, speed, word, pos);
   }
 }

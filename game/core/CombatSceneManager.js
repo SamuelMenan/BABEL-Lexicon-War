@@ -1,5 +1,6 @@
 ﻿import * as THREE from 'three';
 import { CombatEnemy, ENEMY_TYPES } from '../entities/CombatEnemy.js';
+import { EnemyPool } from './EnemyPool.js';
 import { CombatPlayerShip } from '../entities/CombatPlayerShip.js';
 import { Projectile } from '../entities/Projectile.js';
 import { LexBeam } from '../entities/LexBeam.js';
@@ -31,6 +32,7 @@ export class CombatSceneManager {
     this._unsubs = []; this._player = null; this._particles = null;
     this._arena     = new Arena(scene);
     this._resources = new ProgressionSystem();
+    this._pool      = new EnemyPool(scene, { size: 500 });
 
     this._hud = new HudPublisher();
 
@@ -68,6 +70,10 @@ export class CombatSceneManager {
     this._arena.build(ACTIVE_ARENA_SCENARIO);
     this._buildPlayer();
     this._particles = new ParticleEmitter(this.scene);
+    // Pre-instancia enemigos progresivamente — evita lag spike en primera oleada.
+    if (this._pool.size === 0) {
+      this._pool.prewarmProgressive(500, 10);
+    }
     this._unsubs.push(
       EventBus.on(EventTypes.WORD_COMPLETED,            (pp) => this._onWordCompleted(pp)),
       EventBus.on(EventTypes.ENEMY_REACHED,             (pp) => this._onEnemyReached(pp)),
@@ -87,9 +93,8 @@ export class CombatSceneManager {
 
     this.enemies.forEach(e => {
       if (!e) return;
-      e.active = false;
       e.setTargeted?.(false);
-      e.removeFromScene?.(this.scene);
+      this._pool.release(e);
     });
     this.enemies = [];
     this.tokens  = [];
@@ -103,7 +108,7 @@ export class CombatSceneManager {
     this.hudCanvas?.setTokens?.([]);
     this.hudCanvas?.setOccluders?.([]);
     this.lexicon?.clearTarget?.();
-    this._hud.publish([], null);
+    this._hud.flush([], null);
 
     this._unsubs.forEach(fn => fn());
     this._unsubs = [];
@@ -136,6 +141,7 @@ export class CombatSceneManager {
     this._resources.update(delta);
 
     this._hud.tick(delta, this.enemies, this.lexicon.currentTargetId);
+    this._spawn.tick(delta);
     this._updateProjectiles(delta);
     this._autoTarget();
     this._pruneDeadEnemies();
@@ -169,9 +175,8 @@ export class CombatSceneManager {
   }
 
   _spawnOne(type, speed, word, pos) {
-    const enemy = new CombatEnemy(word, pos, speed, type);
+    const enemy = this._pool.acquire(word, pos, type, speed);
     const token = new WordToken(enemy);
-    enemy.addToScene(this.scene);
     this.enemies.push(enemy);
     this.tokens.push(token);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
@@ -233,7 +238,8 @@ export class CombatSceneManager {
       word:  enemy.word,
       intensity: 1.0,
     });
-    enemy.active = false; enemy.setTargeted(false); enemy.removeFromScene(this.scene);
+    enemy.setTargeted(false);
+    this._pool.release(enemy);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     this._player?.clearTarget();
@@ -250,7 +256,7 @@ export class CombatSceneManager {
       word:  enemy.word,
       intensity: 0.7,
     });
-    enemy.active = false; enemy.removeFromScene(this.scene);
+    this._pool.release(enemy);
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     if (id === this.lexicon.currentTargetId) {

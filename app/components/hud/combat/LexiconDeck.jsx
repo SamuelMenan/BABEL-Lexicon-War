@@ -3,7 +3,15 @@ import WarningTriangle from "../warnings/WarningTriangle.jsx";
 import { getProximityLevel } from "../../../../game/systems/hudUtils.js";
 
 export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier }) {
-  const sorted = [...(combatEnemies || [])].sort((a, b) => a.distance - b.distance);
+  // Dedupe defensivo por id (evita duplicación si el payload llega con repetidos).
+  const seen = new Set();
+  const unique = [];
+  for (const e of (combatEnemies || [])) {
+    if (!e || !e.id || seen.has(e.id)) continue;
+    seen.add(e.id);
+    unique.push(e);
+  }
+  const sorted = unique.sort((a, b) => a.distance - b.distance);
   const flowColor = "var(--col-multiplier, var(--col-active))";
 
   return (

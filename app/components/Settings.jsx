@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from "react";
+import { EXECUTION_MODE } from "../../shared/constants.js";
+import { workerBridge } from "../../game/workers/workerBridge.js";
 
 const DEFAULT_SETTINGS = {
   visuals: {
@@ -19,6 +21,7 @@ const DEFAULT_SETTINGS = {
     wordSpeed:         50,
     autoRepeat:        false,
     showPhonetics:     false,
+    executionMode:     EXECUTION_MODE.NORMAL,
   },
 };
 
@@ -133,6 +136,10 @@ export default function Settings({ onClose }) {
     setS(prev => {
       const next = { ...prev, [section]: { ...prev[section], [key]: val } };
       saveSettings(next);
+      if (section === 'protocol' && key === 'executionMode') {
+        workerBridge.setMode(val);
+        window.dispatchEvent(new CustomEvent('babel:executionMode', { detail: val }));
+      }
       return next;
     });
   }, []);
@@ -257,6 +264,16 @@ export default function Settings({ onClose }) {
               </Row>
               <Row label="Mostrar Fonética" hint="Transcripción fonética bajo cada palabra">
                 <SciToggle value={s.protocol.showPhonetics} onChange={v => set('protocol', 'showPhonetics', v)} />
+              </Row>
+              <Row label="Modo de Procesamiento Léxico" hint="Normal: main thread · Paralelo: Web Worker (descarga el frame)">
+                <SciSelect
+                  options={[
+                    { value: EXECUTION_MODE.NORMAL,   label: 'Normal' },
+                    { value: EXECUTION_MODE.PARALLEL, label: 'Paralelo (WW)' },
+                  ]}
+                  value={s.protocol.executionMode}
+                  onChange={v => set('protocol', 'executionMode', v)}
+                />
               </Row>
             </div>
           )}

@@ -5,10 +5,13 @@ import {
   WPM_WINDOW_MS, WPM_MIN_CHARS, WORD_ERROR_PENALTY, PLAYER_MAX_HP,
   FLOW_MAX, FLOW_GAIN_PER_LETTER, FLOW_DECAY_IDLE, FLOW_DECAY_ACTIVE,
   FLOW_PENALTY_HIT, FLOW_PENALTY_MISS, FLOW_HEAL_RATE, FLOW_COOLDOWN_MS,
+  DEFAULT_EXECUTION_MODE,
 } from '../../shared/constants.js';
+import { workerBridge } from '../workers/workerBridge.js';
 
 const FLOW_IDLE_THRESHOLD_MS = 1500;
 const FLOW_PUBLISH_HZ        = 10;
+const STATS_PUBLISH_HZ       = 10; // wpm/accuracy: 10Hz, no 60Hz
 
 export class LexiconSystem {
   constructor() {
@@ -19,7 +22,20 @@ export class LexiconSystem {
     this._combo = 0; this._wordHadError = false; this._flowProgressAcc = 0;
     this._flowEnterTime = 0; this._flowWordsTyped = 0;
     this._unsubs = [];
+    this._matchInflight = false;
+    this._statsAcc = 0;
+    this._lastWpm = -1; this._lastAcc = -1;
+    workerBridge.setMode(DEFAULT_EXECUTION_MODE);
   }
+  // Delegate fuzzy/multi-word matching to workerBridge (NORMAL or PARALLEL).
+  // typedText: string, activeWords: [{id,word}] -> Promise<{matches, collapsed}>
+  async matchInput(typedText, activeWords) {
+    if (this._matchInflight) return null;
+    this._matchInflight = true;
+    try { return await workerBridge.processInput(typedText, activeWords); }
+    finally { this._matchInflight = false; }
+  }
+  setExecutionMode(mode) { workerBridge.setMode(mode); }
   init() {
     this._unsubs.push(
       EventBus.on(EventTypes.KEY_TYPED,       (p) => this._onKey(p)),
@@ -34,8 +50,16 @@ export class LexiconSystem {
     if (this._flowCooldownTimer) { clearTimeout(this._flowCooldownTimer); this._flowCooldownTimer = null; }
   }
   update(delta) {
-    const wpm = this._calcWPM(); const accuracy = this._calcAccuracy();
-    Bridge.setState({ wpm, accuracy }); this._updateFlow(delta);
+    this._statsAcc += delta;
+    if (this._statsAcc >= 1 / STATS_PUBLISH_HZ) {
+      this._statsAcc = 0;
+      const wpm = this._calcWPM(); const accuracy = this._calcAccuracy();
+      if (wpm !== this._lastWpm || accuracy !== this._lastAcc) {
+        this._lastWpm = wpm; this._lastAcc = accuracy;
+        Bridge.setState({ wpm, accuracy });
+      }
+    }
+    this._updateFlow(delta);
   }
   setTarget(enemyId, word) {
     if (!word || typeof word !== 'string') { console.warn('[LexiconSystem] invalid word', word); return; }

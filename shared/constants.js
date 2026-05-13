@@ -5,6 +5,14 @@ export const GAME_MODES = {
   RACING: 'racing',
 };
 
+// --- Modo de ejecución del LexiconSystem ---
+// NORMAL: sync en main thread. PARALLEL: delega a Web Worker (lexiconWorker.js)
+export const EXECUTION_MODE = {
+  NORMAL:   'normal',
+  PARALLEL: 'parallel',
+};
+export const DEFAULT_EXECUTION_MODE = EXECUTION_MODE.NORMAL;
+
 
 // --- Carga ---
 export const LOADING_STAGES = {

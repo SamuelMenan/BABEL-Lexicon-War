@@ -78,7 +78,6 @@ export class CombatEnemy extends Entity {
       color, transparent: true, opacity: cfg.hullOpacity ?? 0.9,
     });
     const hull = new THREE.LineSegments(edges, this._lineMat);
-    hull.layers.enable(BLOOM_LAYER);
     this._group.add(hull);
 
     // core - USE CACHE
@@ -88,7 +87,6 @@ export class CombatEnemy extends Entity {
     });
     this._core = new THREE.Mesh(sharedCore, this._coreMat);
     this._core.scale.setScalar(cfg.coreR); // scale the unit sphere
-    this._core.layers.enable(BLOOM_LAYER);
     this._group.add(this._core);
 
     // glow sprite
@@ -98,7 +96,6 @@ export class CombatEnemy extends Entity {
       depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     this._glow.scale.set(cfg.glowSize, cfg.glowSize, 1);
-    this._glow.layers.enable(BLOOM_LAYER);
     this._group.add(this._glow);
 
     // rings - USE CACHE
@@ -108,7 +105,6 @@ export class CombatEnemy extends Entity {
         color, emissive: color, emissiveIntensity: cfg.emissiveInt * 0.6,
       });
       const mesh = new THREE.Mesh(rg, mat);
-      mesh.layers.enable(BLOOM_LAYER);
       const grp = new THREE.Group();
       grp.add(mesh);
       if (rd.rotX !== undefined) grp.rotation.x = rd.rotX;

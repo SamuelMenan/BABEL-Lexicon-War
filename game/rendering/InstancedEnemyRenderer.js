@@ -20,7 +20,6 @@
 
 import * as THREE from 'three';
 import { CFGS, ENEMY_TYPES } from '../data/enemyConfigs.js';
-import { BLOOM_LAYER } from '../../shared/constants.js';
 
 const TYPES = Object.values(ENEMY_TYPES);
 const MAX_INSTANCES_PER_TYPE = 200;
@@ -54,7 +53,6 @@ export class InstancedEnemyRenderer {
       const hull = new THREE.InstancedMesh(hullGeo, hullMat, MAX_INSTANCES_PER_TYPE);
       hull.count = 0;
       hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      hull.layers.enable(BLOOM_LAYER);
       hull.frustumCulled = false; // matrices se actualizan manual
       this._scene.add(hull);
       this._hullMesh[t] = hull;
@@ -70,7 +68,6 @@ export class InstancedEnemyRenderer {
       core.instanceColor = new THREE.InstancedBufferAttribute(
         new Float32Array(MAX_INSTANCES_PER_TYPE * 3), 3
       );
-      core.layers.enable(BLOOM_LAYER);
       core.frustumCulled = false;
       this._scene.add(core);
       this._coreMesh[t] = core;
@@ -84,7 +81,6 @@ export class InstancedEnemyRenderer {
         rim.count = 0;
         rim.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         rim.userData.def = rd;
-        rim.layers.enable(BLOOM_LAYER);
         rim.frustumCulled = false;
         this._scene.add(rim);
         rings.push(rim);

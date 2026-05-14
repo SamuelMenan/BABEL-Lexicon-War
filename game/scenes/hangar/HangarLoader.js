@@ -114,6 +114,12 @@ export class HangarLoader {
         }
         wrapper.position.set(offset.x, offset.y, offset.z);
 
+        // Floating idle: guardar baseline para que updateFloat oscile relativo.
+        wrapper.userData.floatBaseY    = wrapper.position.y;
+        wrapper.userData.floatBaseRotX = wrapper.rotation.x;
+        wrapper.userData.floatBaseRotZ = wrapper.rotation.z;
+        wrapper.userData.floatPhase    = Math.random() * Math.PI * 2;
+
         this.shipGroup.add(wrapper);
 
         if (ship.id === 'lowpoly') {
@@ -326,6 +332,33 @@ export class HangarLoader {
   toggleDebugMarkers() {
     this.shipGroup.traverse(obj => {
       if (obj.name === 'debug_axis') obj.visible = !obj.visible;
+    });
+  }
+
+  // ─── Floating idle ───────────────────────────────────────────────────────
+  // Llamar cada frame mientras NO esté en deployment. `time` en segundos
+  // (acumulado por el caller). Bob vertical + roll/pitch leve relativo al
+  // baseline guardado en loadShip. Resetea al baseline si time es null.
+  updateFloat(time) {
+    const BOB_AMP    = 0.06;
+    const BOB_FREQ   = 0.8;
+    const ROLL_AMP   = 0.025;
+    const ROLL_FREQ  = 0.6;
+    const PITCH_AMP  = 0.018;
+    const PITCH_FREQ = 0.5;
+    this.shipGroup.children.forEach(w => {
+      const ud = w.userData;
+      if (ud.floatBaseY == null) return;
+      if (time == null) {
+        w.position.y  = ud.floatBaseY;
+        w.rotation.x  = ud.floatBaseRotX;
+        w.rotation.z  = ud.floatBaseRotZ;
+        return;
+      }
+      const p = ud.floatPhase;
+      w.position.y = ud.floatBaseY    + Math.sin(time * BOB_FREQ   + p)       * BOB_AMP;
+      w.rotation.z = ud.floatBaseRotZ + Math.sin(time * ROLL_FREQ  + p)       * ROLL_AMP;
+      w.rotation.x = ud.floatBaseRotX + Math.sin(time * PITCH_FREQ + p + 1.3) * PITCH_AMP;
     });
   }
 

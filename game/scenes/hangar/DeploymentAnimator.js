@@ -1,4 +1,14 @@
 import * as THREE from 'three';
+import { DeploymentTrail } from '../../rendering/fx/DeploymentTrail.js';
+import { Shockwave } from '../../rendering/fx/Shockwave.js';
+import { WarpFlash } from '../../rendering/fx/WarpFlash.js';
+import { DustPuff } from '../../rendering/fx/DustPuff.js';
+
+// Pose final por modo — debe coincidir con Camera.js (_updateCombat/_updateRacing).
+const END_POSES = {
+  combat: { pos: new THREE.Vector3(0, 2,   8), look: new THREE.Vector3(0, 0.5, -8),  fov: 75 },
+  racing: { pos: new THREE.Vector3(0, 1.4, 8), look: new THREE.Vector3(0, 0.8, -80), fov: 75 },
+};
 
 /**
  * Cinematic ship launch sequence — 4 phases:
@@ -15,45 +25,38 @@ export class DeploymentAnimator {
     this._state            = null;
   }
 
-  get isActive()     { return !!this._state?.active; }
-  get shakeAmp()     { return this._state?.shakeAmp ?? 0; }
-  get shakeElapsed() { return this._state?.elapsed  ?? 0; }
+  get isActive()        { return !!this._state?.active; }
+  get shakeAmp()        { return this._state?.shakeAmp ?? 0; }
+  get shakeElapsed()    { return this._state?.elapsed  ?? 0; }
+  // Flag: cuando true, DeploymentAnimator escribe camera.position/lookAt
+  // directamente. ShipSelectionScene debe omitir _cam.applyPosition.
+  get cameraTakeover()  { return !!this._state?.cameraTakeover; }
+  // Phase-aware booster drive — leído por ShipSelectionScene cada frame.
+  get boosterDrive() {
+    return this._state?.boosterDrive ?? { accel: false, vScale: 1.0, rScale: 1.0, flowRatio: 0 };
+  }
 
   /**
    * Starts the deployment animation for the given ship wrapper.
    * Returns a Promise that resolves when the sequence finishes.
    */
-  triggerDeployment(wrapper) {
+  triggerDeployment(wrapper, palette = null, gameMode = 'combat') {
     return new Promise((resolve) => {
       if (!wrapper) { resolve(); return; }
+      const endPose = END_POSES[gameMode] ?? END_POSES.combat;
 
-      // Hangar exit door is always at world +Z. All ships are pre-rotated (startQuat)
-      // to face +Z in hangar space, so these world-space constants are universal.
       const forward   = new THREE.Vector3(0, 0, 1);
       const pitchAxis = new THREE.Vector3(1, 0, 0);
 
-      // Trail: circular buffer of Points
-      const TRAIL_MAX = 120;
-      const trailPos  = new Float32Array(TRAIL_MAX * 3);
-      const trailGeo  = new THREE.BufferGeometry();
-      trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
-      trailGeo.setDrawRange(0, 0);
-      const trailMat = new THREE.PointsMaterial({
-        color: 0x44ccff,
-        size: 0.07,
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: 0.7,
-        depthWrite: false,
-      });
-      const trailMesh = new THREE.Points(trailGeo, trailMat);
-      this._scene.add(trailMesh);
+      const trail = new DeploymentTrail(this._scene, { palette });
+      const dust  = new DustPuff(this._scene, wrapper.position.clone(), { palette });
 
       this._state = {
         active:       true,
         elapsed:      0,
         resolve,
         wrapper,
+        palette,
         forward,
         pitchAxis,
         startQuat:    wrapper.quaternion.clone(),
@@ -61,14 +64,18 @@ export class DeploymentAnimator {
         forwardAccum: 0,
         startFov:     this._camera.fov,
         shakeAmp:     0,
-        trailPos,
-        trailGeo,
-        trailMat,
-        trailMesh,
-        trailCount:   0,
-        trailHead:    0,
-        trailTimer:   0,
-        TRAIL_MAX,
+        trail,
+        dust,
+        warpFlash: null,
+        warpFlashSpawned: false,
+        shockwavesSpawned: { t1: false, t2: false },
+        boosterDrive: { accel: false, vScale: 1.0, rScale: 1.0, flowRatio: 0 },
+        // Camera coreografía
+        gameMode,
+        endPose,
+        cameraTakeover:    false,
+        f4Snapshot:        null,        // { pos, look, fov } al inicio de F4
+        currentLookTarget: new THREE.Vector3(),
       };
     });
   }
@@ -82,10 +89,10 @@ export class DeploymentAnimator {
     const w = s.wrapper;
 
     // ── Timing constants ─────────────────────────────────────────────────────
-    const T1 = 1.5;  // end of ignition / suspension
-    const T2 = 1.8;  // end of recoil
-    const T3 = 3.5;  // end of hangar exit
-    const T4 = 4.5;  // warp complete → resolve
+    const T1 = 2.0;  // end of ignition / suspension
+    const T2 = 2.4;  // end of recoil
+    const T3 = 4.3;  // end of hangar exit
+    const T4 = 5.6;  // warp complete → resolve
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -98,7 +105,21 @@ export class DeploymentAnimator {
     const rollAngle = 0.07 * Math.sin(t * 5.0) * Math.exp(-t * 2.2);
 
     // Slow orbital pan while suspended — scene stays alive
-    if (t < T1) this._cameraController.orbit.theta += 0.18 * dt;
+    if (t < T1) this._cameraController.orbit.theta += 0.40 * dt;
+
+    // ── PHASE 3 CAMERA: alinear detrás de la nave ──────────────────────────
+    // Lerp theta→π, phi→0.18, radius hacia 6.5 durante T2→T3 para preparar
+    // pose final. Suavizado por phaseT.
+    if (t >= T2 && t < T3) {
+      const k = phaseT(T2, T3);
+      const o = this._cameraController.orbit;
+      const targetTheta  = Math.PI;
+      const targetPhi    = 0.18;
+      const targetRadius = 6.5;
+      o.theta  += (targetTheta  - o.theta)  * Math.min(dt * 1.8 * (0.5 + k), 1);
+      o.phi    += (targetPhi    - o.phi)    * Math.min(dt * 1.8 * (0.5 + k), 1);
+      o.radius += (targetRadius - o.radius) * Math.min(dt * 1.4, 1);
+    }
 
     // ── PHASE 2: Max Ignition / Recoil (T1 → T2) ─────────────────────────
     // Brief backward lurch from engine thrust. Camera starts shaking.
@@ -165,47 +186,98 @@ export class DeploymentAnimator {
       o.radius = Math.min(o.radiusMax, o.radius + pullRate * dt);
     }
 
-    // ── FOV STRETCH (warp tunnel effect, Phase 4 only) ───────────────────────
+    // ── PHASE 4 CAMERA TAKEOVER ─────────────────────────────────────────────
+    // T3→T4: bypass orbit. Lerp pos/look/fov directo hacia pose final
+    // (combat o racing). Garantiza llegada exacta a la cámara del modo.
     if (t >= T3) {
-      const warpT = ss(clamp01((t - T3) / (T4 - T3)));
-      this._camera.fov = s.startFov + warpT * 58; // 45 → 103
+      if (!s.f4Snapshot) {
+        // Snapshot pos/look/fov al entrar a F4. lookAt actual = focal.
+        s.f4Snapshot = {
+          pos:  this._camera.position.clone(),
+          look: this._cameraController.focal.clone(),
+          fov:  this._camera.fov,
+        };
+        s.cameraTakeover = true;
+      }
+      const k = ss(clamp01((t - T3) / (T4 - T3)));
+      // Position lerp.
+      this._camera.position.lerpVectors(s.f4Snapshot.pos, s.endPose.pos, k);
+      // lookAt: punto frente a la cámara a la MISMA altura (nivel horizontal).
+      // Resultado: cámara detrás de la nave, mirando recto, sin pitch hacia abajo.
+      s.currentLookTarget.copy(w.position);
+      s.currentLookTarget.y = this._camera.position.y;
+      this._camera.up.set(0, 1, 0);
+      this._camera.lookAt(s.currentLookTarget);
+      // FOV: pequeño stretch warp (snap → +20) y luego converge a endFov.
+      const warpStretch = Math.sin(k * Math.PI) * 20;  // pico medio
+      this._camera.fov = s.f4Snapshot.fov + (s.endPose.fov - s.f4Snapshot.fov) * k + warpStretch;
       this._camera.updateProjectionMatrix();
     }
 
-    // ── TRAIL ────────────────────────────────────────────────────────────────
-    // Starts at exit, brightens to white-hot at warp.
-    s.trailTimer += dt;
-    if (t >= T2 && s.trailTimer >= 0.013) {
-      s.trailTimer = 0;
-      const wp = w.position;
-      const i  = s.trailHead % s.TRAIL_MAX;
-      s.trailPos[i * 3]     = wp.x;
-      s.trailPos[i * 3 + 1] = wp.y;
-      s.trailPos[i * 3 + 2] = wp.z;
-      s.trailHead++;
-      s.trailCount = Math.min(s.trailHead, s.TRAIL_MAX);
-      s.trailGeo.setDrawRange(0, s.trailCount);
-      s.trailGeo.attributes.position.needsUpdate = true;
-      const norm         = Math.min(speed / 28, 1);
-      s.trailMat.opacity = 0.35 + norm * 0.60;
-      s.trailMat.size    = 0.07 + norm * 0.20;
-      s.trailMat.color.lerpColors(
-        new THREE.Color(0x44ccff),
-        new THREE.Color(0xffffff),
-        norm,
-      );
+    // ── BOOSTER DRIVE (phase-aware) ──────────────────────────────────────────
+    // Rampa vScale/rScale/flowRatio según fase. flowRatio>0 → BoosterEffect
+    // usa FLOW_PALETTE (white-hot). Requiere setHangarMode(false) externamente.
+    // Rampas suaves: crecimiento visible pero controlado. Máximos contenidos
+    // para evitar boosters/aros desproporcionados durante warp.
+    let bvScale, brScale, bflow;
+    if (t < T1) {
+      const k = phaseT(0, T1);
+      bvScale = 1.0 + 0.35 * k;
+      brScale = 1.0 + 0.20 * k;
+      bflow   = 0.30 * k;
+    } else if (t < T2) {
+      const k = phaseT(T1, T2);
+      bvScale = 1.35 + 0.25 * k;
+      brScale = 1.20 + 0.15 * k;
+      bflow   = 0.30 + 0.20 * k;
+    } else if (t < T3) {
+      const k = phaseT(T2, T3);
+      bvScale = 1.60 + 0.25 * k;
+      brScale = 1.35 + 0.15 * k;
+      bflow   = 0.50 + 0.30 * k;
+    } else {
+      const k = phaseT(T3, T4);
+      bvScale = 1.85 + 0.15 * k;
+      brScale = 1.50 + 0.10 * k;
+      bflow   = 0.80 + 0.20 * k;
     }
+    s.boosterDrive = { accel: true, vScale: bvScale, rScale: brScale, flowRatio: bflow };
+
+    // ── SHOCKWAVES ───────────────────────────────────────────────────────────
+    // T1: ignición plena. T2: punch de máximo empuje (más grande).
+    if (!s.shockwavesSpawned.t1 && t >= T1 * 0.85) {
+      s.shockwavesSpawned.t1 = true;
+      new Shockwave(this._scene, w.position.clone(), { palette: s.palette, size: 2.2, life: 0.55 });
+    }
+    if (!s.shockwavesSpawned.t2 && t >= T2) {
+      s.shockwavesSpawned.t2 = true;
+      new Shockwave(this._scene, w.position.clone(), { palette: s.palette, size: 4.5, life: 0.75 });
+    }
+
+    // ── TRAIL ────────────────────────────────────────────────────────────────
+    const speedNorm = Math.min(speed / 28, 1);
+    const trailStart = T1 * 0.6;
+    if (t >= trailStart) {
+      s.trail.update(dt, w.position, speedNorm);
+    }
+
+    // ── DUST PUFF (ignición) ─────────────────────────────────────────────────
+    s.dust?.update(dt);
+
+    // ── WARP FLASH (entrada a fase 4) ────────────────────────────────────────
+    if (!s.warpFlashSpawned && t >= T3) {
+      s.warpFlashSpawned = true;
+      s.warpFlash = new WarpFlash(this._scene, this._camera);
+    }
+    s.warpFlash?.update(dt);
 
     // ── DONE ─────────────────────────────────────────────────────────────────
     if (t >= T4) {
       s.active = false;
-      setTimeout(() => {
-        if (s.trailMesh) {
-          this._scene.remove(s.trailMesh);
-          s.trailGeo.dispose();
-          s.trailMat.dispose();
-        }
-      }, 300);
+      const trail = s.trail;
+      setTimeout(() => { trail?.dispose(); }, 600);
+      s.dust?.dispose();
+      s.warpFlash?.dispose();
       s.resolve();
       this._state = null;
     }

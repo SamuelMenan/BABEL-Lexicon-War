@@ -18,10 +18,20 @@ export class RacingOpponentShip extends ShipBase {
     this._raceState    = null;
     this._boosters     = [];
 
+    this._entryActive   = true;
+    this._entryTime     = 0;
+    this._entryDuration = 1.5;
+    this._entryStartPos = new THREE.Vector3(
+      this._basePosition.x,
+      this._basePosition.y,
+      this._basePosition.z + 40,
+    );
+    this._modelLoaded = false;
+
     this._buildFxNodes();
     this._buildFallbackShip();
     this._loadModel();
-    this._group.position.copy(this._basePosition);
+    this._group.position.copy(this._entryStartPos);
   }
 
   _buildFxNodes() {
@@ -126,6 +136,8 @@ export class RacingOpponentShip extends ShipBase {
     if (this._boosters.length === 0) {
       console.warn('[RacingOpponentShip] No hangar_cb1_* booster configs found.');
     }
+
+    this._modelLoaded = true;
   }
 
   setRaceState(state) { this._raceState = state; }
@@ -137,6 +149,20 @@ export class RacingOpponentShip extends ShipBase {
 
   update(delta) {
     super.update(delta);
+
+    if (this._entryActive) {
+      if (!this._modelLoaded) {
+        this._group.position.copy(this._entryStartPos);
+        return;
+      }
+      this._entryTime += delta;
+      const k  = Math.min(this._entryTime / this._entryDuration, 1);
+      const ek = 1 - Math.pow(1 - k, 3);
+      this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
+      this._boosters.forEach(b => b.update(delta, true, 1, 1, 1.0));
+      if (k >= 1) this._entryActive = false;
+      return;
+    }
 
     if (!this._raceState) return;
 
@@ -150,6 +176,7 @@ export class RacingOpponentShip extends ShipBase {
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;
 
     const isThrusting = smoothLead > -0.5;
+    // flowRatio=1.0: rampa ascendente → opacidad plena.
     this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
   }
 

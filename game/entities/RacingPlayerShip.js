@@ -36,10 +36,21 @@ export class RacingPlayerShip extends ShipBase {
     this._basePosition = basePosition.clone();
     this._raceState   = null;
 
+    // Entry animation — sync con salida de hangar.
+    this._entryActive   = true;
+    this._entryTime     = 0;
+    this._entryDuration = 1.5;
+    this._entryStartPos = new THREE.Vector3(
+      this._basePosition.x,
+      this._basePosition.y,
+      this._basePosition.z + 40,
+    );
+    this._modelLoaded = false;
+
     this._buildFxNodes();
     this._buildFallbackShip();
     this._loadModel();
-    this._group.position.copy(this._basePosition);
+    this._group.position.copy(this._entryStartPos);
   }
 
   _buildFxNodes() {
@@ -157,6 +168,8 @@ export class RacingPlayerShip extends ShipBase {
     if (this._boosters.length === 0) {
       console.warn(`[RacingPlayerShip] No hangar booster config for "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
     }
+
+    this._modelLoaded = true;
   }
 
   setRaceState(state) { this._raceState = state; }
@@ -168,6 +181,22 @@ export class RacingPlayerShip extends ShipBase {
 
   update(delta) {
     super.update(delta);
+
+    // Entry animation (sync hangar exit). Gate hasta modelo cargado.
+    if (this._entryActive) {
+      if (!this._modelLoaded) {
+        this._group.position.copy(this._entryStartPos);
+        return;
+      }
+      this._entryTime += delta;
+      const k  = Math.min(this._entryTime / this._entryDuration, 1);
+      const ek = 1 - Math.pow(1 - k, 3);
+      this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
+      this._group.rotation.y = Math.PI;
+      this._boosters.forEach(b => b.update(delta, true, 1, 1, 1.0));
+      if (k >= 1) this._entryActive = false;
+      return;
+    }
 
     if (!this._raceState) return;
 
@@ -181,6 +210,7 @@ export class RacingPlayerShip extends ShipBase {
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
 
     const isThrusting = smoothBurst > 0.05;
+    // flowRatio=1.0: rampa ascendente → opacidad plena, look saturado.
     this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
   }
 

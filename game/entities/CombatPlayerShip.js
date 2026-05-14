@@ -35,10 +35,24 @@ export class CombatPlayerShip extends ShipBase {
     this._isThrusting = false;
     this._prevFlowActive = false;
 
+    // Entry animation — sync con salida de hangar. Nave llega desde lejos
+    // (atrás de cámara en +Z) y desacelera a _basePosition.
+    this._entryActive   = true;
+    this._entryTime     = 0;
+    this._entryDuration = 1.5;
+    this._entryStartPos = new THREE.Vector3(
+      this._basePosition.x,
+      this._basePosition.y,
+      this._basePosition.z + 40,
+    );
+    // Entry hold: no inicia timer hasta que _modelLoaded=true. Evita que la
+    // animación corra con la nave fallback mientras descarga (.glb pesados).
+    this._modelLoaded = false;
+
     this._buildFallbackShip();
     this._loadModel();
 
-    this._group.position.copy(this._basePosition);
+    this._group.position.copy(this._entryStartPos);
   }
 
   get position() { return this._group.position; }
@@ -156,6 +170,9 @@ export class CombatPlayerShip extends ShipBase {
           scale:    config.scale ?? 1.0,
         });
       });
+
+    // Modelo + boosters + muzzles listos → habilitar entry animation.
+    this._modelLoaded = true;
   }
 
   setTarget(pos) { this._targetPos = pos; }
@@ -212,6 +229,31 @@ export class CombatPlayerShip extends ShipBase {
 
   update(delta) {
     super.update(delta);
+
+    // ── Entry animation (sync hangar exit) ────────────────────────────────
+    // Mientras entryActive: lerp ease-out desde entryStartPos → _basePosition.
+    // Boosters al máximo, sin lógica de target/recoil/float. Skip resto.
+    // Gate: no avanza timer hasta que el modelo esté completamente cargado.
+    if (this._entryActive) {
+      if (!this._modelLoaded) {
+        this._group.position.copy(this._entryStartPos);
+        return;
+      }
+      this._entryTime += delta;
+      const k  = Math.min(this._entryTime / this._entryDuration, 1);
+      const ek = 1 - Math.pow(1 - k, 3);  // ease-out cubic
+      this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
+      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 4);
+      this._isThrusting = true;
+      const boostVS = 1.4;
+      const boostRS = 1.18;
+      this._boosters.forEach(b => b.update(delta, true, boostVS, boostRS, 1.0));
+      if (k >= 1) {
+        this._entryActive = false;
+        this._isThrusting = false;
+      }
+      return;
+    }
 
     const floatY   = Math.sin(this._t * 1.2) * 0.12;
     const wingRoll = Math.sin(this._t * 0.85) * 0.045;

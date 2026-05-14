@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { SHIP_PALETTES } from '../../../shared/constants.js';
 
-// 10-level opacity ramp: flowRatio 0→1 maps across these values.
-// Level 1 (no flow): very ghostly. Level 10 (full flow): fully solid.
-export const DEFAULT_OPACITY_RAMP = [0.15, 0.28, 0.44, 0.58, 0.72, 0.84, 0.93, 1.0, 1.0, 1.0];
+// 10-level opacity ramp: flowRatio 0→1 maps across estos valores.
+// Ascendente real: idle (fr=0) muy tenue (0.05) → FLOW final (fr=1) máxima
+// intensidad (1.0). Aplicada con fórmula aditiva rawOp + (1-rawOp)*fop.
+export const DEFAULT_OPACITY_RAMP = [0.05, 0.15, 0.28, 0.42, 0.56, 0.68, 0.79, 0.88, 0.95, 1.0];
 
 export const BOOST_PALETTE = {
   dark:  new THREE.Color(0x102a7a),
@@ -115,41 +116,43 @@ export const SHIP_BOOSTER_CONFIGS = {
     ...pal('spaceship'),
     localPosition: new THREE.Vector3(-0.315, -0.3, -0.9),
     flipZ:         true,
-    bodyRadius:    0.16,
-    bodyLength:    0.80,
+    bodyRadius:    0.12,
+    bodyLength:    0.60,
     ringRadius:    0.26,
     flameSize:     1.50,
     innerSize:     0.60,
-    starSize:      2.40,
+    starSize:      1.7,
     lightIntens:   5.5,
     lightDist:     10.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.35),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.6],
+    sizeMin:       0.5,
+    sizeMax:       0.5,
   },
   hangar_spaceship_1: {
     ...pal('spaceship'),
     localPosition: new THREE.Vector3(0.315, -0.3, -0.9),
     flipZ:         true,
-    bodyRadius:    0.16,
-    bodyLength:    0.80,
+    bodyRadius:    0.12,
+    bodyLength:    0.60,
     ringRadius:    0.26,
     flameSize:     1.50,
     innerSize:     0.60,
-    starSize:      2.40,
+    starSize:      1.7,
     lightIntens:   5.5,
     lightDist:     10.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.35),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.6],
+    sizeMin:       0.5,
+    sizeMax:       0.5, 
   },
 
   // spaceshipnew.glb — hangar (misma nave que combatPlayer, distinto sistema de coordenadas)
   // x=-0.85 → cola en -X. rootRotY=-π/2 → llama apunta -X.
   hangar_spaceshipnew_0: {
     ...pal('spaceshipnew'),
-    localPosition: new THREE.Vector3(-0.94, -0.15, 0),
+    localPosition: new THREE.Vector3(-1.01, -0.15, 0.01758),
     rootRotY:      -1.5708,
-    bodyRadius:    0.14,
-    bodyLength:    1.20,
+    bodyRadius:    0.11,
+    bodyLength:    0.8,
     ringRadius:    0.26,
     flameSize:     0.95,
     innerSize:     0.42,
@@ -157,7 +160,8 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   9.0,
     lightDist:     16.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.35),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.6,
+    sizeMax:       0.6,
   },
 
   // cb1 — 2 propulsores, simétricos a cada lado del motor central
@@ -171,11 +175,12 @@ export const SHIP_BOOSTER_CONFIGS = {
     ringRadius:    0.14,
     flameSize:     0.75,
     innerSize:     0.28,
-    starSize:      1.10,
+    starSize:      1,
     lightIntens:   4.5,
     lightDist:     8.5,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.7,
+    sizeMax:       0.7,
   },
   hangar_cb1_1: {
     ...pal('cb1'),
@@ -186,11 +191,12 @@ export const SHIP_BOOSTER_CONFIGS = {
     ringRadius:    0.14,
     flameSize:     0.75,
     innerSize:     0.28,
-    starSize:      1.10,
+    starSize:      1,
     lightIntens:   4.5,
     lightDist:     8.5,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.7,
+    sizeMax:       0.7,
   },
 
   // ig127.glb — 4 boosters, formación cuadrada (2 arriba + 2 abajo)
@@ -206,7 +212,8 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   4.5,
     lightDist:     8.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.4,
+    sizeMax:       0.5, 
   },
   hangar_ig127_1: {
     ...pal('ig127'),
@@ -220,13 +227,14 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   4.5,
     lightDist:     8.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.4,
+    sizeMax:       0.5, 
   },
   hangar_ig127_2: {
     ...pal('ig127'),
     localPosition: new THREE.Vector3(-0.29, -0.7, 0.91),
     bodyRadius:    0.10,
-    bodyLength:    0.55,
+    bodyLength:    0.75,
     ringRadius:    0.18,
     flameSize:     1.00,
     innerSize:     0.40,
@@ -234,13 +242,14 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   4.5,
     lightDist:     8.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.3,
+    sizeMax:       0.4, 
   },
   hangar_ig127_3: {
     ...pal('ig127'),
     localPosition: new THREE.Vector3(0.29, -0.7, 0.91),
     bodyRadius:    0.10,
-    bodyLength:    0.55,
+    bodyLength:    0.75,
     ringRadius:    0.18,
     flameSize:     1.00,
     innerSize:     0.40,
@@ -248,7 +257,8 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   4.5,
     lightDist:     8.0,
     lightOffset:   new THREE.Vector3(0, 0, 0.25),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.3,
+    sizeMax:       0.4, 
   },
 
   // lowpoly.glb — 1 booster, beige/dorado discreto
@@ -264,22 +274,24 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightIntens:   3.6,
     lightDist:     7.2,
     lightOffset:   new THREE.Vector3(0, 0, 0.20),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.4,
+    sizeMax:       0.5,
   },
 
   // waldeinsamkeit.glb — 1 booster naranja intenso, GRANDE (motor único)
   hangar_waldeinsamkeit_0: {
     ...pal('waldeinsamkeit'),
     localPosition: new THREE.Vector3(0, -0.1, 0.9),
-    bodyRadius:    0.25,
-    bodyLength:    1.50,
-    ringRadius:    0.45,
-    flameSize:     2.80,
-    innerSize:     1.10,
-    starSize:      4.00,
-    lightIntens:   12.0,
-    lightDist:     22.0,
+    bodyRadius:    0.10,
+    bodyLength:    0.8,
+    ringRadius:    0.25,
+    flameSize:     1.2,
+    innerSize:     0.5,
+    starSize:      1.7,
+    lightIntens: 0.45,   // pico final ≈ 0.8 * 1.44 * 0.6 ≈ 0.7
+    lightDist:   0.7, 
     lightOffset:   new THREE.Vector3(0, 0, 0.55),
-    sizeRamp:      [0.6, 0.7, 0.8, 0.9, 0.8],
+    sizeMin:       0.5,
+    sizeMax:       0.6,
   },
 };

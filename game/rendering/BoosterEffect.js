@@ -131,7 +131,15 @@ export class BoosterEffect {
   }
 
   setHangarMode(enabled) {
-    this._hangarMode = enabled;
+    if (enabled !== this._hangarMode) {
+      this._hangarMode = enabled;
+      // Marca para que el próximo update snap-ee smoothFlowSize/Opacity al
+      // target nuevo, sin lerp visible (evita parpadeo de opacidad al cambiar
+      // entre hangar-idle y simulación/despliegue).
+      this._modeSwitchPending = true;
+    } else {
+      this._hangarMode = enabled;
+    }
   }
 
   update(deltaTime, isAccelerating, visualScale = 1, ringScale = 1, flowRatio = 0) {
@@ -152,36 +160,37 @@ export class BoosterEffect {
     this._letterBurst = Math.max(0, this._letterBurst - deltaTime * 4.5);
     const lb = this._letterBurst;
 
-    if (this._hangarMode) {
-      this._bodyMat.color.set(cfg.bodyColor);
-      this._ringMat.color.set(cfg.ringColor ?? cfg.bodyColor);
-      this._flameMat.color.set(cfg.flameColor);
-      this._innerMat.color.set(cfg.innerColor);
-      if (this._showStarSprite) this._starMat.color.set(cfg.starColor);
-      this._light.color.set(cfg.lightColor);
-    } else {
-      computeColors(s, flicker, lb, flowRatio, BOOST_PALETTE, FLOW_PALETTE, this._colors, this._cfg);
-      const col = this._colors;
-      this._bodyMat.color.copy(col.body);
-      this._ringMat.color.copy(col.ring);
-      this._flameMat.color.copy(col.flame);
-      this._innerMat.color.copy(col.inner);
-      if (this._showStarSprite) this._starMat.color.copy(col.star);
-      this._light.color.copy(col.flame);
-    }
+    // Pipeline unificado: frEff = flowRatio en los 3 modos (hangar / combat / racing).
+    const frEff = flowRatio;
+    computeColors(s, flicker, lb, frEff, BOOST_PALETTE, FLOW_PALETTE, this._colors, this._cfg);
+    const col = this._colors;
+    this._bodyMat.color.copy(col.body);
+    this._ringMat.color.copy(col.ring);
+    this._flameMat.color.copy(col.flame);
+    this._innerMat.color.copy(col.inner);
+    if (this._showStarSprite) this._starMat.color.copy(col.star);
+    this._light.color.copy(col.flame);
 
-    // Flow size + opacity multipliers — both locked to 1.0 in hangar mode.
-    const targetFlowSize    = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.sizeRamp,    flowRatio);
-    const targetFlowOpacity = this._hangarMode ? 1.0 : sampleScalarRamp(cfg.opacityRamp, flowRatio);
-    this._smoothFlowSize    += (targetFlowSize    - this._smoothFlowSize)    * Math.min(deltaTime * 4,   1);
-    // Snap to full opacity immediately when in Flow state — no lerp delay.
-    if (flowRatio >= 1.0) {
-      this._smoothFlowOpacity = 1.0;
-    } else {
-      this._smoothFlowOpacity += (targetFlowOpacity - this._smoothFlowOpacity) * Math.min(deltaTime * 3.0, 1);
-    }
+    // Size: en hangar-idle locked a 1.0; en flow ramp por cfg.sizeRamp.
+    // Opacity: curva multiplicativa derivada de frEff (no aditiva → idle
+    // efectivamente transparente).
+    // Size manual min/max: cfg.sizeMin (idle) → cfg.sizeMax (FLOW). Lerp por frEff.
+    // Fallback a sizeRamp legacy si no se definen.
+    const sMin = cfg.sizeMin;
+    const sMax = cfg.sizeMax;
+    const targetFlowSize = (sMin != null && sMax != null)
+      ? sMin + frEff * (sMax - sMin)
+      : sampleScalarRamp(cfg.sizeRamp, flowRatio);
+    const targetFlowOpacity =                          sampleScalarRamp(cfg.opacityRamp, frEff);
+    const dSize = Math.abs(targetFlowSize    - this._smoothFlowSize);
+    const dOpac = Math.abs(targetFlowOpacity - this._smoothFlowOpacity);
+    const rateSize = dSize > 0.3 ? 8 : 4;
+    const rateOpac = dOpac > 0.3 ? 8 : 4;
+    this._smoothFlowSize    += (targetFlowSize    - this._smoothFlowSize)    * Math.min(deltaTime * rateSize, 1);
+    this._smoothFlowOpacity += (targetFlowOpacity - this._smoothFlowOpacity) * Math.min(deltaTime * rateOpac, 1);
+    this._modeSwitchPending = false;
     const fsm = this._smoothFlowSize;
-    const fop = this._smoothFlowOpacity;
+    const fop = this._smoothFlowOpacity;  // ∈ [0.05 idle, 1.0 FLOW] — multiplicador puro
 
     const lateral   = updateLateral(this._lateralState, this._shipGroup, deltaTime);
     const velBoost  = Math.abs(lateral) * 1.10;
@@ -197,26 +206,29 @@ export class BoosterEffect {
     const coneW = cfg.bodyRadius * (0.45 + s * 0.70) * burstMult * sm;
     const coneL = cfg.bodyLength * (0.65 + s * 1.0) * (1.0 + lb * 0.65 + velBoost * 0.40) * sm;
     this._body.scale.set(coneW, coneW, coneL);
-    const rawBodyOp  = Math.min(0.95, (0.08 + s * 0.32) * (1.0 + lb * 0.80));
-    this._bodyMat.opacity = rawBodyOp; // Mantiene la opacidad original del cono
+    const rawBodyOp  = Math.min(0.95, (0.45 + s * 0.50) * (1.0 + lb * 0.40));
+    // Multiplicativo: idle (fop≈0.05) → casi invisible; FLOW (fop=1) → rawOp.
+    this._bodyMat.opacity = rawBodyOp * fop;
     this._body.rotation.z = lateral * 0.55;
     this._body.rotation.y = -lateral * 0.20;
 
+    // Ring: usar SOLO rm (sizeMult * fsm). Antes era sm * rm = sizeMult * ringMult * fsm²
+    // — fsm cuadrado provocaba aros enormes en despliegue.
     const ringBreath = 1.0 + Math.sin(t * 4.8) * 0.04 + s * 0.15;
-    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 0.55 + velBoost * 0.25) * sm * rm;
+    const rr = (cfg.ringRadius ?? cfg.bodyRadius * 1.8) * ringBreath * (1.0 + lb * 0.55 + velBoost * 0.25) * rm;
     this._ring.scale.setScalar(rr);
     const rawRingOp  = Math.min(1.0, (0.55 + s * 0.40 + flicker * 0.10) * (1.0 + lb * 1.40));
-    this._ringMat.opacity = flowRatio >= 1.0 ? 1.0 : rawRingOp + (1.0 - rawRingOp) * fop;
+    this._ringMat.opacity = rawRingOp * fop;
     this._ring.rotation.z += deltaTime * (0.8 + s * 1.5 + Math.abs(lateral) * 2.0);
 
     this._flame.scale.setScalar(cfg.flameSize * (0.65 + s * 0.55 + flicker * 0.12) * burstMult * sm);
-    const rawFlameOp = Math.min(0.95, (0.22 + s * 0.55 + flicker * 0.08) * (1.0 + lb * 0.75));
-    this._flameMat.opacity = rawFlameOp;
+    const rawFlameOp = Math.min(0.95, (0.60 + s * 0.30 + flicker * 0.08) * (1.0 + lb * 0.50));
+    this._flameMat.opacity = rawFlameOp * fop;
 
     const coreF = Math.sin(t * 19.3) * 0.5 + 0.5;
     this._inner.scale.setScalar(cfg.innerSize * (0.55 + s * 0.40 + coreF * 0.08) * (0.90 + Math.abs(lateral) * 0.12) * (1.0 + lb * 0.85) * sm);
     const rawInnerOp = Math.min(1.0, (0.70 + s * 0.36 + coreF * 0.05) * (1.0 + lb * 1.60));
-    this._innerMat.opacity = rawInnerOp;
+    this._innerMat.opacity = rawInnerOp * fop;
 
     if (this._showStarSprite) {
       const starPulse = (0.30 + s * 0.42 + flicker * 0.08) * (1.0 + lb * 3.00);
@@ -224,7 +236,7 @@ export class BoosterEffect {
       const rawStarOp = isAccelerating
         ? Math.min(1.0, (0.28 + s * 0.32 + flicker * 0.06) * (1.0 + lb * 1.10))
         : Math.min(1.0, (0.08 + s * 0.14 + flicker * 0.04) * (1.0 + lb * 1.10));
-      this._starMat.opacity = rawStarOp + (1.0 - rawStarOp) * fop;
+      this._starMat.opacity = rawStarOp * fop;
       this._starMat.rotation += deltaTime * 0.35;
     }
 

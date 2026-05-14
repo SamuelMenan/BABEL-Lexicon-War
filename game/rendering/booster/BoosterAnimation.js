@@ -55,21 +55,20 @@ export function computeColors(s, flicker, lb, flowRatio, boost, flow, out, cfg) 
   const pal = getPalette(cfg);
 
   if (pal) {
-    // Per-ship 5-color ramps: sample normal, then lerp toward flow by fr
-    const blend = (tN, tF, slot) => {
-      sampleRamp(pal.normal, tN, out[slot]);
-      if (fr > 0) { sampleRamp(pal.flow, tF, _tmp); out[slot].lerp(_tmp, fr); }
+    // Single ramp (normalRamp): pálido[0] → saturado[N-1].
+    // t_slot = base(slot) + fr * range(slot) + jitter(s,flicker,lb).
+    // fr=0 → muestreo cerca del extremo claro; fr=1 → extremo profundo.
+    const ramp = pal.normal;
+    const sampleSlot = (base, range, jitter, slot) => {
+      const t = clamp(base + fr * range + jitter, 0, 1);
+      sampleRamp(ramp, t, out[slot]);
     };
-    blend(clamp(0.20 + s * 0.55 + flicker * 0.10 + lb * 0.18, 0, 1),
-          clamp(0.35 + s * 0.45 + flicker * 0.08 + lb * 0.20, 0, 1), 'body');
-    blend(clamp(0.35 + s * 0.50 + lb * 0.22, 0, 1),
-          clamp(0.50 + s * 0.40 + lb * 0.15, 0, 1), 'flame');
-    blend(clamp(0.45 + s * 0.30 + flicker * 0.10, 0, 1),
-          clamp(0.55 + s * 0.30 + flicker * 0.08, 0, 1), 'inner');
-    blend(clamp(0.30 + s * 0.42, 0, 1),
-          clamp(0.45 + s * 0.40, 0, 1), 'ring');
-    blend(clamp(0.50 + s * 0.30 + lb * 0.10, 0, 1),
-          clamp(0.55 + s * 0.28 + lb * 0.12, 0, 1), 'star');
+    const j = flicker * 0.04 + lb * 0.06 + s * 0.08;
+    sampleSlot(0.25, 0.65, j,                'body');   // body: medio→profundo
+    sampleSlot(0.10, 0.55, j * 0.6,          'flame');  // flame: claro→saturado
+    sampleSlot(0.00, 0.35, j * 0.4,          'inner');  // inner: siempre claro
+    sampleSlot(0.20, 0.60, j * 0.7,          'ring');
+    sampleSlot(0.05, 0.45, j * 0.5,          'star');
   } else {
     // Global 3-color palettes with smooth flowRatio blend
     const blendG = (bA, bB, tB, fA, fB, tF, slot) => {

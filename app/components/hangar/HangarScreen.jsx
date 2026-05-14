@@ -22,6 +22,7 @@ const RESERVED_KEYS = new Set([
   'Home', 'End', 'PageUp', 'PageDown',
   'Pause', 'Delete', 'Enter', 'Escape',
   'k', 'K', 'l', 'L', // K = auto-fire hold, L = laser toggle
+  'j', 'J',           // J = toggle flow simulation en boosters
 ]);
 const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph']);
 const PREVENT_DEFAULT_KEYS = new Set(['Tab', ' ', 'Spacebar']);
@@ -126,6 +127,7 @@ export default function HangarScreen() {
       if (e.key === 'Escape' && !e.__babelPauseToggle) handleCancel();
       if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire();
       if ((e.key === 'l' || e.key === 'L') && !e.repeat) sceneRef.current?.toggleLaser();
+      if ((e.key === 'j' || e.key === 'J') && !e.repeat) sceneRef.current?.toggleFlowSim();
       if (isFireKey(e)) {
         if (PREVENT_DEFAULT_KEYS.has(e.key) || /^F\d{1,2}$/.test(e.key)) {
           e.preventDefault();

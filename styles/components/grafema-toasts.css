@@ -1,3 +1,7 @@
+/* ── Grafema toasts (popup +N flotantes) ─────────────────────── */
+/* Colores reactivos: usan --col-active / --col-active-rgb que HUD.jsx
+   inyecta segun nave + Flow Mode. Fallback al cyan original. */
+
 .grafema-toasts{
   position:absolute;
   top:9rem;
@@ -14,7 +18,9 @@
   font-size:0.95rem;
   letter-spacing:0.12em;
   color:var(--col-active, #00ffcc);
-  text-shadow:0 0 8px rgba(0,255,204,0.55), 0 0 18px rgba(0,255,204,0.25);
+  text-shadow:
+    0 0 8px  rgba(var(--col-active-rgb, 0, 255, 204), 0.55),
+    0 0 18px rgba(var(--col-active-rgb, 0, 255, 204), 0.25);
   animation:grafema-toast-rise 1.4s ease-out forwards;
 }
 @keyframes grafema-toast-rise{
@@ -25,6 +31,8 @@
 }
 
 /* ── Wallet badge (hangar / combate / carrera) ──────────────── */
+/* Mismo aspecto en las 3 escenas. Reactivo a paleta de nave + Flow. */
+
 .wallet-badge{
   position:absolute;
   top:4.4rem;
@@ -33,14 +41,18 @@
   flex-direction:column;
   gap:0.18rem;
   padding:0.55rem 0.95rem;
-  border:1px solid var(--col-primary, #00ffcc);
+  border:1px solid var(--col-active, #00ffcc);
   background:rgba(0,8,12,0.82);
-  box-shadow:0 0 14px rgba(0,255,204,0.18), inset 0 0 18px rgba(0,255,204,0.04);
+  box-shadow:
+    0 0 14px rgba(var(--col-active-rgb, 0, 255, 204), 0.20),
+    inset 0 0 18px rgba(var(--col-active-rgb, 0, 255, 204), 0.05);
   backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
   z-index:25;
   pointer-events:auto;
   font-family:var(--font-mono);
   user-select:none;
+  transition:border-color 0.25s, box-shadow 0.25s;
 }
 .wallet-badge__label{
   font-size:0.52rem;
@@ -51,11 +63,15 @@
 .wallet-badge__value{
   font-size:1.15rem;
   letter-spacing:0.16em;
-  color:var(--col-primary, #00ffcc);
-  text-shadow:0 0 10px rgba(0,255,204,0.5), 0 0 22px rgba(0,255,204,0.18);
+  color:var(--col-active, #00ffcc);
+  text-shadow:
+    0 0 10px rgba(var(--col-active-rgb, 0, 255, 204), 0.55),
+    0 0 22px rgba(var(--col-active-rgb, 0, 255, 204), 0.20);
   line-height:1;
+  transition:color 0.25s, text-shadow 0.25s;
 }
-/* Hangar / Combate / Carrera: top-right unificado. Misma posición exacta. */
+
+/* Hangar / Combate / Carrera: top-right unificado. Misma posicion exacta. */
 .wallet-badge--hangar,
 .wallet-badge--combat,
 .wallet-badge--race{
@@ -71,22 +87,30 @@
 .wallet-badge--combat .wallet-badge__label,
 .wallet-badge--race   .wallet-badge__label{ font-size:0.56rem; }
 
-/* Pulse al ganar/gastar */
+/* Pulse al ganar/gastar. Mantienen colores semanticos (verde/rosa). */
 .wallet-badge--gain .wallet-badge__value{
   animation:wallet-pulse-gain 0.7s ease-out;
 }
 .wallet-badge--spend .wallet-badge__value{
   animation:wallet-pulse-spend 0.7s ease-out;
 }
-.wallet-badge--gain{ border-color:#aaffdd; box-shadow:0 0 22px rgba(170,255,221,0.5); }
-.wallet-badge--spend{ border-color:#ff8899; box-shadow:0 0 22px rgba(255,136,153,0.5); }
+.wallet-badge--gain{
+  border-color:#aaffdd;
+  box-shadow:0 0 22px rgba(170,255,221,0.5);
+}
+.wallet-badge--spend{
+  border-color:#ff8899;
+  box-shadow:0 0 22px rgba(255,136,153,0.5);
+}
 @keyframes wallet-pulse-gain{
-  0%   { transform:scale(1);   color:var(--col-primary, #00ffcc); }
-  30%  { transform:scale(1.18); color:#aaffdd; text-shadow:0 0 26px rgba(170,255,221,0.95); }
-  100% { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+  0%   { transform:scale(1);   color:var(--col-active, #00ffcc); }
+  30%  { transform:scale(1.18); color:#aaffdd;
+         text-shadow:0 0 26px rgba(170,255,221,0.95); }
+  100% { transform:scale(1);   color:var(--col-active, #00ffcc); }
 }
 @keyframes wallet-pulse-spend{
-  0%   { transform:scale(1);   color:var(--col-primary, #00ffcc); }
-  30%  { transform:scale(0.9); color:#ff8899; text-shadow:0 0 22px rgba(255,136,153,0.95); }
-  100% { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+  0%   { transform:scale(1);   color:var(--col-active, #00ffcc); }
+  30%  { transform:scale(0.9); color:#ff8899;
+         text-shadow:0 0 22px rgba(255,136,153,0.95); }
+  100% { transform:scale(1);   color:var(--col-active, #00ffcc); }
 }

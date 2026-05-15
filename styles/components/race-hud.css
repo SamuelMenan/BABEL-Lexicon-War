@@ -60,22 +60,24 @@
   gap: 3px;
 }
 
+/* Match combat .hud__pilot-name (0.92rem / 0.22em / rgba 0.85). */
 .r-pilot-tag__callsign {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-family: var(--font-hud);
+  font-size: 0.92rem;
   font-weight: bold;
-  letter-spacing: 0.28em;
-  color: #e8ecf0;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
 }
 
+/* Match combat .hud__pilot-sub (0.68rem / 0.18em / --col-active). */
 .r-pilot-tag__rank {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.24em;
-  color: var(--col-active);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--col-pilot-sub, var(--col-active));
   text-transform: uppercase;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 /* ── TOP-CENTER: live status ──────────────────────────────── */
@@ -86,9 +88,9 @@
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.32em;
-  color: rgba(232, 236, 240, 0.45);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: var(--flow-ticker, rgba(0, 255, 204, 0.55));
   text-transform: uppercase;
   white-space: nowrap;
   display: flex;
@@ -97,7 +99,7 @@
 }
 
 .r-top-status__sep {
-  color: rgba(232, 236, 240, 0.2);
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .r-top-status__accent {
@@ -105,7 +107,7 @@
 }
 
 .r-top-status__live {
-  color: rgba(232, 236, 240, 0.45);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .r-top-status__live::before {
@@ -126,56 +128,65 @@
 }
 
 /* ── TOP-RIGHT: WPM + accuracy ───────────────────────────── */
+/* Alineado al lado del wallet-badge (que ocupa right:1.8rem).
+   Misma logica que combat__top-right. */
 
 .r-topright {
   position: absolute;
   top: 1.8rem;
   right: 12.2rem;
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  flex-direction: row;
+  gap: 1.6rem;
+  align-items: flex-end;
 }
 
 .r-stat {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 0.15rem;
 }
 
+/* Match combat .combat__big-num (3.4rem / bold / -0.03em). */
 .r-stat__val {
   font-family: var(--font-hud);
   font-size: 3.4rem;
   font-weight: bold;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  letter-spacing: -0.01em;
-  color: #e8ecf0;
-  transition: color 0.3s;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.3s, text-shadow 0.3s;
 }
 
-.r-stat__val--accent { color: var(--col-active); }
+.r-stat__val--accent {
+  color: var(--col-stat-primary, var(--col-active));
+  text-shadow: 0 0 20px rgba(var(--col-active-rgb, 0, 255, 204), 0.45);
+}
 .r-stat__val--crit   { color: var(--col-danger); }
 
+/* Match combat .combat__acc-pct (1.05rem / dim). */
 .r-stat__sub {
-  font-size: 0.72rem;
-  opacity: 0.5;
-  margin-left: 2px;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-left: 0.05rem;
 }
 
+/* Match combat .combat__stat-label (0.66rem / 0.3em / rgba 0.22). */
 .r-stat__lbl {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.26em;
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: rgba(232, 236, 240, 0.4);
-  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.22);
+  margin-top: 0.15rem;
 }
 
 .r-stat__bar {
   height: 1px;
   width: 64px;
-  background: rgba(232, 236, 240, 0.07);
+  background: rgba(255, 255, 255, 0.07);
   margin-top: 4px;
   position: relative;
 }
@@ -184,7 +195,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   background: var(--col-active);
-  transition: width 0.3s;
+  transition: width 0.3s, background 0.3s;
 }
 
 /* ── LEFT-MID: distance bar + timer ──────────────────────── */
@@ -198,6 +209,12 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 18px;
+  padding: 0.9rem 1rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .r-distance-row {
@@ -216,7 +233,7 @@
   grid-row: 1;
   font-size: 0.6rem;
   letter-spacing: 0.3em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -237,8 +254,8 @@
   grid-column: 1;
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(232, 236, 240, 0.18) 0,
-    rgba(232, 236, 240, 0.18) 1px,
+    rgba(255, 255, 255, 0.18) 0,
+    rgba(255, 255, 255, 0.18) 1px,
     transparent 1px,
     transparent 25%
   );
@@ -252,7 +269,7 @@
   width: 4px;
   height: 100%;
   position: relative;
-  background: rgba(232, 236, 240, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   align-self: stretch;
 }
@@ -280,13 +297,13 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .r-distance-row__target {
-  color: rgba(232, 236, 240, 0.35);
+  color: rgba(255, 255, 255, 0.35);
   margin-left: 2px;
 }
 
@@ -301,7 +318,7 @@
 .r-timer-row__lbl {
   font-size: 0.6rem;
   letter-spacing: 0.3em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 
@@ -309,7 +326,7 @@
   font-size: 3.4rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1;
   transition: color 0.3s;
 }
@@ -346,7 +363,7 @@
   font-family: var(--font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.28em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 
@@ -361,8 +378,8 @@
 }
 
 .r-ph-num   { color: var(--col-active); font-variant-numeric: tabular-nums; }
-.r-ph-sep   { color: rgba(232, 236, 240, 0.25); margin: 0 2px; }
-.r-ph-total { color: rgba(232, 236, 240, 0.35); font-variant-numeric: tabular-nums; }
+.r-ph-sep   { color: rgba(255, 255, 255, 0.25); margin: 0 2px; }
+.r-ph-total { color: rgba(255, 255, 255, 0.35); font-variant-numeric: tabular-nums; }
 
 /* Outer container: clips to exactly 3 visible lines */
 .r-paragraph {
@@ -407,11 +424,11 @@
 }
 
 .r-word--pending {
-  color: rgba(232, 236, 240, 0.32);
+  color: rgba(255, 255, 255, 0.32);
 }
 
 .r-word--active {
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* Character-level spans */
@@ -427,12 +444,12 @@
 }
 
 .r-pc--pending {
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
   opacity: 0.55;
 }
 
 .r-pc--cursor {
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .r-pc--cursor::before {
@@ -474,12 +491,19 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 0.7rem 0.9rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  min-width: 140px;
 }
 
 .r-flow-block__lbl {
   font-size: 0.6rem;
   letter-spacing: 0.3em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 
@@ -506,7 +530,7 @@
 .r-flow-block__streak {
   font-size: 0.6rem;
   letter-spacing: 0.22em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   margin-top: 4px;
 }
@@ -527,7 +551,7 @@
 .r-flow-block__pips i {
   width: 8px;
   height: 2px;
-  background: rgba(232, 236, 240, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .r-flow-block__pips i.r-pip--on {
@@ -551,12 +575,19 @@
   gap: 6px;
   align-items: flex-end;
   text-align: right;
+  padding: 0.7rem 0.9rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  min-width: 160px;
 }
 
 .r-run-stats__lvl {
   font-size: 0.6rem;
   letter-spacing: 0.3em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 
@@ -570,21 +601,21 @@
   font-size: 1.4rem;
   font-weight: 300;
   font-variant-numeric: tabular-nums;
-  color: #e8ecf0;
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1;
 }
 
 .r-run-stats__micro {
   font-size: 0.6rem;
   letter-spacing: 0.24em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 
 .r-run-stats__peak {
   font-size: 0.6rem;
   letter-spacing: 0.22em;
-  color: rgba(232, 236, 240, 0.4);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
 }
 

@@ -1,5 +1,45 @@
 // Constantes globales del juego — ajustar aquí afecta todo el balance
 
+// --- Economía / Recompensas (Grafemas ₲) ---
+// PUNTO ÚNICO de tuning del balance económico. Cambios aquí impactan
+// inmediatamente combate (kills) y carrera (RACE_COMPLETED).
+//
+// Objetivo orientativo: nave más cara (35k) → 15–25 partidas de rendimiento medio.
+// Revalidar tras telemetría real.
+//
+// Base por kill por tipo de enemigo. Cualquier tipo ausente cae a fallback.
+export const GRAFEMAS_PER_KILL = {
+  scout:      10,
+  sentinel:   25,
+  guardian:   50,
+  phantom:    80,
+  apex:       200,
+  tesseract:  120,
+  stellated:  90,
+  great:      110,
+  rhombicub:  35,
+  icosidodec: 70,
+  truncocta:  20,
+};
+export const GRAFEMAS_PER_KILL_FALLBACK = 15;
+// Multiplicador por longitud de palabra: 1 + (len - LEN_REF) * STEP, clamp.
+export const GRAFEMAS_WORDLEN_REF      = 4;
+export const GRAFEMAS_WORDLEN_STEP     = 0.10;
+export const GRAFEMAS_WORDLEN_MULT_MIN = 1.0;
+export const GRAFEMAS_WORDLEN_MULT_MAX = 2.5;
+// Sin errores en la palabra → bonus de precisión.
+export const GRAFEMAS_PRECISION_MULT_CLEAN = 1.5;
+export const GRAFEMAS_PRECISION_MULT_DIRTY = 1.0;
+// Racha de kills consecutivos sin recibir daño ni fallar palabra.
+export const GRAFEMAS_STREAK_STEP    = 0.05;   // +5% por kill consecutivo
+export const GRAFEMAS_STREAK_MAX_MULT = 2.0;
+
+// Recompensas modo carrera (placeholder, fase 4).
+export const GRAFEMAS_RACE_BASE  = 300;
+export const GRAFEMAS_WPM_TIERS  = [[100, 400], [80, 200], [60, 100], [40, 50]];
+export const GRAFEMAS_ACC_TIERS  = [[0.95, 150], [0.85, 75]];
+
+
 export const GAME_MODES = {
   COMBAT: 'combat',
   RACING: 'racing',

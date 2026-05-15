@@ -12,6 +12,8 @@ import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import { HudPublisher } from './HudPublisher.js';
+import { EconomySystem } from '../systems/EconomySystem.js';
+import { computeKillReward } from '../systems/GrafemaRewards.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
 import { PreCombatController } from '../systems/PreCombatController.js';
 import { PlayerDeathHandler } from '../systems/PlayerDeathHandler.js';
@@ -30,6 +32,8 @@ export class CombatSceneManager {
     this.enemies = []; this.tokens = []; this.projectiles = [];
     this.wave = 0; this._waveTimer = 0;
     this._unsubs = []; this._player = null; this._particles = null;
+    this._wordHadError = false;   // se setea en WORD_PROGRESS correct=false; reset al cambiar target
+    this._killStreak   = 0;       // racha sin daño ni palabra fallida
     this._arena     = new Arena(scene);
     this._resources = new ProgressionSystem();
     this._pool      = new EnemyPool(scene, { size: 500 });
@@ -78,6 +82,9 @@ export class CombatSceneManager {
       EventBus.on(EventTypes.WORD_COMPLETED,            (pp) => this._onWordCompleted(pp)),
       EventBus.on(EventTypes.ENEMY_REACHED,             (pp) => this._onEnemyReached(pp)),
       EventBus.on(EventTypes.WORD_PROGRESS,             (pp) => this._onWordProgress(pp)),
+      EventBus.on(EventTypes.TARGET_CHANGED,            ()   => { this._wordHadError = false; }),
+      EventBus.on(EventTypes.WORD_FAILED,               ()   => { this._wordHadError = true; this._killStreak = 0; }),
+      EventBus.on(EventTypes.PLAYER_HIT,                ()   => { this._killStreak = 0; }),
       EventBus.on(EventTypes.DEBUG_FORCE_PLAYER_DEATH,  ()   => this._onForcePlayerDeath()),
     );
   }
@@ -283,6 +290,7 @@ export class CombatSceneManager {
     if (!targetId) return;
     this.tokens.find(t => t.enemy.id === targetId)?.update(typed !== undefined ? typed : '');
     if (correct === false) {
+      this._wordHadError = true;
       this._resources.addLexHeat(LEX_HEAT_ON_MISTAKE);
     } else if (correct) {
       const enemy = this.enemies.find(e => e.id === targetId);
@@ -305,6 +313,19 @@ export class CombatSceneManager {
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     this._player?.clearTarget();
     EventBus.emit(EventTypes.ENEMY_COLLAPSED, { id: enemyId, word: enemy.word });
+
+    // Recompensa en Grafemas.
+    const enemyType = enemy._type ?? enemy.type ?? 'scout';
+    const reward = computeKillReward({
+      enemyType,
+      wordLen:  (enemy.word ?? '').length,
+      hadError: this._wordHadError,
+      streak:   this._killStreak,
+    });
+    EconomySystem.award(reward.amount, 'combat', reward.breakdown);
+    if (!this._wordHadError) this._killStreak += 1;
+    else                     this._killStreak = 0;
+    this._wordHadError = false;
   }
 
   _onEnemyReached({ id }) {

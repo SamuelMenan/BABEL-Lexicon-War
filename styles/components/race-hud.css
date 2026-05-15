@@ -53,8 +53,8 @@
 
 .r-pilot-tag {
   position: absolute;
-  top: 22px;
-  left: 28px;
+  top: 1.8rem;
+  left: 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -82,7 +82,7 @@
 
 .r-top-status {
   position: absolute;
-  top: 26px;
+  top: 1.8rem;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
@@ -129,8 +129,8 @@
 
 .r-topright {
   position: absolute;
-  top: 22px;
-  right: 28px;
+  top: 1.8rem;
+  right: 12.2rem;
   display: flex;
   gap: 24px;
   align-items: flex-start;
@@ -191,7 +191,7 @@
 
 .r-bottom-bar {
   position: absolute;
-  left: 28px;
+  left: 1.8rem;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -330,7 +330,7 @@
 .r-paragraph-block {
   position: absolute;
   left: 50%;
-  bottom: 36px;
+  bottom: 1.8rem;
   transform: translateX(-50%);
   width: min(720px, 56vw);
   display: flex;
@@ -468,8 +468,8 @@
 
 .r-flow-block {
   position: absolute;
-  left: 28px;
-  bottom: 28px;
+  left: 1.8rem;
+  bottom: 1.8rem;
   font-family: var(--font-mono);
   display: flex;
   flex-direction: column;
@@ -543,8 +543,8 @@
 
 .r-run-stats {
   position: absolute;
-  right: 28px;
-  bottom: 28px;
+  right: 1.8rem;
+  bottom: 1.8rem;
   font-family: var(--font-mono);
   display: flex;
   flex-direction: column;

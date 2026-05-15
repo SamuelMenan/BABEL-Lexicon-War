@@ -1,0 +1,92 @@
+.grafema-toasts{
+  position:absolute;
+  top:9rem;
+  right:2.4rem;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:0.25rem;
+  pointer-events:none;
+  z-index:30;
+}
+.grafema-toasts__item{
+  font-family:var(--font-mono);
+  font-size:0.95rem;
+  letter-spacing:0.12em;
+  color:var(--col-active, #00ffcc);
+  text-shadow:0 0 8px rgba(0,255,204,0.55), 0 0 18px rgba(0,255,204,0.25);
+  animation:grafema-toast-rise 1.4s ease-out forwards;
+}
+@keyframes grafema-toast-rise{
+  0%   { opacity:0; transform:translateY(8px) scale(0.92); }
+  15%  { opacity:1; transform:translateY(0)   scale(1.0);  }
+  70%  { opacity:1; transform:translateY(-14px) scale(1.0); }
+  100% { opacity:0; transform:translateY(-26px) scale(0.96); }
+}
+
+/* ── Wallet badge (hangar / combate / carrera) ──────────────── */
+.wallet-badge{
+  position:absolute;
+  top:4.4rem;
+  left:1.6rem;
+  display:inline-flex;
+  flex-direction:column;
+  gap:0.18rem;
+  padding:0.55rem 0.95rem;
+  border:1px solid var(--col-primary, #00ffcc);
+  background:rgba(0,8,12,0.82);
+  box-shadow:0 0 14px rgba(0,255,204,0.18), inset 0 0 18px rgba(0,255,204,0.04);
+  backdrop-filter:blur(6px);
+  z-index:25;
+  pointer-events:auto;
+  font-family:var(--font-mono);
+  user-select:none;
+}
+.wallet-badge__label{
+  font-size:0.52rem;
+  letter-spacing:0.32em;
+  color:var(--text-dim, rgba(255,255,255,0.55));
+  text-transform:uppercase;
+}
+.wallet-badge__value{
+  font-size:1.15rem;
+  letter-spacing:0.16em;
+  color:var(--col-primary, #00ffcc);
+  text-shadow:0 0 10px rgba(0,255,204,0.5), 0 0 22px rgba(0,255,204,0.18);
+  line-height:1;
+}
+/* Hangar / Combate / Carrera: top-right unificado. Misma posición exacta. */
+.wallet-badge--hangar,
+.wallet-badge--combat,
+.wallet-badge--race{
+  top:1.8rem;
+  right:1.8rem;
+  left:auto;
+  padding:0.7rem 1.2rem;
+}
+.wallet-badge--hangar .wallet-badge__value,
+.wallet-badge--combat .wallet-badge__value,
+.wallet-badge--race   .wallet-badge__value{ font-size:1.45rem; }
+.wallet-badge--hangar .wallet-badge__label,
+.wallet-badge--combat .wallet-badge__label,
+.wallet-badge--race   .wallet-badge__label{ font-size:0.56rem; }
+
+/* Pulse al ganar/gastar */
+.wallet-badge--gain .wallet-badge__value{
+  animation:wallet-pulse-gain 0.7s ease-out;
+}
+.wallet-badge--spend .wallet-badge__value{
+  animation:wallet-pulse-spend 0.7s ease-out;
+}
+.wallet-badge--gain{ border-color:#aaffdd; box-shadow:0 0 22px rgba(170,255,221,0.5); }
+.wallet-badge--spend{ border-color:#ff8899; box-shadow:0 0 22px rgba(255,136,153,0.5); }
+@keyframes wallet-pulse-gain{
+  0%   { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+  30%  { transform:scale(1.18); color:#aaffdd; text-shadow:0 0 26px rgba(170,255,221,0.95); }
+  100% { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+}
+@keyframes wallet-pulse-spend{
+  0%   { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+  30%  { transform:scale(0.9); color:#ff8899; text-shadow:0 0 22px rgba(255,136,153,0.95); }
+  100% { transform:scale(1);   color:var(--col-primary, #00ffcc); }
+}

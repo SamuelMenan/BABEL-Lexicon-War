@@ -38,6 +38,10 @@ let _state = {
   showShipSelection: false,
   pendingGameMode:   null,
   selectedShip:      null,
+  // Economía (mirror de EconomySystem; no mutar desde fuera)
+  grafemas:          0,
+  ownedShips:        [],
+  equippedShip:      null,
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,

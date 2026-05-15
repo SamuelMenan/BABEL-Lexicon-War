@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ShipSelectionScene } from '../../../game/scenes/ShipSelectionScene.js';
 import { Bridge } from '../../../shared/bridge.js';
 import { EventTypes } from '../../../shared/eventTypes.js';
-import { SHIPS } from '../../../shared/constants.js';
+import { getShipsForHangar } from '../../../shared/shopCatalog.js';
+import { EconomySystem } from '../../../game/systems/EconomySystem.js';
+
+const SHIPS = getShipsForHangar();
 import { getShipData } from '../../../game/data/shipData.js';
 import ShipSelectLoadingScreen from '../ShipSelectLoadingScreen.jsx';
 import HangarHeader from './HangarHeader.jsx';
@@ -12,6 +15,7 @@ import ShipStats from './ShipStats.jsx';
 import ShipArsenal from './ShipArsenal.jsx';
 import ShipNav from './ShipNav.jsx';
 import HangarControls from './HangarControls.jsx';
+import PurchaseModal from './PurchaseModal.jsx';
 
 const MIN_LOADING_MS = 1800;
 const PROGRESS_TICK  = 80;
@@ -42,7 +46,9 @@ export default function HangarScreen() {
   const sceneRef   = useRef(null);
   const shipIdxRef = useRef(0);
 
-  const [shipIdx,      setShipIdx]      = useState(0);
+  const [shipIdx,       setShipIdx]      = useState(0);
+  const [walletTick,    setWalletTick]   = useState(0); // re-render al cambiar saldo/inventario
+  const [pendingBuy,    setPendingBuy]   = useState(false);
   const [canvasAlpha,  setCanvasAlpha]  = useState(1);
   const [autoRotate,   setAutoRotate]   = useState(true);
   const [phase,        setPhase]        = useState('loading');
@@ -123,7 +129,16 @@ export default function HangarScreen() {
       if (e.key === 'PageDown')           sceneRef.current?.setSideView();
       if (e.key === 'Pause')              sceneRef.current?.toggleDebugMarkers();
       if (e.key === 'Delete')             sceneRef.current?.detonateCurrentShip();
-      if (e.key === 'Enter')              handleConfirm();
+      if (e.key === 'Enter') {
+        const sid = SHIPS[shipIdxRef.current].id;
+        if (!EconomySystem.ownsShip(sid)) {
+          if (EconomySystem.canAfford(sid)) handlePurchase();
+        } else if (EconomySystem.getEquippedShip() !== sid) {
+          handleEquip();
+        } else {
+          handleConfirm();
+        }
+      }
       if (e.key === 'Escape' && !e.__babelPauseToggle) handleCancel();
       if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire();
       if ((e.key === 'l' || e.key === 'L') && !e.repeat) sceneRef.current?.toggleLaser();
@@ -170,14 +185,39 @@ export default function HangarScreen() {
 
   async function handleConfirm() {
     if (deployingRef.current) return;
+    const shipId = SHIPS[shipIdxRef.current].id;
+    if (!EconomySystem.ownsShip(shipId)) return; // bloqueo: no poseída
+    if (EconomySystem.getEquippedShip() !== shipId) EconomySystem.equipShip(shipId);
     deployingRef.current = true;
     const scene = sceneRef.current;
     if (scene) {
       await scene.triggerDeployment();
     }
-    Bridge.commands.confirmShip(SHIPS[shipIdxRef.current].id);
+    Bridge.commands.confirmShip(shipId);
   }
   function handleCancel()  { Bridge.commands.cancelShipSelection(); }
+
+  function handlePurchase() {
+    const shipId = SHIPS[shipIdxRef.current].id;
+    if (!EconomySystem.canAfford(shipId)) return;
+    setPendingBuy(true);
+  }
+  function confirmPurchase() {
+    const shipId = SHIPS[shipIdxRef.current].id;
+    const res = EconomySystem.purchaseShip(shipId);
+    if (res.ok) setWalletTick(t => t + 1);
+    setPendingBuy(false);
+  }
+  function cancelPurchase() { setPendingBuy(false); }
+  function handleEquip() {
+    const shipId = SHIPS[shipIdxRef.current].id;
+    const res = EconomySystem.equipShip(shipId);
+    if (res.ok) setWalletTick(t => t + 1);
+  }
+
+  useEffect(() => {
+    return Bridge.onStateChange(() => setWalletTick(t => t + 1));
+  }, []);
 
   function toggleAutoRotate() {
     const next = !autoRotate;
@@ -187,6 +227,12 @@ export default function HangarScreen() {
 
   const ship     = SHIPS[shipIdx];
   const shipData = getShipData(ship.id);
+  const owned    = EconomySystem.ownsShip(ship.id);
+  const equipped = EconomySystem.getEquippedShip() === ship.id;
+  const canBuy   = !owned && EconomySystem.canAfford(ship.id);
+  const grafemas = EconomySystem.getGrafemas();
+  const missing  = !owned ? Math.max(0, (ship.price ?? 0) - grafemas) : 0;
+  void walletTick;
 
   return (
     <>
@@ -196,9 +242,10 @@ export default function HangarScreen() {
 
           <HangarFrame />
 
+          <div className="hud-safe-zone">
           <HangarHeader ship={ship} />
 
-          <ShipInfo ship={ship} coreId={shipData.coreId} />
+          <ShipInfo ship={ship} coreId={shipData.coreId} owned={owned} equipped={equipped} price={ship.price} />
 
           <ShipStats coreId={shipData.coreId} stats={shipData.stats} />
 
@@ -216,13 +263,29 @@ export default function HangarScreen() {
             onToggleRotate={toggleAutoRotate}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
+            onPurchase={handlePurchase}
+            onEquip={handleEquip}
             idx={shipIdx}
             total={SHIPS.length}
+            owned={owned}
+            equipped={equipped}
+            canBuy={canBuy}
+            price={ship.price}
+            missing={missing}
           />
+          </div>
         </div>
       </div>
 
       {phase === 'loading' && <ShipSelectLoadingScreen progress={loadProgress} />}
+      {pendingBuy && (
+        <PurchaseModal
+          ship={ship}
+          grafemas={grafemas}
+          onConfirm={confirmPurchase}
+          onCancel={cancelPurchase}
+        />
+      )}
     </>
   );
 }

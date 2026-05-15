@@ -40,10 +40,40 @@ function StatPanel({ label, value, sub, dim }) {
   );
 }
 
+function GrafemaBreakdown({ reward }) {
+  if (!reward || !reward.amount) return null;
+  const b = reward.breakdown || {};
+  const rows = [
+    ['Carrera completada',        b.base],
+    [`WPM pico ${b.wpm ?? ''}`,   b.bWpm],
+    [`Precisión ${b.accuracy != null ? Math.round(b.accuracy * 100) + '%' : ''}`, b.bAcc],
+    [`Posición ${b.position ?? '--'}`, b.bPos],
+  ].filter(([, v]) => v > 0);
+
+  return (
+    <div className="mr__grafemas">
+      <div className="mr__grafemas-title">RECOMPENSA</div>
+      <div className="mr__grafemas-rows">
+        {rows.map(([label, val]) => (
+          <div key={label} className="mr__grafemas-row">
+            <span className="mr__grafemas-label">{label}</span>
+            <span className="mr__grafemas-val">+{val}</span>
+          </div>
+        ))}
+        <div className="mr__grafemas-row mr__grafemas-row--total">
+          <span className="mr__grafemas-label">Total</span>
+          <span className="mr__grafemas-val">+{reward.amount} ₲</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MatchResult({
   score, wpm, accuracy, wave,
   raceVictory, peakWPM, timeElapsed, gameMode,
   wordsDestroyed, bestCombo,
+  grafemasReward,
 }) {
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
@@ -256,6 +286,8 @@ export default function MatchResult({
             <span className="mr__bar-val">{accuracy != null ? `${accuracy}%` : '--'}</span>
           </div>
         </div>
+
+        <GrafemaBreakdown reward={grafemasReward} />
 
         {/* Bottom */}
         <div className="mr__bottom">

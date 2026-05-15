@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { SHIPS, SHIP_PALETTES } from '../../shared/constants.js';
+import { SHIP_PALETTES } from '../../shared/constants.js';
+import { getShipsForHangar } from '../../shared/shopCatalog.js';
+
+const SHIPS = getShipsForHangar();
 import { ShipDestroyFx } from '../rendering/fx/ShipDestroyFx.js';
 import { HangarRenderer } from './hangar/HangarRenderer.js';
 import { HangarCameraController } from './hangar/HangarCameraController.js';

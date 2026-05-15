@@ -27,6 +27,8 @@ import PreCombatOverlay from "./hud/overlays/PreCombatOverlay.jsx";
 import WaveAnnouncement from "./hud/overlays/WaveAnnouncement.jsx";
 
 import WarningIcon from "./hud/warnings/WarningIcon.jsx";
+import GrafemaToasts from "./hud/GrafemaToasts.jsx";
+import WalletBadge from "./hud/WalletBadge.jsx";
 
 export default function HUD() {
   const [state, setState] = useState(Bridge.getState());
@@ -206,6 +208,8 @@ export default function HUD() {
           />
           <CombatWordPanel activeWord={activeWord} animState={animState} />
           <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
+          <WalletBadge placement="combat" />
+          <GrafemaToasts />
         </div>
       </div>
     );
@@ -244,6 +248,8 @@ export default function HUD() {
           flowActive={flowActive}
         />
         <RaceRunStats playerPhrasesCompleted={playerPhrasesCompleted} wpm={wpm} />
+        <WalletBadge placement="race" />
+        <GrafemaToasts />
       </div>
     </div>
   );

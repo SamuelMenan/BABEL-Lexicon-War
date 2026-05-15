@@ -349,3 +349,41 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Recompensa de grafemas ─────────────────────────────────── */
+.mr__grafemas {
+  margin: 1.2rem 0 0.4rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(0,255,204,0.25);
+  background: rgba(0,255,204,0.04);
+}
+.mr__grafemas-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.55rem;
+}
+.mr__grafemas-rows { display: flex; flex-direction: column; gap: 0.28rem; }
+.mr__grafemas-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+.mr__grafemas-label { color: var(--text-dim); }
+.mr__grafemas-val   { color: var(--col-primary, #00ffcc); }
+.mr__grafemas-row--total {
+  margin-top: 0.4rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(0,255,204,0.18);
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+}
+.mr__grafemas-row--total .mr__grafemas-label { color: var(--col-primary); }
+.mr__grafemas-row--total .mr__grafemas-val {
+  text-shadow: 0 0 8px rgba(0,255,204,0.4);
+}

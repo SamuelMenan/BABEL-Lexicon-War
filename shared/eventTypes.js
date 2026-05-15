@@ -60,6 +60,14 @@ export const EventTypes = {
   SHIP_CONFIRMED:           'ship:confirmed',            // { shipId }
   SHIP_SELECTION_CANCELLED: 'ship:selection_cancelled',
 
+  // --- Economía ---
+  GRAFEMAS_AWARDED:  'grafemas:awarded',   // { amount, source, breakdown }
+  GRAFEMAS_SPENT:    'grafemas:spent',     // { amount, reason }
+  SHIP_PURCHASED:    'ship:purchased',     // { shipId, price }
+  SHIP_EQUIPPED:     'ship:equipped',      // { shipId }
+  PROFILE_UPDATED:   'profile:updated',    // { profile }
+  PROFILE_RESET:     'profile:reset',
+
   // --- Sistema ---
   SCENE_READY:        'scene:ready',
   ASSETS_LOADED:      'assets:loaded',

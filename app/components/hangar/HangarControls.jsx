@@ -1,6 +1,42 @@
 import React from 'react';
 
-export default function HangarControls({ autoRotate, onToggleRotate, onConfirm, onCancel, idx, total }) {
+function formatN(n) {
+  return new Intl.NumberFormat('es-ES').format(n ?? 0);
+}
+
+export default function HangarControls({
+  autoRotate, onToggleRotate, onConfirm, onCancel,
+  onPurchase, onEquip,
+  idx, total,
+  owned, equipped, canBuy, price, missing,
+}) {
+  let actionBtn;
+  if (!owned) {
+    const tooltip = canBuy ? '' : `Faltan ${formatN(missing)} ₲`;
+    actionBtn = (
+      <button
+        className={`hangar-controls__btn hangar-controls__btn--buy${canBuy ? '' : ' hangar-controls__btn--disabled'}`}
+        onClick={canBuy ? onPurchase : undefined}
+        disabled={!canBuy}
+        title={tooltip}
+      >
+        COMPRAR · ₲ {formatN(price)}
+      </button>
+    );
+  } else if (!equipped) {
+    actionBtn = (
+      <button className="hangar-controls__btn hangar-controls__btn--equip" onClick={onEquip}>
+        EQUIPAR
+      </button>
+    );
+  } else {
+    actionBtn = (
+      <button className="hangar-controls__btn hangar-controls__btn--confirm" onClick={onConfirm}>
+        DESPLEGAR · NAVE
+      </button>
+    );
+  }
+
   return (
     <div className="hangar-controls">
       <div className="hangar-controls__dots">
@@ -19,13 +55,11 @@ export default function HangarControls({ autoRotate, onToggleRotate, onConfirm, 
         <button className="hangar-controls__btn hangar-controls__btn--danger" onClick={onCancel}>
           VOLVER
         </button>
-        <button className="hangar-controls__btn hangar-controls__btn--confirm" onClick={onConfirm}>
-          DESPLEGAR · NAVE
-        </button>
+        {actionBtn}
       </div>
 
       <p className="hangar-controls__hints">
-        ↔ CAMBIAR · R GIRO · ↕ ZOOM · V REESCALAR · ↵ CONFIRMAR
+        ↔ CAMBIAR · R GIRO · ↕ ZOOM · V REESCALAR · ↵ {owned ? (equipped ? 'DESPLEGAR' : 'EQUIPAR') : 'COMPRAR'}
       </p>
     </div>
   );

@@ -1,6 +1,8 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
+import { EconomySystem } from './EconomySystem.js';
+import { computeRaceReward } from './GrafemaRewards.js';
 import {
   PHRASE_POOL_ES,
   RACE_COUNTDOWN_SECS,
@@ -222,6 +224,17 @@ export class RacingSystem {
     const state    = Bridge.peekState();
     const victory  = this._playerDone > Math.floor(this._oppDone);
 
+    let grafemasReward = null;
+    if (victory) {
+      const reward = computeRaceReward({
+        wpm:      this._peakWPM,
+        accuracy: (state.accuracy ?? 0) / 100,
+        position: 1,
+      });
+      EconomySystem.award(reward.amount, 'race', reward.breakdown);
+      grafemasReward = reward;
+    }
+
     const payload = {
       raceVictory: victory,
       score:       this._playerDone,
@@ -229,6 +242,7 @@ export class RacingSystem {
       accuracy:    state.accuracy,
       peakWPM:     this._peakWPM,
       timeElapsed: Math.round(this._timeElapsed),
+      grafemasReward,
     };
 
     const evType = victory ? EventTypes.RACE_COMPLETED : EventTypes.RACE_FAILED;

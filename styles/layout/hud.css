@@ -42,8 +42,8 @@
 
 .combat__top-left {
   position: absolute;
-  top: 1.4rem;
-  left: 1.6rem;
+  top: 1.8rem;
+  left: 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -67,8 +67,8 @@
 
 .combat__top-right {
   position: absolute;
-  top: 1.4rem;
-  right: 1.6rem;
+  top: 1.8rem;
+  right: 12.2rem;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
@@ -124,7 +124,7 @@
 .combat__bottom-left {
   position: absolute;
   bottom: 1.8rem;
-  left: 1.6rem;
+  left: 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -289,7 +289,7 @@
 .lexicon-deck {
   position: absolute;
   bottom: 1.8rem;
-  right: 1.6rem;
+  right: 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 0;

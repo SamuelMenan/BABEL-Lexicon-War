@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { EXECUTION_MODE } from "../../shared/constants.js";
 import { workerBridge } from "../../game/workers/workerBridge.js";
+import { EconomySystem } from "../../game/systems/EconomySystem.js";
 
 const DEFAULT_SETTINGS = {
   visuals: {
@@ -113,6 +114,7 @@ const TABS = [
   { id: 'visuals',  label: 'Visuales' },
   { id: 'audio',    label: 'Audio' },
   { id: 'protocol', label: 'Protocolo' },
+  { id: 'profile',  label: 'Perfil' },
 ];
 
 const QUALITY_OPTS = [
@@ -127,6 +129,72 @@ const DIFFICULTY_OPTS = [
   { value: 'hard',   label: 'Avanzado' },
   { value: 'elite',  label: 'Elite' },
 ];
+
+function ProfileSection() {
+  const [confirmStep, setConfirmStep] = useState(0);
+  const [profile, setProfile] = useState(() => EconomySystem.getProfile());
+
+  const refresh = () => setProfile(EconomySystem.getProfile());
+
+  const onReset = () => {
+    if (confirmStep === 0) { setConfirmStep(1); return; }
+    if (confirmStep === 1) { setConfirmStep(2); return; }
+    EconomySystem.reset();
+    setConfirmStep(0);
+    refresh();
+  };
+
+  const fmt = n => new Intl.NumberFormat('es-ES').format(n ?? 0);
+  const labels = ['Reiniciar Perfil', 'Confirmar (1/2)', 'Confirmar definitivamente (2/2)'];
+
+  return (
+    <div className="settings__section" key="profile">
+      <Row label="Grafemas" hint="Saldo actual del piloto">
+        <span className="settings__readout">₲ {fmt(profile.grafemas)}</span>
+      </Row>
+      <Row label="Naves en Hangar" hint="Inventario de naves desbloqueadas">
+        <span className="settings__readout">{profile.ownedShips.length}</span>
+      </Row>
+      <Row label="Nave Equipada">
+        <span className="settings__readout">{profile.equippedShip}</span>
+      </Row>
+      <Row label="Kills Totales" hint="Enemigos colapsados acumulados">
+        <span className="settings__readout">{fmt(profile.stats.kills)}</span>
+      </Row>
+      <Row label="Carreras Ganadas">
+        <span className="settings__readout">{fmt(profile.stats.racesWon)}</span>
+      </Row>
+      <Row label="Grafemas Ganados (total)">
+        <span className="settings__readout">₲ {fmt(profile.stats.totalGrafemasEarned)}</span>
+      </Row>
+      <Row label="Grafemas Gastados (total)">
+        <span className="settings__readout">₲ {fmt(profile.stats.totalGrafemasSpent)}</span>
+      </Row>
+
+      <div className="settings__danger-zone">
+        <p className="settings__danger-note">
+          ◈ Reiniciar el perfil borra grafemas, inventario y estadísticas. Acción irreversible.
+        </p>
+        <button
+          type="button"
+          className={`settings__danger-btn${confirmStep > 0 ? ' settings__danger-btn--armed' : ''}`}
+          onClick={onReset}
+        >
+          {labels[confirmStep]}
+        </button>
+        {confirmStep > 0 && (
+          <button
+            type="button"
+            className="settings__danger-cancel"
+            onClick={() => setConfirmStep(0)}
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Settings({ onClose }) {
   const [tab, setTab] = useState('visuals');
@@ -240,6 +308,8 @@ export default function Settings({ onClose }) {
               </Row>
             </div>
           )}
+
+          {tab === 'profile' && <ProfileSection />}
 
           {tab === 'protocol' && (
             <div className="settings__section" key="protocol">

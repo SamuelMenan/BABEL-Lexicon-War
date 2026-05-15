@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { SHIPS } from '../../../shared/constants.js';
+import { getShipsForHangar } from '../../../shared/shopCatalog.js';
+
+const SHIPS = getShipsForHangar();
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../../rendering/BoosterEffect.js';
 import { SHIP_MUZZLE_CONFIGS } from '../../rendering/booster/MuzzleConfig.js';
 

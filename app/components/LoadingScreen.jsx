@@ -76,7 +76,7 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
         <div style={S.quoteBlock}>
           <p style={S.quoteLine}>"Error de sintaxis.</p>
           <p style={S.quoteLine}>&nbsp;Coincidencia fallida."</p>
-          <p style={S.quoteAttr}>— SISTEMA BABEL · ALERTA DE CARGA</p>
+          <p style={S.quoteAttr}>- SISTEMA BABEL · ALERTA DE CARGA</p>
         </div>
       </div>
 

@@ -7,11 +7,7 @@ export default function MainMenu() {
   const [showSettings, setShowSettings] = useState(false);
   const start = (mode) => Bridge.commands.openShipSelection(mode);
 
-  if (showSettings) {
-    return <Settings onClose={() => setShowSettings(false)} />;
-  }
-
-  return (
+  return showSettings ? <Settings onClose={() => setShowSettings(false)} /> : (
     <div className="main-menu">
       <h1 className="main-menu__title">BABEL:</h1>
       <p className="main-menu__subtitle">Lexicon War</p>

@@ -141,27 +141,17 @@ function _stopBot() {
 
 // ── Status Indicator ────────────────────────────────────────────────────
 let _indicatorEl = null;
+const _indicatorBaseCss =
+  'position:fixed;top:4px;right:4px;background:rgba(0,0,0,0.75);' +
+  'font-family:"Share Tech Mono","Courier New",monospace;font-size:11px;' +
+  'padding:3px 10px;border-radius:3px;z-index:99999;pointer-events:none;' +
+  'letter-spacing:0.5px;user-select:none;line-height:1.4;transition:opacity 0.3s;';
 
 function _createIndicator() {
   if (_indicatorEl) return;
   _indicatorEl = document.createElement('div');
   _indicatorEl.id = 'autotyper-indicator';
-  Object.assign(_indicatorEl.style, {
-    position: 'fixed',
-    top: '4px',
-    right: '4px',
-    background: 'rgba(0,0,0,0.75)',
-    fontFamily: '"Share Tech Mono", "Courier New", monospace',
-    fontSize: '11px',
-    padding: '3px 10px',
-    borderRadius: '3px',
-    zIndex: '99999',
-    pointerEvents: 'none',
-    letterSpacing: '0.5px',
-    userSelect: 'none',
-    lineHeight: '1.4',
-    transition: 'opacity 0.3s',
-  });
+  _indicatorEl.style.cssText = _indicatorBaseCss;
   document.body.appendChild(_indicatorEl);
 }
 
@@ -169,14 +159,10 @@ function _updateIndicator() {
   if (!_indicatorEl) _createIndicator();
   if (_active) {
     _indicatorEl.textContent = `BOT · ON · ${TARGET_WPM} WPM`;
-    _indicatorEl.style.color = '#ff4466';
-    _indicatorEl.style.border = '1px solid rgba(255,68,102,0.5)';
-    _indicatorEl.style.opacity = '1';
+    _indicatorEl.style.cssText = 'color:#ff4466;border:1px solid rgba(255,68,102,0.5);opacity:1;' + _indicatorBaseCss;
   } else {
     _indicatorEl.textContent = 'BOT · OFF';
-    _indicatorEl.style.color = '#666';
-    _indicatorEl.style.border = '1px solid rgba(102,102,102,0.3)';
-    _indicatorEl.style.opacity = '0.6';
+    _indicatorEl.style.cssText = 'color:#666;border:1px solid rgba(102,102,102,0.3);opacity:0.6;' + _indicatorBaseCss;
   }
 }
 

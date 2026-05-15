@@ -38,7 +38,7 @@ export function getSoftGlowTexture() {
   return softGlowTexture;
 }
 
-export function getSaberGlowTexture() {
+function getSaberGlowTexture() {
   if (saberGlowTexture) return saberGlowTexture;
 
   const width = 512;

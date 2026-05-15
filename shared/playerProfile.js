@@ -4,12 +4,14 @@
 import { SHIP_CATALOG } from './shopCatalog.js';
 
 const STORAGE_KEY = 'babel.profile.v1';
-export const DEFAULT_SHIP_ID = 'spaceship';
+const DEFAULT_SHIP_ID = 'spaceship';
 
 function computeDefaultOwned() {
-  return Object.entries(SHIP_CATALOG)
-    .filter(([, c]) => c.unlockedByDefault)
-    .map(([id]) => id);
+  const out = [];
+  for (const [id, c] of Object.entries(SHIP_CATALOG)) {
+    if (c.unlockedByDefault) out.push(id);
+  }
+  return out;
 }
 
 export function makeDefaultProfile() {

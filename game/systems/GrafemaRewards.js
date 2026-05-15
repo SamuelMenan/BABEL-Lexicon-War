@@ -13,7 +13,7 @@ import {
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-export function wordLenMultiplier(len) {
+function wordLenMultiplier(len) {
   return clamp(
     1 + (len - GRAFEMAS_WORDLEN_REF) * GRAFEMAS_WORDLEN_STEP,
     GRAFEMAS_WORDLEN_MULT_MIN,
@@ -21,7 +21,7 @@ export function wordLenMultiplier(len) {
   );
 }
 
-export function streakMultiplier(streakCount) {
+function streakMultiplier(streakCount) {
   return clamp(1 + streakCount * GRAFEMAS_STREAK_STEP, 1, GRAFEMAS_STREAK_MAX_MULT);
 }
 

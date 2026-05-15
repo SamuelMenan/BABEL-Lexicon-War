@@ -75,7 +75,7 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
         <div className="loading-quote">
           <p className="loading-quote__line">"Las palabras no se acaban.</p>
           <p className="loading-quote__line">&nbsp;Solo cambian de mano."</p>
-          <p className="loading-quote__attr">— LYRA VOSS · ÚLTIMA TRANSMISIÓN</p>
+          <p className="loading-quote__attr">- LYRA VOSS · ÚLTIMA TRANSMISIÓN</p>
         </div>
       </div>
 

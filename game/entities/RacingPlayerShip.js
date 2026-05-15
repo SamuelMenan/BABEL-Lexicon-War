@@ -129,9 +129,9 @@ export class RacingPlayerShip extends ShipBase {
     const prefix   = `hangar_${this._ship.id}_`;
     const racingSF = TARGET_MODEL_LENGTH / 2.2;
 
-    Object.entries(SHIP_BOOSTER_CONFIGS)
-      .filter(([key]) => key.startsWith(prefix))
-      .forEach(([, config]) => {
+    for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
+      if (!key.startsWith(prefix)) continue;
+      {
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
           config.localPosition.y * rawHalfSize.y,
@@ -163,7 +163,8 @@ export class RacingPlayerShip extends ShipBase {
         }
 
         this._boosters.push(booster);
-      });
+      }
+    }
 
     if (this._boosters.length === 0) {
       console.warn(`[RacingPlayerShip] No hangar booster config for "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);

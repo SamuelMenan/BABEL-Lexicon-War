@@ -92,8 +92,8 @@ export const WORD_ERROR_PENALTY = 'reset';
 
 // --- Jugador ---
 export const PLAYER_MAX_HP     = 100;
-export const PLAYER_MAX_ENERGY = 100;
-export const PLAYER_MAX_SHIELD = 100; // alias semántico para PLAYER_MAX_ENERGY
+const PLAYER_MAX_ENERGY = 100;
+const PLAYER_MAX_SHIELD = 100; // alias semántico para PLAYER_MAX_ENERGY
 export const HIT_DAMAGE        = 20;
 
 // --- WARNINGS ---
@@ -113,8 +113,8 @@ export const OVERHEAT_THRESHOLD    = 85;   // nivel que activa overheat
 export const OVERHEAT_DURATION_SEC = 3.5;  // duración del estado overheat
 
 // --- SHIELD ---
-export const SHIELD_REGEN_PER_SEC  = 12;   // regeneración por segundo
-export const SHIELD_REGEN_DELAY_MS = 1600; // ms sin daño antes de regen
+const SHIELD_REGEN_PER_SEC  = 12;   // regeneración por segundo
+const SHIELD_REGEN_DELAY_MS = 1600; // ms sin daño antes de regen
 
 // --- Rendering ---
 export const CAMERA_FOV    = 75;
@@ -124,9 +124,9 @@ export const BLOOM_LAYER   = 1;
 
 // --- Carrera ---
 export const RACE_TARGET_DISTANCE = 500;
-export const RACE_TIME_LIMIT      = 90;
+const RACE_TIME_LIMIT      = 90;
 export const RACE_OPPONENT_WPM    = 25;
-export const RACE_PHRASE_COUNT    = 16;
+const RACE_PHRASE_COUNT    = 16;
 export const RACE_DURATION        = 60;
 export const RACE_COUNTDOWN_SECS  = 5;
 // [minStreak, multiplier]
@@ -139,11 +139,11 @@ export const FLOW_DECAY_IDLE       = 4;
 export const FLOW_DECAY_ACTIVE     = 5;
 export const FLOW_PENALTY_HIT      = 25;
 export const FLOW_PENALTY_MISS     = 6;
-export const FLOW_PENALTY_FAIL     = 15;
+const FLOW_PENALTY_FAIL     = 15;
 export const FLOW_HEAL_RATE        = 8;
-export const FLOW_BEAM_DAMAGE_MULT = 2.5;
+const FLOW_BEAM_DAMAGE_MULT = 2.5;
 export const FLOW_COOLDOWN_MS      = 3000;
-export const FLOW_BEAM_CHAIN       = 3;    // enemies hit per letter in flow mode
+const FLOW_BEAM_CHAIN       = 3;    // enemies hit per letter in flow mode
 
 export const COLORS_FLOW = {
   RAMP: ['#ffffff', '#eabfff', '#c400ff', '#aa00ff', '#8800ff'],
@@ -269,7 +269,7 @@ export const COLORS = {
 
 
 // --- Racing material presets — same PBR baseline, different emissive tint ---
-export const RACING_MATERIALS = {
+const RACING_MATERIALS = {
   PLAYER: {
     metalness: 0.72, roughness: 0.22,
     emissiveR: 0.22, emissiveG: 0.12, emissiveB: 0.03,
@@ -332,7 +332,7 @@ export const SPAWN_MIN_WEIGHT_GUARDIAN  = 0.10;
 export const SPAWN_MIN_WEIGHT_PHANTOM   = 0.10;
 export const SPAWN_MIN_WEIGHT_APEX      = 0.06;
 export const SPAWN_MAX_WEIGHT_APEX      = 0.16;
-export const SPAWN_RARE_PITY_THRESHOLD  = 4;
+const SPAWN_RARE_PITY_THRESHOLD  = 4;
 
 // --- Flota de naves jugables ---
 // rotationY — ajuste de orientación por nave (radianes)
@@ -394,7 +394,7 @@ export const SHIPS = [
     noseAxis: '-z',
   },
 ];
-export const DEFAULT_SHIP = 'spaceship';
+const DEFAULT_SHIP = 'spaceship';
 
 // ─── Paletas de color por nave ──────────────────────────────────────────────
 //

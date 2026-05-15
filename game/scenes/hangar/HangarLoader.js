@@ -162,9 +162,9 @@ export class HangarLoader {
         // invScale compensates wrapper.scale so visual sizes appear in scene units,
         // same convention as combat configs (bodyRadius, flameSize, etc. in scene units).
         const invScale = 1 / scale;
-        Object.entries(SHIP_BOOSTER_CONFIGS)
-          .filter(([key]) => key.startsWith(prefix))
-          .forEach(([, config]) => {
+        for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
+          if (!key.startsWith(prefix)) continue;
+          {
             // localPosition: fraction of model half-size (±1 = bounding box edge)
             const scaledPos = new THREE.Vector3(
               config.localPosition.x * halfSize.x,
@@ -189,11 +189,12 @@ export class HangarLoader {
             else if (config.flipZ)             booster._root.rotation.y = Math.PI;
             booster.setHangarMode(true);
             this.boosters.push(booster);
-          });
+          }
+        }
 
-        Object.entries(SHIP_MUZZLE_CONFIGS)
-          .filter(([key]) => key.startsWith(prefix))
-          .forEach(([, config]) => {
+        for (const [key, config] of Object.entries(SHIP_MUZZLE_CONFIGS)) {
+          if (!key.startsWith(prefix)) continue;
+          {
             const anchor = new THREE.Object3D();
             anchor.name = 'muzzle_anchor';
             anchor.position.set(
@@ -210,7 +211,8 @@ export class HangarLoader {
               emissive: config.emissive,
               scale:    config.scale ?? 1.0,
             });
-          });
+          }
+        }
 
         this._saveModelOriginals(wrapper);
         this._onLoadEnd();

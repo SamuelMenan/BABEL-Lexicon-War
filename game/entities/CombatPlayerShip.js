@@ -105,9 +105,9 @@ export class CombatPlayerShip extends ShipBase {
     const prefix   = `hangar_${this._ship.id}_`;
     const combatSF = TARGET_MODEL_LENGTH / 2.2;
 
-    Object.entries(SHIP_BOOSTER_CONFIGS)
-      .filter(([key]) => key.startsWith(prefix))
-      .forEach(([, config]) => {
+    for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
+      if (!key.startsWith(prefix)) continue;
+      {
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
           config.localPosition.y * rawHalfSize.y,
@@ -134,7 +134,8 @@ export class CombatPlayerShip extends ShipBase {
         const booster = new BoosterEffect(combatConfig);
         booster.attachToShip(this._group);
         this._boosters.push(booster);
-      });
+      }
+    }
 
     if (this._boosters.length === 0) {
       console.warn(`[CombatPlayerShip] No hangar booster config found for ship "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
@@ -144,9 +145,9 @@ export class CombatPlayerShip extends ShipBase {
     this._muzzles.forEach(m => this._group.remove(m.anchor));
     this._muzzles = [];
 
-    Object.entries(SHIP_MUZZLE_CONFIGS)
-      .filter(([key]) => key.startsWith(prefix))
-      .forEach(([, config]) => {
+    for (const [key, config] of Object.entries(SHIP_MUZZLE_CONFIGS)) {
+      if (!key.startsWith(prefix)) continue;
+      {
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
           config.localPosition.y * rawHalfSize.y,
@@ -169,7 +170,8 @@ export class CombatPlayerShip extends ShipBase {
           emissive: config.emissive,
           scale:    config.scale ?? 1.0,
         });
-      });
+      }
+    }
 
     // Modelo + boosters + muzzles listos → habilitar entry animation.
     this._modelLoaded = true;

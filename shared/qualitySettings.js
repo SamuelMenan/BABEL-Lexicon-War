@@ -3,7 +3,7 @@
 export const QUALITY = Object.freeze({ LOW: 'low', MID: 'mid', HIGH: 'high' });
 
 // Particle and effect budgets per tier.
-export const QUALITY_PROFILES = Object.freeze({
+const QUALITY_PROFILES = Object.freeze({
   low: {
     particleMaxBursts:     6,
     particlePerBurst:      14,

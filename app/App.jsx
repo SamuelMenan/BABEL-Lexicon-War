@@ -8,10 +8,9 @@ import MatchResult from "./components/MatchResult.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import HangarScreen from "./components/hangar/HangarScreen.jsx";
 import { Bridge } from "../shared/bridge.js";
-import "../game/debug/StressTest.js"; // exposes window.__babelStress
 
 export default function App() {
-  const [state, setState] = useState(Bridge.getState());
+  const [state, setState] = useState(() => Bridge.getState());
 
   useEffect(() => {
     const stats = new Stats();

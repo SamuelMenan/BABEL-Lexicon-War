@@ -42,7 +42,11 @@ export class CombatSceneManager {
 
     this._spawn = new SpawnDirector({
       getWave:          () => this.wave,
-      getActiveWords:   () => this.enemies.filter(e => e.active).map(e => e.word),
+      getActiveWords:   () => {
+        const out = [];
+        for (const e of this.enemies) if (e.active) out.push(e.word);
+        return out;
+      },
       getActiveSlots:   () => MAX_ACTIVE_ENEMIES - this.enemies.filter(e => e.active).length,
       getResources:     () => this._resources,
       spawnOne:         (type, speed, word, pos) => this._spawnOne(type, speed, word, pos),

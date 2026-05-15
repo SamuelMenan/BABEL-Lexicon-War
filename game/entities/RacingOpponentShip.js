@@ -96,9 +96,9 @@ export class RacingOpponentShip extends ShipBase {
     const racingSF = TARGET_MODEL_LENGTH / 2.2;
     const prefix   = `hangar_${this._shipModel}_`;
 
-    Object.entries(SHIP_BOOSTER_CONFIGS)
-      .filter(([key]) => key.startsWith(prefix))
-      .forEach(([, config]) => {
+    for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
+      if (!key.startsWith(prefix)) continue;
+      {
         const rawPos = new THREE.Vector3(
           config.localPosition.x * rawHalfSize.x,
           config.localPosition.y * rawHalfSize.y,
@@ -131,8 +131,8 @@ export class RacingOpponentShip extends ShipBase {
         }
 
         this._boosters.push(booster);
-      });
-`[RacingOpponentShip] No hangar_${this._shipModel}_* booster configs found.`
+      }
+    }
     if (this._boosters.length === 0) {
       console.warn('[RacingOpponentShip] No hangar_cb1_* booster configs found.');
     }

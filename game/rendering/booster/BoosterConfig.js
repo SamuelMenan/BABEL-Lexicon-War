@@ -4,7 +4,7 @@ import { SHIP_PALETTES } from '../../../shared/constants.js';
 // 10-level opacity ramp: flowRatio 0→1 maps across estos valores.
 // Ascendente real: idle (fr=0) muy tenue (0.05) → FLOW final (fr=1) máxima
 // intensidad (1.0). Aplicada con fórmula aditiva rawOp + (1-rawOp)*fop.
-export const DEFAULT_OPACITY_RAMP = [0.05, 0.15, 0.28, 0.42, 0.56, 0.68, 0.79, 0.88, 0.95, 1.0];
+const DEFAULT_OPACITY_RAMP = [0.05, 0.15, 0.28, 0.42, 0.56, 0.68, 0.79, 0.88, 0.95, 1.0];
 
 export const BOOST_PALETTE = {
   dark:  new THREE.Color(0x102a7a),

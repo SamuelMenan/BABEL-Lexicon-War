@@ -13,11 +13,7 @@ export default function PauseMenu() {
   const resume  = () => Bridge.commands.resumeGame();
   const toMenu  = () => window.location.reload();
 
-  if (showSettings) {
-    return <Settings onClose={() => setShowSettings(false)} />;
-  }
-
-  return (
+  return showSettings ? <Settings onClose={() => setShowSettings(false)} /> : (
     <div className="pause-menu">
       <div className="pause-menu__panel">
         <span className="pause-menu__scan" aria-hidden="true" />

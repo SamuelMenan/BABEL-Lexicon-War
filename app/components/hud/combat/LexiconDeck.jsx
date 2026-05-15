@@ -39,7 +39,7 @@ export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier })
             </span>
           </div>
         ))}
-        {sorted.length === 0 && <div className="lexicon-deck__empty">— LIMPIO —</div>}
+        {sorted.length === 0 && <div className="lexicon-deck__empty">· LIMPIO ·</div>}
       </div>
       {flowMultiplier > 1.0 && (
         <div className="lexicon-deck__flow">

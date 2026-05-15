@@ -13,12 +13,12 @@ import {
   getSharedRing,
   sharedCore,
 } from '../rendering/EnemyGeometryCache.js';
-import { createBehavior } from './enemyBehaviors/index.js';
+import { createBehavior } from './enemyBehaviors/behaviorRegistry.js';
 import { QUALITY, getQualityTier } from '../../shared/qualitySettings.js';
 import { waveTrace } from '../debug/WaveTrace.js';
 
-// Re-exports — preserve external import surface (SpawnDirector, CombatSceneManager).
-export { ENEMY_TYPES, TYPE_META, pickEnemyType } from '../data/enemyConfigs.js';
+// Re-exports: preserve external import surface (SpawnDirector, CombatSceneManager).
+export { ENEMY_TYPES, TYPE_META } from '../data/enemyConfigs.js';
 
 export class CombatEnemy extends Entity {
   constructor(word, position, speed = ENEMY_BASE_SPEED, type = ENEMY_TYPES.SCOUT) {

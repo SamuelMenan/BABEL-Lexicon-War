@@ -1,5 +1,5 @@
 // Datos de presentación del hangar por nave — no afectan lógica de juego
-export const SHIP_DATA = {
+const SHIP_DATA = {
   spaceship: {
     coreId: '0X14·A2',
     stats: { velocidad: 6, escudo: 5, precision: 7, capacidad: 6 },

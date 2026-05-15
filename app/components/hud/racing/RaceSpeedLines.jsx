@@ -17,16 +17,16 @@ const RIGHT_LINES = [
 export default function RaceSpeedLines({ flowActive }) {
   return (
     <div className="r-speed-lines" style={{ opacity: flowActive ? 0.85 : 0.4 }}>
-      {LEFT_LINES.map((l, i) => (
+      {LEFT_LINES.map((l) => (
         <div
-          key={i}
+          key={`l-${l.top}-${l.width}-${l.delay}`}
           className="r-speed-lines__ln"
           style={{ top: l.top, width: l.width, animationDelay: l.delay + "s" }}
         />
       ))}
-      {RIGHT_LINES.map((l, i) => (
+      {RIGHT_LINES.map((l) => (
         <div
-          key={"r" + i}
+          key={`r-${l.top}-${l.width}-${l.delay}`}
           className="r-speed-lines__ln r-speed-lines__ln--right"
           style={{ top: l.top, width: l.width, animationDelay: l.delay + "s" }}
         />

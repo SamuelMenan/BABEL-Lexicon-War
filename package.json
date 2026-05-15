@@ -12,8 +12,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stats.js": "^0.17.0",
-    "three": "^0.169.0",
-    "zustand": "^5.0.1"
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/three": "^0.169.0",

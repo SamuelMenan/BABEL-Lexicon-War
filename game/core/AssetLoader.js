@@ -76,15 +76,19 @@ function _warmupGPU(renderer) {
 }
 
 async function _loadManifest(keys) {
+  const tasks = [];
   for (const key of keys) {
     const list = ASSET_MANIFESTS[key] ?? [];
     for (const entry of list) {
-      if (entry.type === 'gltf') {
-        try { await _loadGLTFAsync(entry.url); }
-        catch { if (!entry.optional) throw new Error(`Required asset missing: ${entry.url}`); }
-      }
+      if (entry.type !== 'gltf') continue;
+      tasks.push(
+        _loadGLTFAsync(entry.url).catch(() => {
+          if (!entry.optional) throw new Error(`Required asset missing: ${entry.url}`);
+        })
+      );
     }
   }
+  await Promise.all(tasks);
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────

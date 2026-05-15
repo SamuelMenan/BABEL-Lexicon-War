@@ -216,7 +216,7 @@ export const TYPE_META = {
 export const SPEED_MULT_MIN   = 0.5;
 export const SPEED_MULT_RANGE = 0.75;
 
-export function pickEnemyType(word = '', wave = 1) {
+function pickEnemyType(word = '', wave = 1) {
   const w = {};
   for (const [t, c] of Object.entries(CFGS)) w[t] = c.rarityWeight;
 

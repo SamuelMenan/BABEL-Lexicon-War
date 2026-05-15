@@ -5,11 +5,13 @@ export default function Countdown({ countdown, countdownActive }) {
   const prevActive = useRef(true);
 
   useEffect(() => {
+    let timerId;
     if (prevActive.current && !countdownActive) {
       setShowGo(true);
-      setTimeout(() => setShowGo(false), 900);
+      timerId = setTimeout(() => setShowGo(false), 900);
     }
     prevActive.current = countdownActive;
+    return () => { if (timerId) clearTimeout(timerId); };
   }, [countdownActive]);
 
   if (!countdownActive && !showGo) return null;

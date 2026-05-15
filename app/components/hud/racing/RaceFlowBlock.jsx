@@ -22,7 +22,7 @@ export default function RaceFlowBlock({ flowMultiplier = 1.0, flowStreak = 0, fl
       <div className="r-flow-block__pips">
         {Array.from({ length: PIPS }, (_, i) => (
           <i
-            key={i}
+            key={`pip-${i}`}
             className={
               i < activePips ? (isPeak ? "r-pip--peak" : "r-pip--on") : ""
             }

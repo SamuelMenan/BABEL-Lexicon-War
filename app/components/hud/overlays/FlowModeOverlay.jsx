@@ -5,16 +5,16 @@ export default function FlowModeOverlay({ flowActive }) {
   const prevActive = useRef(false);
 
   useEffect(() => {
+    let timerId;
     if (!prevActive.current && flowActive) {
       setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 1600);
+      timerId = setTimeout(() => setShowPopup(false), 1600);
     }
     prevActive.current = flowActive;
+    return () => { if (timerId) clearTimeout(timerId); };
   }, [flowActive]);
 
-  if (!showPopup) return null;
-
-  return (
+  return !showPopup ? null : (
     <div
       className="precombat-overlay"
       style={{

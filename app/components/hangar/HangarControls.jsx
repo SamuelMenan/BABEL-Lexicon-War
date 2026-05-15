@@ -1,7 +1,8 @@
 import React from 'react';
 
+const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
 function formatN(n) {
-  return new Intl.NumberFormat('es-ES').format(n ?? 0);
+  return NUMBER_FORMATTER.format(n ?? 0);
 }
 
 export default function HangarControls({

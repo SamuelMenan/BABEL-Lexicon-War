@@ -3,6 +3,8 @@ import { EXECUTION_MODE } from "../../shared/constants.js";
 import { workerBridge } from "../../game/workers/workerBridge.js";
 import { EconomySystem } from "../../game/systems/EconomySystem.js";
 
+const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
+
 const DEFAULT_SETTINGS = {
   visuals: {
     quality:          'high',
@@ -26,9 +28,11 @@ const DEFAULT_SETTINGS = {
   },
 };
 
+const SETTINGS_STORAGE_KEY = 'babel-settings:v1';
+
 function loadSettings() {
   try {
-    const raw = localStorage.getItem('babel-settings');
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
@@ -42,7 +46,7 @@ function loadSettings() {
 }
 
 function saveSettings(s) {
-  try { localStorage.setItem('babel-settings', JSON.stringify(s)); } catch { /* ignore */ }
+  try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
 }
 
 /* ── Primitives ──────────────────────────────────────────────── */
@@ -144,7 +148,7 @@ function ProfileSection() {
     refresh();
   };
 
-  const fmt = n => new Intl.NumberFormat('es-ES').format(n ?? 0);
+  const fmt = n => NUMBER_FORMATTER.format(n ?? 0);
   const labels = ['Reiniciar Perfil', 'Confirmar (1/2)', 'Confirmar definitivamente (2/2)'];
 
   return (
@@ -225,7 +229,7 @@ export default function Settings({ onClose }) {
         {/* Header */}
         <div className="settings__header">
           <div className="settings__header-left">
-            <span className="settings__header-label">◈ CONFIGURACIÓN DE SISTEMA — BABEL NRX</span>
+            <span className="settings__header-label">◈ CONFIGURACIÓN DE SISTEMA · BABEL NRX</span>
             <h2 className="settings__title">Ajustes</h2>
           </div>
           <button type="button" className="settings__close" onClick={onClose} aria-label="Cerrar">

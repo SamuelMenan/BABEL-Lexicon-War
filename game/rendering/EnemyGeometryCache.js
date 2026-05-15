@@ -151,7 +151,7 @@ export function buildGreatDodecaGeometry(r = 0.78, spike = 1.45) {
   return _stellateGeometry(new THREE.IcosahedronGeometry(r, 0), spike);
 }
 
-export function disposeEnemyGeometryCache() {
+function disposeEnemyGeometryCache() {
   for (const k in _sharedEdges) _sharedEdges[k].dispose();
   for (const k in _sharedRings) _sharedRings[k].dispose();
   sharedCore.dispose();

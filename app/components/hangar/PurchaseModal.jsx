@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 
-function fmt(n) { return new Intl.NumberFormat('es-ES').format(n ?? 0); }
+const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
+function fmt(n) { return NUMBER_FORMATTER.format(n ?? 0); }
 
 export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
   useEffect(() => {
@@ -15,13 +16,26 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
   const after = Math.max(0, (grafemas ?? 0) - (ship.price ?? 0));
 
   return (
-    <div className="purchase-modal" onClick={onCancel}>
-      <div className="purchase-modal__panel" onClick={e => e.stopPropagation()}>
+    <div
+      className="purchase-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="purchase-modal-title"
+      onClick={onCancel}
+      onKeyDown={(e) => { if (e.key === 'Escape') onCancel(); }}
+      tabIndex={-1}
+    >
+      <div
+        className="purchase-modal__panel"
+        role="document"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <div className="purchase-modal__header">
           <span className="purchase-modal__label">◈ CONFIRMAR ADQUISICIÓN</span>
         </div>
 
-        <h3 className="purchase-modal__ship">{ship.name.toUpperCase()}</h3>
+        <h3 id="purchase-modal-title" className="purchase-modal__ship">{ship.name.toUpperCase()}</h3>
         <span className="purchase-modal__code">CORE · {ship.code}</span>
 
         <div className="purchase-modal__rows">

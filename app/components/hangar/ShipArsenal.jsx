@@ -21,7 +21,7 @@ export default function ShipArsenal({ arsenal }) {
       </div>
       <div className="hangar-arsenal__divider" />
       {arsenal.map((weapon, i) => (
-        <WeaponSlot key={i} {...weapon} />
+        <WeaponSlot key={`${weapon.name ?? 'slot'}-${i}`} {...weapon} />
       ))}
     </div>
   );

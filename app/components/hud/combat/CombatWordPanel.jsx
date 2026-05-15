@@ -46,9 +46,9 @@ export default function CombatWordPanel({ activeWord, animState }) {
         <span className="combat__meta-divider">|</span>
         <span className="combat__meta-item">NUCLEO · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{hexCore}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word.length || "—"}</span></span>
+        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word.length || "-"}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word ? freq + "HZ" : "—"}</span></span>
+        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word ? freq + "HZ" : "-"}</span></span>
       </div>
     </div>
   );

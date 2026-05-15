@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Bridge } from "../../shared/bridge.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
@@ -30,10 +30,19 @@ import WarningIcon from "./hud/warnings/WarningIcon.jsx";
 import GrafemaToasts from "./hud/GrafemaToasts.jsx";
 import WalletBadge from "./hud/WalletBadge.jsx";
 
+function wordFxReducer(state, action) {
+  switch (action.type) {
+    case 'correct': return { animState: 'correct', showFlash: false };
+    case 'wrong':   return { animState: 'wrong',   showFlash: true };
+    case 'reset':   return { animState: 'idle',    showFlash: false };
+    default: return state;
+  }
+}
+
 export default function HUD() {
-  const [state, setState] = useState(Bridge.getState());
-  const [animState, setAnim] = useState("idle");
-  const [showFlash, setFlash] = useState(false);
+  const [state, setState] = useState(() => Bridge.getState());
+  const [wordFx, dispatchWordFx] = useReducer(wordFxReducer, { animState: 'idle', showFlash: false });
+  const { animState, showFlash } = wordFx;
   const [waveNotice, setWaveNotice] = useState(null);
   const timerRef = useRef(null);
   const waveTimerRef = useRef(null);
@@ -43,14 +52,8 @@ export default function HUD() {
   useEffect(() => {
     return EventBus.on(EventTypes.WORD_PROGRESS, ({ correct }) => {
       clearTimeout(timerRef.current);
-      if (correct) {
-        setAnim("correct");
-        timerRef.current = setTimeout(() => setAnim("idle"), 150);
-      } else {
-        setAnim("wrong");
-        setFlash(true);
-        timerRef.current = setTimeout(() => { setAnim("idle"); setFlash(false); }, 340);
-      }
+      dispatchWordFx({ type: correct ? 'correct' : 'wrong' });
+      timerRef.current = setTimeout(() => dispatchWordFx({ type: 'reset' }), correct ? 150 : 340);
     });
   }, []);
 
@@ -198,7 +201,7 @@ export default function HUD() {
           <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
           <div className="combat__top-left">
             <span className="hud__pilot-name">KAEL · VOSS</span>
-            <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>TYPO—07 / PILOTO</span>
+            <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>TYPO-07 / PILOTO</span>
           </div>
           <CombatTicker />
           <CombatTopRight wpm={wpm} accuracy={accuracy} />

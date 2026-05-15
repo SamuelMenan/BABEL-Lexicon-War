@@ -4,7 +4,7 @@ import { AssetLoader } from '../core/AssetLoader.js';
 import { Moon } from './Moon.js';
 import { Starfield } from './Starfield.js';
 
-export const ARENA_SCENARIO_1 = 'scenario-1-legacy';
+const ARENA_SCENARIO_1 = 'scenario-1-legacy';
 export const ARENA_SCENARIO_2 = 'scenario-2-combat-clean';
 
 export class Arena {

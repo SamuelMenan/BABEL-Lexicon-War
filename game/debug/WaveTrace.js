@@ -132,8 +132,8 @@ class WaveTrace {
     const frameStats = (waveFilter != null)
       ? this._frameMs.filter(f => f.wave === waveFilter)
       : this._frameMs;
-    const worstFrames = [...frameStats]
-      .sort((a, b) => b.ms - a.ms)
+    const worstFrames = frameStats
+      .toSorted((a, b) => b.ms - a.ms)
       .slice(0, 8)
       .map(f => ({ wave: f.wave, frameIdx: f.idx, ms: f.ms, sinceStartMs: f.sinceStart }));
 

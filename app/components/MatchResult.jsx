@@ -116,7 +116,7 @@ export default function MatchResult({
 
           {/* Header */}
           <div className="mr__header">
-            <span className="mr__header-label">◈ Análisis Post-Misión — Protocolo Léxico NRX</span>
+            <span className="mr__header-label">◈ Análisis Post-Misión · Protocolo Léxico NRX</span>
             <span className="mr__header-id">SES:{sessionId}</span>
           </div>
 
@@ -218,7 +218,7 @@ export default function MatchResult({
 
         {/* Header */}
         <div className="mr__header">
-          <span className="mr__header-label">◈ Registro de Transmisión — Protocolo de Carrera</span>
+          <span className="mr__header-label">◈ Registro de Transmisión · Protocolo de Carrera</span>
           <span className="mr__header-id">SES:{sessionId}</span>
         </div>
 

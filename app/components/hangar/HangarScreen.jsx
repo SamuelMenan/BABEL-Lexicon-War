@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useReducer, useRef, useState, useCallback } from 'react';
 import { ShipSelectionScene } from '../../../game/scenes/ShipSelectionScene.js';
 import { Bridge } from '../../../shared/bridge.js';
 import { EventTypes } from '../../../shared/eventTypes.js';
@@ -47,7 +47,7 @@ export default function HangarScreen() {
   const shipIdxRef = useRef(0);
 
   const [shipIdx,       setShipIdx]      = useState(0);
-  const [walletTick,    setWalletTick]   = useState(0); // re-render al cambiar saldo/inventario
+  const [, forceUpdate]                   = useReducer(x => x + 1, 0);
   const [pendingBuy,    setPendingBuy]   = useState(false);
   const [canvasAlpha,  setCanvasAlpha]  = useState(1);
   const [autoRotate,   setAutoRotate]   = useState(true);
@@ -205,18 +205,18 @@ export default function HangarScreen() {
   function confirmPurchase() {
     const shipId = SHIPS[shipIdxRef.current].id;
     const res = EconomySystem.purchaseShip(shipId);
-    if (res.ok) setWalletTick(t => t + 1);
+    if (res.ok) forceUpdate();
     setPendingBuy(false);
   }
   function cancelPurchase() { setPendingBuy(false); }
   function handleEquip() {
     const shipId = SHIPS[shipIdxRef.current].id;
     const res = EconomySystem.equipShip(shipId);
-    if (res.ok) setWalletTick(t => t + 1);
+    if (res.ok) forceUpdate();
   }
 
   useEffect(() => {
-    return Bridge.onStateChange(() => setWalletTick(t => t + 1));
+    return Bridge.onStateChange(() => forceUpdate());
   }, []);
 
   function toggleAutoRotate() {
@@ -232,7 +232,6 @@ export default function HangarScreen() {
   const canBuy   = !owned && EconomySystem.canAfford(ship.id);
   const grafemas = EconomySystem.getGrafemas();
   const missing  = !owned ? Math.max(0, (ship.price ?? 0) - grafemas) : 0;
-  void walletTick;
 
   return (
     <>

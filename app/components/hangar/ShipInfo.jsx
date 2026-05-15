@@ -1,6 +1,7 @@
 import React from 'react';
 
-function fmt(n) { return new Intl.NumberFormat('es-ES').format(n ?? 0); }
+const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
+function fmt(n) { return NUMBER_FORMATTER.format(n ?? 0); }
 
 export default function ShipInfo({ ship, coreId, owned, equipped, price }) {
   let badge;

@@ -75,4 +75,4 @@ export function createBolt({ color = 0xff2222, scale = 1.0, flowBoost = false } 
   return { root, core, glow, halo, dispose };
 }
 
-export const BOLT_VISUAL_LENGTH = BOLT_LENGTH;
+const BOLT_VISUAL_LENGTH = BOLT_LENGTH;

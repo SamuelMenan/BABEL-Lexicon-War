@@ -40,6 +40,7 @@ function _typeNextChar() {
 function _startBot() {
   if (_intervalId) return;
   _active = true;
+  Bridge.setState({ botActive: true });
   _updateIndicator();
 
   const tick = () => {
@@ -53,11 +54,17 @@ function _startBot() {
 
 function _stopBot() {
   _active = false;
+  Bridge.setState({ botActive: false });
   if (_intervalId) {
     clearTimeout(_intervalId);
     _intervalId = null;
   }
   _updateIndicator();
+}
+
+export function toggleBot() {
+  if (_active) _stopBot();
+  else _startBot();
 }
 
 // ── Status Indicator ────────────────────────────────────────────────────
@@ -68,8 +75,16 @@ const _indicatorBaseCss =
   'padding:3px 10px;border-radius:3px;z-index:99999;pointer-events:none;' +
   'letter-spacing:0.5px;user-select:none;line-height:1.4;transition:opacity 0.3s;';
 
+function _isTouch() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(pointer: coarse)').matches
+      || 'ontouchstart' in window
+      || navigator.maxTouchPoints > 0;
+}
+
 function _createIndicator() {
   if (_indicatorEl) return;
+  if (_isTouch()) return; // En táctil el FAB ya muestra el estado.
   _indicatorEl = document.createElement('div');
   _indicatorEl.id = 'autotyper-indicator';
   _indicatorEl.style.cssText = _indicatorBaseCss;
@@ -78,6 +93,7 @@ function _createIndicator() {
 
 function _updateIndicator() {
   if (!_indicatorEl) _createIndicator();
+  if (!_indicatorEl) return; // touch: sin indicador DOM
   if (_active) {
     _indicatorEl.textContent = `BOT · ON · ${TARGET_WPM} WPM`;
     _indicatorEl.style.cssText = 'color:#ff4466;border:1px solid rgba(255,68,102,0.5);opacity:1;' + _indicatorBaseCss;
@@ -97,8 +113,7 @@ function _toggleTelemetry() {
 function _onKeyDown(e) {
   if (e.key === 'Insert' || e.code === 'Insert') {
     e.preventDefault();
-    if (_active) _stopBot();
-    else _startBot();
+    toggleBot();
     return;
   }
 

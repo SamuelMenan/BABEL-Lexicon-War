@@ -201,3 +201,121 @@
   font-family:var(--font-mono); font-size:0.56rem; letter-spacing:0.22em;
   color:var(--text-dim); text-transform:uppercase;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE OVERRIDES — Hangar (≤768px / ≤480px)
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hangar-header { padding: 0.8rem 0.8rem 0; flex-wrap: wrap; gap: 0.4rem; }
+  .hangar-header__center { position: static; transform: none; order: 3; flex-basis: 100%; text-align: center; }
+  .hangar-title { top: 5.2rem; }
+  .hangar-title__name { font-size: clamp(1.4rem, 7vw, 2.4rem); letter-spacing: 0.2em; }
+
+  /* Stats y arsenal apilados en fila inferior, mitad de ancho */
+  .hangar-stats,
+  .hangar-arsenal {
+    width: 46vw;
+    min-width: 0;
+    max-width: 220px;
+    bottom: 6.4rem;
+    padding: 0.6rem 0.7rem;
+  }
+  .hangar-stats   { left: 0.6rem;  }
+  .hangar-arsenal { right: 0.6rem; }
+
+  .hangar-frame__viewport { width: min(86vw, 520px); height: min(34vh, 280px); }
+
+  .hangar-nav--prev { left: 0.4rem; }
+  .hangar-nav--next { right: 0.4rem; }
+  .hangar-nav__btn  { width: 38px; height: 56px; }
+
+  .hangar-controls { bottom: 0.6rem; gap: 0.4rem; }
+  .hangar-controls__btn { min-height: 44px; padding: 0.55rem 1rem; font-size: 0.72rem; }
+}
+
+@media (max-width: 480px) {
+  /* Stats / arsenal ocultan; navegación + botones únicamente */
+  .hangar-stats,
+  .hangar-arsenal { display: none; }
+
+  .hangar-title { top: 4.2rem; }
+  .hangar-frame__viewport { width: 90vw; height: 38vh; }
+
+  .hangar-controls__btn-row { flex-wrap: wrap; justify-content: center; }
+  .hangar-controls__btn { font-size: 0.68rem; padding: 0.5rem 0.8rem; }
+  .hangar-controls__hints { display: none; }
+
+  .purchase-modal__panel {
+    min-width: 0;
+    width: 92vw;
+    padding: 1.2rem 1rem;
+  }
+  .purchase-modal__ship { font-size: 1.2rem; }
+  .purchase-modal__actions { flex-direction: column-reverse; gap: 0.5rem; }
+  .purchase-modal__btn { width: 100%; min-height: 44px; }
+}
+
+/* ── Touch / tablets ≤900px: ocultar paneles laterales + decoración ──
+   Solo telemetría y controles esenciales permanecen. */
+@media (pointer: coarse), (max-width: 900px) {
+  /* Paneles que tapan la nave / fondo: fuera */
+  .hangar-stats,
+  .hangar-arsenal,
+  .hangar-frame__scan-label,
+  .hangar-frame__axis-label,
+  .hangar-controls__hints,
+  .hangar-frame__scanlines { display: none !important; }
+
+  /* Header compacto: pilot izq, wallet der, code stack abajo */
+  .hangar-header {
+    padding: 0.4rem 0.6rem 0;
+    align-items: flex-start;
+  }
+  .hangar-header__center {
+    position: static;
+    transform: none;
+    text-align: center;
+    flex-basis: 100%;
+    order: 99;
+    margin-top: 0.2rem;
+  }
+
+  /* Título sin clipping */
+  .hangar-title { top: 4.6rem; }
+  .hangar-title__name {
+    font-size: clamp(1.1rem, 5.5vw, 2rem);
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8vw;
+  }
+
+  /* Nav arrows a los bordes (laterales ya libres) */
+  .hangar-nav--prev { left: 4px; }
+  .hangar-nav--next { right: 4px; }
+  .hangar-nav__btn  { width: 36px; height: 56px; }
+
+  /* Controles tappeables */
+  .hangar-controls { bottom: 0.5rem; gap: 0.4rem; }
+  .hangar-controls__btn-row { flex-wrap: wrap; justify-content: center; }
+  .hangar-controls__btn { min-height: 44px; padding: 0.55rem 1rem; font-size: 0.7rem; }
+
+  /* Frame de la nave ocupa más espacio sin paneles laterales */
+  .hangar-frame__viewport { width: min(92vw, 600px); height: min(48vh, 360px); }
+}
+
+@media (max-width: 480px) {
+  .hangar-title { top: 3.4rem; }
+  .hangar-frame__viewport { width: 94vw; height: 42vh; }
+  .hangar-controls__btn { font-size: 0.66rem; padding: 0.5rem 0.8rem; }
+
+  .purchase-modal__panel {
+    min-width: 0;
+    width: 92vw;
+    padding: 1.2rem 1rem;
+  }
+  .purchase-modal__ship { font-size: 1.2rem; }
+  .purchase-modal__actions { flex-direction: column-reverse; gap: 0.5rem; }
+  .purchase-modal__btn { width: 100%; min-height: 44px; }
+}

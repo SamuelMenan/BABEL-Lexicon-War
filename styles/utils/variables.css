@@ -69,3 +69,12 @@
   --anim-slow:      0.9s;
   --anim-very-slow: 1.4s;
 }
+
+/* ── Responsive rem scaling ─────────────────────────────────────
+   Bajamos la base rem en pantallas pequeñas. Todo el HUD usa rem,
+   así escala proporcional sin tocar componentes individuales. */
+@media (max-width: 1024px) { :root { font-size: 14px; } }
+@media (max-width: 768px)  { :root { font-size: 12px; } }
+@media (max-width: 480px)  { :root { font-size: 10px; } }
+@media (max-width: 360px)  { :root { font-size: 9px;  } }
+

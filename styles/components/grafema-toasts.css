@@ -114,3 +114,23 @@
          text-shadow:0 0 22px rgba(255,136,153,0.95); }
   100% { transform:scale(1);   color:var(--col-active, #00ffcc); }
 }
+
+/* ── Mobile/touch: WalletBadge oculto durante gameplay ──
+   Saldo solo importa en hangar. Toasts siguen mostrando deltas. */
+@media (max-width: 768px) {
+  .wallet-badge--combat,
+  .wallet-badge--race { display: none; }
+
+  .grafema-toasts {
+    top: auto;
+    bottom: 120px;
+    right: 8px;
+    max-width: 55vw;
+  }
+}
+
+/* ── Touch device: ocultar WalletBadge en gameplay sin importar viewport ── */
+@media (pointer: coarse) {
+  .wallet-badge--combat,
+  .wallet-badge--race { display: none !important; }
+}

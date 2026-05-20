@@ -1,0 +1,96 @@
+.bot-fab {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 9998;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 204, 0.45);
+  background: rgba(0, 0, 0, 0.7);
+  color: #00ffcc;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  transition: background 0.15s, transform 0.1s, border-color 0.15s;
+}
+
+.bot-fab:active {
+  transform: scale(0.94);
+}
+
+.bot-fab__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bot-fab__label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  opacity: 0.75;
+}
+
+.bot-fab--on {
+  background: rgba(255, 68, 102, 0.85);
+  border-color: rgba(255, 68, 102, 0.9);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(255, 68, 102, 0.55);
+}
+
+.bot-fab--on .bot-fab__label { opacity: 1; }
+
+/* Pantallas pequeñas: FAB más compacto */
+@media (max-width: 480px) {
+  .bot-fab { width: 48px; height: 48px; }
+  .bot-fab__icon  { font-size: 16px; }
+  .bot-fab__label { font-size: 8px;  }
+}
+
+/* ── Pause FAB (mismo lenguaje visual, esquina superior derecha) ── */
+.pause-fab {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 9998;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 204, 0, 0.45);
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffcc00;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.pause-fab:active { transform: scale(0.94); }
+
+.pause-fab--paused {
+  color: #00ffcc;
+  border-color: rgba(0, 255, 204, 0.6);
+  box-shadow: 0 4px 16px rgba(0, 255, 204, 0.4);
+}
+
+.pause-fab__icon { line-height: 1; letter-spacing: -1px; }
+
+@media (max-width: 480px) {
+  .pause-fab { width: 42px; height: 42px; font-size: 12px; }
+}

@@ -624,3 +624,90 @@
   font-variant-numeric: tabular-nums;
   margin-left: 4px;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE OVERRIDES — Racing HUD (≤480px)
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .r-pilot-tag { top: 0.6rem; left: 0.6rem; }
+  .r-pilot-tag__callsign { font-size: 0.78rem; letter-spacing: 0.14em; }
+  .r-pilot-tag__rank     { font-size: 0.58rem; letter-spacing: 0.12em; }
+
+  .r-top-status {
+    top: 0.6rem;
+    font-size: 0.5rem;
+    gap: 6px;
+  }
+
+  /* Phrase block — full width, fuente fluida */
+  .race__phrase-zone,
+  .race-paragraph-block {
+    width: 94vw !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: clamp(0.75rem, 3.4vw, 1.05rem) !important;
+  }
+
+  /* Stats / flow / distance — compactos abajo */
+  .r-run-stats,
+  .r-flow-block,
+  .r-distance-bar,
+  .r-stats-top-right {
+    font-size: 0.6rem;
+  }
+
+  .r-distance-bar { width: 92vw; left: 50%; transform: translateX(-50%); }
+
+  .r-speed-lines { opacity: 0.55; }
+}
+
+/* ── Race: stats top-right y deck no chocan con FABs ── */
+@media (max-width: 768px) {
+  .r-stats-top-right,
+  .r-top-status { right: 58px; }
+
+  /* Run stats / flow block bottom-right: subir para no chocar con BotFAB */
+  .r-run-stats {
+    right: 60px;
+    bottom: 6px;
+    font-size: 0.55rem;
+  }
+
+  /* Mazo léxico (lexicon-deck) oculto en móvil táctil — duplica info del word panel */
+  .lexicon-deck { display: none; }
+}
+
+/* ── Touch / tablets ≤900px: anti-overlap broad ── */
+@media (pointer: coarse), (max-width: 900px) {
+  /* Stats run apila ARRIBA del BotFAB, no a su lado */
+  .r-run-stats {
+    right: 8px;
+    bottom: 76px;
+    min-width: 0;
+    padding: 0.35rem 0.55rem;
+    gap: 3px;
+    font-size: 0.55rem;
+  }
+  .r-run-stats__num { font-size: 1rem; }
+
+  /* Flow block bottom-left compacto, no choca con word-panel */
+  .r-flow-block {
+    left: 8px;
+    bottom: 8px;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
+  }
+  .r-flow-block__x { font-size: 2rem; }
+
+  /* Top stats deja paso a PauseFAB */
+  .r-stats-top-right { right: 60px; top: 0.4rem; }
+  .r-stats-top-right .combat__big-num   { font-size: 1.4rem; }
+  .r-stats-top-right .combat__big-num-2 { font-size: 1rem; }
+
+  /* Top status / ticker bajado para no chocar telemetry */
+  .r-top-status { top: 3.6rem; left: 50%; right: auto; font-size: 0.5rem; }
+
+  /* Mazo léxico oculto — duplica info word-panel */
+  .lexicon-deck { display: none; }
+}

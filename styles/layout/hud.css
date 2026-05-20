@@ -589,3 +589,169 @@
   box-shadow: 0 0 8px var(--col-flow);
 }
 
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE OVERRIDES — Combat HUD (≤480px)
+   El escalado rem global ya reduce tamaños; aquí solo arreglamos
+   componentes con min-width o posicionamiento que invaden centro.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Stats top-right: quitar offset grande pensado para desktop */
+  .combat__top-right {
+    top: 0.6rem;
+    right: 0.6rem;
+    gap: 0.8rem;
+  }
+  .combat__big-num   { font-size: 2.2rem; }
+  .combat__big-num-2 { font-size: 1.4rem; }
+  .combat__acc-pct   { font-size: 0.85rem; }
+
+  /* Pilot info top-left compacto */
+  .combat__top-left { top: 0.6rem; left: 0.6rem; }
+  .hud__pilot-name  { font-size: 0.82rem; letter-spacing: 0.16em; }
+  .hud__pilot-sub   { font-size: 0.6rem;  letter-spacing: 0.14em; }
+
+  /* Ticker fuera de la zona central */
+  .hud__ticker { width: 90vw; height: 1.8rem; }
+  .hud__ticker-text { font-size: 0.52rem; }
+
+  /* Status bars bottom-left — sin min-width fijo */
+  .combat__bottom-left {
+    bottom: 0.6rem;
+    left: 0.6rem;
+    min-width: 0;
+    width: min(58vw, 220px);
+    gap: 0.4rem;
+  }
+  .status-bar__label { width: 4rem; font-size: 0.62rem; }
+  .status-bar__track { min-width: 60px; height: 6px; }
+  .status-bar__value { width: 2.2rem; font-size: 0.78rem; }
+
+  /* Wave block — reducir número gigante */
+  .wave-block       { margin-top: 0.4rem; }
+  .wave-block__num  { font-size: 1.9rem; }
+
+  /* Word panel (bottom-center) — encaja en SE 375px */
+  .combat__word-panel {
+    bottom: 0.6rem;
+    min-width: 0;
+    width: 92vw;
+    gap: 0.3rem;
+  }
+  .combat__word-box {
+    min-width: 0;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    gap: 0.4rem;
+  }
+  .combat__word-prompt { font-size: 1.1rem; }
+  .combat__letter      { font-size: 1.6rem; width: 1.1ch; }
+  .combat__word-header { font-size: 0.52rem; }
+  .combat__word-meta   { font-size: 0.5rem; gap: 0.3rem; }
+
+  /* Lexicon deck — ocultar en móvil: tapa juego y ya hay panel de palabra */
+  .lexicon-deck { display: none; }
+}
+
+/* Tablets pequeñas (481–768px): ajustes ligeros */
+@media (min-width: 481px) and (max-width: 768px) {
+  .combat__top-right { right: 1rem; }
+  .combat__word-panel { min-width: 0; width: 80vw; }
+  .combat__word-box { min-width: 0; width: 100%; }
+  .lexicon-deck { min-width: 180px; }
+}
+
+/* ── Mobile/touch: separar cluster top-right y ticker ── */
+@media (max-width: 768px) {
+  .hud__ticker { top: 0; height: 1.6rem; }
+  .hud__ticker-text { font-size: 0.5rem; opacity: 0.6; }
+
+  /* Stats WPM/ACC apilados o más compactos para no chocar con PauseFAB */
+  .combat__top-right {
+    top: 0.4rem;
+    right: 58px; /* deja paso al PauseFAB (42–48px) */
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .combat__top-right { right: 54px; }
+  .lexicon-deck { display: none; }
+}
+
+/* ── Ticker bajo Telemetry top-left ── */
+@media (max-width: 768px) {
+  .hud__ticker { top: 0.2rem; }
+}
+@media (max-width: 480px) {
+  .hud__ticker { top: 4.6rem; height: 1.4rem; width: 80vw; }
+}
+
+/* ── Touch / tablets ≤900px: anti-overlap broad combat ── */
+@media (pointer: coarse), (max-width: 900px) {
+  /* Telemetry siempre top-left fijo y compacto */
+  .telemetry-panel {
+    top: 6px;
+    left: 6px;
+    bottom: auto;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 10px;
+    z-index: 10000;
+  }
+  .telemetry-row--sub { display: none; }
+
+  /* Ticker bajo telemetry */
+  .hud__ticker {
+    top: 4.6rem;
+    left: 50%;
+    width: min(70vw, 520px);
+    height: 1.4rem;
+  }
+  .hud__ticker-text { font-size: 0.5rem; opacity: 0.55; }
+
+  /* Pilot tag bajo telemetry/ticker — evita chocar con caja telemetry */
+  .combat__top-left { top: 7.4rem; left: 8px; }
+  .hud__pilot-name { font-size: 0.7rem; }
+  .hud__pilot-sub  { font-size: 0.55rem; }
+
+  /* Stats WPM/ACC top-right deja paso PauseFAB */
+  .combat__top-right {
+    top: 0.5rem;
+    right: 60px;
+    gap: 0.6rem;
+  }
+  .combat__big-num   { font-size: 1.6rem; }
+  .combat__big-num-2 { font-size: 1.1rem; }
+
+  /* Status bars bottom-left compactas */
+  .combat__bottom-left {
+    bottom: 6px;
+    left: 6px;
+    min-width: 0;
+    width: min(46vw, 200px);
+    gap: 0.3rem;
+  }
+  .status-bar__label { width: 3.6rem; font-size: 0.58rem; }
+  .status-bar__track { min-width: 50px; height: 5px; }
+  .status-bar__value { width: 2rem; font-size: 0.7rem; }
+  .wave-block__num { font-size: 1.4rem; }
+
+  /* Word panel bottom-center, deja paso a BotFAB y wave-block */
+  .combat__word-panel {
+    bottom: 6px;
+    min-width: 0;
+    width: min(54vw, 380px);
+    gap: 0.25rem;
+  }
+  .combat__word-box {
+    min-width: 0;
+    width: 100%;
+    padding: 0.35rem 0.55rem;
+  }
+  .combat__word-prompt { font-size: 0.9rem; }
+  .combat__letter      { font-size: 1.3rem; width: 1.05ch; }
+
+  /* Lexicon deck oculto en todo móvil/touch */
+  .lexicon-deck { display: none; }
+}

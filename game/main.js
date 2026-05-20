@@ -7,6 +7,7 @@ import { LexiconSystem } from './systems/LexiconSystem.js';
 import { PhysicsSystem } from './systems/PhysicsSystem.js';
 import { RacingSystem } from './systems/RacingSystem.js';
 import { HUDCanvas } from './rendering/HUDCanvas.js';
+import { TelemetrySystem } from './systems/TelemetrySystem.js';
 import { EventBus } from '../shared/events.js';
 import { EventTypes } from '../shared/eventTypes.js';
 import { Bridge } from '../shared/bridge.js';
@@ -39,6 +40,7 @@ export async function initGame(mountEl) {
   engine.addSystem('lexicon',   _lexicon);
   engine.addSystem('physics',   _physics);
   engine.addSystem('hudCanvas', hudCanvas);
+  engine.addSystem('telemetry', TelemetrySystem);
 
   // Single proxy slot — swapped out per mode without accumulating loop entries
   engine.addSystem('scene', { update: (d) => _activeScene?.update(d) });

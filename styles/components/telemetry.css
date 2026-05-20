@@ -1,0 +1,52 @@
+.telemetry-panel {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 9999;
+  pointer-events: none;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #d8e6ff;
+  min-width: 168px;
+  letter-spacing: 0.03em;
+}
+
+.telemetry-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.telemetry-row--sub {
+  opacity: 0.6;
+  font-size: 10px;
+}
+
+.telemetry-label {
+  color: #7a8aa8;
+  text-transform: uppercase;
+}
+
+.telemetry-value {
+  color: #e8f1ff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Móvil: panel compacto y reposicionado abajo-izquierda para no chocar
+   con pilot-tag (top-left) ni con pause-fab (top-right). */
+@media (max-width: 480px) {
+  .telemetry-panel {
+    top: auto;
+    bottom: max(70px, calc(env(safe-area-inset-bottom) + 70px));
+    left: 6px;
+    min-width: 0;
+    padding: 4px 6px;
+    font-size: 9px;
+  }
+  .telemetry-row--sub { display: none; }
+}

@@ -29,6 +29,7 @@ import WaveAnnouncement from "./hud/overlays/WaveAnnouncement.jsx";
 import WarningIcon from "./hud/warnings/WarningIcon.jsx";
 import GrafemaToasts from "./hud/GrafemaToasts.jsx";
 import WalletBadge from "./hud/WalletBadge.jsx";
+import TelemetryPanel from "./hud/TelemetryPanel.jsx";
 
 function wordFxReducer(state, action) {
   switch (action.type) {
@@ -213,6 +214,7 @@ export default function HUD() {
           <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
           <WalletBadge placement="combat" />
           <GrafemaToasts />
+          <TelemetryPanel />
         </div>
       </div>
     );
@@ -253,6 +255,7 @@ export default function HUD() {
         <RaceRunStats playerPhrasesCompleted={playerPhrasesCompleted} wpm={wpm} />
         <WalletBadge placement="race" />
         <GrafemaToasts />
+        <TelemetryPanel />
       </div>
     </div>
   );

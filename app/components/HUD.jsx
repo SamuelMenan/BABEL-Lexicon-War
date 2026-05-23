@@ -31,7 +31,6 @@ import WarningIcon from "./hud/warnings/WarningIcon.jsx";
 import GrafemaToasts from "./hud/GrafemaToasts.jsx";
 import WalletBadge from "./hud/WalletBadge.jsx";
 import TelemetryPanel from "./hud/TelemetryPanel.jsx";
-import BotToggleFAB from "./hud/BotToggleFAB.jsx";
 import PauseFAB from "./hud/PauseFAB.jsx";
 
 function wordFxReducer(state, action) {
@@ -227,7 +226,6 @@ export default function HUD() {
           <WalletBadge placement="combat" />
           <GrafemaToasts />
           <TelemetryPanel />
-          <BotToggleFAB />
           <PauseFAB />
         </div>
       </div>

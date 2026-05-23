@@ -19,6 +19,16 @@ class EconomySystemImpl {
   getGrafemas()     { return this._profile.grafemas; }
   ownsShip(id)      { return this._profile.ownedShips.includes(id); }
   getEquippedShip() { return this._profile.equippedShip; }
+  getSelectedCharacter() { return this._profile.selectedCharacter; }
+
+  setSelectedCharacter(characterId) {
+    if (typeof characterId !== 'string') return { ok: false, reason: 'invalid_id' };
+    if (this._profile.selectedCharacter === characterId) return { ok: true };
+    this._profile.selectedCharacter = characterId;
+    this._commit();
+    Bridge.emit(EventTypes.CHARACTER_SELECTED, { characterId });
+    return { ok: true };
+  }
 
   canAfford(shipId) {
     const entry = getShipCatalogEntry(shipId);
@@ -66,6 +76,26 @@ class EconomySystemImpl {
     Bridge.emit(EventTypes.PROFILE_RESET);
   }
 
+  // Setters generales para preferencias persistidas (no monetarias).
+  setKeybindOverride(actionId, key) {
+    this._profile.keybindOverrides = { ...(this._profile.keybindOverrides || {}), [actionId]: key };
+    this._commit();
+  }
+  clearKeybindOverride(actionId) {
+    const next = { ...(this._profile.keybindOverrides || {}) };
+    delete next[actionId];
+    this._profile.keybindOverrides = next;
+    this._commit();
+  }
+  resetKeybindOverrides() {
+    this._profile.keybindOverrides = {};
+    this._commit();
+  }
+  setDebugEnabled(enabled) {
+    this._profile.debugEnabled = !!enabled;
+    this._commit();
+  }
+
   // ── Interno ──────────────────────────────────────────────────────────────
   _commit() {
     saveProfile(this._profile);
@@ -75,9 +105,10 @@ class EconomySystemImpl {
 
   _mirrorToBridge() {
     Bridge.setState({
-      grafemas:     this._profile.grafemas,
-      ownedShips:   [...this._profile.ownedShips],
-      equippedShip: this._profile.equippedShip,
+      grafemas:          this._profile.grafemas,
+      ownedShips:        [...this._profile.ownedShips],
+      equippedShip:      this._profile.equippedShip,
+      selectedCharacter: this._profile.selectedCharacter,
     });
   }
 

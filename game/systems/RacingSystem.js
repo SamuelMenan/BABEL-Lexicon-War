@@ -69,7 +69,7 @@ export class RacingSystem {
     };
   }
 
-  init() {
+  init({ deferStart = false } = {}) {
     this._stream         = buildWordStream();
     this._streamIdx      = 0;
     this._wordBuffer     = [];
@@ -78,7 +78,7 @@ export class RacingSystem {
     this._playerDone     = 0;
     this._oppDone        = 0;
     this._countdown      = RACE_COUNTDOWN_SECS;
-    this._countdownActive = true;
+    this._countdownActive = !deferStart;
     this._active         = false;
     this._finished       = false;
     this._flowStreak     = 0;
@@ -96,7 +96,7 @@ export class RacingSystem {
 
     Bridge.setState({
       countdown:              RACE_COUNTDOWN_SECS,
-      countdownActive:        true,
+      countdownActive:        this._countdownActive,
       phraseProgress:         0,
       opponentPhraseProgress: 0,
       totalPhrases:           null,
@@ -110,6 +110,13 @@ export class RacingSystem {
       wordBuffer:             this._wordBuffer.slice(),
       globalWordIndex:        0,
     });
+  }
+
+  armCountdown() {
+    if (this._countdownActive || this._active) return;
+    this._countdown = RACE_COUNTDOWN_SECS;
+    this._countdownActive = true;
+    Bridge.setState({ countdown: RACE_COUNTDOWN_SECS, countdownActive: true });
   }
 
   destroy() {

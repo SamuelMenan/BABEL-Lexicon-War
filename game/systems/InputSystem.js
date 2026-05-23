@@ -1,13 +1,21 @@
-// Captura global de teclado — no depende de <input> HTML enfocado
+// Captura typing en gameplay. NO maneja teclas de acción (Escape, F-keys, debug).
+// Service global (shared/keybindService.js) maneja todo lo demás.
 
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
+import { Bridge } from '../../shared/bridge.js';
 
-const BLOCKED_KEYS = new Set([
-  'Tab', 'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
-  'Escape', 'CapsLock', 'Shift', 'Control', 'Alt', 'Meta',
+// Teclas que NUNCA emiten KEY_TYPED (modificadores, función, navegación, debug).
+// El service ya consume las que tienen action binding. Esta lista es defensa extra
+// para teclas físicas que el service no consume (ej. Shift/Tab) y no deben tipear.
+const NON_TYPING_KEYS = new Set([
+  'Tab', 'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'AltGraph',
+  'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+  'Escape',
   'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
   'Insert', 'Delete', 'Home', 'End', 'PageUp', 'PageDown',
+  'Pause', 'ScrollLock', 'PrintScreen', 'ContextMenu',
+  'Enter',
 ]);
 
 export class InputSystem {
@@ -26,46 +34,30 @@ export class InputSystem {
     this._active = false;
   }
 
-  // update() no hace nada — el sistema es puramente reactivo a eventos
   update() {}
 
   _onKeyDown(e) {
     if (!this._active) return;
-
-    // F9 alterna el modo de rendimiento: desactiva/activa el postprocesado pesado.
-    if (e.key === 'F9' || e.code === 'F9') {
-      e.preventDefault();
-      EventBus.emit(EventTypes.PERFORMANCE_TOGGLE);
-      return;
-    }
-
-    const isDeleteKey =
-      e.key === 'Delete' ||
-      e.key === 'Del' ||
-      e.key === 'Supr' ||
-      e.code === 'Delete' ||
-      e.keyCode === 46;
-
-    if (isDeleteKey) {
-      e.preventDefault();
-      EventBus.emit(EventTypes.DEBUG_FORCE_PLAYER_DEATH);
-      return;
-    }
-
-    // Prevenir comportamiento del navegador en teclas relevantes al juego
-    if (e.key === 'Backspace' || e.key === ' ') e.preventDefault();
-
-    if (BLOCKED_KEYS.has(e.key)) return;
-
-    // Sin copy-paste
+    // Bloqueo durante tutorial — input local de práctica vive en React.
+    if (Bridge.peekState().tutorialActive) return;
+    // Si el service ya consumió la tecla (action binding), no tipear.
+    if (e.defaultPrevented) return;
+    // Bloquear modificadores combinados (sin copy-paste accidental).
     if (e.ctrlKey || e.metaKey) return;
 
+    if (NON_TYPING_KEYS.has(e.key)) return;
+
+    // Backspace → borrar carácter
     if (e.key === 'Backspace') {
+      e.preventDefault();
       EventBus.emit(EventTypes.KEY_BACKSPACE);
       return;
     }
 
-    // Solo caracteres imprimibles (largo 1)
+    // Space → typing (override de alias CONFIRM). En gameplay, space ES typing.
+    if (e.key === ' ') e.preventDefault();
+
+    // Solo caracteres imprimibles (length 1)
     if (e.key.length === 1) {
       EventBus.emit(EventTypes.KEY_TYPED, {
         key:       e.key,

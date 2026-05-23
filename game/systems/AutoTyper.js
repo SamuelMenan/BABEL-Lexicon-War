@@ -103,25 +103,10 @@ function _updateIndicator() {
   }
 }
 
-// ── Telemetry toggle ────────────────────────────────────────────────────
-function _toggleTelemetry() {
+// ── Telemetry toggle (público para DebugBindings) ───────────────────────
+export function toggleTelemetry() {
   const current = Bridge.peekState().telemetryVisible !== false;
   Bridge.setState({ telemetryVisible: !current });
-}
-
-// ── Key Listener ────────────────────────────────────────────────────────
-function _onKeyDown(e) {
-  if (e.key === 'Insert' || e.code === 'Insert') {
-    e.preventDefault();
-    toggleBot();
-    return;
-  }
-
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
-    e.preventDefault();
-    _toggleTelemetry();
-    return;
-  }
 }
 
 // ── Public init/destroy ─────────────────────────────────────────────────
@@ -130,19 +115,12 @@ let _installed = false;
 export function initAutoTyper() {
   if (_installed) return;
   _installed = true;
-  document.addEventListener('keydown', _onKeyDown, true);
   _createIndicator();
   _updateIndicator();
-  console.log(
-    '%c[AutoTyper] %cINSERT%c = toggle bot (%d WPM)  |  %cCtrl+F%c = toggle telemetry',
-    'color:#00ffcc', 'color:#ff4466;font-weight:bold', 'color:#aaa', TARGET_WPM,
-    'color:#ff4466;font-weight:bold', 'color:#aaa'
-  );
 }
 
 export function destroyAutoTyper() {
   _stopBot();
-  document.removeEventListener('keydown', _onKeyDown, true);
   _indicatorEl?.remove(); _indicatorEl = null;
   _installed = false;
 }

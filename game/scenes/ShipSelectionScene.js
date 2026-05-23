@@ -131,14 +131,6 @@ export class ShipSelectionScene {
     this._destroyFx.spawn();
   }
 
-  setAutoRotate(enabled) {
-    this._autoRotate = enabled;
-    if (enabled) this._unfreezeModels();
-    else         this._freezeModels();
-  }
-
-  isAutoRotating() { return this._autoRotate; }
-
   addKey(key)    { this._keys.add(key); }
   removeKey(key) { this._keys.delete(key); }
 
@@ -147,11 +139,22 @@ export class ShipSelectionScene {
   endDrag()       { this._cam.endDrag(); }
   zoom(delta)     { this._cam.zoom(delta); }
 
-  resetOrbit()    { this._cam.resetOrbit(); }
+  resetOrbit()    { this._cam.resetOrbit(); this._viewIdx = 0; }
   setTopView()    { this._cam.setTopView(); }
   setBottomView() { this._cam.setBottomView(); }
   setRearView()   { this._cam.setRearView(); }
   setSideView()   { this._cam.setSideView(); }
+
+  // Cycle entre vistas predefinidas (front/top/rear/side).
+  cycleCameraView() {
+    this._viewIdx = ((this._viewIdx ?? 0) + 1) % 4;
+    switch (this._viewIdx) {
+      case 0: this._cam.resetOrbit();   break; // front
+      case 1: this._cam.setTopView();   break;
+      case 2: this._cam.setRearView();  break;
+      case 3: this._cam.setSideView();  break;
+    }
+  }
 
   toggleDebugMarkers() { this._loader.toggleDebugMarkers(); }
 

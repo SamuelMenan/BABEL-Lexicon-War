@@ -43,6 +43,8 @@ let _state = {
   ownedShips:        [],
   equippedShip:      null,
   selectedCharacter: 'kael',
+  isGuest:           true,
+  displayName:       'Invitado',
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,

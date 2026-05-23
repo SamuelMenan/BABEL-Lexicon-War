@@ -22,12 +22,16 @@ function computeDefaultOwned() {
   return out;
 }
 
+export const GUEST_DISPLAY_NAME = 'Invitado';
+
 export function makeDefaultProfile() {
   const owned = computeDefaultOwned();
   if (!owned.includes(DEFAULT_SHIP_ID)) owned.unshift(DEFAULT_SHIP_ID);
   return {
     version:      1,
     playerId:     makePlayerId(),
+    displayName:  GUEST_DISPLAY_NAME,
+    isGuest:      true,
     grafemas:     0,
     ownedShips:   owned,
     equippedShip: DEFAULT_SHIP_ID,
@@ -70,6 +74,10 @@ export function loadProfile() {
     if (typeof parsed.debugEnabled !== 'boolean') parsed.debugEnabled = false;
     if (typeof parsed.selectedCharacter !== 'string' || !CHARACTERS[parsed.selectedCharacter]) {
       parsed.selectedCharacter = DEFAULT_CHARACTER_ID;
+    }
+    if (typeof parsed.isGuest !== 'boolean') parsed.isGuest = true;
+    if (typeof parsed.displayName !== 'string' || !parsed.displayName) {
+      parsed.displayName = parsed.isGuest ? GUEST_DISPLAY_NAME : 'Pilot';
     }
     return parsed;
   } catch {

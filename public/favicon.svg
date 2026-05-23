@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0077aa" />
+    </linearGradient>
+    <linearGradient id="magentaGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff0055" />
+      <stop offset="100%" stop-color="#990033" />
+    </linearGradient>
+    <linearGradient id="amberLyra" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffaa00" />
+      <stop offset="100%" stop-color="#ffdd55" />
+    </linearGradient>
+    
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#050512" />
+
+  <g opacity="0.15" stroke="#00f0ff" stroke-width="2">
+    <polygon points="256,40 442,148 442,364 256,472 70,364 70,148" fill="none" />
+    <line x1="256" y1="40" x2="256" y2="472" />
+    <line x1="70" y1="148" x2="442" y2="364" />
+    <line x1="70" y1="364" x2="442" y2="148" />
+  </g>
+
+  <g filter="url(#neonGlow)">
+    <polygon points="256,70 417,163 417,349 256,442 95,349 95,163" 
+             fill="none" stroke="url(#cyanGlow)" stroke-width="12" stroke-linejoin="round" />
+             
+    <line x1="256" y1="70" x2="256" y2="150" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+    <line x1="417" y1="163" x2="348" y2="203" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+    <line x1="417" y1="349" x2="348" y2="309" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+    <line x1="256" y1="442" x2="256" y2="362" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+    <line x1="95" y1="349" x2="164" y2="309" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+    <line x1="95" y1="163" x2="164" y2="203" stroke="url(#cyanGlow)" stroke-width="8" stroke-linecap="round" />
+  </g>
+
+  <g filter="url(#neonGlow)">
+    <polygon points="256,150 348,203 348,309 256,362 164,309 164,203" 
+             fill="none" stroke="url(#magentaGlow)" stroke-width="8" stroke-linejoin="round" opacity="0.9" />
+             
+    <line x1="140" y1="230" x2="180" y2="230" stroke="#ff0055" stroke-width="6" />
+    <line x1="332" y1="282" x2="372" y2="282" stroke="#ff0055" stroke-width="6" />
+  </g>
+
+  <g filter="url(#neonGlow)">
+    <polygon points="256,210 296,233 296,279 256,302 216,279 216,233" 
+             fill="url(#amberLyra)" />
+    
+    <line x1="256" y1="195" x2="256" y2="317" stroke="#ffffff" stroke-width="4" stroke-dasharray="12 8" />
+  </g>
+</svg>

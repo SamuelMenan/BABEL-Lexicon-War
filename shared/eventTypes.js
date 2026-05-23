@@ -69,6 +69,10 @@ export const EventTypes = {
   PROFILE_RESET:     'profile:reset',
   CHARACTER_SELECTED: 'character:selected', // { characterId }
 
+  // --- Navegación in-app desde pause ---
+  EXIT_TO_MENU:      'app:exit_to_menu',
+  EXIT_TO_HANGAR:    'app:exit_to_hangar',   // { mode }
+
   // --- Sistema ---
   SCENE_READY:        'scene:ready',
   ASSETS_LOADED:      'assets:loaded',

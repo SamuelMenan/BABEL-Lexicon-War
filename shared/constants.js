@@ -345,6 +345,7 @@ export const SHIPS = [
     name: 'Clase Estandar',
     code: 'TYPO-STD',
     rotationY: 0, // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '+z',  // nariz en +Z (confirmado: booster_localPos.z=-0.9 → cola en -Z)
   },
   {
     id: 'spaceshipnew',
@@ -384,6 +385,7 @@ export const SHIPS = [
     name: 'Colaid I',
     code: 'TYPO-CLD1',
     rotationY: 0,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '+z',
   },
   {
     id: 'waldeinsamkeit',

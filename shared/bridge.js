@@ -47,6 +47,7 @@ let _state = {
   displayName:       'Invitado',
   // Racing state
   distanceTraveled:       0,
+  opponentDistance:       0,
   targetDistance:         500,
   flowMultiplier:         1.0,
   timeRemaining:          90,
@@ -184,6 +185,14 @@ export const Bridge = {
     resetTutorials() {
       Object.assign(_state, { tutorialsSeen: {}, tutorialActive: null, deploymentPhase: null });
       notifyStateChange();
+    },
+    // Salir desde pause sin reload — preserva flags de epilepsia/presentación.
+    exitToMenu() {
+      EventBus.emit(EventTypes.EXIT_TO_MENU);
+    },
+    exitToHangar() {
+      const mode = _state.gameMode;
+      EventBus.emit(EventTypes.EXIT_TO_HANGAR, { mode });
     },
   },
 };

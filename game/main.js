@@ -20,6 +20,7 @@ let _physics     = null;
 let _activeScene = null;
 let _performanceModeEnabled = true;
 let _pauseSnapshot = null;
+let _pendingCountdownStart = null;
 
 export async function initGame(mountEl) {
   engine = new Engine(mountEl);
@@ -42,12 +43,17 @@ export async function initGame(mountEl) {
   engine.addSystem('hudCanvas', hudCanvas);
   engine.addSystem('telemetry', TelemetrySystem);
 
-  // Single proxy slot — swapped out per mode without accumulating loop entries
-  engine.addSystem('scene', { update: (d) => _activeScene?.update(d) });
+  // Single proxy slot — swapped out per mode without accumulating loop entries.
+  // Skip scene update while tutorial modal is open (no enemy spawn, no damage, no countdown tick).
+  engine.addSystem('scene', { update: (d) => {
+    if (Bridge.peekState().tutorialActive) return; // pausa total durante tutorial
+    _activeScene?.update(d);
+  }});
 
   EventBus.on(EventTypes.GAME_START, async ({ mode }) => {
     _activeScene?.destroy();
     _activeScene = null;
+    _pendingCountdownStart = null;
 
     // Show loading for this mode (cache makes re-entry fast)
     await AssetLoader.preload(mode, engine.renderer);
@@ -65,13 +71,14 @@ export async function initGame(mountEl) {
       engine.invalidateBloomCache();
 
       const rs = new RacingSystem(_lexicon);
-      rs.init();
+      rs.init({ deferStart: true });
 
       _activeScene = {
         update:  (d) => { rsm.update(d); rs.update(d); },
         destroy: ()  => { rsm.destroy(); rs.destroy(); engine.camController.setRacingMode(false); engine.restoreGlobalLights(); },
       };
 
+      _pendingCountdownStart = () => rs.armCountdown();
     } else {
       engine.camController.setRacingMode(false);
 
@@ -81,10 +88,24 @@ export async function initGame(mountEl) {
       engine.invalidateBloomCache();
 
       _physics.setEnemies(sm.enemies);
-      sm.startCombatWithCountdown();
-
       _activeScene = sm;
+      _pendingCountdownStart = () => sm.startCombatWithCountdown();
     }
+
+    // Animación de entrada: la nave usa su propia _entryDuration (3.5s) en ship.update.
+    // Esperamos ~3.8s antes de mostrar tutorial para que aterrice visiblemente.
+    Bridge.setState({ deploymentPhase: 'landing' });
+    await new Promise(r => setTimeout(r, 3800));
+
+    // Tras entrada visible, dispara tutorial (si first-time) o START_COUNTDOWN inmediato.
+    EventBus.emit(EventTypes.DEPLOYMENT_ANIMATION_COMPLETE, { mode });
+  });
+
+  EventBus.on(EventTypes.START_COUNTDOWN, () => {
+    Bridge.setState({ deploymentPhase: 'countdown' });
+    const fn = _pendingCountdownStart;
+    _pendingCountdownStart = null;
+    fn?.();
   });
 
   EventBus.on(EventTypes.GAME_PAUSE, () => {

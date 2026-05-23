@@ -20,6 +20,17 @@ class EconomySystemImpl {
   ownsShip(id)      { return this._profile.ownedShips.includes(id); }
   getEquippedShip() { return this._profile.equippedShip; }
   getSelectedCharacter() { return this._profile.selectedCharacter; }
+  isGuest() { return !!this._profile.isGuest; }
+
+  setGuestMode(isGuest, displayName) {
+    this._profile.isGuest = !!isGuest;
+    if (typeof displayName === 'string' && displayName) {
+      this._profile.displayName = displayName;
+    } else if (isGuest) {
+      this._profile.displayName = 'Invitado';
+    }
+    this._commit();
+  }
 
   setSelectedCharacter(characterId) {
     if (typeof characterId !== 'string') return { ok: false, reason: 'invalid_id' };
@@ -48,6 +59,7 @@ class EconomySystemImpl {
 
   // Compra una nave. Devuelve { ok, reason }.
   purchaseShip(shipId) {
+    if (this._profile.isGuest) return { ok: false, reason: 'guest_locked' };
     if (this.ownsShip(shipId)) return { ok: false, reason: 'already_owned' };
     const entry = getShipCatalogEntry(shipId);
     if (!Number.isFinite(entry.price)) return { ok: false, reason: 'not_for_sale' };
@@ -109,6 +121,8 @@ class EconomySystemImpl {
       ownedShips:        [...this._profile.ownedShips],
       equippedShip:      this._profile.equippedShip,
       selectedCharacter: this._profile.selectedCharacter,
+      isGuest:           !!this._profile.isGuest,
+      displayName:       this._profile.displayName || (this._profile.isGuest ? 'Invitado' : 'Pilot'),
     });
   }
 

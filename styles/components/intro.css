@@ -1,0 +1,273 @@
+/* ─────────────────────────────────────────────────────────────
+   Intro screens (EpilepsyWarning + PresentationMenu)
+   Misma identidad visual que MainMenu via .babel-bg / .babel-frame
+   ───────────────────────────────────────────────────────────── */
+
+.babel-intro {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-loading);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-overlay);
+  font-family: var(--font-hud);
+  overflow: hidden;
+  isolation: isolate;
+  animation: babel-fade-in 0.4s ease-out both;
+}
+
+.babel-intro--exit { animation: babel-fade-out 0.5s ease-in both; }
+
+@keyframes babel-fade-out {
+  to { opacity: 0; }
+}
+
+.babel-intro__main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.5rem;
+}
+
+/* ── Epilepsy warning ─────────────────────────────────────── */
+.epilepsy {
+  max-width: 36rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.epilepsy__icon {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--col-warning);
+  background: rgba(0, 0, 0, 0.45);
+  margin: 1.5rem 0 2rem;
+  animation: babel-pop-in 0.6s ease-out 0.3s both;
+}
+
+.epilepsy__icon::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  background: var(--col-warning);
+  filter: blur(18px);
+  opacity: 0.35;
+  animation: epilepsy-pulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes epilepsy-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.08); }
+}
+
+.epilepsy__icon-glyph {
+  font-size: 2rem;
+  color: var(--col-warning);
+  line-height: 1;
+}
+
+.epilepsy__title {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+.epilepsy__subtitle {
+  font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+  letter-spacing: 0.5em;
+  color: var(--col-warning);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.epilepsy__body {
+  margin: 2rem 0;
+  padding: 1.4rem 1.6rem;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: left;
+  animation: babel-fade-in 0.5s ease-out 0.5s both;
+}
+.epilepsy__body p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.epilepsy__body p.epilepsy__fine {
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--text-faint);
+}
+
+.epilepsy__actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.epilepsy__btn {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1rem 1.2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid color-mix(in srgb, var(--col-warning) 40%, transparent);
+  border-radius: 6px;
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--col-warning);
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.epilepsy__btn:hover:not(:disabled),
+.epilepsy__btn--focused:not(:disabled) {
+  background: color-mix(in srgb, var(--col-warning) 12%, transparent);
+  border-color: var(--col-warning);
+}
+.epilepsy__btn:active:not(:disabled) { transform: translateY(1px); }
+.epilepsy__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.epilepsy__btn-arrow { transition: transform 0.25s; }
+.epilepsy__btn:hover .epilepsy__btn-arrow { transform: translateX(4px); }
+
+.epilepsy__spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--col-warning);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: babel-spin 0.9s linear infinite;
+}
+
+@keyframes babel-spin {
+  to { transform: rotate(360deg); }
+}
+
+.epilepsy__countdown {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--text-faint);
+}
+.epilepsy__countdown strong {
+  color: color-mix(in srgb, var(--col-warning) 80%, white);
+  font-weight: 600;
+}
+
+/* ── Presentation menu (intro narrativa) ──────────────────── */
+.presentation {
+  width: 100%;
+  max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.presentation__stage {
+  min-height: 18rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.presentation__line {
+  text-align: center;
+  font-family: var(--font-hud);
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  letter-spacing: 0.05em;
+  line-height: 1.55;
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(6px);
+  transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease, color 0.8s;
+}
+.presentation__line--visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+.presentation__line--current { color: var(--text-primary); }
+.presentation__line--past {
+  color: var(--text-muted);
+  opacity: 0.35;
+}
+.presentation__line--highlight {
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--col-primary);
+  text-shadow: 0 0 16px rgba(0, 255, 204, 0.3);
+}
+.presentation__line--highlight.presentation__line--past { color: rgba(0, 255, 204, 0.4); }
+
+.presentation__progress {
+  display: flex;
+  gap: 0.4rem;
+  animation: babel-fade-in 0.6s ease-out 1.2s both;
+}
+.presentation__dot {
+  width: 1.5rem;
+  height: 2px;
+  background: var(--border-subtle);
+  transition: background 0.4s, box-shadow 0.4s;
+}
+.presentation__dot--done { background: var(--col-primary); }
+.presentation__dot--current {
+  background: var(--col-primary);
+  box-shadow: 0 0 10px var(--col-primary);
+}
+
+/* ── Stars overlay (PresentationMenu) ─────────────────────── */
+.presentation__stars { position: absolute; inset: 0; pointer-events: none; }
+.presentation__star {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  animation: presentation-twinkle linear infinite;
+}
+@keyframes presentation-twinkle {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.85; }
+}
+
+@media (max-width: 480px) {
+  .epilepsy__body { padding: 1rem 1.1rem; }
+  .presentation__stage { min-height: 14rem; }
+}

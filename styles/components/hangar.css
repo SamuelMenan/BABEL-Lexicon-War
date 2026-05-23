@@ -12,6 +12,7 @@
 .hangar-header__wallet{font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.18em;color:var(--col-primary);text-shadow:0 0 8px rgba(0,255,204,0.4);margin-bottom:0.25rem;}
 .hangar-header__pilot{font-family:var(--font-hud);font-size:0.68rem;letter-spacing:0.2em;color:var(--col-primary);text-transform:uppercase;}
 .hangar-header__pilot-id{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.16em;color:var(--text-dim);text-transform:uppercase;}
+.hangar-header__pilot-ship{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.16em;color:var(--col-primary);text-transform:uppercase;margin-top:0.15rem;}
 .hangar-title{position:absolute;top:3.2rem;left:0;right:0;text-align:center;pointer-events:none;z-index:3;}
 .hangar-title__name{font-family:var(--font-hud);font-size:clamp(2.2rem,5vw,4rem);letter-spacing:0.28em;color:var(--col-primary);margin:0;line-height:1;text-shadow:0 0 40px rgba(0,255,204,0.38),0 0 80px rgba(0,255,204,0.10);}
 .hangar-title__meta{display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-top:0.6rem;font-family:var(--font-mono);font-size:0.56rem;letter-spacing:0.26em;color:var(--text-dim);text-transform:uppercase;}

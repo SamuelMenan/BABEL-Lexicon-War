@@ -28,9 +28,12 @@
 @import './components/precombat.css';
 @import './components/wave.css';
 @import './components/menu.css';
+@import './components/intro.css';
+@import './components/tutorial-diagrams.css';
 @import './components/match-result.css';
 @import './components/settings.css';
 @import './components/pause-menu.css';
+@import './components/character-select.css';
 
 @import './components/race-hud.css';
 @import './components/grafema-toasts.css';

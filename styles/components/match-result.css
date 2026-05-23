@@ -316,6 +316,12 @@
 
 .mr__btn:hover  { filter: brightness(1.28); transform: translateY(-1px); }
 .mr__btn:active { transform: translateY(0); filter: brightness(0.9); }
+.mr__btn--focused {
+  outline: 2px solid var(--col-primary, #00ffcc);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px rgba(0, 255, 204, 0.4);
+}
+.mr__actions .kbnav { display: flex; gap: 0.6rem; }
 
 .mr__btn--primary {
   background: var(--col-primary);

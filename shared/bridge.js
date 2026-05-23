@@ -180,7 +180,7 @@ export const Bridge = {
       EventBus.emit(EventTypes.TUTORIAL_COMPLETED, { id: t.id });
     },
     resetTutorials() {
-      Object.assign(_state, { tutorialsSeen: {} });
+      Object.assign(_state, { tutorialsSeen: {}, tutorialActive: null, deploymentPhase: null });
       notifyStateChange();
     },
   },

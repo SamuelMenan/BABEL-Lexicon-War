@@ -6,7 +6,7 @@ import TypingDiagram from './TypingDiagram.jsx';
 
 import { DiagBranch, DiagFlow, DiagCountdown } from './diagrams/shared.jsx';
 import {
-  DiagCombatIntro, DiagObjective, DiagStatBars, DiagLexHeat,
+  DiagCombatIntro, DiagObjective, DiagStatBars, DiagLifeBar,
   DiagProximity, DiagWaves, DiagGrafemas,
 } from './diagrams/combat.jsx';
 import {
@@ -28,8 +28,8 @@ const REGISTRY = {
   // combat
   'combat-intro':     DiagCombatIntro,
   'combat-objective': DiagObjective,
+  'hp-bar':           DiagLifeBar,
   'hud-statbars':     DiagStatBars,
-  'lex-heat':         DiagLexHeat,
   proximity:          DiagProximity,
   waves:              DiagWaves,
   grafemas:           DiagGrafemas,

@@ -1,13 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bridge } from '../../shared/bridge.js';
 import { GAME_MODES } from '../../shared/constants.js';
 import Settings from './Settings.jsx';
 import KeyboardNavigable from './common/KeyboardNavigable.jsx';
+import AuthModal from './auth/AuthModal.jsx';
+import LeaderboardModal from './leaderboard/LeaderboardModal.jsx';
+import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName } from '../services/supabase/auth.js';
+import { loadProfile } from '../../shared/playerProfile.js';
+import { getCharacter } from '../../shared/characterData.js';
 
 export default function MainMenu() {
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('visuals');
+  const [authUser, setAuthUser] = useState(null);
+  const [authModal, setAuthModal] = useState(null); // 'signin' | 'signup' | null
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-  if (showSettings) return <Settings onClose={() => setShowSettings(false)} />;
+  useEffect(() => {
+    let mounted = true;
+    getSession().then((s) => { if (mounted) setAuthUser(s?.user || null); });
+    const off = onAuthChange((user) => { if (mounted) setAuthUser(user); });
+    return () => { mounted = false; off(); };
+  }, []);
+
+  if (showSettings) return <Settings onClose={() => setShowSettings(false)} initialTab={settingsTab} />;
+
+  const displayName = authUser
+    ? resolveDisplayName({
+        user: authUser,
+        profile: loadProfile(),
+        characterName: getCharacter(loadProfile().selectedCharacter)?.name,
+      })
+    : null;
 
   // Defer scope-changing commands un tick para que el Enter actual termine
   // antes de cambiar a scope 'hangar'. Sin esto, el mismo Enter dispara
@@ -37,7 +61,15 @@ export default function MainMenu() {
       desc: 'Controles, audio, visuales y atajos.',
       glyph: '⚙',
       accent: 'var(--text-dim)',
-      action: () => setShowSettings(true),
+      action: () => { setSettingsTab('visuals'); setShowSettings(true); },
+    },
+    {
+      id: 'ranking',
+      label: 'Clasificación',
+      desc: 'Diario, semanal y mensual por modo.',
+      glyph: '⌘',
+      accent: 'var(--col-primary)',
+      action: () => setShowLeaderboard(true),
     },
   ];
 
@@ -56,6 +88,46 @@ export default function MainMenu() {
         <span>BABEL · LEXICON WAR</span>
         <span className="babel-frame__tag--accent">// PROGRAMA TYPO</span>
       </header>
+
+      {/* Auth pill — siempre visible; modal avisa si Supabase no está configurado */}
+      <div className="auth-pill">
+        {authUser ? (
+          <>
+            <span className="auth-pill__user">
+              <span className="auth-pill__user-tag">PILOTO ·</span>{displayName}
+            </span>
+            <button
+              type="button"
+              className="auth-pill__btn auth-pill__btn--ghost"
+              onClick={async () => { await signOut(); setAuthUser(null); }}
+            >Cerrar sesión</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="auth-pill__btn" onClick={() => setAuthModal('signin')}>
+              Iniciar sesión
+            </button>
+            <button type="button" className="auth-pill__btn auth-pill__btn--ghost" onClick={() => setAuthModal('signup')}>
+              Registrarse
+            </button>
+          </>
+        )}
+        {!isAuthAvailable() && (
+          <span className="auth-pill__user-tag" title="Falta VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY">⚠ offline</span>
+        )}
+      </div>
+
+      {authModal && (
+        <AuthModal
+          initialMode={authModal}
+          onClose={() => setAuthModal(null)}
+          onSuccess={(user) => setAuthUser(user)}
+        />
+      )}
+
+      {showLeaderboard && (
+        <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+      )}
 
       {/* Main */}
       <main className="main-menu__main">

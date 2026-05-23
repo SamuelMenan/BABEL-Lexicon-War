@@ -224,9 +224,14 @@ function ProfileSection() {
   );
 }
 
-export default function Settings({ onClose }) {
-  const [tab, setTab] = useState('visuals');
+
+export default function Settings({ onClose, initialTab = 'visuals' }) {
+  const [tab, setTab] = useState(initialTab);
   const [s, setS] = useState(loadSettings);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
 
   // Push 'modal' scope mientras Settings está montado.
   useEffect(() => {

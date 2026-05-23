@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
+import { loadProfile } from "../../shared/playerProfile.js";
+import { saveMatchResult } from "../services/supabase/leaderboard.js";
 
 function ResultActions({ onMenu, onRetry }) {
   const items = [
@@ -105,6 +107,7 @@ export default function MatchResult({
 }) {
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
+  const syncOnce = useRef(false);
   const restart = () => window.location.reload();
 
   const effectiveWpm = wpm ?? 0;
@@ -132,6 +135,33 @@ export default function MatchResult({
     if (s < 60) return `${s}s`;
     return `${Math.floor(s / 60)}m ${s % 60}s`;
   }
+
+  useEffect(() => {
+    if (syncOnce.current) return;
+    syncOnce.current = true;
+
+    const elapsedSeconds = Number.isFinite(timeElapsed) ? Math.max(0, Math.round(timeElapsed)) : null;
+    const finishedAt = new Date().toISOString();
+    const startedAt = elapsedSeconds == null ? null : new Date(Date.now() - elapsedSeconds * 1000).toISOString();
+
+    void saveMatchResult({
+      profile: loadProfile(),
+      sessionId,
+      mode: gameMode || (isRacing ? 'racing' : 'combat'),
+      startedAt,
+      finishedAt,
+      score: Number.isFinite(score) ? score : null,
+      wpm: Number.isFinite(wpm) ? wpm : null,
+      accuracy: Number.isFinite(accuracy) ? accuracy : null,
+      wave: Number.isFinite(wave) ? wave : null,
+      raceVictory,
+      peakWPM: Number.isFinite(peakWPM) ? peakWPM : null,
+      timeElapsed: elapsedSeconds,
+      grafemasReward: Number.isFinite(grafemasReward?.amount) ? grafemasReward.amount : null,
+    }).catch((error) => {
+      console.warn('[Supabase] No se pudo guardar el resultado', error);
+    });
+  }, [accuracy, gameMode, grafemasReward, isRacing, peakWPM, raceVictory, score, sessionId, timeElapsed, wave, wpm]);
 
   /* ── Combat ──────────────────────────────────────────────── */
   if (!isRacing) {

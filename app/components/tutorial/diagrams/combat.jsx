@@ -57,37 +57,31 @@ export function DiagStatBars() {
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
         <Label text="// PANEL DE PILOTO" tone="primary" />
-        <HudBar x="28" y="40"  label="HP"       value={78} color="var(--col-primary)" />
-        <HudBar x="28" y="75"  label="LEX-HEAT" value={42} color="var(--col-warning)" threshold={85} />
-        <HudBar x="28" y="110" label="SHIELD"   value={60} color="#66ccff" />
-        <HudBar x="28" y="145" label="FLOW"     value={85} color="var(--col-flow)" />
-        <text x="120" y="186" textAnchor="middle" className="td-text-sm td-text-dim">esquina inferior izquierda</text>
+        <HudBar x="38" y="54" w={164} label="HP"   value={78} color="var(--col-primary)" />
+        <HudBar x="38" y="98" w={164} label="FLOW" value={85} color="var(--col-flow)" />
+        <text x="120" y="172" textAnchor="middle" className="td-text-sm td-text-dim">esquina inferior izquierda</text>
       </Frame>
     </svg>
   );
 }
 
-export function DiagLexHeat() {
+export function DiagLifeBar() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
-      <Frame tone="warning">
-        <Label text="// TÉRMICO LÉXICO" tone="warning" />
-        <g transform="translate(28 48)">
-          <rect width="184" height="14" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.15)" />
-          <rect width="156" height="14" fill="url(#grad-warning)" className="td-fill-grow" />
-          {[...Array(11)].map((_, i) => (
-            <line key={i} x1={i * 18.4} y1="-3" x2={i * 18.4} y2="0" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-          ))}
-          <text x="0"   y="-5" className="td-text-sm td-text-dim">0</text>
-          <text x="184" y="-5" textAnchor="end" className="td-text-sm td-text-dim">100</text>
-          <line x1="156" y1="-8" x2="156" y2="22" stroke="var(--col-danger)" strokeWidth="1" strokeDasharray="2 2" />
-          <text x="156" y="32" textAnchor="middle" className="td-text-sm td-text-danger">85 ▲</text>
+      <Frame tone="danger">
+        <Label text="// BARRA DE VIDA" tone="warning" />
+        <g transform="translate(20 54)" className="td-pulse-slow">
+          <rect x="0" y="0" width="200" height="18" rx="2" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.15)" />
+          <rect x="0" y="0" width="150" height="18" rx="2" fill="var(--col-primary)" fillOpacity="0.85" />
+          <rect x="0" y="0" width="200" height="4" fill="rgba(255,255,255,0.08)" />
+          <text x="100" y="13" textAnchor="middle" className="td-text-sm td-text-primary">HP 78 / 100</text>
         </g>
-        <g transform="translate(40 110)" className="td-pulse">
-          <rect width="160" height="60" rx="2" fill="rgba(255,68,102,0.1)" stroke="var(--col-danger)" strokeDasharray="4 3" />
-          <text x="80" y="22" textAnchor="middle" className="td-text td-text-danger">⊘  BLOQUEO  ⊘</text>
-          <text x="80" y="40" textAnchor="middle" className="td-text-sm td-text-dim">input deshabilitado</text>
-          <text x="80" y="52" textAnchor="middle" className="td-text-sm td-text-warning">3.5 s</text>
+        <g transform="translate(20 92)">
+          <text x="0" y="0" className="td-text-sm td-text-dim">Si baja a cero, pierdes la nave.</text>
+          <text x="0" y="18" className="td-text-sm td-text-dim">Los golpes enemigos reducen</text>
+          <text x="0" y="36" className="td-text-sm td-text-dim">la barra.</text>
+          <text x="0" y="54" className="td-text-sm td-text-warning">Mantén el HP alto y elimina</text>
+          <text x="0" y="72" className="td-text-sm td-text-warning">amenazas antes que te alcancen.</text>
         </g>
       </Frame>
     </svg>

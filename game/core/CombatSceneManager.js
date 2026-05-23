@@ -222,6 +222,33 @@ export class CombatSceneManager {
     this.hudCanvas?.setShipColor?.(this._player.laserColor);
   }
 
+  // Anima la entrada de la nave: arranca lejos -Z, vuela hasta pose final.
+  // Resolves cuando termina. Llamado por game/main.js post-mount.
+  playEntryAnimation(durationSec = 4.0) {
+    return new Promise((resolve) => {
+      const mesh = this._player?.mesh;
+      if (!mesh) { resolve(); return; }
+      const finalPos = mesh.position.clone();
+      const startOffset = -55;       // lejos al frente (espacio combat -Z)
+      mesh.position.z = finalPos.z + startOffset;
+      mesh.position.y = finalPos.y + 6;
+      let elapsed = 0;
+      let lastTs = performance.now();
+      function tick(ts) {
+        const dt = (ts - lastTs) / 1000;
+        lastTs = ts;
+        elapsed += dt;
+        const k = Math.min(1, elapsed / durationSec);
+        const eased = 1 - Math.pow(1 - k, 3);
+        mesh.position.z = (finalPos.z + startOffset) + (-startOffset) * eased;
+        mesh.position.y = (finalPos.y + 6) + (-6) * eased;
+        if (k < 1) requestAnimationFrame(tick);
+        else { mesh.position.copy(finalPos); resolve(); }
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
   _startWave() {
     this.wave++;
     waveTrace.beginWave(this.wave);

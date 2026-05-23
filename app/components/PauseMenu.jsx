@@ -8,13 +8,22 @@ export default function PauseMenu() {
 
   if (showSettings) return <Settings onClose={() => setShowSettings(false)} />;
 
+  const { gameMode } = Bridge.peekState();
+  const isGameplay = gameMode === 'combat' || gameMode === 'racing';
+
   const items = [
     { id: 'resume',   label: 'Reanudar',              icon: '▶', variant: 'primary',
       action: () => Bridge.commands.resumeGame() },
     { id: 'settings', label: 'Configuración',         variant: 'secondary',
       action: () => setShowSettings(true) },
+    ...(isGameplay ? [{
+      id: 'hangar',
+      label: 'Volver al Hangar',
+      variant: 'secondary',
+      action: () => Bridge.commands.exitToHangar(),
+    }] : []),
     { id: 'menu',     label: 'Volver al Menú Principal', variant: 'ghost',
-      action: () => window.location.reload() },
+      action: () => Bridge.commands.exitToMenu() },
   ];
 
   return (

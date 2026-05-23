@@ -2,7 +2,7 @@
 import WarningTriangle from "../warnings/WarningTriangle.jsx";
 import { getProximityLevel } from "../../../../game/systems/hudUtils.js";
 
-export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier }) {
+export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier, mirror = false }) {
   // Dedupe defensivo por id (evita duplicación si el payload llega con repetidos).
   const seen = new Set();
   const unique = [];
@@ -15,7 +15,7 @@ export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier })
   const flowColor = "var(--col-multiplier, var(--col-active))";
 
   return (
-    <div className="lexicon-deck">
+    <div className={`lexicon-deck${mirror ? " lexicon-deck--mirror" : ""}`}>
       <div className="lexicon-deck__header">
         <span className="lexicon-deck__header-label">MAZO · LEXICO</span>
         <span className="lexicon-deck__header-count" style={{ color: "var(--col-deck-count, var(--col-active))" }}>{sorted.length}</span>

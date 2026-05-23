@@ -9,6 +9,8 @@ import CombatTicker from "./hud/combat/CombatTicker.jsx";
 import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
 import CombatBottomLeft from "./hud/combat/CombatBottomLeft.jsx";
 import CombatWordPanel from "./hud/combat/CombatWordPanel.jsx";
+import CombatWPMSide from "./hud/combat/CombatWPMSide.jsx";
+import CombatWaveSide from "./hud/combat/CombatWaveSide.jsx";
 import LexiconDeck from "./hud/combat/LexiconDeck.jsx";
 
 import RacePilotTag from "./hud/racing/RacePilotTag.jsx";
@@ -17,6 +19,9 @@ import RaceStatsTopRight from "./hud/racing/RaceStatsTopRight.jsx";
 import RaceDistanceBar from "./hud/racing/RaceDistanceBar.jsx";
 import RaceParagraphBlock from "./hud/racing/RaceParagraphBlock.jsx";
 import RaceFlowBlock from "./hud/racing/RaceFlowBlock.jsx";
+import RaceWPMSide from "./hud/racing/RaceWPMSide.jsx";
+import RaceTimeSide from "./hud/racing/RaceTimeSide.jsx";
+import RaceOpponentDistanceBar from "./hud/racing/RaceOpponentDistanceBar.jsx";
 import RaceRunStats from "./hud/racing/RaceRunStats.jsx";
 import RaceSpeedLines from "./hud/racing/RaceSpeedLines.jsx";
 
@@ -76,6 +81,7 @@ export default function HUD() {
     playerPhrasesCompleted, totalPhrases,
     countdown, countdownActive, timeRemaining,
     distanceTraveled, targetDistance,
+    opponentDistance = 0,
     combatEnemies, swarmRemnants, targetId,
     flow = 0, flowActive = false, flowCooldown = false,
     flowStreak = 0,
@@ -222,7 +228,10 @@ export default function HUD() {
             wave={wave} swarmRemnants={swarmRemnants} warnings={warnings}
           />
           <CombatWordPanel activeWord={activeWord} animState={animState} />
+          <CombatWPMSide wpm={wpm} />
+          <CombatWaveSide wave={wave} swarmRemnants={swarmRemnants} />
           <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} />
+          <LexiconDeck combatEnemies={combatEnemies} targetId={targetId} flowMultiplier={flowMultiplier} mirror />
           <WalletBadge placement="combat" />
           <GrafemaToasts />
           <TelemetryPanel />
@@ -235,6 +244,7 @@ export default function HUD() {
   return (
     <div className="hud" style={hudVars}>
       {showFlash && <div className="edge-flash" />}
+      {flowActive && <FlowFrame />}
       <LowHpFrame level={lowHpLevel} />
       <div className="r-vignette" />
       <RaceSpeedLines flowActive={flowActive} />
@@ -242,15 +252,19 @@ export default function HUD() {
         <WaveAnnouncement wave={waveNotice} />
         <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
-        <FlowModeOverlay flowActive={flowActive} />
         <RacePilotTag pilotName={pilotName} pilotSub={pilotSub} shipName={shipName} />
         <RaceTopStatus wave={wave} playerPhrasesCompleted={playerPhrasesCompleted} />
-        <RaceStatsTopRight wpm={wpm} accuracy={accuracy} />
+        <RaceStatsTopRight accuracy={accuracy} />
         <RaceDistanceBar
           distanceTraveled={distanceTraveled}
           targetDistance={targetDistance}
-          timeRemaining={timeRemaining}
         />
+        <RaceOpponentDistanceBar
+          distanceOpponent={opponentDistance}
+          targetDistance={targetDistance}
+        />
+        <RaceWPMSide wpm={wpm} />
+        <RaceTimeSide timeRemaining={timeRemaining} />
         <RaceParagraphBlock
           wordBuffer={wordBuffer}
           globalWordIndex={globalWordIndex}
@@ -268,7 +282,6 @@ export default function HUD() {
         <WalletBadge placement="race" />
         <GrafemaToasts />
         <TelemetryPanel />
-        <BotToggleFAB />
         <PauseFAB />
       </div>
     </div>

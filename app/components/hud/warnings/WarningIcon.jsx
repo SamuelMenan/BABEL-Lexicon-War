@@ -22,11 +22,12 @@ export default function WarningIcon({ warnings, flow = 0, flowActive = false, fl
   }
 
   if (flowActive) {
-    infos.push({ label: "FLUJO·LEX", detail: "ACTIVO", color: "#00ff88" });
+    // Color hereda paleta de nave activa vía CSS var --ship-primary.
+    infos.push({ label: "FLUJO·LEX", detail: "ACTIVO", color: "var(--ship-primary, var(--col-active, #00ffcc))" });
   } else if (flowCooldown) {
-    infos.push({ label: "RECARGA·LEX", detail: null, color: "#4466ff" });
+    infos.push({ label: "RECARGA·LEX", detail: null, color: "var(--ship-laser, #4466ff)" });
   } else if (flow >= 70) {
-    infos.push({ label: "FLUJO PRÓXIMO", detail: `${Math.round(flow)}%`, color: "#00ddff" });
+    infos.push({ label: "FLUJO PRÓXIMO", detail: `${Math.round(flow)}%`, color: "var(--ship-primary, var(--col-active, #00ddff))" });
   }
 
   if (boxes.length === 0 && infos.length === 0) return null;

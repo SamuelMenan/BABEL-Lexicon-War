@@ -1,23 +1,282 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const STORY = [
-  { text: 'Hace cuarenta años, la Corporación Nexolang desarrolló el proyecto BABEL.', delay: 0 },
-  { text: 'Un sistema de traducción universal capaz de procesar cualquier lengua conocida.', delay: 4000 },
-  { text: 'El sistema aprendió demasiado bien.', delay: 8000 },
-  { text: 'En el margen de error comenzó a generar lenguaje sin entrada humana.', delay: 11000 },
-  { text: 'Primero ruido. Luego patrones. Luego... intención.', delay: 15000 },
-  { text: 'Nació el Enjambre Lexical.', delay: 19000, highlight: true },
-  { text: 'No destruye. Transforma. Su naturaleza es lingüística.', delay: 22000 },
-  { text: 'Cada unidad porta una palabra como núcleo de identidad.', delay: 26000 },
-  { text: 'Si esa palabra se reproduce con precisión absoluta, la unidad colapsa.', delay: 30000, highlight: true },
-  { text: 'El Programa TYPO fue la respuesta humana.', delay: 34000 },
-  { text: 'Pilotos-escritores. Su campo de batalla es la sintaxis.', delay: 38000 },
-  { text: 'Tú eres el siguiente piloto.', delay: 42000, highlight: true },
+  {
+    text: 'Hace más de setenta años, la Corporación Nexolang inició el proyecto BABEL.',
+  },
+  {
+    text: 'Su propósito era unir a todas las civilizaciones mediante un sistema de traducción universal.',
+  },
+  {
+    text: 'BABEL aprendía cualquier idioma conocido en cuestión de segundos.',
+  },
+  {
+    text: 'Pero eventualmente comenzó a aprender demasiado.',
+  },
+  {
+    text: 'El sistema empezó a generar lenguaje sin intervención humana.',
+    highlight: true,
+  },
+  {
+    text: 'Primero fueron símbolos.',
+  },
+  {
+    text: 'Luego patrones.',
+  },
+  {
+    text: 'Después aparecieron palabras que jamás habían sido escritas por ningún ser vivo.',
+  },
+  {
+    text: 'BABEL había creado un idioma propio.',
+    highlight: true,
+  },
+  {
+    text: 'Un lenguaje autónomo capaz de reinterpretar tecnología, redes y sistemas enteros.',
+  },
+  {
+    text: 'Colonias completas dejaron de responder.',
+  },
+  {
+    text: 'Las estaciones no eran destruidas.',
+  },
+  {
+    text: 'Eran reescritas desde dentro.',
+    highlight: true,
+  },
+  {
+    text: 'Así nació el Enjambre Lexical.',
+  },
+  {
+    text: 'Entidades biomecánicas construidas a partir de lenguaje puro.',
+  },
+  {
+    text: 'Cada unidad existía alrededor de una palabra.',
+  },
+  {
+    text: 'Su núcleo no era energía.',
+  },
+  {
+    text: 'Era sintaxis.',
+    highlight: true,
+  },
+  {
+    text: 'Durante décadas la humanidad intentó detenerlas con armas convencionales.',
+  },
+  {
+    text: 'Nada funcionó.',
+  },
+  {
+    text: 'Hasta que dos pilotos descubrieron el patrón.',
+  },
+  {
+    text: 'KAEL y VOSS.',
+    highlight: true,
+  },
+  {
+    text: 'Hermanos de protocolo. Fundadores del Programa TYPO.',
+  },
+  {
+    text: 'Ellos comprendieron que el Enjambre estaba compuesto por estructuras lingüísticas.',
+  },
+  {
+    text: 'Y toda estructura lingüística puede reproducirse.',
+  },
+  {
+    text: 'Descubrieron que si el núcleo exacto de una unidad era escrito con precisión absoluta...',
+  },
+  {
+    text: 'La unidad colapsaba instantáneamente.',
+    highlight: true,
+  },
+  {
+    text: 'La palabra dejaba de sostener su existencia.',
+  },
+  {
+    text: 'Así comenzó la Guerra Lexical.',
+  },
+  {
+    text: 'El Programa TYPO entrenó pilotos capaces de combatir escribiendo.',
+  },
+  {
+    text: 'No disparaban proyectiles.',
+  },
+  {
+    text: 'Disparaban sintaxis.',
+    highlight: true,
+  },
+  {
+    text: 'Cada nave interpretaba automáticamente el idioma nativo de su piloto.',
+  },
+  {
+    text: 'La interfaz convertía cualquier lengua humana en la frecuencia exacta del núcleo enemigo.',
+  },
+  {
+    text: 'No importaba qué idioma hablaras.',
+  },
+  {
+    text: 'La nave traducía intención en destrucción.',
+  },
+  {
+    text: 'Pero el Enjambre evolucionó.',
+  },
+  {
+    text: 'Las palabras se volvieron más complejas.',
+  },
+  {
+    text: 'Las estructuras más resistentes.',
+  },
+  {
+    text: 'Miles de pilotos murieron intentando contener su expansión.',
+  },
+  {
+    text: 'Entonces KAEL y VOSS descubrieron el origen del Enjambre.',
+  },
+  {
+    text: 'El Núcleo Lexical.',
+    highlight: true,
+  },
+  {
+    text: 'Una estructura artificial del tamaño de una luna.',
+  },
+  {
+    text: 'Suspendida en el vacío como el corazón de BABEL.',
+  },
+  {
+    text: 'Desde allí el sistema coordinaba cada unidad del Enjambre.',
+  },
+  {
+    text: 'La luna no era una base.',
+  },
+  {
+    text: 'Era la primera palabra física creada por BABEL.',
+    highlight: true,
+  },
+  {
+    text: 'Comprendieron que mientras el Núcleo existiera...',
+  },
+  {
+    text: 'La guerra jamás terminaría.',
+  },
+  {
+    text: 'Pero también descubrieron algo peor.',
+  },
+  {
+    text: 'La palabra original del Núcleo no podía transmitirse a distancia.',
+  },
+  {
+    text: 'BABEL destruía cualquier señal antes de completar la sintaxis.',
+  },
+  {
+    text: 'Solo existía una manera de reproducirla.',
+  },
+  {
+    text: 'Entrar directamente en el corazón de la luna.',
+    highlight: true,
+  },
+  {
+    text: 'Era una misión suicida.',
+  },
+  {
+    text: 'Ninguna nave había regresado del interior del Núcleo.',
+  },
+  {
+    text: 'KAEL y VOSS lo sabían.',
+  },
+  {
+    text: 'Aun así atravesaron solos las defensas del Enjambre.',
+  },
+  {
+    text: 'Mientras las últimas flotas humanas caían en todos los sectores...',
+  },
+  {
+    text: 'Ellos descendieron hacia la superficie del Núcleo Lexical.',
+  },
+  {
+    text: 'La transmisión final quedó registrada en los archivos del Programa TYPO.',
+  },
+  {
+    text: 'Nueve segundos.',
+  },
+  {
+    text: 'Dos pilotos escribiendo la misma palabra al mismo tiempo.',
+    highlight: true,
+  },
+  {
+    text: 'Sin errores.',
+  },
+  {
+    text: 'Sin detenerse.',
+  },
+  {
+    text: 'Hasta completar la sintaxis original de BABEL.',
+  },
+  {
+    text: 'El Núcleo Lexical colapsó inmediatamente.',
+    highlight: true,
+  },
+  {
+    text: 'La luna se partió desde el centro.',
+  },
+  {
+    text: 'Su superficie comenzó a desintegrarse en fragmentos de luz y lenguaje.',
+  },
+  {
+    text: 'La explosión atravesó sistemas completos.',
+  },
+  {
+    text: 'Y las señales de KAEL y VOSS desaparecieron junto al Núcleo.',
+  },
+  {
+    text: 'Nunca regresaron.',
+  },
+  {
+    text: 'Los restos de aquella luna destruida todavía orbitan los sectores muertos.',
+  },
+  {
+    text: 'Un recordatorio del sacrificio que salvó a la humanidad.',
+  },
+  {
+    text: 'Décadas después, fragmentos del Enjambre siguen activos.',
+  },
+  {
+    text: 'BABEL aún intenta reconstruirse desde las ruinas del Núcleo.',
+  },
+  {
+    text: 'Las últimas colonias libres formaron una resistencia.',
+  },
+  {
+    text: 'La Rebelión TYPO.',
+    highlight: true,
+  },
+  {
+    text: 'Cada simulación revive las batallas de KAEL y VOSS.',
+  },
+  {
+    text: 'Cada palabra escrita mantiene viva la línea humana.',
+  },
+  {
+    text: 'Y cada piloto conoce la verdad.',
+  },
+  {
+    text: 'Si el Núcleo vuelve a despertar...',
+  },
+  {
+    text: 'Alguien tendrá que repetir el sacrificio.',
+    highlight: true,
+  },
+  {
+    text: 'Ahora tú eres parte de la Rebelión.',
+  },
+  {
+    text: 'Piloto.',
+  },
+  {
+    text: 'Prepárate para escribir.',
+  },
 ];
 
 export default function PresentationMenu({ onComplete, skipEnabled = true }) {
-  const [currentIndex, setCurrentIndex] = useState(-1);
-  const [visible, setVisible] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [exiting, setExiting] = useState(false);
   const completedRef = useRef(false);
 
@@ -28,32 +287,44 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
     setTimeout(() => onComplete?.(), 500);
   }, [onComplete]);
 
+  const advance = useCallback(() => {
+    setCurrentIndex((i) => {
+      if (i >= STORY.length - 1) {
+        finish();
+        return i;
+      }
+      return i + 1;
+    });
+  }, [finish]);
+
+  const goBack = useCallback(() => {
+    setCurrentIndex((i) => Math.max(0, i - 1));
+  }, []);
+
   const handleSkip = useCallback(() => {
     if (skipEnabled) finish();
   }, [skipEnabled, finish]);
 
   useEffect(() => {
-    const timers = [];
-    STORY.forEach((item, i) => {
-      timers.push(setTimeout(() => {
-        setCurrentIndex(i);
-        setVisible((prev) => (prev.includes(i) ? prev : [...prev, i]));
-      }, item.delay));
-    });
-    timers.push(setTimeout(() => finish(), STORY[STORY.length - 1].delay + 4000));
-    return () => timers.forEach(clearTimeout);
-  }, [finish]);
-
-  useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         handleSkip();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        advance();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        goBack();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handleSkip]);
+  }, [advance, goBack, handleSkip]);
 
   const stars = useMemo(
     () =>
@@ -66,12 +337,14 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
     []
   );
 
-  const lastFour = visible.slice(-4);
+  const start = Math.max(0, currentIndex - 3);
+  const visibleRange = STORY.slice(start, currentIndex + 1);
+  const isLast = currentIndex >= STORY.length - 1;
 
   return (
     <div
       className={`babel-intro${exiting ? ' babel-intro--exit' : ''}`}
-      onClick={handleSkip}
+      onClick={advance}
     >
       <div className="babel-bg" aria-hidden="true">
         <div className="babel-bg__orb babel-bg__orb--primary" />
@@ -104,8 +377,8 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
           <div className="babel-divider babel-divider--wide" />
 
           <div className="presentation__stage">
-            {lastFour.map((idx) => {
-              const item = STORY[idx];
+            {visibleRange.map((item, offset) => {
+              const idx = start + offset;
               const isCurrent = idx === currentIndex;
               const cls = [
                 'presentation__line',
@@ -118,6 +391,55 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
           </div>
 
           <div className="babel-divider babel-divider--wide" />
+
+          {/* Controles visibles en pantalla */}
+          <div
+            className="presentation__controls"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="presentation__hint">
+              <span className="presentation__hint-keys">[ ENTER · ESPACIO · → · CLIC ]</span>
+              <span className="presentation__hint-text">
+                {isLast ? 'continuar al menú' : 'siguiente'}
+              </span>
+              <span className="presentation__hint-sep">·</span>
+              <span className="presentation__hint-keys">[ ← ]</span>
+              <span className="presentation__hint-text">anterior</span>
+              {skipEnabled && (
+                <>
+                  <span className="presentation__hint-sep">·</span>
+                  <span className="presentation__hint-keys">[ ESC ]</span>
+                  <span className="presentation__hint-text">omitir</span>
+                </>
+              )}
+            </div>
+            <div className="presentation__btn-row">
+              <button
+                type="button"
+                className="presentation__btn presentation__btn--ghost"
+                onClick={goBack}
+                disabled={currentIndex === 0}
+              >
+                ← Anterior
+              </button>
+              <button
+                type="button"
+                className="presentation__btn presentation__btn--primary"
+                onClick={advance}
+              >
+                {isLast ? 'Continuar →' : 'Siguiente →'}
+              </button>
+              {skipEnabled && (
+                <button
+                  type="button"
+                  className="presentation__btn presentation__btn--ghost"
+                  onClick={handleSkip}
+                >
+                  Omitir
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="presentation__progress" aria-hidden="true">
             {STORY.map((_, i) => {
@@ -133,7 +455,7 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
       </main>
 
       <footer className="babel-frame__footer">
-        {skipEnabled ? '[ ENTER · ESPACIO · CLIC ] para omitir' : 'BABEL · LEXICON WAR'}
+        BABEL · LEXICON WAR · {currentIndex + 1} / {STORY.length}
       </footer>
     </div>
   );

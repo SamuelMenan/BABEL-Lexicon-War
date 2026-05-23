@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-export default function EpilepsyWarning({ onAccept, autoSkipAfter = 10 }) {
+export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
   const [countdown, setCountdown] = useState(autoSkipAfter);
   const [canSkip, setCanSkip] = useState(false);
   const btnRef = useRef(null);

@@ -43,7 +43,6 @@ export default function WalletBadge({ placement = 'hangar' }) {
       className={`wallet-badge wallet-badge--${placement}${pulse ? ` wallet-badge--${pulse}` : ''}`}
       title="Grafemas: moneda del Programa TYPO"
     >
-      <span className="wallet-badge__label">GRAFEMAS</span>
       <span className="wallet-badge__value">₲ {fmt(grafemas)}</span>
     </div>
   );

@@ -12,6 +12,7 @@ export class Moon {
     this._torusRings = [];
     this._coreRings = [];
     this._coreGroup = null;
+    this._extras = [];   // halo + debris + ambient + rimLight (todo lo agregado al scene)
   }
 
   load() {
@@ -26,6 +27,10 @@ export class Moon {
   _applyMoonGLTF(gltf) {
     const root = gltf?.scene;
     if (!root) return;
+    // Reset transforms — el GLB cacheado puede venir transformado de un load previo.
+    root.position.set(0, 0, 0);
+    root.rotation.set(0, 0, 0);
+    root.scale.setScalar(1);
     const box = new THREE.Box3().setFromObject(root);
     if (!box.isEmpty()) {
       root.position.sub(box.getCenter(new THREE.Vector3()));
@@ -76,8 +81,14 @@ export class Moon {
   }
 
   dispose() {
-    if (this._moon) { this._moon.removeFromParent(); this._moon = null; }
-    if (this._moonLight) { this._moonLight.removeFromParent(); this._moonLight = null; }
+    const rm = (o) => { if (o) o.removeFromParent(); };
+    rm(this._moon);       this._moon = null;
+    rm(this._moonLight);  this._moonLight = null;
+    rm(this._coreGroup);  this._coreGroup = null;
+    this._moonRings.forEach(rm);  this._moonRings = [];
+    this._torusRings.forEach(rm); this._torusRings = [];
+    this._coreRings = [];   // hijos del coreGroup, ya removidos
+    this._extras.forEach(rm);     this._extras = [];
   }
 
   _buildCore() {
@@ -207,16 +218,17 @@ export class Moon {
   _buildEnvironment() {
     const rimLight = new THREE.PointLight(0x2255cc, 500, 62);
     rimLight.position.set(24, -12, -65);
-    this._scene.add(rimLight);
+    this._scene.add(rimLight); this._extras.push(rimLight);
 
-    this._scene.add(new THREE.AmbientLight(0x030508, 1.5));
+    const ambient = new THREE.AmbientLight(0x030508, 1.5);
+    this._scene.add(ambient); this._extras.push(ambient);
 
     const halo = new THREE.Mesh(
       new THREE.SphereGeometry(22, 20, 20),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.72, depthWrite: false, side: THREE.FrontSide })
     );
     halo.position.set(0, 0, -78); halo.renderOrder = -1;
-    this._scene.add(halo);
+    this._scene.add(halo); this._extras.push(halo);
 
     const debrisCount = 180;
     const debrisPos = new Float32Array(debrisCount * 3);
@@ -234,6 +246,6 @@ export class Moon {
       color: 0x8899cc, size: 0.18, sizeAttenuation: true, transparent: true, opacity: 0.7,
       blending: THREE.AdditiveBlending, depthWrite: false
     }));
-    this._scene.add(debris);
+    this._scene.add(debris); this._extras.push(debris);
   }
 }

@@ -5,10 +5,9 @@ import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.
 
 const TARGET_MODEL_LENGTH = 3.2;
 
-// cb1 noseAxis='+x': yaw=+π/2 maps +X → group -Z.
-// Opponent update uses rotation.y ≈ 0 (small oscillation),
-// so group -Z → world -Z = racing forward direction.
-const OPPONENT_YAW = Math.PI / 2;
+// Opponent (cb1): mismo patrón que combat → modelRoot.rotation.y = rotationY + π.
+// cb1.rotationY = -π/2 → yaw = π/2. Group queda en identidad.
+const OPPONENT_YAW = (-Math.PI/2) + Math.PI;  // = π/2
 
 export class RacingOpponentShip extends ShipBase {
   constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8), shipModel = 'cb1') {
@@ -18,13 +17,14 @@ export class RacingOpponentShip extends ShipBase {
     this._raceState    = null;
     this._boosters     = [];
 
+    // Entry animation espejo de combate.
     this._entryActive   = true;
     this._entryTime     = 0;
-    this._entryDuration = 1.5;
+    this._entryDuration = 3.5;
     this._entryStartPos = new THREE.Vector3(
       this._basePosition.x,
       this._basePosition.y,
-      this._basePosition.z + 40,
+      this._basePosition.z + 90,
     );
     this._modelLoaded = false;
 
@@ -35,10 +35,7 @@ export class RacingOpponentShip extends ShipBase {
   }
 
   _buildFxNodes() {
-    const glow = this._makeGlow(0xffffff, 0.95, 0.20);
-    glow.position.set(0, 0, 1.08);
-    glow.layers.enable(BLOOM_LAYER);
-    this._group.add(glow);
+    // Glow sphere removida.
   }
 
   _buildFallbackShip() {
@@ -54,7 +51,9 @@ export class RacingOpponentShip extends ShipBase {
       metalness: 0.72,
       roughness: 0.28,
     });
-    this._shipRoot.add(new THREE.Mesh(bodyGeo, bodyMat));
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.layers.enable(BLOOM_LAYER);
+    this._shipRoot.add(bodyMesh);
 
     const wingGeo = new THREE.BufferGeometry();
     wingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
@@ -70,11 +69,14 @@ export class RacingOpponentShip extends ShipBase {
       metalness: 0.78,
       roughness: 0.22,
     });
-    this._shipRoot.add(new THREE.Mesh(wingGeo, wingMat));
+    const wingMesh = new THREE.Mesh(wingGeo, wingMat);
+    wingMesh.layers.enable(BLOOM_LAYER);
+    this._shipRoot.add(wingMesh);
   }
 
   _configureLoadedMesh(node) {
     node.layers.set(0);
+    node.layers.enable(BLOOM_LAYER);   // bloquea halo del túnel durante bloom pass
   }
 
   _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
@@ -159,18 +161,23 @@ export class RacingOpponentShip extends ShipBase {
       const k  = Math.min(this._entryTime / this._entryDuration, 1);
       const ek = 1 - Math.pow(1 - k, 3);
       this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
-      this._boosters.forEach(b => b.update(delta, true, 1, 1, 1.0));
+      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 4);
+      this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
       if (k >= 1) this._entryActive = false;
       return;
     }
 
     if (!this._raceState) return;
 
-    const { t, smoothLead, smoothProgress } = this._raceState;
+    const { t, smoothLead, progressZ, smoothProgress } = this._raceState;
+    const zBase = (progressZ ?? this._basePosition.z);
+    const shrink = THREE.MathUtils.lerp(1.0, 0.5, smoothProgress ?? 0);
+    this._group.scale.setScalar(shrink);
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.2 + 0.8) * 0.24 + Math.cos(t * 0.62 + 0.2) * 0.11 - smoothLead * 0.05;
     this._group.position.y = this._basePosition.y + Math.sin(t * 1.6 + 1.1) * 0.2 + Math.cos(t * 1.05 + 0.4) * 0.08;
-    this._group.position.z = this._basePosition.z + smoothProgress * 0.35 + smoothLead * 0.65;
+    // Si player adelanta (smoothLead > 0), opponent queda más atrás (z mayor = más cerca cámara, menos avanzado).
+    this._group.position.z = zBase + smoothLead * 0.65;
     this._group.rotation.x = -0.05 + Math.sin(t * 1.4 + 0.3) * 0.05;
     this._group.rotation.y = Math.sin(t * 0.75 + 0.6) * 0.07;
     this._group.rotation.z = -smoothLead * 0.09 + Math.sin(t * 1.1 + 0.5) * 0.06;

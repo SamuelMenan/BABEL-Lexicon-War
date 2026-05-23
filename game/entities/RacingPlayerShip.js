@@ -6,18 +6,9 @@ import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.
 
 const TARGET_MODEL_LENGTH = 5.0;
 
-// Racing forward = -Z (ship moves by decreasing z each frame).
-// The update() forces group.rotation.y = π, which maps group +Z → world -Z.
-// So we need the model nose to point group +Z after modelRoot.rotation.y = racingYaw.
-//   +X-nose ship: rotY(-π/2) maps +X → +Z  ✓
-//   +Z-nose ship: no rotation needed         ✓
+// Mismo patrón que CombatPlayerShip y RacingOpponentShip.
 function getRacingYaw(ship) {
-  switch (ship?.noseAxis) {
-    case '+x': return -Math.PI / 2;
-    case '-x': return  Math.PI / 2;
-    case '-z': return Math.PI;
-    default:   return 0;
-  }
+  return (ship?.rotationY ?? 0) + Math.PI;
 }
 
 export class RacingPlayerShip extends ShipBase {
@@ -36,14 +27,20 @@ export class RacingPlayerShip extends ShipBase {
     this._basePosition = basePosition.clone();
     this._raceState   = null;
 
-    // Entry animation — sync con salida de hangar.
+    // Entry animation (espejo de CombatPlayerShip): nave parte detrás de cámara,
+    // lerp ease-out hasta basePosition. Quaternion slerp hacia identidad → orientación
+    // racing limpia sin double-rotation.
     this._entryActive   = true;
     this._entryTime     = 0;
-    this._entryDuration = 3.5;
+    this._entryDuration = 5.0;   // más largo para sensación más suave
+    // Spawn DEEP (más allá de base) → nave aparece pequeña al fondo del túnel
+    // y avanza hacia base. Motion +Z. Para que aparezca nose-first, el group
+    // arranca rotado π (nariz hacia +Z = hacia cámara) y slerp a identidad
+    // (nose -Z = vórtice) al terminar.
     this._entryStartPos = new THREE.Vector3(
       this._basePosition.x,
       this._basePosition.y,
-      this._basePosition.z + 40,
+      this._basePosition.z - 140,  // base=-55 → start=-195 (más allá del vórtice → invisible mientras carga)
     );
     this._modelLoaded = false;
 
@@ -51,13 +48,13 @@ export class RacingPlayerShip extends ShipBase {
     this._buildFallbackShip();
     this._loadModel();
     this._group.position.copy(this._entryStartPos);
+    this._group.rotation.set(0, Math.PI, 0);
+    // Oculta hasta que el modelo cargue → no se ve el fallback ni el modelo a medias.
+    this._group.visible = false;
   }
 
   _buildFxNodes() {
-    const glow = this._makeGlow(0xffaa33, 0.78, 0.12);
-    glow.position.set(0, 0, 1.08);
-    glow.layers.enable(BLOOM_LAYER);
-    this._group.add(glow);
+    // Glow sphere removida.
   }
 
   _buildFallbackShip() {
@@ -73,7 +70,9 @@ export class RacingPlayerShip extends ShipBase {
       metalness: 0.75,
       roughness: 0.24,
     });
-    this._shipRoot.add(new THREE.Mesh(bodyGeo, bodyMat));
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.layers.enable(BLOOM_LAYER);
+    this._shipRoot.add(bodyMesh);
 
     const wingGeo = new THREE.BufferGeometry();
     wingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
@@ -89,11 +88,16 @@ export class RacingPlayerShip extends ShipBase {
       metalness: 0.8,
       roughness: 0.2,
     });
-    this._shipRoot.add(new THREE.Mesh(wingGeo, wingMat));
+    const wingMesh = new THREE.Mesh(wingGeo, wingMat);
+    wingMesh.layers.enable(BLOOM_LAYER);
+    this._shipRoot.add(wingMesh);
   }
 
   _configureLoadedMesh(node) {
     node.layers.set(0);
+    // Bloom layer en la nave → durante bloom pass se renderiza y escribe depth,
+    // ocluyendo el túnel y evitando que su halo se "sume" encima de la nave.
+    node.layers.enable(BLOOM_LAYER);
   }
 
   _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
@@ -184,30 +188,40 @@ export class RacingPlayerShip extends ShipBase {
     super.update(delta);
 
     // Entry animation (sync hangar exit). Gate hasta modelo cargado.
+    // Entry: lerp ease-out + slerp quaternion a identidad (replica CombatPlayerShip).
     if (this._entryActive) {
       if (!this._modelLoaded) {
         this._group.position.copy(this._entryStartPos);
+        this._group.visible = false;
         return;
       }
+      this._group.visible = true;
       this._entryTime += delta;
       const k  = Math.min(this._entryTime / this._entryDuration, 1);
-      const ek = 1 - Math.pow(1 - k, 3);
+      // Quintic ease-out: arranque más suave, llegada más cremosa.
+      const ek = 1 - Math.pow(1 - k, 5);
       this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
-      this._group.rotation.y = Math.PI;
-      this._boosters.forEach(b => b.update(delta, true, 1, 1, 1.0));
+      // Slerp más lento (1.6 vs 4) para que la rotación nariz +Z → -Z sea gradual.
+      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 1.6);
+      this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
       if (k >= 1) this._entryActive = false;
       return;
     }
 
     if (!this._raceState) return;
 
-    const { t, smoothLead, smoothBurst, typedAdvance, progressPush } = this._raceState;
+    const { t, smoothLead, smoothBurst, typedAdvance, progressZ, smoothProgress } = this._raceState;
+    const zBase = (progressZ ?? this._basePosition.z);
+    // Encoge la nave a medida que se aleja → refuerza sensación de avance.
+    const shrink = THREE.MathUtils.lerp(1.0, 0.5, smoothProgress ?? 0);
+    this._group.scale.setScalar(shrink);
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.45) * 0.28 + Math.cos(t * 0.68) * 0.14 + smoothLead * 0.06;
     this._group.position.y = this._basePosition.y + Math.sin(t * 2.1) * 0.24 + Math.cos(t * 1.3) * 0.11 + smoothBurst * 0.12;
-    this._group.position.z = this._basePosition.z - smoothLead - typedAdvance - progressPush;
+    this._group.position.z = zBase - smoothLead - typedAdvance;
+    // Group en identidad (orientación viene de modelRoot ya alineado por combat formula).
     this._group.rotation.x = -0.08 + Math.sin(t * 1.9) * 0.06 - smoothBurst * 0.04;
-    this._group.rotation.y = Math.PI + Math.sin(t * 0.92) * 0.08;
+    this._group.rotation.y = Math.sin(t * 0.92) * 0.08;
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
 
     const isThrusting = smoothBurst > 0.05;

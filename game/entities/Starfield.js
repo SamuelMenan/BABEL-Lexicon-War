@@ -4,6 +4,12 @@ import { getSoftGlowTexture } from '../../shared/softVisuals.js';
 export class Starfield {
   constructor(scene) {
     this._scene = scene;
+    this._added = [];
+  }
+  _add(obj) { this._scene.add(obj); this._added.push(obj); return obj; }
+  dispose() {
+    for (const o of this._added) o.removeFromParent?.();
+    this._added = [];
   }
 
   addStarField(count, spread, size, color, opacity = 1) {
@@ -20,7 +26,7 @@ export class Starfield {
       map: getSoftGlowTexture(), alphaMap: getSoftGlowTexture(),
       depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
     }));
-    this._scene.add(stars);
+    this._add(stars);
   }
 
   addStarCluster(cx, cy, cz, count, radius, size, color, opacity = 1) {
@@ -40,7 +46,7 @@ export class Starfield {
       map: getSoftGlowTexture(), alphaMap: getSoftGlowTexture(),
       depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
     }));
-    this._scene.add(pts);
+    this._add(pts);
   }
 
   addMilkyWay() {
@@ -59,7 +65,7 @@ export class Starfield {
       });
       const band = new THREE.Points(geo, mat);
       band.frustumCulled = false;
-      this._scene.add(band);
+      this._add(band);
       return mat;
     };
 
@@ -95,14 +101,14 @@ export class Starfield {
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side, depthWrite: false });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), mat);
     mesh.position.set(x, y, z);
-    this._scene.add(mesh);
+    this._add(mesh);
   }
 
   addNebulaSolid(x, y, z, color, radius) {
     const mat = new THREE.MeshBasicMaterial({ color, side: THREE.BackSide, depthWrite: false });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16), mat);
     mesh.position.set(x, y, z);
-    this._scene.add(mesh);
+    this._add(mesh);
   }
 
   addNebulaGlow(x, y, z, color, opacity, radius) {
@@ -112,12 +118,12 @@ export class Starfield {
     });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), mat);
     mesh.position.set(x, y, z);
-    this._scene.add(mesh);
+    this._add(mesh);
   }
 
   addBackgroundVoid(color, radius) {
     const mat = new THREE.MeshBasicMaterial({ color, side: THREE.BackSide, depthWrite: false });
-    this._scene.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 14), mat));
+    this._add(new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 14), mat));
   }
 
   addDistantPlanet(x, y, z, radius, colorTop) {
@@ -126,14 +132,14 @@ export class Starfield {
       new THREE.MeshStandardMaterial({ color: colorTop, emissive: colorTop, emissiveIntensity: 0.08, roughness: 0.9, metalness: 0.0 })
     );
     planet.position.set(x, y, z);
-    this._scene.add(planet);
+    this._add(planet);
 
     const atm = new THREE.Mesh(
       new THREE.SphereGeometry(radius * 1.18, 20, 20),
       new THREE.MeshBasicMaterial({ color: colorTop, transparent: true, opacity: 0.18, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending })
     );
     atm.position.set(x, y, z);
-    this._scene.add(atm);
+    this._add(atm);
   }
 
   // Returns mesh so caller can track it for animation
@@ -144,7 +150,7 @@ export class Starfield {
     );
     mesh.position.set(x, y, z);
     mesh.rotation.x = Math.PI / 2;
-    this._scene.add(mesh);
+    this._add(mesh);
     return mesh;
   }
 }

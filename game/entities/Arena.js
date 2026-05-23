@@ -38,6 +38,8 @@ export class Arena {
     this._backdrop?.removeFromParent();
     this._backdrop = null;
     this._moon.dispose();
+    this._sf?.dispose?.();   // limpia starfields / nebulas / decor rings / milky way
+    this._decorRings = [];
     this._sceneLights.forEach(l => this._scene.remove(l));
     this._sceneLights = [];
   }

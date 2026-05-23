@@ -39,7 +39,7 @@ export class RacingPlayerShip extends ShipBase {
     // Entry animation — sync con salida de hangar.
     this._entryActive   = true;
     this._entryTime     = 0;
-    this._entryDuration = 1.5;
+    this._entryDuration = 3.5;
     this._entryStartPos = new THREE.Vector3(
       this._basePosition.x,
       this._basePosition.y,

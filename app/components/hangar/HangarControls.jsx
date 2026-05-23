@@ -6,8 +6,9 @@ function formatN(n) {
 }
 
 export default function HangarControls({
-  autoRotate, onToggleRotate, onConfirm, onCancel,
+  onConfirm, onCancel,
   onPurchase, onEquip,
+  onOpenCharSelect, character,
   idx, total,
   owned, equipped, canBuy, price, missing,
 }) {
@@ -50,9 +51,15 @@ export default function HangarControls({
       </div>
 
       <div className="hangar-controls__btn-row">
-        <button className="hangar-controls__btn hangar-controls__btn--secondary" onClick={onToggleRotate}>
-          {autoRotate ? 'DETENER · GIRO' : 'INICIAR · GIRO'}
-        </button>
+        {onOpenCharSelect && (
+          <button
+            className="hangar-controls__btn hangar-controls__btn--secondary"
+            onClick={onOpenCharSelect}
+            title="Elegir piloto"
+          >
+            PILOTO · {(character?.name || '—').toUpperCase()}
+          </button>
+        )}
         <button className="hangar-controls__btn hangar-controls__btn--danger" onClick={onCancel}>
           VOLVER
         </button>
@@ -60,7 +67,7 @@ export default function HangarControls({
       </div>
 
       <p className="hangar-controls__hints">
-        ↔ CAMBIAR · R GIRO · ↕ ZOOM · V REESCALAR · ↵ {owned ? (equipped ? 'DESPLEGAR' : 'EQUIPAR') : 'COMPRAR'}
+        ←/→ CAMBIAR NAVE · WASD ROTAR CÁMARA · C VISTAS · R RESET · ESC VOLVER · ↵ {owned ? (equipped ? 'DESPLEGAR' : 'EQUIPAR') : 'COMPRAR'} · ? ATAJOS
       </p>
     </div>
   );

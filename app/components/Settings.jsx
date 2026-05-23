@@ -1,7 +1,12 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { EXECUTION_MODE } from "../../shared/constants.js";
 import { workerBridge } from "../../game/workers/workerBridge.js";
 import { EconomySystem } from "../../game/systems/EconomySystem.js";
+import { Bridge } from "../../shared/bridge.js";
+import { resetTutorialFlags, getAllSeen } from "../../shared/tutorialFlags.js";
+import { KeybindService } from "../../shared/keybindService.js";
+import ControlsSection from "./settings/ControlsSection.jsx";
+import "../../styles/components/controls-section.css";
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
 
@@ -118,6 +123,7 @@ const TABS = [
   { id: 'visuals',  label: 'Visuales' },
   { id: 'audio',    label: 'Audio' },
   { id: 'protocol', label: 'Protocolo' },
+  { id: 'controls', label: 'Controles' },
   { id: 'profile',  label: 'Perfil' },
 ];
 
@@ -174,6 +180,24 @@ function ProfileSection() {
       <Row label="Grafemas Gastados (total)">
         <span className="settings__readout">₲ {fmt(profile.stats.totalGrafemasSpent)}</span>
       </Row>
+      <Row label="Tutoriales" hint="Vuelve a mostrar los tutoriales de Combate, Carrera y Hangar">
+        <button
+          type="button"
+          className="settings__reset"
+          onClick={() => { resetTutorialFlags(); Bridge.commands.resetTutorials(); }}
+        >
+          Repetir tutoriales
+        </button>
+      </Row>
+      <Row label="Mecanografía" hint="Repaso de postura y dedos">
+        <button
+          type="button"
+          className="settings__reset"
+          onClick={() => Bridge.commands.startTutorial('typing')}
+        >
+          Ver tutorial de mecanografía
+        </button>
+      </Row>
 
       <div className="settings__danger-zone">
         <p className="settings__danger-note">
@@ -203,6 +227,19 @@ function ProfileSection() {
 export default function Settings({ onClose }) {
   const [tab, setTab] = useState('visuals');
   const [s, setS] = useState(loadSettings);
+
+  // Push 'modal' scope mientras Settings está montado.
+  useEffect(() => {
+    KeybindService.pushScope('modal');
+    const offCancel = KeybindService.register('modal', 'CANCEL', () => onClose?.());
+    const offPrev   = KeybindService.register('modal', 'NAV_PREV', () => {
+      setTab(t => { const i = TABS.findIndex(x => x.id === t); return TABS[(i - 1 + TABS.length) % TABS.length].id; });
+    });
+    const offNext   = KeybindService.register('modal', 'NAV_NEXT', () => {
+      setTab(t => { const i = TABS.findIndex(x => x.id === t); return TABS[(i + 1) % TABS.length].id; });
+    });
+    return () => { offCancel(); offPrev(); offNext(); KeybindService.popScope('modal'); };
+  }, [onClose]);
 
   const set = useCallback((section, key, val) => {
     setS(prev => {
@@ -313,7 +350,8 @@ export default function Settings({ onClose }) {
             </div>
           )}
 
-          {tab === 'profile' && <ProfileSection />}
+          {tab === 'profile'  && <ProfileSection />}
+          {tab === 'controls' && <ControlsSection />}
 
           {tab === 'protocol' && (
             <div className="settings__section" key="protocol">

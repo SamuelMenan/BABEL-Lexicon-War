@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
+import { KeybindService } from '../../../shared/keybindService.js';
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
 function fmt(n) { return NUMBER_FORMATTER.format(n ?? 0); }
 
 export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
+  // Modal scope push/pop + CONFIRM/CANCEL via service.
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') { e.stopPropagation(); onCancel(); }
-      if (e.key === 'Enter')  { e.stopPropagation(); onConfirm(); }
-    };
-    window.addEventListener('keydown', onKey, { capture: true });
-    return () => window.removeEventListener('keydown', onKey, { capture: true });
+    KeybindService.pushScope('modal');
+    const offCancel  = KeybindService.register('modal', 'CANCEL',  () => onCancel());
+    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onConfirm());
+    return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
   }, [onConfirm, onCancel]);
 
   const after = Math.max(0, (grafemas ?? 0) - (ship.price ?? 0));
@@ -22,14 +22,11 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
       aria-modal="true"
       aria-labelledby="purchase-modal-title"
       onClick={onCancel}
-      onKeyDown={(e) => { if (e.key === 'Escape') onCancel(); }}
-      tabIndex={-1}
     >
       <div
         className="purchase-modal__panel"
         role="document"
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="purchase-modal__header">
           <span className="purchase-modal__label">◈ CONFIRMAR ADQUISICIÓN</span>
@@ -57,7 +54,7 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
           <button className="purchase-modal__btn purchase-modal__btn--cancel" onClick={onCancel}>
             Cancelar
           </button>
-          <button className="purchase-modal__btn purchase-modal__btn--confirm" onClick={onConfirm}>
+          <button className="purchase-modal__btn purchase-modal__btn--confirm" onClick={onConfirm} autoFocus>
             Confirmar Compra
           </button>
         </div>

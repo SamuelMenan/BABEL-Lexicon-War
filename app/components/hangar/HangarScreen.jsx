@@ -2,6 +2,7 @@ import React, { useEffect, useReducer, useRef, useState, useCallback } from 'rea
 import { ShipSelectionScene } from '../../../game/scenes/ShipSelectionScene.js';
 import { Bridge } from '../../../shared/bridge.js';
 import { EventTypes } from '../../../shared/eventTypes.js';
+import { KeybindService } from '../../../shared/keybindService.js';
 import { getShipsForHangar } from '../../../shared/shopCatalog.js';
 import { EconomySystem } from '../../../game/systems/EconomySystem.js';
 
@@ -16,30 +17,12 @@ import ShipArsenal from './ShipArsenal.jsx';
 import ShipNav from './ShipNav.jsx';
 import HangarControls from './HangarControls.jsx';
 import PurchaseModal from './PurchaseModal.jsx';
+import CharacterSelectModal from './CharacterSelectModal.jsx';
+import { getCharacter } from '../../../shared/characterData.js';
 
 const MIN_LOADING_MS = 1800;
 const PROGRESS_TICK  = 80;
 const PROGRESS_STEP  = 3.5;
-
-const RESERVED_KEYS = new Set([
-  'ArrowLeft', 'ArrowRight',
-  'Home', 'End', 'PageUp', 'PageDown',
-  'Pause', 'Delete', 'Enter', 'Escape',
-  'k', 'K', 'l', 'L', // K = auto-fire hold, L = laser toggle
-  'j', 'J',           // J = toggle flow simulation en boosters
-]);
-const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph']);
-const PREVENT_DEFAULT_KEYS = new Set(['Tab', ' ', 'Spacebar']);
-
-function isFireKey(e) {
-  if (e.repeat) return false;
-  const k = e.key;
-  if (!k) return false;
-  if (RESERVED_KEYS.has(k)) return false;
-  if (MODIFIER_KEYS.has(k)) return false;
-  if (k.length === 1 && /[a-zA-Z]/.test(k)) return false;
-  return true;
-}
 
 export default function HangarScreen() {
   const mountRef   = useRef(null);
@@ -49,8 +32,8 @@ export default function HangarScreen() {
   const [shipIdx,       setShipIdx]      = useState(0);
   const [, forceUpdate]                   = useReducer(x => x + 1, 0);
   const [pendingBuy,    setPendingBuy]   = useState(false);
+  const [showCharSelect, setShowCharSelect] = useState(false);
   const [canvasAlpha,  setCanvasAlpha]  = useState(1);
-  const [autoRotate,   setAutoRotate]   = useState(true);
   const [phase,        setPhase]        = useState('loading');
   const [loadProgress, setLoadProgress] = useState(0);
 
@@ -117,19 +100,14 @@ export default function HangarScreen() {
     }, 180);
   }, []);
 
+  // Acciones de hangar registradas en KeybindService (scope 'hangar').
   useEffect(() => {
-    function onKeyDown(e) {
-      sceneRef.current?.addKey(e.key);
-      if (e.key === 'ArrowLeft')          navigateTo(shipIdxRef.current - 1);
-      if (e.key === 'ArrowRight')         navigateTo(shipIdxRef.current + 1);
-      if (e.key === 'r' || e.key === 'R') sceneRef.current?.resetOrbit();
-      if (e.key === 'Home')               sceneRef.current?.setTopView();
-      if (e.key === 'End')                sceneRef.current?.setBottomView();
-      if (e.key === 'PageUp')             sceneRef.current?.setRearView();
-      if (e.key === 'PageDown')           sceneRef.current?.setSideView();
-      if (e.key === 'Pause')              sceneRef.current?.toggleDebugMarkers();
-      if (e.key === 'Delete')             sceneRef.current?.detonateCurrentShip();
-      if (e.key === 'Enter') {
+    const offs = [
+      KeybindService.register('hangar', 'NAV_PREV', () => navigateTo(shipIdxRef.current - 1)),
+      KeybindService.register('hangar', 'NAV_NEXT', () => navigateTo(shipIdxRef.current + 1)),
+      KeybindService.register('hangar', 'HANGAR_CAM_RESET', () => sceneRef.current?.resetOrbit()),
+      KeybindService.register('hangar', 'HANGAR_CAM_CYCLE', () => sceneRef.current?.cycleCameraView()),
+      KeybindService.register('hangar', 'CONFIRM', () => {
         const sid = SHIPS[shipIdxRef.current].id;
         if (!EconomySystem.ownsShip(sid)) {
           if (EconomySystem.canAfford(sid)) handlePurchase();
@@ -138,30 +116,29 @@ export default function HangarScreen() {
         } else {
           handleConfirm();
         }
-      }
-      if (e.key === 'Escape' && !e.__babelPauseToggle) handleCancel();
-      if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire();
-      if ((e.key === 'l' || e.key === 'L') && !e.repeat) sceneRef.current?.toggleLaser();
-      if ((e.key === 'j' || e.key === 'J') && !e.repeat) sceneRef.current?.toggleFlowSim();
-      if (isFireKey(e)) {
-        if (PREVENT_DEFAULT_KEYS.has(e.key) || /^F\d{1,2}$/.test(e.key)) {
-          e.preventDefault();
-        }
-        sceneRef.current?.fireWeapon();
-      }
+      }),
+      KeybindService.register('hangar', 'CANCEL', () => handleCancel()),
+    ];
+    return () => offs.forEach(fn => fn());
+  }, [navigateTo]);
+
+  // WASD hold para mover cámara orbital. Listener separado del service
+  // porque son teclas continuas (hold), no acciones discretas.
+  useEffect(() => {
+    const HOLD_KEYS = new Set(['a','A','w','W','s','S','d','D']);
+    function onKeyDown(e) {
+      if (HOLD_KEYS.has(e.key)) sceneRef.current?.addKey(e.key);
     }
     function onKeyUp(e) {
-      sceneRef.current?.removeKey(e.key);
-      if (e.key === 'k' || e.key === 'K') sceneRef.current?.stopAutoFire();
+      if (HOLD_KEYS.has(e.key)) sceneRef.current?.removeKey(e.key);
     }
-
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup',   onKeyUp);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup',   onKeyUp);
     };
-  }, [navigateTo]);
+  }, []);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -190,9 +167,12 @@ export default function HangarScreen() {
     if (EconomySystem.getEquippedShip() !== shipId) EconomySystem.equipShip(shipId);
     deployingRef.current = true;
     const scene = sceneRef.current;
+    Bridge.setState({ deploymentPhase: 'landing' });
     if (scene) {
       await scene.triggerDeployment();
     }
+    // No emitir DEPLOYMENT_ANIMATION_COMPLETE aquí — lo hace game/main.js
+    // tras mount de combat/racing scene para evitar tutorial sobre fondo vacío.
     Bridge.commands.confirmShip(shipId);
   }
   function handleCancel()  { Bridge.commands.cancelShipSelection(); }
@@ -209,6 +189,13 @@ export default function HangarScreen() {
     setPendingBuy(false);
   }
   function cancelPurchase() { setPendingBuy(false); }
+  function openCharSelect()   { setShowCharSelect(true); }
+  function cancelCharSelect() { setShowCharSelect(false); }
+  function confirmCharSelect(characterId) {
+    EconomySystem.setSelectedCharacter(characterId);
+    setShowCharSelect(false);
+    forceUpdate();
+  }
   function handleEquip() {
     const shipId = SHIPS[shipIdxRef.current].id;
     const res = EconomySystem.equipShip(shipId);
@@ -218,12 +205,6 @@ export default function HangarScreen() {
   useEffect(() => {
     return Bridge.onStateChange(() => forceUpdate());
   }, []);
-
-  function toggleAutoRotate() {
-    const next = !autoRotate;
-    setAutoRotate(next);
-    sceneRef.current?.setAutoRotate(next);
-  }
 
   const ship     = SHIPS[shipIdx];
   const shipData = getShipData(ship.id);
@@ -242,7 +223,7 @@ export default function HangarScreen() {
           <HangarFrame />
 
           <div className="hud-safe-zone">
-          <HangarHeader ship={ship} />
+          <HangarHeader ship={ship} character={getCharacter(EconomySystem.getSelectedCharacter())} />
 
           <ShipInfo ship={ship} coreId={shipData.coreId} owned={owned} equipped={equipped} price={ship.price} />
 
@@ -258,12 +239,12 @@ export default function HangarScreen() {
           />
 
           <HangarControls
-            autoRotate={autoRotate}
-            onToggleRotate={toggleAutoRotate}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
             onPurchase={handlePurchase}
             onEquip={handleEquip}
+            onOpenCharSelect={openCharSelect}
+            character={getCharacter(EconomySystem.getSelectedCharacter())}
             idx={shipIdx}
             total={SHIPS.length}
             owned={owned}
@@ -273,6 +254,7 @@ export default function HangarScreen() {
             missing={missing}
           />
           </div>
+
         </div>
       </div>
 
@@ -283,6 +265,13 @@ export default function HangarScreen() {
           grafemas={grafemas}
           onConfirm={confirmPurchase}
           onCancel={cancelPurchase}
+        />
+      )}
+      {showCharSelect && (
+        <CharacterSelectModal
+          currentId={EconomySystem.getSelectedCharacter()}
+          onConfirm={confirmCharSelect}
+          onCancel={cancelCharSelect}
         />
       )}
     </>

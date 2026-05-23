@@ -1,4 +1,32 @@
 import React, { useState, useEffect, useRef } from "react";
+import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
+
+function ResultActions({ onMenu, onRetry }) {
+  const items = [
+    { id: 'menu',  label: 'Menú Principal', variant: 'secondary', action: onMenu },
+    { id: 'retry', label: 'Reintentar',     variant: 'primary',   action: onRetry },
+  ];
+  return (
+    <KeyboardNavigable
+      items={items}
+      orientation="horizontal"
+      onActivate={(it) => it.action()}
+      initialIndex={1}
+      className="mr__actions"
+    >
+      {(it, { focused, activate }) => (
+        <button
+          key={it.id}
+          className={`mr__btn mr__btn--${it.variant}${focused ? ' mr__btn--focused' : ''}`}
+          onClick={activate}
+          onMouseEnter={(e) => e.currentTarget.focus()}
+        >
+          {it.label}
+        </button>
+      )}
+    </KeyboardNavigable>
+  );
+}
 
 function calcGrade(wpm, accuracy) {
   const w = wpm ?? 0;
@@ -190,14 +218,7 @@ export default function MatchResult({
             <p className="mr__quote">
               "Las palabras no se acaban.<br />Solo cambian de mano."
             </p>
-            <div className="mr__actions">
-              <button className="mr__btn mr__btn--secondary" onClick={restart}>
-                Menú Principal
-              </button>
-              <button className="mr__btn mr__btn--primary" onClick={restart}>
-                Reintentar
-              </button>
-            </div>
+            <ResultActions onMenu={restart} onRetry={restart} />
           </div>
 
         </div>

@@ -2,7 +2,8 @@ import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Bridge } from "../../shared/bridge.js";
 import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
-import { GAME_MODES, SHIP_PALETTES } from "../../shared/constants.js";
+import { GAME_MODES, SHIP_PALETTES, SHIPS } from "../../shared/constants.js";
+import { getCharacter } from "../../shared/characterData.js";
 
 import CombatTicker from "./hud/combat/CombatTicker.jsx";
 import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
@@ -82,7 +83,14 @@ export default function HUD() {
     warnings = {},
     preCombatActive = false, preCombatStep = null,
     preCombatValue = null, preCombatMessage = "", preCombatLevel = "yellow",
+    selectedCharacter,
   } = state;
+
+  const character = getCharacter(selectedCharacter);
+  const shipEntry = SHIPS.find(s => s.id === selectedShip);
+  const shipName  = shipEntry?.name || '—';
+  const pilotName = (character?.name || 'PILOTO').toUpperCase();
+  const pilotSub  = `${character?.codename || '—'} / ${(character?.role || 'PILOT').toUpperCase()}`;
 
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? "none";
@@ -203,8 +211,10 @@ export default function HUD() {
           <WaveAnnouncement wave={waveNotice} />
           <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
           <div className="combat__top-left">
-            <span className="hud__pilot-name">KAEL · VOSS</span>
-            <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>TYPO-07 / PILOTO</span>
+            <span className="hud__pilot-name">{pilotName}</span>
+            <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>{pilotSub}</span>
+            <span className="hud__pilot-ship">NAVE · {shipName.toUpperCase()}</span>
+            <span className="hud__pilot-scene">ESCENA · COMBATE</span>
           </div>
           <CombatTicker />
           <CombatTopRight wpm={wpm} accuracy={accuracy} />
@@ -235,7 +245,7 @@ export default function HUD() {
         <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
         <FlowModeOverlay flowActive={flowActive} />
-        <RacePilotTag />
+        <RacePilotTag pilotName={pilotName} pilotSub={pilotSub} shipName={shipName} />
         <RaceTopStatus wave={wave} playerPhrasesCompleted={playerPhrasesCompleted} />
         <RaceStatsTopRight wpm={wpm} accuracy={accuracy} />
         <RaceDistanceBar

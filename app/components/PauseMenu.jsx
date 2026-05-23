@@ -1,55 +1,55 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Bridge } from "../../shared/bridge.js";
 import Settings from "./Settings.jsx";
+import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
 
 export default function PauseMenu() {
   const [showSettings, setShowSettings] = useState(false);
-  const resumeRef = useRef(null);
 
-  useEffect(() => {
-    resumeRef.current?.focus();
-  }, []);
+  if (showSettings) return <Settings onClose={() => setShowSettings(false)} />;
 
-  const resume  = () => Bridge.commands.resumeGame();
-  const toMenu  = () => window.location.reload();
+  const items = [
+    { id: 'resume',   label: 'Reanudar',              icon: '▶', variant: 'primary',
+      action: () => Bridge.commands.resumeGame() },
+    { id: 'settings', label: 'Configuración',         variant: 'secondary',
+      action: () => setShowSettings(true) },
+    { id: 'menu',     label: 'Volver al Menú Principal', variant: 'ghost',
+      action: () => window.location.reload() },
+  ];
 
-  return showSettings ? <Settings onClose={() => setShowSettings(false)} /> : (
+  return (
     <div className="pause-menu">
       <div className="pause-menu__panel">
         <span className="pause-menu__scan" aria-hidden="true" />
-
         <div className="pause-menu__header">
           <span className="pause-menu__header-label">◈ SISTEMA EN PAUSA</span>
         </div>
-
         <h2 className="pause-menu__title">Pausa</h2>
 
-        <div className="pause-menu__actions">
-          <button
-            ref={resumeRef}
-            className="pause-menu__btn pause-menu__btn--primary"
-            onClick={resume}
-          >
-            <span className="pause-menu__btn-icon">▶</span>
-            Reanudar
-          </button>
+        <KeyboardNavigable
+          items={items}
+          orientation="vertical"
+          onActivate={(it) => it.action()}
+          initialIndex={0}
+          className="pause-menu__actions"
+        >
+          {(it, { focused, activate }) => (
+            <button
+              key={it.id}
+              className={
+                `pause-menu__btn pause-menu__btn--${it.variant}` +
+                (focused ? ' pause-menu__btn--focused' : '')
+              }
+              onClick={activate}
+              onMouseEnter={(e) => e.currentTarget.focus()}
+            >
+              {it.icon && <span className="pause-menu__btn-icon">{it.icon}</span>}
+              {it.label}
+            </button>
+          )}
+        </KeyboardNavigable>
 
-          <button
-            className="pause-menu__btn pause-menu__btn--secondary"
-            onClick={() => setShowSettings(true)}
-          >
-            Configuración
-          </button>
-
-          <button
-            className="pause-menu__btn pause-menu__btn--ghost"
-            onClick={toMenu}
-          >
-            Volver al Menú Principal
-          </button>
-        </div>
-
-        <span className="pause-menu__hint">[ESC] para reanudar</span>
+        <span className="pause-menu__hint">↑↓ navegar · Enter elegir · ESC reanudar</span>
       </div>
     </div>
   );

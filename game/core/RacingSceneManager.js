@@ -264,4 +264,31 @@ export class RacingSceneManager {
     this._playerWordLead=Math.min(this._playerWordLead+0.42,3.8);
     if(this._playerShip?.mesh?.position) this._particles?.burst(this._playerShip.mesh.position,14);
   }
+
+  // Anima entrada de la nave en racing: arranca lejos -Z, vuela hasta pose final.
+  playEntryAnimation(durationSec = 4.0) {
+    return new Promise((resolve) => {
+      const mesh = this._playerShip?.mesh;
+      if (!mesh) { resolve(); return; }
+      const finalPos = mesh.position.clone();
+      const startOffsetZ = -65;
+      const startOffsetY = 5;
+      mesh.position.z = finalPos.z + startOffsetZ;
+      mesh.position.y = finalPos.y + startOffsetY;
+      let elapsed = 0;
+      let lastTs = performance.now();
+      function tick(ts) {
+        const dt = (ts - lastTs) / 1000;
+        lastTs = ts;
+        elapsed += dt;
+        const k = Math.min(1, elapsed / durationSec);
+        const eased = 1 - Math.pow(1 - k, 3);
+        mesh.position.z = (finalPos.z + startOffsetZ) + (-startOffsetZ) * eased;
+        mesh.position.y = (finalPos.y + startOffsetY) + (-startOffsetY) * eased;
+        if (k < 1) requestAnimationFrame(tick);
+        else { mesh.position.copy(finalPos); resolve(); }
+      }
+      requestAnimationFrame(tick);
+    });
+  }
 }

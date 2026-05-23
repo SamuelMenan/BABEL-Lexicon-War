@@ -157,6 +157,10 @@ export class RacingSystem {
     this._stateMain.playerPhrasesCompleted = this._playerDone;
     this._stateMain.phraseProgress         = timeProgress;
     this._stateMain.distanceTraveled       = Math.round(timeProgress * RACE_TARGET_DISTANCE);
+    // Distancia del rival = ritmo opponent constante, llega a target al final de duración.
+    this._stateMain.opponentDistance       = Math.round(
+      (this._oppDone / (OPP_PHRASES_PER_SEC * RACE_DURATION)) * RACE_TARGET_DISTANCE,
+    );
     this._stateMain.timeRemaining          = timeRemaining;
     this._stateMain.flowMultiplier         = this._flowMultiplier;
     this._stateMain.flowStreak             = this._flowStreak;

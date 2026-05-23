@@ -1,7 +1,7 @@
 // Contenido declarativo de tutoriales. Sin lógica de motor.
 // Cada step: { title, body, highlight?, diagram?, ctaContinue?, ctaSkip? }
 // diagram = { kind: 'keyboard'|'combat-intro'|'branch-typing'|'combat-objective'
-//                  |'hud-statbars'|'lex-heat'|'flow-mode'|'proximity'|'waves'
+//                  |'hp-bar'|'hud-statbars'|'lex-heat'|'flow-mode'|'proximity'|'waves'
 //                  |'grafemas'|'countdown'|'racing-typing'|'distance'|'timer'
 //                  |'phrase'|'opponent'|'wpm-acc'|'hangar-overview'|'hangar-slots'
 //                  |'hangar-nav'|'posture'|'no-look'|'accuracy', ...props }
@@ -28,15 +28,16 @@ export const TUTORIALS = {
         diagram: { kind: 'combat-objective' },
       },
       {
-        title: 'HP / Lex-Heat / Shield / Flow',
-        body: 'Esquina inferior izquierda: tus stats. HP baja con golpes. Lex-Heat sube con errores. Shield amortigua. Flow recompensa precisión.',
+        title: 'HP / Flow',
+        body: 'Esquina inferior izquierda: tus stats básicos. HP baja con golpes. Flow recompensa precisión. Los sistemas de sobrecalentamiento y escudo quedan reservados para una futura versión del tutorial.',
         highlight: 'bottom-left',
         diagram: { kind: 'hud-statbars' },
       },
-      {
-        title: 'Lex-Heat — el sobrecalentamiento',
-        body: 'Cada error suma 6, cada golpe enemigo suma 14. Al pasar 85, tu input se bloquea por 3.5 segundos. Respira y escribe limpio.',
-        diagram: { kind: 'lex-heat' },
+            {
+        title: 'HP',
+        body: 'La barra de vida es tu HP. Se reduce cuando te golpean y, si llega a cero, pierdes la nave. Vigílala antes de dejar que los enemigos se acerquen demasiado.',
+        highlight: 'bottom-left',
+        diagram: { kind: 'hp-bar' },
       },
       {
         title: 'Flow Mode',

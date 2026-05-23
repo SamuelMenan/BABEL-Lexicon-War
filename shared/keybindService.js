@@ -82,13 +82,20 @@ function dispatch(e) {
   return false;
 }
 
+function isEditableTarget(t) {
+  if (!t) return false;
+  const tag = t.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (t.isContentEditable) return true;
+  return false;
+}
+
 function onKeyDown(e) {
-  // Ignorar repeats por defecto (handlers individuales pueden manejarlos vía e.repeat).
-  // No ignoramos acá — el handler decide.
+  // Si el foco está en un input/textarea editable, no interceptar nada.
+  // Permite tipear, borrar, navegar dentro de formularios (auth, name editor, etc.).
+  if (isEditableTarget(e.target)) return;
   const consumed = dispatch(e);
   if (consumed) {
-    // Prevenir comportamiento browser para teclas que claramente conflictúan.
-    // El service consume → llama preventDefault solo si no es typing.
     e.preventDefault();
   }
 }

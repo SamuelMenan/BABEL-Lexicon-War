@@ -7,6 +7,13 @@ import { DEFAULT_CHARACTER_ID, CHARACTERS } from './characterData.js';
 const STORAGE_KEY = 'babel.profile.v1';
 const DEFAULT_SHIP_ID = 'spaceship';
 
+function makePlayerId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `plr_${crypto.randomUUID().replace(/-/g, '')}`;
+  }
+  return `plr_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function computeDefaultOwned() {
   const out = [];
   for (const [id, c] of Object.entries(SHIP_CATALOG)) {
@@ -20,6 +27,7 @@ export function makeDefaultProfile() {
   if (!owned.includes(DEFAULT_SHIP_ID)) owned.unshift(DEFAULT_SHIP_ID);
   return {
     version:      1,
+    playerId:     makePlayerId(),
     grafemas:     0,
     ownedShips:   owned,
     equippedShip: DEFAULT_SHIP_ID,
@@ -55,6 +63,8 @@ export function loadProfile() {
     const defaults = computeDefaultOwned();
     const merged = new Set([...parsed.ownedShips, ...defaults]);
     parsed.ownedShips = Array.from(merged);
+    if (typeof parsed.playerId !== 'string' || !parsed.playerId) parsed.playerId = makePlayerId();
+    if (typeof parsed.version !== 'number' || parsed.version < 2) parsed.version = 2;
     if (!parsed.tutorialsSeen || typeof parsed.tutorialsSeen !== 'object') parsed.tutorialsSeen = {};
     if (!parsed.keybindOverrides || typeof parsed.keybindOverrides !== 'object') parsed.keybindOverrides = {};
     if (typeof parsed.debugEnabled !== 'boolean') parsed.debugEnabled = false;

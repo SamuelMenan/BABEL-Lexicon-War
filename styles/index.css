@@ -34,6 +34,8 @@
 @import './components/settings.css';
 @import './components/pause-menu.css';
 @import './components/character-select.css';
+@import './components/auth-modal.css';
+@import './components/leaderboard-modal.css';
 
 @import './components/race-hud.css';
 @import './components/grafema-toasts.css';

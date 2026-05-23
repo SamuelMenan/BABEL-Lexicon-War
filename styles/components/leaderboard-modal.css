@@ -1,0 +1,122 @@
+/* == Leaderboard modal == */
+
+.lb-modal{
+  position:fixed; inset:0; z-index:var(--z-modal, 9000);
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,8,0.72); backdrop-filter:blur(6px);
+  animation:lb-modal-bg-in 0.2s ease;
+}
+@keyframes lb-modal-bg-in { from{opacity:0;} to{opacity:1;} }
+
+.lb-modal__panel{
+  position:relative;
+  width:min(720px, 94vw); max-height:88vh;
+  display:flex; flex-direction:column;
+  background:rgba(0,0,8,0.94);
+  border:1px solid var(--col-primary);
+  box-shadow:0 0 40px rgba(0,255,204,0.18), inset 0 0 24px rgba(0,255,204,0.05);
+  animation:lb-modal-in 0.25s cubic-bezier(.2,.7,.3,1);
+}
+@keyframes lb-modal-in {
+  from { opacity:0; transform:translateY(10px) scale(0.98); }
+  to   { opacity:1; transform:translateY(0)    scale(1); }
+}
+
+.lb-modal__header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 1.2rem;
+  border-bottom:1px solid rgba(0,255,204,0.18);
+}
+.lb-modal__label{
+  font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.32em;
+  color:var(--col-primary); text-transform:uppercase;
+}
+.lb-modal__close{
+  background:transparent; border:1px solid rgba(255,255,255,0.15);
+  color:var(--text-dim); cursor:pointer;
+  width:30px; height:30px; line-height:1;
+  transition:color var(--anim-instant), border-color var(--anim-instant);
+}
+.lb-modal__close:hover{ color:var(--col-danger); border-color:var(--col-danger); }
+
+.lb-modal__controls{
+  display:flex; gap:1.2rem; flex-wrap:wrap;
+  padding:0.9rem 1.2rem;
+  border-bottom:1px solid rgba(0,255,204,0.10);
+}
+.lb-modal__group{ display:flex; flex-direction:column; gap:0.35rem; }
+.lb-modal__group-label{
+  font-family:var(--font-mono); font-size:0.55rem; letter-spacing:0.22em;
+  color:var(--text-dim); text-transform:uppercase;
+}
+.lb-modal__chips{ display:flex; gap:0.4rem; }
+.lb-modal__chip{
+  font-family:var(--font-hud); font-size:0.7rem; letter-spacing:0.12em;
+  text-transform:uppercase; padding:0.4rem 0.85rem;
+  background:transparent; border:1px solid rgba(0,255,204,0.25);
+  color:var(--text-dim); cursor:pointer;
+  transition:color var(--anim-instant), border-color var(--anim-instant), background var(--anim-instant);
+}
+.lb-modal__chip:hover{ color:var(--col-primary); border-color:var(--col-primary); }
+.lb-modal__chip--active{
+  color:#000; background:var(--col-primary); border-color:var(--col-primary);
+  box-shadow:0 0 12px rgba(0,255,204,0.35);
+}
+
+.lb-modal__body{
+  flex:1; overflow:auto;
+  padding:0.9rem 1.2rem;
+  display:flex; flex-direction:column; gap:0.6rem;
+}
+
+.lb-modal__state{
+  font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.08em;
+  color:var(--text-dim); padding:1.2rem 0; text-align:center;
+}
+.lb-modal__state--err{ color:#ffcc44; }
+
+.lb-row{
+  display:grid; grid-template-columns: 48px 1fr auto;
+  gap:0.9rem; align-items:center;
+  padding:0.75rem 0.9rem;
+  background:rgba(7, 12, 24, 0.55);
+  border:1px solid rgba(0,255,204,0.15);
+}
+.lb-row__rank{
+  font-family:var(--font-hud); font-size:1.1rem; letter-spacing:0.08em;
+  color:var(--col-primary); text-align:center;
+}
+.lb-row__main{ display:flex; flex-direction:column; gap:0.18rem; min-width:0; }
+.lb-row__name{
+  font-family:var(--font-hud); font-size:0.9rem; letter-spacing:0.16em;
+  color:var(--text-primary); text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.lb-row__sub{
+  font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.08em;
+  color:var(--text-dim);
+}
+.lb-row__score{ text-align:right; }
+.lb-row__score-val{
+  font-family:var(--font-hud); font-size:1rem; letter-spacing:0.12em;
+  color:var(--col-primary);
+}
+.lb-row__score-lbl{
+  font-family:var(--font-mono); font-size:0.5rem; letter-spacing:0.22em;
+  color:var(--text-dim); text-transform:uppercase;
+}
+
+.lb-modal__footer{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.7rem 1.2rem;
+  border-top:1px solid rgba(0,255,204,0.10);
+  font-family:var(--font-mono); font-size:0.55rem; letter-spacing:0.18em;
+  text-transform:uppercase;
+}
+.lb-modal__status{ color:var(--col-primary); }
+.lb-modal__hint{ color:var(--text-ghost); }
+
+@media (max-width: 540px){
+  .lb-row{ grid-template-columns: 36px 1fr auto; gap:0.5rem; }
+  .lb-modal__controls{ gap:0.7rem; }
+}

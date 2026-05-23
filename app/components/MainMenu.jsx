@@ -5,7 +5,8 @@ import Settings from './Settings.jsx';
 import KeyboardNavigable from './common/KeyboardNavigable.jsx';
 import AuthModal from './auth/AuthModal.jsx';
 import LeaderboardModal from './leaderboard/LeaderboardModal.jsx';
-import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName } from '../services/supabase/auth.js';
+import GuestPromptModal from './auth/GuestPromptModal.jsx';
+import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '../services/supabase/auth.js';
 import { loadProfile } from '../../shared/playerProfile.js';
 import { getCharacter } from '../../shared/characterData.js';
 
@@ -15,11 +16,20 @@ export default function MainMenu() {
   const [authUser, setAuthUser] = useState(null);
   const [authModal, setAuthModal] = useState(null); // 'signin' | 'signup' | null
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [guestPrompt, setGuestPrompt] = useState(null); // { feature, onProceed } | null
 
   useEffect(() => {
     let mounted = true;
-    getSession().then((s) => { if (mounted) setAuthUser(s?.user || null); });
-    const off = onAuthChange((user) => { if (mounted) setAuthUser(user); });
+    getSession().then((s) => {
+      if (!mounted) return;
+      setAuthUser(s?.user || null);
+      if (s?.user) applyAuthenticatedProfile({ user: s.user });
+    });
+    const off = onAuthChange((user) => {
+      if (!mounted) return;
+      setAuthUser(user);
+      if (user) applyAuthenticatedProfile({ user });
+    });
     return () => { mounted = false; off(); };
   }, []);
 
@@ -38,6 +48,15 @@ export default function MainMenu() {
   // KbNav activate (menu) + KeybindService CONFIRM (hangar) en cascada.
   const deferred = (fn) => () => setTimeout(fn, 0);
 
+  // Si invitado: muestra modal y al "Seguir como invitado" o login exitoso, ejecuta acción.
+  const gatedByGuest = (feature, action) => () => {
+    if (!authUser) {
+      setGuestPrompt({ feature, onProceed: action });
+      return;
+    }
+    action();
+  };
+
   const items = [
     {
       id: 'combat',
@@ -45,7 +64,7 @@ export default function MainMenu() {
       desc: 'Enfrenta al Enjambre. Escribe para destruir.',
       glyph: '◢',
       accent: 'var(--col-danger)',
-      action: deferred(() => Bridge.commands.openShipSelection(GAME_MODES.COMBAT)),
+      action: gatedByGuest('combat', deferred(() => Bridge.commands.openShipSelection(GAME_MODES.COMBAT))),
     },
     {
       id: 'racing',
@@ -53,7 +72,7 @@ export default function MainMenu() {
       desc: 'Velocidad pura. Tu WPM determina la nave.',
       glyph: '▶',
       accent: 'var(--col-primary)',
-      action: deferred(() => Bridge.commands.openShipSelection(GAME_MODES.RACING)),
+      action: gatedByGuest('racing', deferred(() => Bridge.commands.openShipSelection(GAME_MODES.RACING))),
     },
     {
       id: 'settings',
@@ -69,7 +88,7 @@ export default function MainMenu() {
       desc: 'Diario, semanal y mensual por modo.',
       glyph: '⌘',
       accent: 'var(--col-primary)',
-      action: () => setShowLeaderboard(true),
+      action: gatedByGuest('leaderboard', () => setShowLeaderboard(true)),
     },
   ];
 
@@ -86,7 +105,6 @@ export default function MainMenu() {
       {/* Header */}
       <header className="babel-frame__header">
         <span>BABEL · LEXICON WAR</span>
-        <span className="babel-frame__tag--accent">// PROGRAMA TYPO</span>
       </header>
 
       {/* Auth pill — siempre visible; modal avisa si Supabase no está configurado */}
@@ -94,7 +112,7 @@ export default function MainMenu() {
         {authUser ? (
           <>
             <span className="auth-pill__user">
-              <span className="auth-pill__user-tag">PILOTO ·</span>{displayName}
+              <span className="auth-pill__user-tag">USUARIO ·</span>{displayName}
             </span>
             <button
               type="button"
@@ -127,6 +145,24 @@ export default function MainMenu() {
 
       {showLeaderboard && (
         <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+      )}
+
+      {guestPrompt && (
+        <GuestPromptModal
+          feature={guestPrompt.feature}
+          onClose={() => {
+            const proceed = guestPrompt.onProceed;
+            setGuestPrompt(null);
+            // Cierra sin login → ejecuta acción igual (invitado puede jugar).
+            proceed?.();
+          }}
+          onAuthSuccess={(user) => {
+            setAuthUser(user);
+            const proceed = guestPrompt.onProceed;
+            setGuestPrompt(null);
+            proceed?.();
+          }}
+        />
       )}
 
       {/* Main */}

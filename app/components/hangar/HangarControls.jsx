@@ -11,18 +11,23 @@ export default function HangarControls({
   onOpenCharSelect, character,
   idx, total,
   owned, equipped, canBuy, price, missing,
+  isGuest = false,
 }) {
   let actionBtn;
   if (!owned) {
-    const tooltip = canBuy ? '' : `Faltan ${formatN(missing)} ₲`;
+    // Guest: clickeable (abre prompt). Resto: gated por canBuy.
+    const tooltip = isGuest
+      ? 'Inicia sesión para comprar naves'
+      : (canBuy ? '' : `Faltan ${formatN(missing)} ₲`);
+    const enabled = isGuest || canBuy;
     actionBtn = (
       <button
-        className={`hangar-controls__btn hangar-controls__btn--buy${canBuy ? '' : ' hangar-controls__btn--disabled'}`}
-        onClick={canBuy ? onPurchase : undefined}
-        disabled={!canBuy}
+        className={`hangar-controls__btn hangar-controls__btn--buy${enabled ? '' : ' hangar-controls__btn--disabled'}`}
+        onClick={enabled ? onPurchase : undefined}
+        disabled={!enabled}
         title={tooltip}
       >
-        COMPRAR · ₲ {formatN(price)}
+        {isGuest ? 'COMPRAR · 🔒' : `COMPRAR · ₲ ${formatN(price)}`}
       </button>
     );
   } else if (!equipped) {

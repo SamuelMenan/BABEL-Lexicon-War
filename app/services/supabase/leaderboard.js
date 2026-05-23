@@ -35,6 +35,11 @@ export async function saveMatchResult({
   }
 
   const user = await getUser();
+  // Invitado (no autenticado) NO se sube al leaderboard.
+  if (!user || profile?.isGuest) {
+    return { ok: false, skipped: true, reason: 'guest' };
+  }
+
   const character = getCharacter(profile?.selectedCharacter);
   const displayName = resolveDisplayName({
     user,

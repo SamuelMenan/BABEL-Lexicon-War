@@ -18,6 +18,7 @@ import ShipNav from './ShipNav.jsx';
 import HangarControls from './HangarControls.jsx';
 import PurchaseModal from './PurchaseModal.jsx';
 import CharacterSelectModal from './CharacterSelectModal.jsx';
+import GuestPromptModal from '../auth/GuestPromptModal.jsx';
 import { getCharacter } from '../../../shared/characterData.js';
 
 const MIN_LOADING_MS = 1800;
@@ -33,6 +34,7 @@ export default function HangarScreen() {
   const [, forceUpdate]                   = useReducer(x => x + 1, 0);
   const [pendingBuy,    setPendingBuy]   = useState(false);
   const [showCharSelect, setShowCharSelect] = useState(false);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [canvasAlpha,  setCanvasAlpha]  = useState(1);
   const [phase,        setPhase]        = useState('loading');
   const [loadProgress, setLoadProgress] = useState(0);
@@ -178,6 +180,7 @@ export default function HangarScreen() {
   function handleCancel()  { Bridge.commands.cancelShipSelection(); }
 
   function handlePurchase() {
+    if (EconomySystem.isGuest()) { setShowGuestPrompt(true); return; }
     const shipId = SHIPS[shipIdxRef.current].id;
     if (!EconomySystem.canAfford(shipId)) return;
     setPendingBuy(true);
@@ -252,6 +255,7 @@ export default function HangarScreen() {
             canBuy={canBuy}
             price={ship.price}
             missing={missing}
+            isGuest={EconomySystem.isGuest()}
           />
           </div>
 
@@ -272,6 +276,13 @@ export default function HangarScreen() {
           currentId={EconomySystem.getSelectedCharacter()}
           onConfirm={confirmCharSelect}
           onCancel={cancelCharSelect}
+        />
+      )}
+      {showGuestPrompt && (
+        <GuestPromptModal
+          feature="purchase"
+          onClose={() => setShowGuestPrompt(false)}
+          onAuthSuccess={() => { setShowGuestPrompt(false); forceUpdate(); }}
         />
       )}
     </>

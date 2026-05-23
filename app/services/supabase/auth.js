@@ -3,6 +3,7 @@
 
 import { supabase } from './client.js';
 import { loadProfile, saveProfile } from '../../../shared/playerProfile.js';
+import { EconomySystem } from '../../../game/systems/EconomySystem.js';
 
 function notReady() {
   return { ok: false, skipped: true, reason: 'supabase-not-configured' };
@@ -71,11 +72,38 @@ export async function signInAnonymously() {
   return { ok: true, user: data.user, session: data.session };
 }
 
+export async function signInWithGoogle() {
+  if (!supabase) return notReady();
+  const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo },
+  });
+  if (error) return { ok: false, error };
+  // Browser redirige a Google. La sesión se resuelve en el callback al volver.
+  return { ok: true, data };
+}
+
 export async function signOut() {
   if (!supabase) return notReady();
   const { error } = await supabase.auth.signOut();
   if (error) return { ok: false, error };
+  // Al cerrar sesión: reset perfil local a Invitado. Borra grafemas, naves
+  // compradas y stats — el invitado arranca limpio.
+  try { EconomySystem.reset(); } catch (e) { console.warn('[auth] reset failed', e); }
   return { ok: true };
+}
+
+// Llamar tras sign-in / sign-up exitoso. Marca perfil como NO invitado
+// y usa el display name del usuario.
+export function applyAuthenticatedProfile({ user, displayName }) {
+  if (!user) return;
+  const name = displayName
+    || user.user_metadata?.display_name
+    || (user.email ? user.email.split('@')[0] : 'Pilot');
+  try {
+    EconomySystem.setGuestMode(false, name);
+  } catch (e) { console.warn('[auth] setGuestMode failed', e); }
 }
 
 // Display name persiste en perfil local + user_metadata para mostrarlo offline.

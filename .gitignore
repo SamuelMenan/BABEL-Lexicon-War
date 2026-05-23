@@ -13,7 +13,7 @@ pnpm-debug.log*
 .vscode/
 coverage/
 .claude/
-
+supabase/
 # Project idea/documentation (not part of game source)
 idea/
 commit-msg-mcp.txt

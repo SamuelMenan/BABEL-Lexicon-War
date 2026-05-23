@@ -2,6 +2,7 @@
 // Persistencia: localStorage. Migraciones por versión.
 
 import { SHIP_CATALOG } from './shopCatalog.js';
+import { DEFAULT_CHARACTER_ID, CHARACTERS } from './characterData.js';
 
 const STORAGE_KEY = 'babel.profile.v1';
 const DEFAULT_SHIP_ID = 'spaceship';
@@ -22,12 +23,16 @@ export function makeDefaultProfile() {
     grafemas:     0,
     ownedShips:   owned,
     equippedShip: DEFAULT_SHIP_ID,
+    selectedCharacter: DEFAULT_CHARACTER_ID,
     stats: {
       kills:                0,
       racesWon:             0,
       totalGrafemasEarned:  0,
       totalGrafemasSpent:   0,
     },
+    tutorialsSeen: {},  // { combat:'v1', racing:'v1', hangar:'v1', typing:'v1' }
+    keybindOverrides: {},  // { actionId: keyString } — vacío = defaults de keybindings.js
+    debugEnabled: false,   // gate de DEBUG_* actions (F9, F10, etc.)
   };
 }
 
@@ -50,6 +55,12 @@ export function loadProfile() {
     const defaults = computeDefaultOwned();
     const merged = new Set([...parsed.ownedShips, ...defaults]);
     parsed.ownedShips = Array.from(merged);
+    if (!parsed.tutorialsSeen || typeof parsed.tutorialsSeen !== 'object') parsed.tutorialsSeen = {};
+    if (!parsed.keybindOverrides || typeof parsed.keybindOverrides !== 'object') parsed.keybindOverrides = {};
+    if (typeof parsed.debugEnabled !== 'boolean') parsed.debugEnabled = false;
+    if (typeof parsed.selectedCharacter !== 'string' || !CHARACTERS[parsed.selectedCharacter]) {
+      parsed.selectedCharacter = DEFAULT_CHARACTER_ID;
+    }
     return parsed;
   } catch {
     return makeDefaultProfile();

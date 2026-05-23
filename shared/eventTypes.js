@@ -67,6 +67,7 @@ export const EventTypes = {
   SHIP_EQUIPPED:     'ship:equipped',      // { shipId }
   PROFILE_UPDATED:   'profile:updated',    // { profile }
   PROFILE_RESET:     'profile:reset',
+  CHARACTER_SELECTED: 'character:selected', // { characterId }
 
   // --- Sistema ---
   SCENE_READY:        'scene:ready',
@@ -75,4 +76,13 @@ export const EventTypes = {
   // --- Carga ---
   LOADING_PROGRESS: 'loading:progress',  // { progress, message, stage }
   LOADING_COMPLETE: 'loading:complete',  // { mode }
+
+  // --- Deployment / Tutorial ---
+  DEPLOYMENT_ANIMATION_COMPLETE: 'deployment:animation_complete', // { mode }
+  HANGAR_READY:                  'hangar:ready',
+  START_COUNTDOWN:               'countdown:start_request',       // { mode }
+  TUTORIAL_STARTED:              'tutorial:started',              // { id }
+  TUTORIAL_STEP_CHANGED:         'tutorial:step_changed',         // { id, step }
+  TUTORIAL_COMPLETED:            'tutorial:completed',            // { id }
+  TUTORIAL_SKIPPED:              'tutorial:skipped',              // { id, atStep }
 };

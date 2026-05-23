@@ -42,6 +42,7 @@ let _state = {
   grafemas:          0,
   ownedShips:        [],
   equippedShip:      null,
+  selectedCharacter: 'kael',
   // Racing state
   distanceTraveled:       0,
   targetDistance:         500,
@@ -72,6 +73,10 @@ let _state = {
     closestEnemyDistance: null,
     lowHp:               false,
   },
+  // Tutorial / deployment
+  tutorialActive:  null,           // { id, stepIndex } | null
+  deploymentPhase: null,           // 'landing' | 'tutorial' | 'countdown' | 'playing' | null
+  tutorialsSeen:   {},             // mirror del perfil
 };
 
 const stateListeners = new Set();
@@ -139,6 +144,44 @@ export const Bridge = {
       _state = { ..._state, showShipSelection: false, pendingGameMode: null };
       notifyStateChange();
       EventBus.emit(EventTypes.SHIP_SELECTION_CANCELLED, {});
+    },
+    startTutorial(id) {
+      Object.assign(_state, { tutorialActive: { id, stepIndex: 0 } });
+      notifyStateChange();
+      EventBus.emit(EventTypes.TUTORIAL_STARTED, { id });
+    },
+    advanceTutorial() {
+      const t = _state.tutorialActive;
+      if (!t) return;
+      Object.assign(_state, { tutorialActive: { id: t.id, stepIndex: t.stepIndex + 1 } });
+      notifyStateChange();
+      EventBus.emit(EventTypes.TUTORIAL_STEP_CHANGED, { id: t.id, step: t.stepIndex + 1 });
+    },
+    backTutorial() {
+      const t = _state.tutorialActive;
+      if (!t || t.stepIndex <= 0) return;
+      Object.assign(_state, { tutorialActive: { id: t.id, stepIndex: t.stepIndex - 1 } });
+      notifyStateChange();
+      EventBus.emit(EventTypes.TUTORIAL_STEP_CHANGED, { id: t.id, step: t.stepIndex - 1 });
+    },
+    skipTutorial() {
+      const t = _state.tutorialActive;
+      if (!t) return;
+      const atStep = t.stepIndex;
+      Object.assign(_state, { tutorialActive: null });
+      notifyStateChange();
+      EventBus.emit(EventTypes.TUTORIAL_SKIPPED, { id: t.id, atStep });
+    },
+    completeTutorial() {
+      const t = _state.tutorialActive;
+      if (!t) return;
+      Object.assign(_state, { tutorialActive: null });
+      notifyStateChange();
+      EventBus.emit(EventTypes.TUTORIAL_COMPLETED, { id: t.id });
+    },
+    resetTutorials() {
+      Object.assign(_state, { tutorialsSeen: {} });
+      notifyStateChange();
     },
   },
 };

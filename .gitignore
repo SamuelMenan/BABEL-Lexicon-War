@@ -13,7 +13,14 @@ pnpm-debug.log*
 .vscode/
 coverage/
 .claude/
-supabase/
+# Supabase CLI artifacts (root /supabase/). Mantener schema.sql tracked.
+# NO ignora app/services/supabase/ (código cliente).
+/supabase/.branches/
+/supabase/.temp/
+/supabase/migrations/
+/supabase/functions/
+/supabase/seed.sql
+/supabase/config.toml
 # Project idea/documentation (not part of game source)
 idea/
 commit-msg-mcp.txt

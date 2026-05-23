@@ -28,7 +28,7 @@
 .hangar-frame__axis-label{position:absolute;top:calc(50% + 19vh - 0.5rem);left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:0.52rem;letter-spacing:0.35em;color:var(--text-label);text-transform:uppercase;}
 .hangar-frame__scanlines{position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent 0px,transparent 3px,rgba(0,255,204,0.009) 3px,rgba(0,255,204,0.009) 4px);}
 .hangar-frame__vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,8,0.65) 100%);}
-.hangar-stats{position:absolute;left:1.8rem;bottom:7.8rem;width:270px;background:rgba(0,0,8,0.72);border:1px solid rgba(0,255,204,0.25);padding:1rem 1.1rem;z-index:3;backdrop-filter:blur(6px);}
+.hangar-stats{position:absolute;left:1.8rem;bottom:5rem;width:270px;background:rgba(0,0,8,0.72);border:1px solid rgba(0,255,204,0.25);padding:1rem 1.1rem;z-index:3;backdrop-filter:blur(6px);}
 .hangar-stats__header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem;}
 .hangar-stats__title{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;}
 .hangar-stats__core{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.18em;color:var(--col-primary);}
@@ -39,7 +39,7 @@
 .hangar-stats__value{font-family:var(--font-mono);font-size:0.92rem;letter-spacing:0.12em;color:var(--col-primary);}
 .hangar-stats__bar-track{height:2px;background:rgba(0,255,204,0.1);overflow:hidden;}
 .hangar-stats__bar-fill{height:100%;background:var(--col-primary);transition:width var(--anim-normal) ease;}
-.hangar-arsenal{position:absolute;right:1.8rem;bottom:7.8rem;width:260px;background:rgba(0,0,8,0.72);border:1px solid rgba(0,255,204,0.25);padding:1rem 1.1rem;z-index:3;backdrop-filter:blur(6px);}
+.hangar-arsenal{position:absolute;right:1.8rem;bottom:5rem;width:260px;background:rgba(0,0,8,0.72);border:1px solid rgba(0,255,204,0.25);padding:1rem 1.1rem;z-index:3;backdrop-filter:blur(6px);}
 .hangar-arsenal__header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem;}
 .hangar-arsenal__title{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;}
 .hangar-arsenal__count{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.18em;color:var(--col-primary);}

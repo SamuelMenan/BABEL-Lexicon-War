@@ -46,7 +46,7 @@
   left: 1.8rem;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 3px;   /* matched con racing .r-pilot-tag */
 }
 
 .hud__pilot-name {
@@ -67,9 +67,9 @@
   font-family: var(--font-mono);
   font-size: 0.58rem;
   letter-spacing: 0.18em;
-  color: var(--col-active);
+  color: var(--col-pilot-sub, var(--col-active));
   text-transform: uppercase;
-  margin-top: 0.15rem;
+  margin-top: 2px;   /* matched con racing .r-pilot-tag__ship */
 }
 .hud__pilot-scene {
   font-family: var(--font-mono);
@@ -139,8 +139,9 @@
 
 .combat__bottom-left {
   position: absolute;
-  bottom: 1.8rem;
+  top: 50%;
   left: 1.8rem;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -302,6 +303,10 @@
 
 /* ── Lexicon deck (bottom-right) ─────────────────────────────── */
 
+.lexicon-deck--mirror {
+  left: 1.8rem !important;
+  right: auto !important;
+}
 .lexicon-deck {
   position: absolute;
   bottom: 1.8rem;

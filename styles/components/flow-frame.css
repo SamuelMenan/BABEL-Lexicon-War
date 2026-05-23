@@ -77,7 +77,8 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   opacity: 0.72;
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  /* Hereda color de la nave activa (--ship-flame-rgb) en lugar de verde fijo. */
+  text-shadow: 0 0 10px rgba(var(--ship-flame-rgb, 0, 255, 136), 0.7);
 }
 
 /* ── Info notification box ───────────────────────────────────── */

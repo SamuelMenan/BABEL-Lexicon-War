@@ -22,7 +22,7 @@
 
 .warning-stack {
   position: absolute;
-  top: 5.55rem;
+  top: 8.4rem;   /* bajado para no chocar con pilot-tag (que ocupa hasta ~8rem) */
   left: 0.9rem;
   z-index: var(--z-warnings);
   display: flex;

@@ -39,8 +39,10 @@
   left:1.6rem;
   display:inline-flex;
   flex-direction:column;
-  gap:0.18rem;
-  padding:0.55rem 0.95rem;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  padding:0.6rem 1.1rem;
   border:1px solid var(--col-active, #00ffcc);
   background:rgba(0,8,12,0.82);
   box-shadow:

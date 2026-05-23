@@ -141,6 +141,34 @@ export async function initGame(mountEl) {
     Bridge.setState({ isRunning: false, isPaused: false, gameOver: true, ...result });
   });
 
+  // Salir desde pause al menú principal — destruye escena, limpia estado de juego.
+  EventBus.on(EventTypes.EXIT_TO_MENU, () => {
+    _activeScene?.destroy();
+    _activeScene = null;
+    _pendingCountdownStart = null;
+    _pauseSnapshot = null;
+    engine.loop.start();   // re-iniciar loop (estaba detenido por GAME_PAUSE)
+    Bridge.setState({
+      isRunning: false, isPaused: false, gameOver: false,
+      showShipSelection: false, pendingGameMode: null, gameMode: null,
+      tutorialActive: null, deploymentPhase: null,
+    });
+  });
+
+  // Salir desde pause al hangar — destruye escena, abre ship selection con mode previo.
+  EventBus.on(EventTypes.EXIT_TO_HANGAR, ({ mode } = {}) => {
+    _activeScene?.destroy();
+    _activeScene = null;
+    _pendingCountdownStart = null;
+    _pauseSnapshot = null;
+    engine.loop.start();   // re-iniciar loop (estaba detenido por GAME_PAUSE)
+    Bridge.setState({
+      isRunning: false, isPaused: false, gameOver: false,
+      showShipSelection: true, pendingGameMode: mode ?? null, gameMode: null,
+      tutorialActive: null, deploymentPhase: null,
+    });
+  });
+
   EventBus.on(EventTypes.PLAYER_HIT, ({ damage }) => {
     engine?.onPlayerDamage?.(damage ?? 0);
   });

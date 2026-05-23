@@ -13,18 +13,11 @@ import PresentationMenu from "./components/PresentationMenu.jsx";
 import { Bridge } from "../shared/bridge.js";
 import { KeybindService } from "../shared/keybindService.js";
 
-const INTRO_KEY = 'babel.intro.seen.v1';
-const readIntroSeen = () => {
-  try { return localStorage.getItem(INTRO_KEY) === '1'; } catch { return false; }
-};
-const markIntroSeen = () => {
-  try { localStorage.setItem(INTRO_KEY, '1'); } catch { /* noop */ }
-};
-
 export default function App() {
   const [state, setState] = useState(() => Bridge.getState());
   const [showHelp, setShowHelp] = useState(false);
-  const [introStage, setIntroStage] = useState(() => (readIntroSeen() ? 'done' : 'warning'));
+  // Epilepsia + presentación SIEMPRE salen al cargar — no se persisten.
+  const [introStage, setIntroStage] = useState('warning');
 
   useEffect(() => {
     const off = KeybindService.register('global', 'SHOW_HELP', () => setShowHelp((s) => !s));
@@ -97,7 +90,7 @@ export default function App() {
   if (introStage === 'prologue') {
     return (
       <PresentationMenu
-        onComplete={() => { markIntroSeen(); setIntroStage('done'); }}
+        onComplete={() => setIntroStage('done')}
       />
     );
   }

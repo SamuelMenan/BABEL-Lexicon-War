@@ -1,7 +1,7 @@
-// Instrumentación de wave-start FPS drops.
+// Instrumentacion de wave-start FPS drops.
 // Activar/desactivar: window.__waveTrace.enable() / .disable()
 // Resumen por oleada: window.__waveTrace.report()
-// Auto-report al cerrar oleada (beginWave después de una activa).
+// Auto-report al cerrar oleada (beginWave despues de una activa).
 
 class WaveTrace {
   constructor() {
@@ -96,13 +96,13 @@ class WaveTrace {
     return out;
   }
 
-  // Mark sin medición — eventos discretos.
+  // Mark sin medicion — eventos discretos.
   mark(label, meta = null) {
     if (!this.enabled) return;
     this._samples.push({ wave: this._currentWave, label, ms: 0, meta });
   }
 
-  // Resumen por oleada: top-N pasos más costosos + agregados por label.
+  // Resumen por oleada: top-N pasos mas costosos + agregados por label.
   report(waveFilter = null) {
     if (this._samples.length === 0) { console.info('[WaveTrace] sin datos'); return; }
     const filtered = waveFilter != null

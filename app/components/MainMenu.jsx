@@ -6,6 +6,15 @@ import KeyboardNavigable from './common/KeyboardNavigable.jsx';
 import AuthModal from './auth/AuthModal.jsx';
 import LeaderboardModal from './leaderboard/LeaderboardModal.jsx';
 import GuestPromptModal from './auth/GuestPromptModal.jsx';
+import RaceModeSelectModal from './race/RaceModeSelectModal.jsx';
+import LobbyBrowser from './race/online/LobbyBrowser.jsx';
+import RoomScreen from './race/online/RoomScreen.jsx';
+import { createOnlineRaceSync } from '../services/supabase/onlineRaceSync.js';
+import { recordOnlineMatch } from '../services/supabase/rooms.js';
+import { EventBus } from '../../shared/events.js';
+import {
+  attachRematchSync, detachRematchSync, clearPendingRoom,
+} from '../services/online/rematchCoordinator.js';
 import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '../services/supabase/auth.js';
 import { loadProfile } from '../../shared/playerProfile.js';
 import { getCharacter } from '../../shared/characterData.js';
@@ -17,6 +26,36 @@ export default function MainMenu() {
   const [authModal, setAuthModal] = useState(null); // 'signin' | 'signup' | null
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [guestPrompt, setGuestPrompt] = useState(null); // { feature, onProceed } | null
+  const [raceModePick, setRaceModePick] = useState(false);
+  const [onlineLobby,   setOnlineLobby] = useState(() => {
+    // Si MatchResult guardo intent de revancha, reabrir lobby al volver.
+    try {
+      if (window.sessionStorage?.getItem('online:reopen-lobby') === '1') {
+        window.sessionStorage.removeItem('online:reopen-lobby');
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  });
+  const [onlineRoom,    setOnlineRoom]  = useState(null); // { roomId, role } | null
+
+  // Auto-open RoomScreen si Bridge tiene onlinePendingRoom (revancha aceptada
+  // o propuesta enviada mientras MatchResult estaba visible).
+  useEffect(() => {
+    const pending = Bridge.peekState().onlinePendingRoom;
+    if (pending) {
+      setOnlineRoom(pending);
+      setOnlineLobby(true);
+      clearPendingRoom();
+    }
+    return Bridge.onStateChange((s) => {
+      if (s.onlinePendingRoom && !onlineRoom) {
+        setOnlineRoom(s.onlinePendingRoom);
+        setOnlineLobby(true);
+        clearPendingRoom();
+      }
+    });
+  }, [onlineRoom]);
 
   useEffect(() => {
     let mounted = true;
@@ -72,7 +111,7 @@ export default function MainMenu() {
       desc: 'Velocidad pura. Tu WPM determina la nave.',
       glyph: '▶',
       accent: 'var(--col-primary)',
-      action: gatedByGuest('racing', deferred(() => Bridge.commands.openShipSelection(GAME_MODES.RACING))),
+      action: gatedByGuest('racing', deferred(() => setRaceModePick(true))),
     },
     {
       id: 'settings',
@@ -145,6 +184,113 @@ export default function MainMenu() {
 
       {showLeaderboard && (
         <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+      )}
+
+      {raceModePick && (
+        <RaceModeSelectModal
+          onClose={() => setRaceModePick(false)}
+          onSelectSingle={() => {
+            setRaceModePick(false);
+            Bridge.commands.openShipSelection(GAME_MODES.RACING);
+          }}
+          onSelectOnline={() => {
+            setRaceModePick(false);
+            setOnlineLobby(true);
+          }}
+        />
+      )}
+
+      {onlineLobby && !onlineRoom && (
+        <LobbyBrowser
+          onClose={() => setOnlineLobby(false)}
+          onEnterRoom={(roomId, role) => {
+            setOnlineRoom({ roomId, role });
+          }}
+        />
+      )}
+
+      {onlineRoom && (
+        <RoomScreen
+          roomId={onlineRoom.roomId}
+          role={onlineRoom.role}
+          onLeave={() => { setOnlineRoom(null); }}
+          onMatchStart={(room) => {
+            const role = onlineRoom.role;
+            const profile = loadProfile();
+            const myShip   = role === 'host' ? room.host_ship  : room.guest_ship;
+            const oppShip  = role === 'host' ? room.guest_ship : room.host_ship;
+            const myPilot  = role === 'host' ? room.host_pilot : room.guest_pilot;
+            const oppPilot = role === 'host' ? room.guest_pilot : room.host_pilot;
+
+            // Inicia capa de sincronizacion realtime (canal broadcast).
+            const sync = createOnlineRaceSync(room.id);
+
+            // Espera resultado del rival, decide ganador (solo host registra DB).
+            let remoteFinish = null;
+            let localFinish  = null;
+            let disconnected = false;
+            const tryRecord = async () => {
+              // Caso normal: ambos finish llegaron.
+              // Caso disconnect: rival caido, asumir avgWpm=0 → ganador = local.
+              if (!localFinish) return;
+              if (role !== 'host') return;
+              const haveRemote = !!remoteFinish || disconnected;
+              if (!haveRemote) return;
+              const hostAvg  = localFinish.avgWpm;
+              const guestAvg = remoteFinish?.avgWpm ?? 0;
+              const hostAcc  = localFinish.accuracy;
+              const guestAcc = remoteFinish?.accuracy ?? 0;
+              let winnerId = null;
+              if (hostAvg > guestAvg) winnerId = room.host_id;
+              else if (guestAvg > hostAvg) winnerId = room.guest_id;
+              else if (hostAcc > guestAcc) winnerId = room.host_id;
+              else if (guestAcc > hostAcc) winnerId = room.guest_id;
+              try {
+                await recordOnlineMatch({
+                  roomId: room.id, hostAvgWpm: hostAvg, guestAvgWpm: guestAvg,
+                  hostAccuracy: hostAcc, guestAccuracy: guestAcc, winnerPlayerId: winnerId,
+                });
+              } catch (e) { console.warn('[online] record falla', e); }
+            };
+            sync.onRemoteFinish((s) => { remoteFinish = s; tryRecord(); });
+            sync.onDisconnect(() => {
+              disconnected = true;
+              // Si guest no termino antes del timeout, marcarlo perdido por abandono.
+              if (!remoteFinish) {
+                remoteFinish = { avgWpm: 0, accuracy: 0 };
+                Bridge.setState({ onlineOpponentStats: { ...remoteFinish, distance: 0, phrasesDone: 0 } });
+              }
+              tryRecord();
+            });
+            const offLocalFinish = EventBus.on('online:race_finish_local', (s) => {
+              localFinish = s;
+              tryRecord();
+            });
+
+            // Rematch via coordinator singleton — sobrevive unmount de MainMenu.
+            // Listeners + estado (pendingInvite/pendingRoom) en Bridge global.
+            attachRematchSync({ sync, room, role, profile, myPilot });
+
+            // Limpieza tardia — 60s para permitir coordinacion de revancha.
+            const offGameOver = EventBus.on('game:over', () => {
+              setTimeout(() => {
+                sync.dispose();
+                detachRematchSync();
+                offLocalFinish();
+                offGameOver();
+              }, 60000);
+            });
+
+            // Cierra RoomScreen + arranca carrera online.
+            setOnlineRoom(null);
+            setOnlineLobby(false);
+            Bridge.commands.startOnlineRace({
+              room, role,
+              ship: myShip, opponentShip: oppShip,
+              pilot: myPilot, opponentPilot: oppPilot,
+            });
+          }}
+        />
       )}
 
       {guestPrompt && (

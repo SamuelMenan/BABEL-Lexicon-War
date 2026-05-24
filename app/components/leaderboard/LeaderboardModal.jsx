@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { KeybindService } from '../../../shared/keybindService.js';
-import { fetchLeaderboard, isLeaderboardSyncAvailable } from '../../services/supabase/leaderboard.js';
+import {
+  fetchLeaderboard, fetchOnlineWinsLeaderboard, isLeaderboardSyncAvailable,
+} from '../../services/supabase/leaderboard.js';
 
 const PERIODS = [
   { value: 'day',   label: 'Diario' },
@@ -8,8 +10,9 @@ const PERIODS = [
   { value: 'month', label: 'Mensual' },
 ];
 const MODES = [
-  { value: 'combat', label: 'Combate' },
-  { value: 'racing', label: 'Carrera' },
+  { value: 'combat',       label: 'Combate' },
+  { value: 'racing',       label: 'Carrera' },
+  { value: 'online-wins',  label: 'Victorias Online' },
 ];
 
 const fmt = new Intl.NumberFormat('es-ES');
@@ -30,7 +33,11 @@ export default function LeaderboardModal({ onClose }) {
   useEffect(() => {
     let alive = true;
     setLoading(true); setError('');
-    fetchLeaderboard({ period, mode, limit: 10 })
+    // 'online-wins' usa view dedicada all-time (sin period buckets).
+    const fetcher = mode === 'online-wins'
+      ? fetchOnlineWinsLeaderboard({ limit: 10 })
+      : fetchLeaderboard({ period, mode, limit: 10 });
+    fetcher
       .then(({ rows: nextRows, skipped }) => {
         if (!alive) return;
         setRows(nextRows ?? []);
@@ -56,7 +63,7 @@ export default function LeaderboardModal({ onClose }) {
         </div>
 
         <div className="lb-modal__controls">
-          <div className="lb-modal__group">
+          <div className="lb-modal__group" style={mode === 'online-wins' ? { opacity: 0.4, pointerEvents: 'none' } : null}>
             <span className="lb-modal__group-label">PERIODO</span>
             <div className="lb-modal__chips">
               {PERIODS.map(p => (
@@ -65,6 +72,7 @@ export default function LeaderboardModal({ onClose }) {
                   type="button"
                   className={`lb-modal__chip${period === p.value ? ' lb-modal__chip--active' : ''}`}
                   onClick={() => setPeriod(p.value)}
+                  disabled={mode === 'online-wins'}
                 >{p.label}</button>
               ))}
             </div>
@@ -90,7 +98,24 @@ export default function LeaderboardModal({ onClose }) {
           {!loading && !error && rows.length === 0 && (
             <div className="lb-modal__state">Sin partidas registradas para este filtro.</div>
           )}
-          {!loading && !error && rows.map((row) => {
+          {!loading && !error && rows.map((row, idx) => {
+            if (mode === 'online-wins') {
+              return (
+                <div key={`${row.player_id}-${idx}`} className="lb-row">
+                  <div className="lb-row__rank">#{idx + 1}</div>
+                  <div className="lb-row__main">
+                    <div className="lb-row__name">{row.display_name}</div>
+                    <div className="lb-row__sub">
+                      {fmt.format(row.matches ?? 0)} partidas · Win rate {row.win_rate ?? 0}%
+                    </div>
+                  </div>
+                  <div className="lb-row__score">
+                    <div className="lb-row__score-val">{fmt.format(row.wins ?? 0)}</div>
+                    <div className="lb-row__score-lbl">VICTORIAS</div>
+                  </div>
+                </div>
+              );
+            }
             const isCombat = mode === 'combat';
             const primary  = isCombat ? (row.max_wave ?? row.best_score ?? 0) : (row.best_score ?? 0);
             const primaryLabel = isCombat ? 'OLEADA' : 'MEJOR';

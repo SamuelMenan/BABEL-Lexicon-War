@@ -24,6 +24,7 @@ import RaceTimeSide from "./hud/racing/RaceTimeSide.jsx";
 import RaceOpponentDistanceBar from "./hud/racing/RaceOpponentDistanceBar.jsx";
 import RaceRunStats from "./hud/racing/RaceRunStats.jsx";
 import RaceSpeedLines from "./hud/racing/RaceSpeedLines.jsx";
+import OnlineOpponentHud from "./hud/racing/OnlineOpponentHud.jsx";
 
 import Countdown from "./hud/overlays/Countdown.jsx";
 import FlowFrame from "./hud/overlays/FlowFrame.jsx";
@@ -80,6 +81,8 @@ export default function HUD() {
     wordBuffer, globalWordIndex, wordsCompleted,
     playerPhrasesCompleted, totalPhrases,
     countdown, countdownActive, timeRemaining, deploymentPhase,
+    onlineEnabled, onlineOpponentStats, onlineOpponentPilot, onlineOpponentShip,
+    onlineConnection,
     distanceTraveled, targetDistance,
     opponentDistance = 0,
     combatEnemies, swarmRemnants, targetId,
@@ -253,6 +256,14 @@ export default function HUD() {
       <RaceSpeedLines flowActive={flowActive} />
       <div className="hud-safe-zone">
         <WaveAnnouncement wave={waveNotice} />
+        {onlineEnabled && (
+          <OnlineOpponentHud
+            stats={onlineOpponentStats}
+            opponentPilot={onlineOpponentPilot}
+            opponentShip={onlineOpponentShip}
+            connection={onlineConnection}
+          />
+        )}
         <Countdown countdown={countdown} countdownActive={countdownActive} />
         <RacePilotTag pilotName={pilotName} pilotSub={pilotSub} shipName={shipName} />
         <RaceTopStatus wave={wave} playerPhrasesCompleted={playerPhrasesCompleted} />

@@ -3,6 +3,7 @@ import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
 import { Bridge } from "../../shared/bridge.js";
 import { loadProfile } from "../../shared/playerProfile.js";
 import { saveMatchResult } from "../services/supabase/leaderboard.js";
+import { proposeRematch } from "../services/online/rematchCoordinator.js";
 
 function ResultActions({ onMenu, onRetry }) {
   const items = [
@@ -106,11 +107,22 @@ export default function MatchResult({
   wordsDestroyed, bestCombo,
   grafemasReward,
   distanceTraveled,
+  onlineEnabled, onlineOpponentStats, onlineRole,
 }) {
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
   const syncOnce = useRef(false);
-  const restart = () => Bridge.commands.exitToHangar();
+  // En online, "restart" = proponer revancha. Coordinator singleton crea sala
+  // nueva + broadcast invite por canal viejo del match. Bridge.onlinePendingRoom
+  // hace que MainMenu auto-abra RoomScreen al volver. Sync sigue vivo 60s.
+  const restart = () => {
+    if (onlineEnabled) {
+      proposeRematch();
+      Bridge.commands.exitToMenu();
+    } else {
+      Bridge.commands.exitToHangar();
+    }
+  };
   const toMenu  = () => Bridge.commands.exitToMenu();
 
   const effectiveWpm = wpm ?? 0;
@@ -266,6 +278,16 @@ export default function MatchResult({
     );
   }
 
+  /* ── Online verdict (calculado a partir de WPM Medio local vs rival) ── */
+  let onlineVerdict = null;
+  if (onlineEnabled) {
+    const localAvg  = wpm ?? 0;
+    const remoteAvg = onlineOpponentStats?.avgWpm ?? 0;
+    if (localAvg > remoteAvg) onlineVerdict = { kind: 'win',  label: 'GANASTE' };
+    else if (remoteAvg > localAvg) onlineVerdict = { kind: 'lose', label: 'PERDISTE' };
+    else onlineVerdict = { kind: 'draw', label: 'EMPATE' };
+  }
+
   /* ── Racing ──────────────────────────────────────────────── */
   const peak = peakWPM || effectiveWpm;
   const peakPct = Math.min(peak / 120 * 100, 100);
@@ -282,6 +304,16 @@ export default function MatchResult({
           <span className="mr__header-label">◈ Registro de Transmision · Protocolo de Carrera</span>
           <span className="mr__header-id">SES:{sessionId}</span>
         </div>
+
+        {/* Online verdict banner */}
+        {onlineVerdict && (
+          <div className={`mr__online-banner mr__online-banner--${onlineVerdict.kind}`}>
+            <span className="mr__online-banner__verdict">{onlineVerdict.label}</span>
+            <span className="mr__online-banner__sub">
+              Tu WPM Medio {wpm ?? '--'} · Rival {onlineOpponentStats?.avgWpm ?? '--'}
+            </span>
+          </div>
+        )}
 
         {/* Title row */}
         <div className="mr__title-row">
@@ -357,10 +389,10 @@ export default function MatchResult({
           </p>
           <div className="mr__actions">
             <button className="mr__btn mr__btn--secondary" onClick={toMenu}>
-              Menu Principal
+              {onlineEnabled ? 'Salir' : 'Menu Principal'}
             </button>
             <button className="mr__btn mr__btn--primary" onClick={restart}>
-              Reintentar
+              {onlineEnabled ? 'Revancha' : 'Reintentar'}
             </button>
           </div>
         </div>

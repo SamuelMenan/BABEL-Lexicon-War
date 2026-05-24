@@ -80,6 +80,20 @@ const LEADERBOARD_VIEWS = {
   month: 'leaderboard_monthly',
 };
 
+// Fetch ranking de victorias online (modo carrera en linea, fase 3).
+// View: leaderboard_online_wins. No tiene buckets temporales — all-time.
+export async function fetchOnlineWinsLeaderboard({ limit = 10 } = {}) {
+  if (!supabase) return { ok: false, skipped: true, rows: [] };
+  const { data, error } = await supabase
+    .from('leaderboard_online_wins')
+    .select('*')
+    .order('wins', { ascending: false })
+    .order('win_rate', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return { ok: true, rows: data ?? [] };
+}
+
 export async function fetchLeaderboard({ period = 'day', mode, limit = 10 } = {}) {
   if (!supabase) {
     return { ok: false, skipped: true, rows: [] };

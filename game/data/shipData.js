@@ -1,4 +1,4 @@
-// Datos de presentación del hangar por nave — no afectan lógica de juego
+// Datos de presentacion del hangar por nave — no afectan logica de juego
 const SHIP_DATA = {
   spaceship: {
     coreId: '0X14·A2',

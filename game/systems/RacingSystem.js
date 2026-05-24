@@ -248,9 +248,11 @@ export class RacingSystem {
 
     const payload = {
       raceVictory: victory,
+      // Race: `score` = phrases completed (mode-specific semantic; see B3 note).
       score:       this._playerDone,
-      wpm:         state.wpm,
-      accuracy:    state.accuracy,
+      wave:        null,
+      wpm:         state.wpm,        // 0-100 unit; schema numeric
+      accuracy:    state.accuracy,   // 0-100 percent (DB column matches)
       peakWPM:     this._peakWPM,
       timeElapsed: Math.round(this._timeElapsed),
       grafemasReward,

@@ -19,7 +19,9 @@ export class LexiconSystem {
     this._keyLog = []; this._totalKeys = 0; this._correctKeys = 0;
     this._flow = 0; this._flowActive = false; this._flowCooldown = false;
     this._flowCooldownTimer = null; this._lastKeyTime = performance.now();
-    this._combo = 0; this._wordHadError = false; this._flowProgressAcc = 0;
+    this._combo = 0; this._bestCombo = 0; this._wordsCompleted = 0;
+    this._peakWPM = 0;
+    this._wordHadError = false; this._flowProgressAcc = 0;
     this._flowEnterTime = 0; this._flowWordsTyped = 0;
     this._unsubs = [];
     this._matchInflight = false;
@@ -36,6 +38,14 @@ export class LexiconSystem {
     finally { this._matchInflight = false; }
   }
   setExecutionMode(mode) { workerBridge.setMode(mode); }
+  // Per-match counters reset. Called from game/main.js on GAME_START to avoid
+  // bleed of combo/words/keystrokes from previous match into the new row.
+  resetMatchStats() {
+    this._combo = 0; this._bestCombo = 0; this._wordsCompleted = 0;
+    this._peakWPM = 0;
+    this._totalKeys = 0; this._correctKeys = 0; this._keyLog = [];
+    this._wordHadError = false; this._lastWpm = -1; this._lastAcc = -1;
+  }
   init() {
     this._unsubs.push(
       EventBus.on(EventTypes.KEY_TYPED,       (p) => this._onKey(p)),
@@ -54,9 +64,10 @@ export class LexiconSystem {
     if (this._statsAcc >= 1 / STATS_PUBLISH_HZ) {
       this._statsAcc = 0;
       const wpm = this._calcWPM(); const accuracy = this._calcAccuracy();
+      if (wpm > this._peakWPM) this._peakWPM = wpm;
       if (wpm !== this._lastWpm || accuracy !== this._lastAcc) {
         this._lastWpm = wpm; this._lastAcc = accuracy;
-        Bridge.setState({ wpm, accuracy });
+        Bridge.setState({ wpm, accuracy, peakWPM: this._peakWPM });
       }
     }
     this._updateFlow(delta);
@@ -104,7 +115,10 @@ export class LexiconSystem {
       const wordLen = this._targetWord ? this._targetWord.length : 0;
       const wpmMod = this._wpmModifier(); const comboMod = 1 + Math.min(this._combo * 0.05, 0.5);
       this._addFlow(wordLen * 0.8 * wpmMod * comboMod); this._combo++;
+      if (this._combo > this._bestCombo) this._bestCombo = this._combo;
     } else { this._combo = 0; }
+    this._wordsCompleted++;
+    Bridge.setState({ wordsDestroyed: this._wordsCompleted, bestCombo: this._bestCombo });
     this._flowWordsTyped++; this._wordHadError = false;
     const wpm = this._calcWPM(); const accuracy = this._calcAccuracy();
     const completedId = this._targetId; const completedWord = this._targetWord;

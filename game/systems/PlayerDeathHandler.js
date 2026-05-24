@@ -13,7 +13,7 @@ function _getRampForShip(shipId) {
 
 export class PlayerDeathHandler {
   constructor({ getParticles, getPlayer, getLexicon, getProjectiles, clearProjectiles,
-                getEnemies, hudCanvas, cam, scene, getWave, onPublish }) {
+                getEnemies, hudCanvas, cam, scene, getWave, getTimeElapsed, onPublish }) {
     this._getParticles     = getParticles;
     this._getPlayer        = getPlayer;
     this._getLexicon       = getLexicon;
@@ -24,6 +24,7 @@ export class PlayerDeathHandler {
     this._cam              = cam;
     this._scene            = scene;
     this._getWave          = getWave;
+    this._getTimeElapsed   = getTimeElapsed ?? (() => null);
     this._onPublish        = onPublish;
     this._started          = false;
     this._gameOverTimer    = null;
@@ -34,6 +35,17 @@ export class PlayerDeathHandler {
 
   start() {
     this._started = true;
+    // Snapshot stats AT death moment (before cinematic). WPM uses a 5s rolling
+    // window; reading after the 1.8s cinematic risks decay to 0 if the player
+    // wasn't typing in the final seconds. Peak survives regardless.
+    const sAtDeath = Bridge.getState();
+    this._statsSnapshot = {
+      wpm:            sAtDeath.wpm,
+      accuracy:       sAtDeath.accuracy,
+      peakWPM:        sAtDeath.peakWPM ?? null,
+      wordsDestroyed: sAtDeath.wordsDestroyed ?? null,
+      bestCombo:      sAtDeath.bestCombo ?? null,
+    };
     this._cam?.trackX(0);
 
     const enemies = this._getEnemies();
@@ -70,10 +82,27 @@ export class PlayerDeathHandler {
 
       this._gameOverTimer = setTimeout(() => {
         this._gameOverTimer = null;
+        const snap    = this._statsSnapshot || {};
+        const elapsed = this._getTimeElapsed();
+        // Final WPM: prefer snapshot at death; if zero/null, fall back to peak.
+        // Combat sessions where player was dodging in final seconds otherwise
+        // ended up with wpm=0 due to rolling-window decay.
+        const finalWpm = (Number.isFinite(snap.wpm) && snap.wpm > 0)
+          ? snap.wpm
+          : (Number.isFinite(snap.peakWPM) ? snap.peakWPM : null);
         EventBus.emit(EventTypes.GAME_OVER, {
-          score:    this._getWave(),
-          wpm:      Bridge.getState().wpm,
-          accuracy: Bridge.getState().accuracy,
+          // Combat: `score` = wave reached (waves index combat progression).
+          // Race uses `score` for phrases done; views partition by mode so no mix.
+          score:           this._getWave(),
+          wave:            this._getWave(),
+          wpm:             finalWpm,
+          accuracy:        snap.accuracy ?? null,
+          wordsDestroyed:  snap.wordsDestroyed ?? null,
+          bestCombo:       snap.bestCombo ?? null,
+          peakWPM:         snap.peakWPM ?? null,
+          timeElapsed:     Number.isFinite(elapsed) ? Math.round(elapsed) : null,
+          grafemasReward:  null,
+          raceVictory:     null,
         });
       }, CINEMATIC_DELAY_MS);
     });

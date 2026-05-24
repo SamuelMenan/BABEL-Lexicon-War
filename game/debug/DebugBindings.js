@@ -20,7 +20,7 @@ export function initDebugBindings() {
     EventBus.emit(EventTypes.PERFORMANCE_TOGGLE);
   }));
 
-  // F10 — toggle telemetría
+  // F10 — toggle telemetria
   _unsubs.push(KeybindService.register('global', 'DEBUG_TELEMETRY', () => {
     toggleTelemetry();
   }));
@@ -47,7 +47,7 @@ export function initDebugBindings() {
     EventBus.emit(EventTypes.DEBUG_FORCE_PLAYER_DEATH);
   }));
 
-  // End — skip wave (placeholder hasta wiring específico en CombatSceneManager)
+  // End — skip wave (placeholder hasta wiring especifico en CombatSceneManager)
   _unsubs.push(KeybindService.register('gameplay', 'DEBUG_SKIP_WAVE', () => {
     EventBus.emit('debug:skip_wave');
   }));

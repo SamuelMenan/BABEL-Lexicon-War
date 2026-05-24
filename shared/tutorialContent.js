@@ -62,7 +62,7 @@ export const TUTORIALS = {
       },
       {
         title: '¡A combatir!',
-        body: 'Al cerrar este panel, comienza la cuenta regresiva. Las palabras no se acaban. Solo cambian de mano.',
+        body: 'Al cerrar este panel, comienza la cuenta regresiva. Error de sintaxis. Coincidencia fallida.',
         ctaContinue: 'EMPEZAR',
         diagram: { kind: 'countdown' },
       },
@@ -86,13 +86,13 @@ export const TUTORIALS = {
       },
       {
         title: 'Distancia y meta',
-        body: 'Barra lateral izquierda: distancia recorrida vs meta. Llega a 500 m antes del tiempo límite.',
+        body: 'Barra lateral izquierda: distancia recorrida vs meta. Llega a 500 m antes del tiempo limite.',
         highlight: 'mid-left',
         diagram: { kind: 'distance' },
       },
       {
-        title: 'Tiempo límite',
-        body: 'Cronómetro arriba. 60 segundos. Timeout = derrota.',
+        title: 'Tiempo limite',
+        body: 'Cronometro arriba. 60 segundos. Timeout = derrota.',
         highlight: 'top-center',
         diagram: { kind: 'timer' },
       },
@@ -103,7 +103,7 @@ export const TUTORIALS = {
       },
       {
         title: 'Frase activa',
-        body: 'Centro inferior: el párrafo en curso. Tipea palabra por palabra. La nave avanza con cada letra.',
+        body: 'Centro inferior: el parrafo en curso. Tipea palabra por palabra. La nave avanza con cada letra.',
         highlight: 'bottom-center',
         diagram: { kind: 'phrase' },
       },
@@ -113,8 +113,8 @@ export const TUTORIALS = {
         diagram: { kind: 'opponent' },
       },
       {
-        title: 'WPM y precisión',
-        body: 'Esquina superior derecha: tus métricas en vivo. La precisión cuenta más que la velocidad.',
+        title: 'WPM y precision',
+        body: 'Esquina superior derecha: tus metricas en vivo. La precision cuenta mas que la velocidad.',
         diagram: { kind: 'wpm-acc' },
       },
       {

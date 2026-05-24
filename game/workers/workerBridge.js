@@ -1,6 +1,6 @@
 // Facade async para lexicon matching. Conmuta NORMAL <-> PARALLEL en runtime.
 // NORMAL: ejecuta sync en main thread y envuelve en Promesa resuelta.
-// PARALLEL: delega a lexiconWorker (instancia única, reutilizada).
+// PARALLEL: delega a lexiconWorker (instancia unica, reutilizada).
 
 import { EXECUTION_MODE } from '../../shared/constants.js';
 
@@ -51,7 +51,7 @@ class LexiconWorkerBridge {
     this._pending.clear();
   }
 
-  // Núcleo de matching duplicado en main thread (modo NORMAL).
+  // Nucleo de matching duplicado en main thread (modo NORMAL).
   _matchSync(typedText, activeWords) {
     const typed = (typedText || '').toLowerCase();
     const matches = [];

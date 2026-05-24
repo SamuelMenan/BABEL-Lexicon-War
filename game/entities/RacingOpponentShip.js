@@ -1,18 +1,22 @@
 import * as THREE from 'three';
 import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS } from '../../shared/constants.js';
+import { BLOOM_LAYER, COLORS, SHIPS } from '../../shared/constants.js';
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
 
 const TARGET_MODEL_LENGTH = 3.2;
 
-// Opponent (cb1): mismo patron que combat → modelRoot.rotation.y = rotationY + π.
-// cb1.rotationY = -π/2 → yaw = π/2. Group queda en identidad.
-const OPPONENT_YAW = (-Math.PI/2) + Math.PI;  // = π/2
+// Yaw racing igual a player: ship.rotationY + π (modelRoot apunta a -Z).
+function getOpponentYaw(ship) {
+  return (ship?.rotationY ?? 0) + Math.PI;
+}
 
 export class RacingOpponentShip extends ShipBase {
   constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8), shipModel = 'cb1') {
-    super({ modelUrl: `/models/spaceship_-_${shipModel}.glb`, targetLength: TARGET_MODEL_LENGTH, yaw: OPPONENT_YAW });
-    this._shipModel    = shipModel; // 'cb1', 'spaceship', 'ig127', etc.
+    // Lookup ship metadata; default a cb1 si no se encuentra (offline race).
+    const ship = SHIPS.find(s => s.id === shipModel) ?? SHIPS.find(s => s.id === 'cb1') ?? SHIPS[0];
+    super({ modelUrl: ship.url, targetLength: TARGET_MODEL_LENGTH, yaw: getOpponentYaw(ship) });
+    this._ship         = ship;
+    this._shipModel    = ship.id;
     this._basePosition = basePosition.clone();
     this._raceState    = null;
     this._boosters     = [];

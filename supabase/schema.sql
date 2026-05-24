@@ -336,6 +336,10 @@ create index if not exists idx_race_rooms_public
   on public.race_rooms (created_at desc)
   where status = 'lobby' and is_private = false;
 
+-- Soft migration: anyadir last_activity_at para deteccion de salas fantasmas.
+alter table public.race_rooms add column if not exists last_activity_at timestamptz not null default now();
+create index if not exists idx_race_rooms_activity on public.race_rooms (last_activity_at);
+
 create table if not exists public.online_match_results (
   id               text primary key,
   room_id          text not null references public.race_rooms(id) on delete cascade,
@@ -432,8 +436,8 @@ begin
 
   v_room_id := replace(gen_random_uuid()::text, '-', '');
 
-  insert into public.race_rooms (id, code, is_private, host_id, status)
-  values (v_room_id, case when p_is_private then v_code else null end, p_is_private, p_host_id, 'lobby');
+  insert into public.race_rooms (id, code, is_private, host_id, status, last_activity_at)
+  values (v_room_id, case when p_is_private then v_code else null end, p_is_private, p_host_id, 'lobby', now());
 
   return v_room_id;
 end;
@@ -460,7 +464,7 @@ begin
 
   perform public.ensure_player(p_guest_id, p_guest_name);
 
-  update public.race_rooms set guest_id = p_guest_id where id = p_room_id;
+  update public.race_rooms set guest_id = p_guest_id, last_activity_at = now() where id = p_room_id;
   return true;
 end;
 $$;
@@ -486,7 +490,7 @@ begin
 
   perform public.ensure_player(p_guest_id, p_guest_name);
 
-  update public.race_rooms set guest_id = p_guest_id where id = v_room.id;
+  update public.race_rooms set guest_id = p_guest_id, last_activity_at = now() where id = v_room.id;
   return v_room.id;
 end;
 $$;
@@ -522,9 +526,9 @@ begin
   end if;
 
   if p_player_id = v_room.host_id then
-    update public.race_rooms set host_ship = p_ship_id where id = p_room_id;
+    update public.race_rooms set host_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
   else
-    update public.race_rooms set guest_ship = p_ship_id where id = p_room_id;
+    update public.race_rooms set guest_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
   end if;
 
   return true;
@@ -550,10 +554,10 @@ begin
 
   if p_player_id = v_room.host_id then
     if v_room.host_ship is null then return false; end if;
-    update public.race_rooms set host_ready = p_ready where id = p_room_id;
+    update public.race_rooms set host_ready = p_ready, last_activity_at = now() where id = p_room_id;
   elsif p_player_id = v_room.guest_id then
     if v_room.guest_ship is null then return false; end if;
-    update public.race_rooms set guest_ready = p_ready where id = p_room_id;
+    update public.race_rooms set guest_ready = p_ready, last_activity_at = now() where id = p_room_id;
   else
     return false;
   end if;
@@ -588,18 +592,69 @@ begin
   if not found then return; end if;
 
   if p_player_id = v_room.host_id then
-    -- Host abandona → sala cancelada
-    update public.race_rooms set status = 'cancelled' where id = p_room_id;
+    -- Host abandona → sala cancelada (cleanup la borrara fisicamente luego).
+    update public.race_rooms set status = 'cancelled', last_activity_at = now() where id = p_room_id;
   elsif p_player_id = v_room.guest_id then
     -- Guest abandona → libera slot, host queda
     update public.race_rooms
-      set guest_id = null, guest_ship = null, guest_ready = false
+      set guest_id = null, guest_ship = null, guest_ready = false, last_activity_at = now()
       where id = p_room_id;
   end if;
 end;
 $$;
 
+-- ── RPC: heartbeat — clientes pingean cada 30s para mantener viva la sala.
+-- Si dejan de pingear, cleanup_stale_rooms eliminara la fila.
+create or replace function public.touch_room(
+  p_room_id   text,
+  p_player_id text
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id;
+  if not found then return false; end if;
+  if p_player_id <> v_room.host_id and p_player_id <> v_room.guest_id then return false; end if;
+  if v_room.status not in ('lobby','starting','racing') then return false; end if;
+  update public.race_rooms set last_activity_at = now() where id = p_room_id;
+  return true;
+end;
+$$;
+
+-- ── RPC: detector + eliminador de salas fantasmas.
+-- Reglas:
+--   * lobby/starting sin actividad > 3 min → DELETE
+--   * racing sin actividad > 5 min        → DELETE (broadcast cayó)
+--   * finished/cancelled > 5 min          → DELETE
+-- Llamado oportunisticamente desde list_public_rooms() y create_race_room().
+create or replace function public.cleanup_stale_rooms()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count integer;
+begin
+  with deleted as (
+    delete from public.race_rooms
+    where (status in ('lobby','starting') and last_activity_at < now() - interval '3 minutes')
+       or (status = 'racing'              and last_activity_at < now() - interval '5 minutes')
+       or (status in ('finished','cancelled') and last_activity_at < now() - interval '5 minutes')
+    returning 1
+  )
+  select count(*) into v_count from deleted;
+  return v_count;
+end;
+$$;
+
 -- ── RPC: listar salas publicas (lobby browser)
+-- Ejecuta cleanup_stale_rooms() al inicio — ventana de cleanup recurrente
+-- sin necesidad de pg_cron. Cualquier visita al lobby dispara purga.
 create or replace function public.list_public_rooms()
 returns table (
   id          text,
@@ -613,6 +668,7 @@ security definer
 set search_path = public
 as $$
 begin
+  perform public.cleanup_stale_rooms();
   return query
     select rr.id, rr.host_id, p.display_name, rr.host_ship, rr.created_at
     from public.race_rooms rr
@@ -673,6 +729,8 @@ grant execute on function public.set_room_ship(text, text, text)                
 grant execute on function public.set_room_ready(text, text, boolean)                to anon, authenticated;
 grant execute on function public.leave_race_room(text, text)                        to anon, authenticated;
 grant execute on function public.list_public_rooms()                                to anon, authenticated;
+grant execute on function public.touch_room(text, text)                              to anon, authenticated;
+grant execute on function public.cleanup_stale_rooms()                               to anon, authenticated;
 grant execute on function public.record_online_match(text, integer, integer, numeric, numeric, text)
                                                                                     to anon, authenticated;
 

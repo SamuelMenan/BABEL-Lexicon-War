@@ -100,8 +100,14 @@ export const AssetLoader = {
    * Pass renderer to pre-upload textures to GPU — eliminates first-frame stutter.
    */
   async preload(mode, renderer = null) {
-    if (this._preloadPromise) return this._preloadPromise;
-    this._preloadPromise = (async () => {
+    // Per-mode idempotency. Previously a single global `_preloadPromise`
+    // meant the FIRST call (usually `preload(null)` for shared assets) blocked
+    // every later call with a real mode → racing/combat manifests never loaded.
+    // Now each mode key has its own promise.
+    if (!this._preloadPromises) this._preloadPromises = new Map();
+    const key = mode || '__shared__';
+    if (this._preloadPromises.has(key)) return this._preloadPromises.get(key);
+    const promise = (async () => {
       Bridge.setState({ isLoading: true, loadingMode: mode ?? null, loadingProgress: 0, loadingMessage: '' });
 
       await _stage('INIT', 0, 15, _jitter(320, 60), () => _sleep(0));
@@ -110,7 +116,8 @@ export const AssetLoader = {
         _buildGeometryCache();
       });
 
-      // Load all GLTFs for shared + this mode
+      // Load GLTFs for shared + this mode. `_loadGLTFAsync` is cache-aware so
+      // re-listing 'shared' across modes is free.
       await _stage('SCENE', 35, 68, _jitter(520, 110), async () => {
         const keys = ['shared'];
         if (mode) keys.push(mode);
@@ -127,7 +134,8 @@ export const AssetLoader = {
       Bridge.setState({ isLoading: false, loadingProgress: 100 });
       EventBus.emit(EventTypes.LOADING_COMPLETE, { mode });
     })();
-    return this._preloadPromise;
+    this._preloadPromises.set(key, promise);
+    return promise;
   },
 
   // ── Cache read/write ──────────────────────────────────────────────────────
@@ -146,4 +154,4 @@ export const AssetLoader = {
 };
 
 // Resetea el promise de preload al desmontar o destruir la escena si fuera necesario
-AssetLoader.resetPreload = () => { AssetLoader._preloadPromise = null; };
+AssetLoader.resetPreload = () => { AssetLoader._preloadPromises = new Map(); };

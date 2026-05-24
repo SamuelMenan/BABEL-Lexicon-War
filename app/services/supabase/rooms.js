@@ -83,6 +83,26 @@ export async function leaveRoom({ roomId, playerId }) {
   if (error) throw error;
 }
 
+// Heartbeat — clientes en RoomScreen/race lo llaman cada 30s. Bumps
+// last_activity_at; sin pings la sala se considera fantasma y cleanup la borra.
+export async function touchRoom({ roomId, playerId }) {
+  const sb = ensure();
+  const { error } = await sb.rpc('touch_room', {
+    p_room_id:   roomId,
+    p_player_id: playerId,
+  });
+  if (error) throw error;
+}
+
+// Dispara cleanup manual de salas fantasmas. list_public_rooms() ya lo invoca,
+// pero util para llamar al crear sala (purga antes de listar).
+export async function cleanupStaleRooms() {
+  const sb = ensure();
+  const { data, error } = await sb.rpc('cleanup_stale_rooms');
+  if (error) throw error;
+  return data ?? 0;
+}
+
 export async function fetchRoom(roomId) {
   const sb = ensure();
   const { data, error } = await sb.from('race_rooms').select('*').eq('id', roomId).single();

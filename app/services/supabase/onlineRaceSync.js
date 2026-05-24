@@ -15,7 +15,8 @@
 
 import { Bridge } from '../../../shared/bridge.js';
 import { EventBus } from '../../../shared/events.js';
-import { openRoomChannel } from './rooms.js';
+import { openRoomChannel, touchRoom } from './rooms.js';
+import { loadProfile } from '../../../shared/playerProfile.js';
 
 const TICK_HZ = 10;          // 10 broadcast/sec por jugador
 const TICK_MIN_INTERVAL_MS = 1000 / TICK_HZ;
@@ -50,6 +51,12 @@ export function createOnlineRaceSync(roomId) {
       onRematchDeclineCbs.forEach((cb) => cb(payload));
     }
   });
+
+  // Heartbeat anti-fantasma — bumps last_activity_at en DB cada 30s.
+  const profile = loadProfile();
+  const beat = () => touchRoom({ roomId, playerId: profile.playerId }).catch(() => {});
+  beat();
+  const heartbeatId = setInterval(beat, 30000);
 
   // Watchdog: si pasan >10s sin tick del rival, fire disconnect callbacks.
   const watchdog = setInterval(() => {
@@ -88,6 +95,7 @@ export function createOnlineRaceSync(roomId) {
     onRematchDecline: (cb) => { onRematchDeclineCbs.push(cb); },
     dispose: () => {
       clearInterval(watchdog);
+      clearInterval(heartbeatId);
       offTick(); offFinish();
       try { channel.unsub(); } catch { /* ignore */ }
       onTickCbs = []; onFinishCbs = []; onDisconnectCbs = [];

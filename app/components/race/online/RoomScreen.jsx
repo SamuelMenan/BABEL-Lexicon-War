@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { loadProfile } from '../../../../shared/playerProfile.js';
 import { getShipsForHangar } from '../../../../shared/shopCatalog.js';
 import {
-  fetchRoom, subscribeRoom, setRoomShip, setRoomReady, leaveRoom,
+  fetchRoom, subscribeRoom, setRoomShip, setRoomReady, leaveRoom, touchRoom,
 } from '../../../services/supabase/rooms.js';
+import { supabase } from '../../../services/supabase/client.js';
 
 // Sala pre-carrera. Cada jugador escoge nave (no la misma que el rival)
 // y marca ready. Cuando ambos ready + status='starting' → onMatchStart(room).
@@ -17,7 +18,7 @@ export default function RoomScreen({ roomId, role, onLeave, onMatchStart }) {
   const myId = profile.playerId;
   const ships = getShipsForHangar();
 
-  // Load + suscribir + poll fallback.
+  // Load + suscribir + poll fallback + heartbeat anti-fantasma.
   useEffect(() => {
     let mounted = true;
     setBusy(true);
@@ -33,8 +34,49 @@ export default function RoomScreen({ roomId, role, onLeave, onMatchStart }) {
     });
     // Poll fallback — Realtime puede no estar habilitado o perder eventos.
     const pollId = setInterval(reload, 2000);
-    return () => { mounted = false; unsub(); clearInterval(pollId); };
-  }, [roomId]);
+    // Heartbeat 30s — sin esto cleanup_stale_rooms borra la sala a los 3 min.
+    touchRoom({ roomId, playerId: myId }).catch(() => {});
+    const beatId = setInterval(() => {
+      touchRoom({ roomId, playerId: myId }).catch(() => {});
+    }, 30000);
+
+    // beforeunload — best-effort leave si jugador cierra tab/refresh.
+    // sendBeacon es sincronico durante unload (fetch async puede no completar).
+    const onBeforeUnload = () => {
+      try {
+        const url = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
+        const key = supabase?.supabaseKey;
+        const blob = new Blob(
+          [JSON.stringify({ p_room_id: roomId, p_player_id: myId })],
+          { type: 'application/json' },
+        );
+        if (url && key && 'sendBeacon' in navigator) {
+          // sendBeacon no soporta headers custom → fallback fetch keepalive.
+          fetch(url, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey':        key,
+              'Authorization': `Bearer ${key}`,
+            },
+            body: blob,
+          }).catch(() => {});
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('pagehide', onBeforeUnload);
+
+    return () => {
+      mounted = false;
+      unsub();
+      clearInterval(pollId);
+      clearInterval(beatId);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('pagehide', onBeforeUnload);
+    };
+  }, [roomId, myId]);
 
   // Disparar onMatchStart cuando ambos listos + status starting (fase 2).
   useEffect(() => {

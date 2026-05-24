@@ -112,12 +112,13 @@ export default function MatchResult({
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
   const syncOnce = useRef(false);
-  // En online, "restart" = proponer revancha. Coordinator singleton crea sala
-  // nueva + broadcast invite por canal viejo del match. Bridge.onlinePendingRoom
-  // hace que MainMenu auto-abra RoomScreen al volver. Sync sigue vivo 60s.
-  const restart = () => {
+  // En online, "restart" = proponer revancha. Esperamos createRoom + broadcast
+  // ANTES de salir al menu, asi MainMenu monta con onlinePendingRoom seteado
+  // y abre RoomScreen inmediato. Antes (sin await) MainMenu llegaba antes que
+  // la sala existiera → quedaba en menu principal.
+  const restart = async () => {
     if (onlineEnabled) {
-      proposeRematch();
+      try { await proposeRematch(); } catch { /* ignore */ }
       Bridge.commands.exitToMenu();
     } else {
       Bridge.commands.exitToHangar();
@@ -291,9 +292,20 @@ export default function MatchResult({
   /* ── Racing ──────────────────────────────────────────────── */
   const peak = peakWPM || effectiveWpm;
   const peakPct = Math.min(peak / 120 * 100, 100);
-  const titleText  = raceVictory ? 'VICTORIA' : 'TIEMPO AGOTADO';
-  const titleClass = raceVictory ? 'mr__title--victory' : 'mr__title--defeat';
-  const txStatus   = raceVictory ? 'COMPLETADA' : 'INTERRUMPIDA';
+  // En online el "raceVictory" offline (player vs IA opponent) no aplica —
+  // ganador real lo decide WPM Medio vs rival humano (onlineVerdict).
+  let titleText, titleClass, txStatus;
+  if (onlineEnabled && onlineVerdict) {
+    titleText  = onlineVerdict.label;  // GANASTE / PERDISTE / EMPATE
+    titleClass = onlineVerdict.kind === 'win'  ? 'mr__title--victory'
+              : onlineVerdict.kind === 'draw' ? 'mr__title--defeat'
+              : 'mr__title--defeat';
+    txStatus   = onlineVerdict.kind === 'win' ? 'GANADA' : onlineVerdict.kind === 'draw' ? 'EMPATE' : 'PERDIDA';
+  } else {
+    titleText  = raceVictory ? 'VICTORIA' : 'TIEMPO AGOTADO';
+    titleClass = raceVictory ? 'mr__title--victory' : 'mr__title--defeat';
+    txStatus   = raceVictory ? 'COMPLETADA' : 'INTERRUMPIDA';
+  }
 
   return (
     <div className="mr">
@@ -305,10 +317,9 @@ export default function MatchResult({
           <span className="mr__header-id">SES:{sessionId}</span>
         </div>
 
-        {/* Online verdict banner */}
+        {/* Online verdict banner — solo sub-info, titulo principal ya muestra GANASTE/PERDISTE */}
         {onlineVerdict && (
           <div className={`mr__online-banner mr__online-banner--${onlineVerdict.kind}`}>
-            <span className="mr__online-banner__verdict">{onlineVerdict.label}</span>
             <span className="mr__online-banner__sub">
               Tu WPM Medio {wpm ?? '--'} · Rival {onlineOpponentStats?.avgWpm ?? '--'}
             </span>

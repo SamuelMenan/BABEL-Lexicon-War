@@ -41,6 +41,8 @@ export default function MainMenu() {
 
   // Auto-open RoomScreen si Bridge tiene onlinePendingRoom (revancha aceptada
   // o propuesta enviada mientras MatchResult estaba visible).
+  // Tambien cierra RoomScreen si Bridge.onlineRoom se limpia (rival rechazo
+  // revancha → coordinator pone onlinePendingRoom=null + onlineRoom=null).
   useEffect(() => {
     const pending = Bridge.peekState().onlinePendingRoom;
     if (pending) {
@@ -53,6 +55,10 @@ export default function MainMenu() {
         setOnlineRoom(s.onlinePendingRoom);
         setOnlineLobby(true);
         clearPendingRoom();
+      }
+      // Coordinator pidio cerrar la sala (rival rechazo revancha, etc.).
+      if (s.onlineRoom === null && onlineRoom && s.onlineNotice) {
+        setOnlineRoom(null);
       }
     });
   }, [onlineRoom]);

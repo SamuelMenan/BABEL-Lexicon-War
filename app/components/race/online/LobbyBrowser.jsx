@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { loadProfile } from '../../../../shared/playerProfile.js';
 import {
-  createRoom, joinRoomById, joinRoomByCode, listPublicRooms,
+  createRoom, joinRoomById, joinRoomByCode, listPublicRooms, cleanupStaleRooms,
 } from '../../../services/supabase/rooms.js';
 import { getShipsForHangar } from '../../../../shared/shopCatalog.js';
 
@@ -32,6 +32,8 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   }, []);
 
   useEffect(() => {
+    // Cleanup explicito al abrir lobby + refresh + poll cada 5s.
+    cleanupStaleRooms().catch(() => {});
     refresh();
     const id = setInterval(refresh, 5000);
     return () => clearInterval(id);

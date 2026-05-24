@@ -76,10 +76,10 @@ const STORY = [
     text: 'Fundadores del Programa TYPO.',
   },
   {
-    text: 'Comprendieron que el Enjambre estaba compuesto por estructuras lingüisticas.',
+    text: 'Comprendieron que el Enjambre estaba compuesto por estructuras linguisticas.',
   },
   {
-    text: 'Y toda estructura lingüistica puede reproducirse.',
+    text: 'Y toda estructura linguistica puede reproducirse.',
   },
   {
     text: 'Si el nucleo exacto de una unidad era escrito con precision absoluta...',

@@ -65,8 +65,14 @@ create table if not exists public.match_results (
   peak_wpm         integer,
   time_elapsed     integer,
   grafemas_reward  integer,
+  words_destroyed  integer,
+  best_combo       integer,
   created_at       timestamptz not null default now()
 );
+
+-- Soft migration for pre-existing installations: add new combat-detail columns.
+alter table public.match_results add column if not exists words_destroyed integer;
+alter table public.match_results add column if not exists best_combo      integer;
 
 create index if not exists idx_match_results_mode_created_at on public.match_results (mode, created_at desc);
 create index if not exists idx_match_results_player_created_at on public.match_results (player_id, created_at desc);
@@ -95,7 +101,9 @@ create or replace function public.record_match_result(
   p_race_victory     boolean default null,
   p_peak_wpm         integer default null,
   p_time_elapsed     integer default null,
-  p_grafemas_reward  integer default null
+  p_grafemas_reward  integer default null,
+  p_words_destroyed  integer default null,
+  p_best_combo       integer default null
 )
 returns void
 language plpgsql
@@ -143,12 +151,14 @@ begin
   insert into public.match_results (
     id, session_id, player_id, display_name, mode,
     score, wpm, accuracy, wave, race_victory,
-    peak_wpm, time_elapsed, grafemas_reward
+    peak_wpm, time_elapsed, grafemas_reward,
+    words_destroyed, best_combo
   )
   values (
     p_session_id, p_session_id, p_player_id, p_display_name, p_mode,
     p_score, p_wpm, p_accuracy, p_wave, p_race_victory,
-    p_peak_wpm, p_time_elapsed, p_grafemas_reward
+    p_peak_wpm, p_time_elapsed, p_grafemas_reward,
+    p_words_destroyed, p_best_combo
   )
   on conflict (session_id) do update
     set player_id       = excluded.player_id,
@@ -161,14 +171,23 @@ begin
         race_victory    = excluded.race_victory,
         peak_wpm        = excluded.peak_wpm,
         time_elapsed    = excluded.time_elapsed,
-        grafemas_reward = excluded.grafemas_reward;
+        grafemas_reward = excluded.grafemas_reward,
+        words_destroyed = excluded.words_destroyed,
+        best_combo      = excluded.best_combo;
 end;
 $$;
 
 -- Permitir a anon + authenticated invocar la RPC. La RPC controla escritura.
-grant execute on function public.record_match_result(
+-- Si existe una versión vieja con menos params, primero la borramos para evitar
+-- conflicto por overload (PostgREST resolvería ambas).
+drop function if exists public.record_match_result(
   text, text, text, text, uuid, timestamptz, timestamptz,
   integer, integer, numeric, integer, boolean, integer, integer, integer
+);
+grant execute on function public.record_match_result(
+  text, text, text, text, uuid, timestamptz, timestamptz,
+  integer, integer, numeric, integer, boolean, integer, integer, integer,
+  integer, integer
 ) to anon, authenticated;
 
 -- ────────────────────────────────────────────────────────────────────
@@ -218,10 +237,10 @@ create or replace view public.leaderboard_daily as
 select
   dense_rank() over (
     partition by bucket_start, mode
-    order by total_score desc, max_peak_wpm desc, avg_accuracy desc
+    order by best_score desc, max_peak_wpm desc, avg_accuracy desc
   ) as rank,
   bucket_start, mode, player_id, display_name,
-  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at
+  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at, max_wave
 from (
   select
     date_trunc('day', created_at) as bucket_start,
@@ -229,6 +248,7 @@ from (
     max(display_name) as display_name,
     sum(coalesce(score, 0)) as total_score,
     max(coalesce(score, 0)) as best_score,
+    max(coalesce(wave,  0)) as max_wave,
     count(*) as games_played,
     avg(wpm) as avg_wpm,
     avg(accuracy) as avg_accuracy,
@@ -242,10 +262,10 @@ create or replace view public.leaderboard_weekly as
 select
   dense_rank() over (
     partition by bucket_start, mode
-    order by total_score desc, max_peak_wpm desc, avg_accuracy desc
+    order by best_score desc, max_peak_wpm desc, avg_accuracy desc
   ) as rank,
   bucket_start, mode, player_id, display_name,
-  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at
+  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at, max_wave
 from (
   select
     date_trunc('week', created_at) as bucket_start,
@@ -253,6 +273,7 @@ from (
     max(display_name) as display_name,
     sum(coalesce(score, 0)) as total_score,
     max(coalesce(score, 0)) as best_score,
+    max(coalesce(wave,  0)) as max_wave,
     count(*) as games_played,
     avg(wpm) as avg_wpm,
     avg(accuracy) as avg_accuracy,
@@ -266,10 +287,10 @@ create or replace view public.leaderboard_monthly as
 select
   dense_rank() over (
     partition by bucket_start, mode
-    order by total_score desc, max_peak_wpm desc, avg_accuracy desc
+    order by best_score desc, max_peak_wpm desc, avg_accuracy desc
   ) as rank,
   bucket_start, mode, player_id, display_name,
-  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at
+  total_score, best_score, games_played, avg_wpm, avg_accuracy, max_peak_wpm, last_played_at, max_wave
 from (
   select
     date_trunc('month', created_at) as bucket_start,
@@ -277,6 +298,7 @@ from (
     max(display_name) as display_name,
     sum(coalesce(score, 0)) as total_score,
     max(coalesce(score, 0)) as best_score,
+    max(coalesce(wave,  0)) as max_wave,
     count(*) as games_played,
     avg(wpm) as avg_wpm,
     avg(accuracy) as avg_accuracy,

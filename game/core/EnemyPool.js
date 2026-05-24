@@ -2,7 +2,7 @@
 // - prewarm(n): pre-instancia n enemigos inactivos (opcionalmente progresivo).
 // - acquire(word, position, type, speed): saca uno listo del free list.
 // - release(enemy): lo devuelve, oculta el mesh, no lo remueve del scene.
-// - expand dinámico si free list se vacía (con warning).
+// - expand dinamico si free list se vacia (con warning).
 
 import * as THREE from 'three';
 import { CombatEnemy, ENEMY_TYPES } from '../entities/CombatEnemy.js';
@@ -24,8 +24,8 @@ export class EnemyPool {
     for (let i = 0; i < n; i++) this._instantiate();
   }
 
-  // Allocation progresiva en N frames — útil para loading screen.
-  // perFrame: cuántos crear por tick. Retorna Promise resuelta al terminar.
+  // Allocation progresiva en N frames — util para loading screen.
+  // perFrame: cuantos crear por tick. Retorna Promise resuelta al terminar.
   prewarmProgressive(total = this._size, perFrame = 8) {
     return new Promise((resolve) => {
       let created = 0;
@@ -53,7 +53,7 @@ export class EnemyPool {
   acquire(word, position, type = ENEMY_TYPES.SCOUT, speed = 0) {
     let e = this._free.pop();
     if (!e) {
-      // expansión dinámica
+      // expansion dinamica
       this._expansions++;
       if (this._expansions <= 3 || this._expansions % 50 === 0) {
         console.warn(`[EnemyPool] expanded (${this._expansions}), size=${this._all.length + 1}`);

@@ -166,6 +166,9 @@ export async function initGame(mountEl) {
       isRunning: false, isPaused: false, gameOver: false,
       showShipSelection: false, pendingGameMode: null, gameMode: null,
       tutorialActive: null, deploymentPhase: null,
+      onlineEnabled: false, onlineRoom: null, onlineRole: null,
+      onlinePilot: null, onlineOpponentShip: null, onlineOpponentPilot: null,
+      onlineOpponentStats: null, onlineOpponentReady: false, onlineConnection: 'idle',
     });
   });
 
@@ -180,6 +183,10 @@ export async function initGame(mountEl) {
       isRunning: false, isPaused: false, gameOver: false,
       showShipSelection: true, pendingGameMode: mode ?? null, gameMode: null,
       tutorialActive: null, deploymentPhase: null,
+      // Limpiar estado online — sesion termino, no debe persistir a hangar.
+      onlineEnabled: false, onlineRoom: null, onlineRole: null,
+      onlinePilot: null, onlineOpponentShip: null, onlineOpponentPilot: null,
+      onlineOpponentStats: null, onlineOpponentReady: false, onlineConnection: 'idle',
     });
   });
 

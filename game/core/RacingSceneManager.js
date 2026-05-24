@@ -14,9 +14,9 @@ import { getSoftGlowTexture } from "../../shared/softVisuals.js";
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage","nave","propulsor"];
 const HOLE_NODE_NAME  = "Vortex_1";   // ancla del agujero negro dentro del GLB
 const TUNNEL_TARGET_SIZE = 280;        // tamaño aproximado mundo (era 32)
-const HOLE_WORLD_Z = -180;             // dónde queremos el vórtice en mundo (profundo, hacia -Z)
-const SHIP_SPAWN_Z  = -55;             // spawn lejano dentro del túnel (visible pero pequeño)
-const SHIP_TARGET_Z = -160;            // posición final cerca del vórtice (deja 20u para void anim)
+const HOLE_WORLD_Z = -180;             // donde queremos el vortice en mundo (profundo, hacia -Z)
+const SHIP_SPAWN_Z  = -55;             // spawn lejano dentro del tunel (visible pero pequeño)
+const SHIP_TARGET_Z = -160;            // posicion final cerca del vortice (deja 20u para void anim)
 
 const VOID_ANIM_DURATION = 3.2;
 
@@ -28,8 +28,8 @@ export class RacingSceneManager {
     this._particles=null; this._t=0; this._opponentDist=0;
     this._playerWordBurst=0; this._playerWordLead=0;
     this._prevSceneBackground=null; this._prevSceneFog=null;
-    // Bases XY/Y; Z se computa cada frame vía progressZ (lerp spawn→target).
-    // X balanceado: simétrico, espaciado moderado para no tapar HUD.
+    // Bases XY/Y; Z se computa cada frame via progressZ (lerp spawn→target).
+    // X balanceado: simetrico, espaciado moderado para no tapar HUD.
     this._playerBase   = new THREE.Vector3(-2.6,-0.9, SHIP_SPAWN_Z);
     this._opponentBase = new THREE.Vector3( 2.6,-0.1, SHIP_SPAWN_Z);
     this._smoothProgress=0;
@@ -80,14 +80,14 @@ export class RacingSceneManager {
     const state=Bridge.peekState(); const wpm=state.wpm||0;
     const flowActive = !!state.flowActive;
 
-    // Sync ritmo del vórtice con Flow — pulsa más rápido bajo Flow.
+    // Sync ritmo del vortice con Flow — pulsa mas rapido bajo Flow.
     if (this._tunnelMixer) this._tunnelMixer.timeScale = flowActive ? 0.32 : 0.12;
-    // Pulsación leve de la rim light al ritmo del player.
+    // Pulsacion leve de la rim light al ritmo del player.
     if (this._holeRimLight) {
       this._holeRimLight.intensity = 2.0 + Math.sin(this._t * (flowActive ? 6 : 2.4)) * 0.4;
     }
     this._updateTunnelMotes(delta, flowActive);
-    // Decay moderado → el empuje persiste como aceleración continua sin desaparecer rápido.
+    // Decay moderado → el empuje persiste como aceleracion continua sin desaparecer rapido.
     this._playerWordBurst=Math.max(0,this._playerWordBurst-delta*1.0);
     this._playerWordLead =Math.max(0,this._playerWordLead -delta*0.35);
 
@@ -97,14 +97,14 @@ export class RacingSceneManager {
     const progressRatio=THREE.MathUtils.clamp(playerDist/targetDist,0,1);
     const rawLead=THREE.MathUtils.clamp((playerDist-this._opponentDist)*0.012,-1.2,1.2);
 
-    // Lerp equilibrado: rápido suficiente para sentir avance, lento suficiente para no saltar.
+    // Lerp equilibrado: rapido suficiente para sentir avance, lento suficiente para no saltar.
     const lf=delta*0.9;
     this._smoothProgress+=(progressRatio-this._smoothProgress)*Math.min(lf*0.55,1);
     this._smoothLead    +=(rawLead-this._smoothLead)*Math.min(lf*0.6,1);
     this._smoothBurst   +=(this._playerWordBurst-this._smoothBurst)*Math.min(lf*0.85,1);
 
-    // Túnel se desplaza hacia cámara según progreso → da sensación clara de avance,
-    // como en racing games clásicos. Range 90u (tunnel completo "pasa" durante carrera).
+    // Tunel se desplaza hacia camara segun progreso → da sensacion clara de avance,
+    // como en racing games clasicos. Range 90u (tunnel completo "pasa" durante carrera).
     if (this._tunnelWrapper) {
       const tunnelBaseZ = (this._tunnelBaseZ ?? this._tunnelWrapper.position.z);
       if (this._tunnelBaseZ === undefined) this._tunnelBaseZ = this._tunnelWrapper.position.z;
@@ -113,7 +113,7 @@ export class RacingSceneManager {
     const progressPush =this._smoothProgress*24;
     // Magnitud alta (0.5) — empuje claro y visible por palabra.
     const typedAdvance =(this._playerWordLead+this._smoothBurst*0.6)*0.5;
-    // Z absoluto: spawn (lejano) → target (cerca vórtice).
+    // Z absoluto: spawn (lejano) → target (cerca vortice).
     const progressZ = THREE.MathUtils.lerp(SHIP_SPAWN_Z, SHIP_TARGET_Z, this._smoothProgress);
 
     this._raceState.t             = this._t;
@@ -132,7 +132,7 @@ export class RacingSceneManager {
     if(this._cam){
       const targetFOV=THREE.MathUtils.clamp(70+(wpm/40)*10,70,80);
       this._cam.setRacingFOV(targetFOV);
-      // Chase target = posición actual player (después de update). LookAt = vórtice.
+      // Chase target = posicion actual player (despues de update). LookAt = vortice.
       if (this._playerShip?.mesh) this._cam.setRacingChaseTarget(this._playerShip.mesh.position);
       if (this._holeWorldPos)     this._cam.setRacingLookAt(this._holeWorldPos);
       this._cam.setRacingVoidPhase(0);
@@ -172,11 +172,11 @@ export class RacingSceneManager {
       winnerShip.mesh.position.x = THREE.MathUtils.lerp(winnerStartX, 0, ease);
       winnerShip.mesh.position.y = THREE.MathUtils.lerp(winnerStartY, 0, ease);
 
-      // Escala hacia 0 en el último 40% — efecto de ser tragado.
+      // Escala hacia 0 en el ultimo 40% — efecto de ser tragado.
       const shrink = ease > 0.6 ? 1 - ((ease - 0.6) / 0.4) : 1;
       winnerShip.mesh.scale.setScalar(Math.max(0.02, shrink));
 
-      // Group queda en identidad (combat formula maneja nariz vía modelRoot).
+      // Group queda en identidad (combat formula maneja nariz via modelRoot).
       // No sumar π. Solo yaw correctivo pequeño para apuntar al hole, pitch/roll.
       const yawCorrection = Math.atan2(-winnerStartX, totalDistZ) * 1.6;
       winnerShip.mesh.rotation.x = -ease*0.4;
@@ -194,17 +194,14 @@ export class RacingSceneManager {
     }
 
     if(this._cam){
-      // Durante void anim: cámara sigue al ganador, FOV se cierra (zoom in al hole).
+      // Durante void anim: camara sigue al ganador y mira al hole.
+      // FOV se mantiene estable. Antes habia dos lerps en conflicto
+      // (75→45 y 75→125 en el mismo frame) que producian un crecimiento
+      // visual aparente de la nave antes de entrar al portal. La nave
+      // ya encoge via mesh.scale (lineas arriba) — no necesita zoom.
       if (winnerShip?.mesh) this._cam.setRacingChaseTarget(winnerShip.mesh.position);
       if (this._holeWorldPos) this._cam.setRacingLookAt(this._holeWorldPos);
-      // FOV target: cerrar de 75 → 45 (zoom dramático), voidPhase negativo no funciona,
-      // se usa setRacingFOV directo y voidPhase = 0 para no sumar boost.
-      const targetFOV = THREE.MathUtils.lerp(75, 45, ease);
-      this._cam.setRacingFOV(targetFOV);
       this._cam.setRacingVoidPhase(0);
-    }
-    if(this._cam){
-      this._cam.setRacingFOV(THREE.MathUtils.lerp(75, 125, ease)); // Aleja drásticamente la cámara para ver la escala
     }
 
     if(p>=1){
@@ -217,12 +214,16 @@ export class RacingSceneManager {
     this._prevSceneFog=this.scene.fog?this.scene.fog.clone():null;
 
     this.scene.background=new THREE.Color(0x000000);
-    this.scene.fog=null; // no fog — keeps scene crisp like the hangar
+    // Fog exponencial — oculta el borde lejano del tunel GLB (lip azul visible
+    // sin niebla) y atenua naves spawneadas en Z profundo durante entrada.
+    // Background sphere / starfields / motes desactivan fog en su material
+    // para conservar profundidad y brillo aditivo.
+    this.scene.fog=new THREE.FogExp2(0x000000, 0.0);
 
     // Background void sphere — material cached for mode re-entry.
     const bgMatKey='racing-bg-void';
     let bg=AssetLoader.getMat(bgMatKey);
-    if(!bg){ bg=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,depthWrite:false}); AssetLoader.setMat(bgMatKey,bg); }
+    if(!bg){ bg=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide,depthWrite:false,fog:false}); AssetLoader.setMat(bgMatKey,bg); }
     const bgGeoKey='sphere-bg-200';
     let bgGeo=AssetLoader.getGeo(bgGeoKey);
     if(!bgGeo){ bgGeo=new THREE.SphereGeometry(200,16,16); AssetLoader.setGeo(bgGeoKey,bgGeo); }
@@ -239,12 +240,12 @@ export class RacingSceneManager {
     // Point lights moved to RacingLightingRig
   }
   _buildTunnelMotes(){
-    // Motas internas del túnel — pequeños puntos volando hacia la cámara
-    // para reforzar sensación de movimiento. Cilindro entre SHIP_TARGET_Z y +20.
+    // Motas internas del tunel — pequeños puntos volando hacia la camara
+    // para reforzar sensacion de movimiento. Cilindro entre SHIP_TARGET_Z y +20.
     const COUNT = 280;
     const RADIUS = 26;          // radio del cilindro
-    const Z_NEAR = 12;          // detrás de cámara (z=8 → motas a z=12 ya invisibles)
-    const Z_FAR  = SHIP_TARGET_Z - 10;  // -170, pasado el vórtice
+    const Z_NEAR = 12;          // detras de camara (z=8 → motas a z=12 ya invisibles)
+    const Z_FAR  = SHIP_TARGET_Z - 10;  // -170, pasado el vortice
     const pos = new Float32Array(COUNT*3);
     for (let i=0;i<COUNT;i++){
       const a = Math.random()*Math.PI*2;
@@ -260,6 +261,7 @@ export class RacingSceneManager {
       transparent: true, opacity: 0.6,
       map: getSoftGlowTexture(), alphaMap: getSoftGlowTexture(),
       depthWrite: false, blending: THREE.AdditiveBlending, alphaTest: 0.01,
+      fog: false,    // motes conservan brillo independientemente de la niebla
     });
     const motes = new THREE.Points(geo, mat);
     motes.layers.enable(BLOOM_LAYER);
@@ -276,12 +278,12 @@ export class RacingSceneManager {
     const advance = speed * delta;
     for (let i=2; i<arr.length; i+=3) {
       arr[i] += advance;
-      if (arr[i] > Z_NEAR) arr[i] = Z_FAR + (arr[i] - Z_NEAR);  // wrap atrás
+      if (arr[i] > Z_NEAR) arr[i] = Z_FAR + (arr[i] - Z_NEAR);  // wrap atras
     }
     motes.geometry.attributes.position.needsUpdate = true;
   }
   _buildHoleRimLight(){
-    // Luz puntual en el vórtice — ilumina las naves desde el frente con tinte cyan/violet.
+    // Luz puntual en el vortice — ilumina las naves desde el frente con tinte cyan/violet.
     const light = new THREE.PointLight(0x9a66ff, 2.2, 220, 1.4);
     light.position.set(0, 0, HOLE_WORLD_Z);
     this._holeRimLight = light;
@@ -312,6 +314,7 @@ export class RacingSceneManager {
         color,size,sizeAttenuation:true,transparent:true,opacity,
         map:getSoftGlowTexture(),alphaMap:getSoftGlowTexture(),
         depthWrite:false,blending:THREE.AdditiveBlending,alphaTest:0.01,
+        fog:false,   // starfields no son afectados por niebla — profundidad cosmetica
       });
       AssetLoader.setMat(matKey,mat);
     }
@@ -330,7 +333,7 @@ export class RacingSceneManager {
     const root=gltf.scene;
 
     // Ocultar nodos por nombre exacto: nave decorativa del GLB y su propulsor.
-    // Filtrado por hint (SHIP_HINTS) también captura cualquier "nave/propulsor/ship".
+    // Filtrado por hint (SHIP_HINTS) tambien captura cualquier "nave/propulsor/ship".
     const HIDE_NAMES = new Set(['Nave_2','Propulsor_3']);
     root.traverse(node=>{
       if(HIDE_NAMES.has(node.name)){ node.visible=false; return; }
@@ -343,9 +346,9 @@ export class RacingSceneManager {
       node.layers.enable(BLOOM_LAYER);
     });
 
-    // Reset transforms del root antes de medir — el GLB está cacheado y puede
+    // Reset transforms del root antes de medir — el GLB esta cacheado y puede
     // venir ya escalado/posicionado de un deploy previo. Sin reset, maxDim se
-    // calcularía sobre el modelo ya transformado → re-scale incorrecto.
+    // calcularia sobre el modelo ya transformado → re-scale incorrecto.
     root.position.set(0,0,0);
     root.rotation.set(0,0,0);
     root.scale.setScalar(1);
@@ -361,14 +364,14 @@ export class RacingSceneManager {
     this._addToScene(wrapper);
 
     // Recentrar para que Vortex_1 quede en world (0, 0, HOLE_WORLD_Z).
-    // Sin esto el vórtice queda offset según el bbox del GLB.
+    // Sin esto el vortice queda offset segun el bbox del GLB.
     const hole = root.getObjectByName(HOLE_NODE_NAME);
     this._holeAnchor = hole || null;
     if (hole) {
       hole.updateWorldMatrix(true, false);
       const holeWorld = new THREE.Vector3();
       hole.getWorldPosition(holeWorld);
-      // Compensar para que el vórtice acabe exactamente en HOLE_WORLD_Z.
+      // Compensar para que el vortice acabe exactamente en HOLE_WORLD_Z.
       wrapper.position.set(-holeWorld.x, -holeWorld.y, HOLE_WORLD_Z - holeWorld.z);
     } else {
       wrapper.position.set(0,0,HOLE_WORLD_Z);

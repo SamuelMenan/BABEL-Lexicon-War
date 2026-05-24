@@ -16,7 +16,7 @@ import { KeybindService } from "../shared/keybindService.js";
 export default function App() {
   const [state, setState] = useState(() => Bridge.getState());
   const [showHelp, setShowHelp] = useState(false);
-  // Epilepsia + presentación SIEMPRE salen al cargar — no se persisten.
+  // Epilepsia + presentacion SIEMPRE salen al cargar — no se persisten.
   const [introStage, setIntroStage] = useState('warning');
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function App() {
     isRunning, isPaused, gameOver,
     score, wpm, accuracy, wave,
     gameMode, raceVictory, peakWPM, timeElapsed, grafemasReward,
-    wordsDestroyed, bestCombo,
+    wordsDestroyed, bestCombo, distanceTraveled,
     showShipSelection, tutorialActive,
   } = state;
 
@@ -114,6 +114,7 @@ export default function App() {
         peakWPM={peakWPM} timeElapsed={timeElapsed}
         grafemasReward={grafemasReward}
         wordsDestroyed={wordsDestroyed} bestCombo={bestCombo}
+        distanceTraveled={distanceTraveled}
       />
     );
   }

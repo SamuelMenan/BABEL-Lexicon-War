@@ -180,7 +180,7 @@ export const PHRASE_POOL_ES = [
   ['cada', 'unidad', 'del', 'enjambre', 'porta', 'una', 'palabra', 'como', 'nucleo'],
   ['esa', 'palabra', 'es', 'su', 'identidad', 'su', 'escudo', 'y', 'su', 'unica', 'vulnerabilidad'],
   ['el', 'enjambre', 'no', 'destruye', 'transforma'],
-  ['su', 'naturaleza', 'es', 'lingüistica', 'no', 'violenta'],
+  ['su', 'naturaleza', 'es', 'linguistica', 'no', 'violenta'],
   ['lo', 'que', 'no', 'puede', 'entender', 'lo', 'transforma', 'hasta', 'hacerlo', 'coherente'],
   ['el', 'lenguaje', 'habia', 'dejado', 'de', 'ser', 'herramienta'],
   ['habia', 'empezado', 'a', 'pensarse', 'a', 'si', 'mismo'],

@@ -11,6 +11,7 @@ import ShortcutsOverlay from "./components/common/ShortcutsOverlay.jsx";
 import EpilepsyWarning from "./components/EpilepsyWarning.jsx";
 import PresentationMenu from "./components/PresentationMenu.jsx";
 import RematchInviteModal from "./components/race/online/RematchInviteModal.jsx";
+import OnlineNoticeBanner from "./components/OnlineNoticeBanner.jsx";
 import { Bridge } from "../shared/bridge.js";
 import { KeybindService } from "../shared/keybindService.js";
 
@@ -80,7 +81,7 @@ export default function App() {
     wordsDestroyed, bestCombo, distanceTraveled,
     showShipSelection, tutorialActive,
     onlineEnabled, onlineOpponentStats, onlineRole,
-    onlinePendingInvite,
+    onlinePendingInvite, onlineNotice,
   } = state;
 
   if (introStage === 'warning') {
@@ -124,6 +125,7 @@ export default function App() {
           onlineRole={onlineRole}
         />
         <RematchInviteModal invite={onlinePendingInvite} />
+        <OnlineNoticeBanner notice={onlineNotice} />
       </>
     );
   }
@@ -137,6 +139,7 @@ export default function App() {
       {tutorialActive && <TutorialOverlay tutorialActive={tutorialActive} />}
       <ShortcutsOverlay open={showHelp} onClose={() => setShowHelp(false)} />
       <RematchInviteModal invite={onlinePendingInvite} />
+      <OnlineNoticeBanner notice={onlineNotice} />
     </>
   );
 }

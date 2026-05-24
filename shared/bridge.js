@@ -93,6 +93,7 @@ let _state = {
   // Rematch coordination — sobrevive a unmount de MainMenu durante MatchResult.
   onlinePendingInvite:  null,      // { newRoomId, fromPilot } — modal en App.jsx
   onlinePendingRoom:    null,      // { roomId, role } — MainMenu lo abre en mount
+  onlineNotice:         null,      // { kind, message } — banner global (rechazo de revancha, etc.)
 };
 
 const stateListeners = new Set();

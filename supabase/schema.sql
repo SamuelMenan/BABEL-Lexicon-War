@@ -307,3 +307,391 @@ from (
   from public.match_results
   group by 1, 2, 3
 ) monthly;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ONLINE RACE MODE — fase 1 (lobby + sala + pick nave)
+-- Diseño: docs/design/online-race-mode.md
+-- ════════════════════════════════════════════════════════════════════
+
+create table if not exists public.race_rooms (
+  id            text primary key,
+  code          text unique,                                  -- 4 digitos privadas; null para publicas
+  is_private    boolean not null default false,
+  host_id       text not null references public.players(id) on delete cascade,
+  guest_id      text references public.players(id) on delete set null,
+  host_ship     text,
+  guest_ship    text,
+  host_pilot    text not null default 'kael',
+  guest_pilot   text not null default 'voss',
+  host_ready    boolean not null default false,
+  guest_ready   boolean not null default false,
+  status        text not null default 'lobby'
+                check (status in ('lobby','starting','racing','finished','cancelled')),
+  created_at    timestamptz not null default now(),
+  started_at    timestamptz,
+  finished_at   timestamptz
+);
+
+create index if not exists idx_race_rooms_public
+  on public.race_rooms (created_at desc)
+  where status = 'lobby' and is_private = false;
+
+create table if not exists public.online_match_results (
+  id               text primary key,
+  room_id          text not null references public.race_rooms(id) on delete cascade,
+  host_player_id   text not null references public.players(id) on delete cascade,
+  guest_player_id  text not null references public.players(id) on delete cascade,
+  host_avg_wpm     integer,
+  guest_avg_wpm    integer,
+  host_accuracy    numeric(5,2),
+  guest_accuracy   numeric(5,2),
+  host_ship        text,
+  guest_ship       text,
+  winner_player_id text references public.players(id) on delete set null,
+  finished_at      timestamptz not null default now()
+);
+
+create index if not exists idx_online_match_winner
+  on public.online_match_results (winner_player_id, finished_at desc);
+
+-- ── RLS: lectura publica, escritura solo via RPC SECURITY DEFINER
+alter table public.race_rooms             enable row level security;
+alter table public.online_match_results   enable row level security;
+
+drop policy if exists rooms_select_all on public.race_rooms;
+create policy rooms_select_all on public.race_rooms for select using (true);
+
+drop policy if exists online_matches_select_all on public.online_match_results;
+create policy online_matches_select_all on public.online_match_results for select using (true);
+
+-- ── Realtime: publicar race_rooms para que postgres_changes funcione.
+-- Sin esto, subscribeRoom() no recibe eventos cuando guest entra o
+-- ship/ready se actualizan → UI queda desincronizada.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='race_rooms'
+  ) then
+    alter publication supabase_realtime add table public.race_rooms;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='online_match_results'
+  ) then
+    alter publication supabase_realtime add table public.online_match_results;
+  end if;
+end $$;
+
+-- Helper: asegura fila en players (upsert ligero) para FK de race_rooms.
+create or replace function public.ensure_player(
+  p_player_id    text,
+  p_display_name text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- No tocamos auth_user_id aqui: el indice unico parcial sobre auth_user_id
+  -- chocaria si el mismo uid esta vinculado a otro player.id local. La
+  -- vinculacion se hace en record_match_result (migracion suave).
+  insert into public.players (id, display_name, last_seen_at)
+  values (p_player_id, coalesce(nullif(p_display_name, ''), 'Pilot'), now())
+  on conflict (id) do update
+    set display_name = coalesce(nullif(excluded.display_name, ''), public.players.display_name),
+        last_seen_at = now();
+end;
+$$;
+
+-- Drop versiones previas (cambio de firma) para evitar overload ambigua.
+drop function if exists public.create_race_room(text, boolean, text);
+drop function if exists public.join_race_room(text, text);
+drop function if exists public.join_race_room_by_code(text, text);
+
+-- ── RPC: crear sala
+create or replace function public.create_race_room(
+  p_host_id       text,
+  p_host_name     text,
+  p_is_private    boolean default false,
+  p_code          text default null
+) returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room_id text;
+  v_code    text := p_code;
+begin
+  if p_is_private and (v_code is null or length(v_code) <> 4) then
+    raise exception 'Salas privadas requieren codigo de 4 digitos';
+  end if;
+
+  perform public.ensure_player(p_host_id, p_host_name);
+
+  v_room_id := replace(gen_random_uuid()::text, '-', '');
+
+  insert into public.race_rooms (id, code, is_private, host_id, status)
+  values (v_room_id, case when p_is_private then v_code else null end, p_is_private, p_host_id, 'lobby');
+
+  return v_room_id;
+end;
+$$;
+
+-- ── RPC: unirse por id (sala publica)
+create or replace function public.join_race_room(
+  p_room_id    text,
+  p_guest_id   text,
+  p_guest_name text
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id for update;
+  if not found then return false; end if;
+  if v_room.status <> 'lobby' then return false; end if;
+  if v_room.guest_id is not null and v_room.guest_id <> p_guest_id then return false; end if;
+  if v_room.host_id = p_guest_id then return false; end if;
+
+  perform public.ensure_player(p_guest_id, p_guest_name);
+
+  update public.race_rooms set guest_id = p_guest_id where id = p_room_id;
+  return true;
+end;
+$$;
+
+-- ── RPC: unirse por codigo (sala privada)
+create or replace function public.join_race_room_by_code(
+  p_code       text,
+  p_guest_id   text,
+  p_guest_name text
+) returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+begin
+  select * into v_room from public.race_rooms
+    where code = p_code and status = 'lobby' for update;
+  if not found then return null; end if;
+  if v_room.guest_id is not null and v_room.guest_id <> p_guest_id then return null; end if;
+  if v_room.host_id = p_guest_id then return null; end if;
+
+  perform public.ensure_player(p_guest_id, p_guest_name);
+
+  update public.race_rooms set guest_id = p_guest_id where id = v_room.id;
+  return v_room.id;
+end;
+$$;
+
+-- ── RPC: elegir nave (rechaza si rival ya escogio misma nave)
+create or replace function public.set_room_ship(
+  p_room_id   text,
+  p_player_id text,
+  p_ship_id   text
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+  v_other_ship text;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id for update;
+  if not found then return false; end if;
+  if v_room.status <> 'lobby' then return false; end if;
+
+  if p_player_id = v_room.host_id then
+    v_other_ship := v_room.guest_ship;
+  elsif p_player_id = v_room.guest_id then
+    v_other_ship := v_room.host_ship;
+  else
+    return false;
+  end if;
+
+  if v_other_ship is not null and v_other_ship = p_ship_id then
+    return false;  -- nave ocupada por el rival
+  end if;
+
+  if p_player_id = v_room.host_id then
+    update public.race_rooms set host_ship = p_ship_id where id = p_room_id;
+  else
+    update public.race_rooms set guest_ship = p_ship_id where id = p_room_id;
+  end if;
+
+  return true;
+end;
+$$;
+
+-- ── RPC: toggle ready
+create or replace function public.set_room_ready(
+  p_room_id   text,
+  p_player_id text,
+  p_ready     boolean
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id for update;
+  if not found then return false; end if;
+  if v_room.status <> 'lobby' then return false; end if;
+
+  if p_player_id = v_room.host_id then
+    if v_room.host_ship is null then return false; end if;
+    update public.race_rooms set host_ready = p_ready where id = p_room_id;
+  elsif p_player_id = v_room.guest_id then
+    if v_room.guest_ship is null then return false; end if;
+    update public.race_rooms set guest_ready = p_ready where id = p_room_id;
+  else
+    return false;
+  end if;
+
+  -- Si ambos ready, transicion a 'starting'
+  update public.race_rooms
+    set status = 'starting', started_at = now()
+    where id = p_room_id
+      and host_ready = true
+      and guest_ready = true
+      and host_ship is not null
+      and guest_ship is not null
+      and status = 'lobby';
+
+  return true;
+end;
+$$;
+
+-- ── RPC: abandonar sala
+create or replace function public.leave_race_room(
+  p_room_id   text,
+  p_player_id text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id for update;
+  if not found then return; end if;
+
+  if p_player_id = v_room.host_id then
+    -- Host abandona → sala cancelada
+    update public.race_rooms set status = 'cancelled' where id = p_room_id;
+  elsif p_player_id = v_room.guest_id then
+    -- Guest abandona → libera slot, host queda
+    update public.race_rooms
+      set guest_id = null, guest_ship = null, guest_ready = false
+      where id = p_room_id;
+  end if;
+end;
+$$;
+
+-- ── RPC: listar salas publicas (lobby browser)
+create or replace function public.list_public_rooms()
+returns table (
+  id          text,
+  host_id     text,
+  host_name   text,
+  host_ship   text,
+  created_at  timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+    select rr.id, rr.host_id, p.display_name, rr.host_ship, rr.created_at
+    from public.race_rooms rr
+    join public.players p on p.id = rr.host_id
+    where rr.status = 'lobby'
+      and rr.is_private = false
+      and rr.guest_id is null
+      and rr.created_at > now() - interval '30 minutes'
+    order by rr.created_at desc
+    limit 50;
+end;
+$$;
+
+-- ── RPC: registrar resultado online (lo llama el host al cerrar match)
+create or replace function public.record_online_match(
+  p_room_id          text,
+  p_host_avg_wpm     integer,
+  p_guest_avg_wpm    integer,
+  p_host_accuracy    numeric,
+  p_guest_accuracy   numeric,
+  p_winner_player_id text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_room public.race_rooms%rowtype;
+  v_id   text;
+begin
+  select * into v_room from public.race_rooms where id = p_room_id;
+  if not found then return; end if;
+  if v_room.guest_id is null then return; end if;
+
+  v_id := replace(gen_random_uuid()::text, '-', '');
+
+  insert into public.online_match_results (
+    id, room_id, host_player_id, guest_player_id,
+    host_avg_wpm, guest_avg_wpm, host_accuracy, guest_accuracy,
+    host_ship, guest_ship, winner_player_id
+  ) values (
+    v_id, p_room_id, v_room.host_id, v_room.guest_id,
+    p_host_avg_wpm, p_guest_avg_wpm, p_host_accuracy, p_guest_accuracy,
+    v_room.host_ship, v_room.guest_ship, p_winner_player_id
+  );
+
+  update public.race_rooms
+    set status = 'finished', finished_at = now()
+    where id = p_room_id;
+end;
+$$;
+
+grant execute on function public.ensure_player(text, text)                          to anon, authenticated;
+grant execute on function public.create_race_room(text, text, boolean, text)        to anon, authenticated;
+grant execute on function public.join_race_room(text, text, text)                   to anon, authenticated;
+grant execute on function public.join_race_room_by_code(text, text, text)           to anon, authenticated;
+grant execute on function public.set_room_ship(text, text, text)                    to anon, authenticated;
+grant execute on function public.set_room_ready(text, text, boolean)                to anon, authenticated;
+grant execute on function public.leave_race_room(text, text)                        to anon, authenticated;
+grant execute on function public.list_public_rooms()                                to anon, authenticated;
+grant execute on function public.record_online_match(text, integer, integer, numeric, numeric, text)
+                                                                                    to anon, authenticated;
+
+-- ── Vista: ranking de victorias online
+create or replace view public.leaderboard_online_wins as
+select
+  player_id, display_name, wins, matches,
+  round(100.0 * wins / nullif(matches, 0), 1) as win_rate
+from (
+  select
+    p.id as player_id,
+    max(p.display_name) as display_name,
+    count(*) filter (where omr.winner_player_id = p.id) as wins,
+    count(*) as matches
+  from public.players p
+  join public.online_match_results omr
+    on omr.host_player_id = p.id or omr.guest_player_id = p.id
+  group by p.id
+) agg
+where matches > 0;
+
+select id, display_name, auth_user_id from public.players where auth_user_id = auth.uid();

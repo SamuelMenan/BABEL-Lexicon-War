@@ -67,6 +67,10 @@ export async function initGame(mountEl) {
       peakWPM: null, timeElapsed: null, grafemasReward: null,
       raceVictory: null,
       wordsDestroyed: null, bestCombo: null,
+      // Combat-only warning state. Without reset it bleeds into race HUD
+      // (red LowHpFrame / proximity edges showing during a clean race).
+      lowHpLevel: 'none', proximityLevel: 'none',
+      warnings: { proximityLevel: 'none', lowHpLevel: 'none', lowHp: false, globalLevel: 'none' },
     });
 
     if (mode === GAME_MODES.RACING) {
@@ -101,7 +105,7 @@ export async function initGame(mountEl) {
       _pendingCountdownStart = () => sm.startCombatWithCountdown();
     }
 
-    // Animación de entrada por modo: combat ship _entryDuration=3.5s, racing player=5.0s.
+    // Animacion de entrada por modo: combat ship _entryDuration=3.5s, racing player=5.0s.
     // Esperar a que la nave aterrice antes de mostrar tutorial.
     Bridge.setState({ deploymentPhase: 'landing' });
     const landingMs = mode === 'racing' ? 5200 : 3800;
@@ -151,7 +155,7 @@ export async function initGame(mountEl) {
     Bridge.setState({ isRunning: false, isPaused: false, gameOver: true, ...result });
   });
 
-  // Salir desde pause al menú principal — destruye escena, limpia estado de juego.
+  // Salir desde pause al menu principal — destruye escena, limpia estado de juego.
   EventBus.on(EventTypes.EXIT_TO_MENU, () => {
     _activeScene?.destroy();
     _activeScene = null;

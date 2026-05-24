@@ -1,7 +1,7 @@
-// Diagramas compartidos entre múltiples tutoriales.
-// DiagBranch — selección de rama (combat / racing).
+// Diagramas compartidos entre multiples tutoriales.
+// DiagBranch — seleccion de rama (combat / racing).
 // DiagFlow   — multiplicador Flow (combat & racing).
-// DiagCountdown — preparación inicio (combat & racing).
+// DiagCountdown — preparacion inicio (combat & racing).
 
 import React from 'react';
 import { Defs, Frame, Label, VB } from '../../common/svg/HudPrimitives.jsx';
@@ -31,10 +31,10 @@ export function DiagBranch() {
           <path d="M0 4 L4 0 L74 0 L80 6 L80 96 L74 102 L4 102 L0 96 Z"
             fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
           <path d="M25 50 L36 60 L55 38" fill="none" stroke="var(--text-dim)" strokeWidth="2" />
-          <text x="40" y="80" textAnchor="middle" className="td-text-sm td-text-dim">YA SÉ</text>
+          <text x="40" y="80" textAnchor="middle" className="td-text-sm td-text-dim">YA SE</text>
           <text x="40" y="92" textAnchor="middle" className="td-text-sm td-text-dim">continuar</text>
         </g>
-        <text x="120" y="175" textAnchor="middle" className="td-text-sm td-text-dim">[ ELIGE UNA OPCIÓN ]</text>
+        <text x="120" y="175" textAnchor="middle" className="td-text-sm td-text-dim">[ ELIGE UNA OPCION ]</text>
       </Frame>
     </svg>
   );

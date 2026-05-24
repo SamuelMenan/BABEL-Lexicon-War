@@ -52,11 +52,11 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
 
   return (
     <div className="hangar-fx" role="toolbar" aria-label="Vista previa de FX">
-      <button className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label="Ciclar cámara">
+      <button className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label="Ciclar camara">
         <span className="hangar-fx__icon">📐</span>
-        <span className="hangar-fx__label">Cámara</span>
+        <span className="hangar-fx__label">Camara</span>
       </button>
-      <button className="hangar-fx__btn" onPointerDown={onResetCam} aria-label="Reset cámara">
+      <button className="hangar-fx__btn" onPointerDown={onResetCam} aria-label="Reset camara">
         <span className="hangar-fx__icon">⟲</span>
         <span className="hangar-fx__label">Reset</span>
       </button>
@@ -74,10 +74,10 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
         className={`hangar-fx__btn${laserOn ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onLaser}
         aria-pressed={laserOn}
-        aria-label="Toggle láser"
+        aria-label="Toggle laser"
       >
         <span className="hangar-fx__icon">⚡</span>
-        <span className="hangar-fx__label">Láser</span>
+        <span className="hangar-fx__label">Laser</span>
       </button>
       <button
         className={`hangar-fx__btn${flowOn ? ' hangar-fx__btn--on' : ''}`}

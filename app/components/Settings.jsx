@@ -134,8 +134,8 @@ const QUALITY_OPTS = [
 ];
 
 const DIFFICULTY_OPTS = [
-  { value: 'easy',   label: 'Básico' },
-  { value: 'normal', label: 'Estándar' },
+  { value: 'easy',   label: 'Basico' },
+  { value: 'normal', label: 'Estandar' },
   { value: 'hard',   label: 'Avanzado' },
   { value: 'elite',  label: 'Elite' },
 ];
@@ -189,19 +189,19 @@ function ProfileSection() {
           Repetir tutoriales
         </button>
       </Row>
-      <Row label="Mecanografía" hint="Repaso de postura y dedos">
+      <Row label="Mecanografia" hint="Repaso de postura y dedos">
         <button
           type="button"
           className="settings__reset"
           onClick={() => Bridge.commands.startTutorial('typing')}
         >
-          Ver tutorial de mecanografía
+          Ver tutorial de mecanografia
         </button>
       </Row>
 
       <div className="settings__danger-zone">
         <p className="settings__danger-note">
-          ◈ Reiniciar el perfil borra grafemas, inventario y estadísticas. Acción irreversible.
+          ◈ Reiniciar el perfil borra grafemas, inventario y estadisticas. Accion irreversible.
         </p>
         <button
           type="button"
@@ -233,7 +233,7 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
     setTab(initialTab);
   }, [initialTab]);
 
-  // Push 'modal' scope mientras Settings está montado.
+  // Push 'modal' scope mientras Settings esta montado.
   useEffect(() => {
     KeybindService.pushScope('modal');
     const offCancel = KeybindService.register('modal', 'CANCEL', () => onClose?.());
@@ -271,7 +271,7 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
         {/* Header */}
         <div className="settings__header">
           <div className="settings__header-left">
-            <span className="settings__header-label">◈ CONFIGURACIÓN DE SISTEMA · BABEL NRX</span>
+            <span className="settings__header-label">◈ CONFIGURACION DE SISTEMA · BABEL NRX</span>
             <h2 className="settings__title">Ajustes</h2>
           </div>
           <button type="button" className="settings__close" onClick={onClose} aria-label="Cerrar">
@@ -307,23 +307,23 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
                   onChange={v => set('visuals', 'quality', v)}
                 />
               </Row>
-              <Row label="Sombras Dinámicas" hint="Impacto en rendimiento: moderado">
+              <Row label="Sombras Dinamicas" hint="Impacto en rendimiento: moderado">
                 <SciToggle value={s.visuals.shadows} onChange={v => set('visuals', 'shadows', v)} />
               </Row>
-              <Row label="Post-Procesado" hint="Bloom, aberración cromática, viñeta">
+              <Row label="Post-Procesado" hint="Bloom, aberracion cromatica, viñeta">
                 <SciToggle value={s.visuals.postProcessing} onChange={v => set('visuals', 'postProcessing', v)} />
               </Row>
-              <Row label="Densidad de Partículas" hint="Efectos de propulsión y explosiones">
+              <Row label="Densidad de Particulas" hint="Efectos de propulsion y explosiones">
                 <SciSlider
                   value={s.visuals.particleDensity}
                   onChange={v => set('visuals', 'particleDensity', v)}
                   unit="%"
                 />
               </Row>
-              <Row label="Destellos de Pantalla" hint="Flashes al recibir daño o eventos críticos">
+              <Row label="Destellos de Pantalla" hint="Flashes al recibir daño o eventos criticos">
                 <SciToggle value={s.visuals.screenFlash} onChange={v => set('visuals', 'screenFlash', v)} />
               </Row>
-              <Row label="Vibración de Cámara" hint="Sacudida al impacto o muerte de nave">
+              <Row label="Vibracion de Camara" hint="Sacudida al impacto o muerte de nave">
                 <SciToggle value={s.visuals.cameraShake} onChange={v => set('visuals', 'cameraShake', v)} />
               </Row>
             </div>
@@ -338,7 +338,7 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
                   unit="%"
                 />
               </Row>
-              <Row label="Música" hint="Banda sonora ambiental del combate">
+              <Row label="Musica" hint="Banda sonora ambiental del combate">
                 <SciSlider
                   value={s.audio.music}
                   onChange={v => set('audio', 'music', v)}
@@ -360,14 +360,14 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
 
           {tab === 'protocol' && (
             <div className="settings__section" key="protocol">
-              <Row label="Dificultad Léxica" hint="Complejidad y longitud del vocabulario enemigo">
+              <Row label="Dificultad Lexica" hint="Complejidad y longitud del vocabulario enemigo">
                 <SciSelect
                   options={DIFFICULTY_OPTS}
                   value={s.protocol.lexicalDifficulty}
                   onChange={v => set('protocol', 'lexicalDifficulty', v)}
                 />
               </Row>
-              <Row label="Velocidad de Palabras" hint="Tiempo de exposición por objetivo activo">
+              <Row label="Velocidad de Palabras" hint="Tiempo de exposicion por objetivo activo">
                 <SciSlider
                   value={s.protocol.wordSpeed}
                   min={10}
@@ -376,13 +376,13 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
                   unit="%"
                 />
               </Row>
-              <Row label="Repetición Automática" hint="Repite palabras fallidas al final de oleada">
+              <Row label="Repeticion Automatica" hint="Repite palabras fallidas al final de oleada">
                 <SciToggle value={s.protocol.autoRepeat} onChange={v => set('protocol', 'autoRepeat', v)} />
               </Row>
-              <Row label="Mostrar Fonética" hint="Transcripción fonética bajo cada palabra">
+              <Row label="Mostrar Fonetica" hint="Transcripcion fonetica bajo cada palabra">
                 <SciToggle value={s.protocol.showPhonetics} onChange={v => set('protocol', 'showPhonetics', v)} />
               </Row>
-              <Row label="Modo de Procesamiento Léxico" hint="Normal: main thread · Paralelo: Web Worker (descarga el frame)">
+              <Row label="Modo de Procesamiento Lexico" hint="Normal: main thread · Paralelo: Web Worker (descarga el frame)">
                 <SciSelect
                   options={[
                     { value: EXECUTION_MODE.NORMAL,   label: 'Normal' },
@@ -399,7 +399,7 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
 
         {/* Footer */}
         <div className="settings__footer">
-          <span className="settings__footer-note">◈ Los cambios se aplican y guardan automáticamente</span>
+          <span className="settings__footer-note">◈ Los cambios se aplican y guardan automaticamente</span>
           <button type="button" className="settings__reset" onClick={handleReset}>
             Restaurar Valores
           </button>

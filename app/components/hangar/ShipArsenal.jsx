@@ -16,7 +16,7 @@ export default function ShipArsenal({ arsenal }) {
   return (
     <div className="hangar-arsenal">
       <div className="hangar-arsenal__header">
-        <span className="hangar-arsenal__title">ARSENAL · LÉXICO</span>
+        <span className="hangar-arsenal__title">ARSENAL · LEXICO</span>
         <span className="hangar-arsenal__count">{String(count).padStart(2, '0')}</span>
       </div>
       <div className="hangar-arsenal__divider" />

@@ -1,7 +1,7 @@
 import React from "react";
 
 // Panel lateral derecho de combate: muestra OLEADA + restos del enjambre.
-// Mismo tamaño/altura que CombatWPMSide para balance simétrico.
+// Mismo tamaño/altura que CombatWPMSide para balance simetrico.
 export default function CombatWaveSide({ wave = 0, swarmRemnants = 0 }) {
   return (
     <div className="r-side r-side--combat-right">

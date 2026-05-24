@@ -17,7 +17,7 @@ export default function HangarControls({
   if (!owned) {
     // Guest: clickeable (abre prompt). Resto: gated por canBuy.
     const tooltip = isGuest
-      ? 'Inicia sesión para comprar naves'
+      ? 'Inicia sesion para comprar naves'
       : (canBuy ? '' : `Faltan ${formatN(missing)} ₲`);
     const enabled = isGuest || canBuy;
     actionBtn = (
@@ -72,7 +72,7 @@ export default function HangarControls({
       </div>
 
       <p className="hangar-controls__hints">
-        ←/→ CAMBIAR NAVE · WASD ROTAR CÁMARA · C VISTAS · R RESET · ESC VOLVER · ↵ {owned ? (equipped ? 'DESPLEGAR' : 'EQUIPAR') : 'COMPRAR'} · ? ATAJOS
+        ←/→ CAMBIAR NAVE · WASD ROTAR CAMARA · C VISTAS · R RESET · ESC VOLVER · ↵ {owned ? (equipped ? 'DESPLEGAR' : 'EQUIPAR') : 'COMPRAR'} · ? ATAJOS
       </p>
     </div>
   );

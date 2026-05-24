@@ -13,7 +13,7 @@ export default function RaceParagraphBlock({
   const [offsetY, setOffsetY] = useState(0);
   const lastLineRef = useRef(0);
 
-  // Cuando cambia la palabra activa, mira si saltó de línea
+  // Cuando cambia la palabra activa, mira si salto de linea
   const measureScroll = useCallback(() => {
     const el = activeRef.current;
     if (!el) return;

@@ -4,9 +4,9 @@ import AuthModal from './AuthModal.jsx';
 
 const FEATURE_COPY = {
   purchase:    'comprar naves',
-  leaderboard: 'aparecer en la clasificación',
-  combat:      'guardar tu progreso de Combate en la clasificación',
-  racing:      'guardar tu progreso de Carrera en la clasificación',
+  leaderboard: 'aparecer en la clasificacion',
+  combat:      'guardar tu progreso de Combate en la clasificacion',
+  racing:      'guardar tu progreso de Carrera en la clasificacion',
   default:     'usar funciones de usuario',
 };
 
@@ -37,10 +37,10 @@ export default function GuestPromptModal({ feature = 'default', onClose, onAuthS
         <div className="guest-prompt__header">
           <span className="guest-prompt__label">◈ ACCESO REQUERIDO</span>
         </div>
-        <h3 className="guest-prompt__title">Función bloqueada</h3>
+        <h3 className="guest-prompt__title">Funcion bloqueada</h3>
         <p className="guest-prompt__text">
-          Estás en modo <strong>Invitado</strong>. Para <strong>{action}</strong> necesitas
-          iniciar sesión o crear una cuenta. Puedes seguir jugando Combate, Carrera y Hangar
+          Estas en modo <strong>Invitado</strong>. Para <strong>{action}</strong> necesitas
+          iniciar sesion o crear una cuenta. Puedes seguir jugando Combate, Carrera y Hangar
           sin cuenta.
         </p>
         <div className="guest-prompt__actions">
@@ -48,7 +48,7 @@ export default function GuestPromptModal({ feature = 'default', onClose, onAuthS
             Seguir como invitado
           </button>
           <button type="button" className="guest-prompt__btn guest-prompt__btn--primary" onClick={() => setShowAuth(true)}>
-            Iniciar sesión
+            Iniciar sesion
           </button>
         </div>
         <p className="guest-prompt__hint">ESC cerrar</p>

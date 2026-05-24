@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 const MESSAGES = [
   'ACCEDIENDO A HANGAR · TYPO',
   'ESCANEANDO UNIDADES DISPONIBLES',
-  'VERIFICANDO FIRMA LÉXICA',
-  'CALIBRANDO SINCRONIZACIÓN DE PILOTO',
+  'VERIFICANDO FIRMA LEXICA',
+  'CALIBRANDO SINCRONIZACION DE PILOTO',
   'PREPARANDO DESPLIEGUE · EN ESPERA',
 ];
 
@@ -44,7 +44,7 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
         <div className="loading-hairline" />
 
         <div className="loading-mode-badge">
-          <span className="loading-mode-badge__text">SELECCIÓN · DE · NAVE</span>
+          <span className="loading-mode-badge__text">SELECCION · DE · NAVE</span>
         </div>
 
         <div className="loading-hairline" />
@@ -75,7 +75,7 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
         <div className="loading-quote">
           <p className="loading-quote__line">"Error de sintaxis.</p>
           <p className="loading-quote__line">&nbsp;Coincidencia fallida."</p>
-          <p className="loading-quote__attr">- LYRA VOSS · ÚLTIMA TRANSMISIÓN</p>
+          <p className="loading-quote__attr">- LYRA VOSS · ULTIMA TRANSMISION</p>
         </div>
       </div>
 

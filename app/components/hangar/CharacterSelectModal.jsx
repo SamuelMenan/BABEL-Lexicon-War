@@ -46,7 +46,7 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
     >
       <div className="char-modal__panel" role="document" onClick={(e) => e.stopPropagation()}>
         <div className="char-modal__header">
-          <span className="char-modal__label">◈ SELECCIÓN · PILOTO</span>
+          <span className="char-modal__label">◈ SELECCION · PILOTO</span>
         </div>
 
         <h3 id="char-modal-title" className="char-modal__title">ELIGE TU PILOTO</h3>

@@ -43,9 +43,9 @@ export async function signUp({ email, password, displayName }) {
   if (error) return { ok: false, error };
   if (displayName) await persistDisplayName(displayName);
 
-  // Si "Confirm email" está OFF en Supabase, signUp devuelve session directa → listo.
-  // Si está ON, session viene null. Intentamos signIn para dev/local. Si falla
-  // (porque confirmación pendiente), devolvemos info para que UI lo muestre.
+  // Si "Confirm email" esta OFF en Supabase, signUp devuelve session directa → listo.
+  // Si esta ON, session viene null. Intentamos signIn para dev/local. Si falla
+  // (porque confirmacion pendiente), devolvemos info para que UI lo muestre.
   if (!data.session) {
     const fallback = await supabase.auth.signInWithPassword({ email, password });
     if (!fallback.error && fallback.data?.session) {
@@ -80,7 +80,7 @@ export async function signInWithGoogle() {
     options: { redirectTo },
   });
   if (error) return { ok: false, error };
-  // Browser redirige a Google. La sesión se resuelve en el callback al volver.
+  // Browser redirige a Google. La sesion se resuelve en el callback al volver.
   return { ok: true, data };
 }
 
@@ -88,7 +88,7 @@ export async function signOut() {
   if (!supabase) return notReady();
   const { error } = await supabase.auth.signOut();
   if (error) return { ok: false, error };
-  // Al cerrar sesión: reset perfil local a Invitado. Borra grafemas, naves
+  // Al cerrar sesion: reset perfil local a Invitado. Borra grafemas, naves
   // compradas y stats — el invitado arranca limpio.
   try { EconomySystem.reset(); } catch (e) { console.warn('[auth] reset failed', e); }
   return { ok: true };
@@ -109,7 +109,7 @@ export function applyAuthenticatedProfile({ user, displayName }) {
 // Display name persiste en perfil local + user_metadata para mostrarlo offline.
 export async function updateDisplayName(displayName) {
   if (!displayName || typeof displayName !== 'string') {
-    return { ok: false, error: { message: 'Nombre vacío.' } };
+    return { ok: false, error: { message: 'Nombre vacio.' } };
   }
   await persistDisplayName(displayName);
   if (!supabase) return { ok: true, skipped: true };

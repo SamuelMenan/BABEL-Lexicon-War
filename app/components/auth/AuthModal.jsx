@@ -31,11 +31,11 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
         ? await signUp({ email, password, displayName: displayName || null })
         : await signIn({ email, password });
       if (!res.ok) {
-        setError(res.error?.message || 'No se pudo completar la operación.');
+        setError(res.error?.message || 'No se pudo completar la operacion.');
         return;
       }
       if (mode === 'signup' && !res.session) {
-        setInfo('Cuenta creada. Revisa tu email para confirmar (si la verificación está activada).');
+        setInfo('Cuenta creada. Revisa tu email para confirmar (si la verificacion esta activada).');
         return;
       }
       onSuccess?.(res.user);
@@ -62,7 +62,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
       setError(res.error?.message || 'No se pudo iniciar con Google.');
       return;
     }
-    // Redirige a Google. Al volver, onAuthChange dispara onSuccess vía MainMenu.
+    // Redirige a Google. Al volver, onAuthChange dispara onSuccess via MainMenu.
   }
 
   // Evita que KeybindService (window keydown) consuma Backspace/letras dentro de inputs.
@@ -87,7 +87,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
             type="button"
             className={`auth-modal__tab${mode === 'signin' ? ' auth-modal__tab--active' : ''}`}
             onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
-          >Iniciar sesión</button>
+          >Iniciar sesion</button>
           <button
             type="button"
             className={`auth-modal__tab${mode === 'signup' ? ' auth-modal__tab--active' : ''}`}

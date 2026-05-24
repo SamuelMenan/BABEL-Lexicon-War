@@ -48,7 +48,7 @@ export default function MainMenu() {
   // KbNav activate (menu) + KeybindService CONFIRM (hangar) en cascada.
   const deferred = (fn) => () => setTimeout(fn, 0);
 
-  // Si invitado: muestra modal y al "Seguir como invitado" o login exitoso, ejecuta acción.
+  // Si invitado: muestra modal y al "Seguir como invitado" o login exitoso, ejecuta accion.
   const gatedByGuest = (feature, action) => () => {
     if (!authUser) {
       setGuestPrompt({ feature, onProceed: action });
@@ -76,7 +76,7 @@ export default function MainMenu() {
     },
     {
       id: 'settings',
-      label: 'Configuración',
+      label: 'Configuracion',
       desc: 'Controles, audio, visuales y atajos.',
       glyph: '⚙',
       accent: 'var(--text-dim)',
@@ -84,7 +84,7 @@ export default function MainMenu() {
     },
     {
       id: 'ranking',
-      label: 'Clasificación',
+      label: 'Clasificacion',
       desc: 'Diario, semanal y mensual por modo.',
       glyph: '⌘',
       accent: 'var(--col-primary)',
@@ -107,7 +107,7 @@ export default function MainMenu() {
         <span>BABEL · LEXICON WAR</span>
       </header>
 
-      {/* Auth pill — siempre visible; modal avisa si Supabase no está configurado */}
+      {/* Auth pill — siempre visible; modal avisa si Supabase no esta configurado */}
       <div className="auth-pill">
         {authUser ? (
           <>
@@ -118,12 +118,12 @@ export default function MainMenu() {
               type="button"
               className="auth-pill__btn auth-pill__btn--ghost"
               onClick={async () => { await signOut(); setAuthUser(null); }}
-            >Cerrar sesión</button>
+            >Cerrar sesion</button>
           </>
         ) : (
           <>
             <button type="button" className="auth-pill__btn" onClick={() => setAuthModal('signin')}>
-              Iniciar sesión
+              Iniciar sesion
             </button>
             <button type="button" className="auth-pill__btn auth-pill__btn--ghost" onClick={() => setAuthModal('signup')}>
               Registrarse
@@ -153,7 +153,7 @@ export default function MainMenu() {
           onClose={() => {
             const proceed = guestPrompt.onProceed;
             setGuestPrompt(null);
-            // Cierra sin login → ejecuta acción igual (invitado puede jugar).
+            // Cierra sin login → ejecuta accion igual (invitado puede jugar).
             proceed?.();
           }}
           onAuthSuccess={(user) => {

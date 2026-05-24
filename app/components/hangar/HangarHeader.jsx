@@ -12,7 +12,7 @@ export default function HangarHeader({ ship, character }) {
           <span className="hangar-header__pilot">{pilotName}</span>
           <span className="hangar-header__pilot-id">{pilotCode} / {pilotRole.toUpperCase()}</span>
           <span className="hangar-header__pilot-ship">NAVE · {ship?.name?.toUpperCase() || '—'}</span>
-          <span className="hangar-header__session">SESIÓN · 01 · hangar · orbital</span>
+          <span className="hangar-header__session">SESION · 01 · hangar · orbital</span>
         </div>
 
         <div className="hangar-header__center">

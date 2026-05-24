@@ -39,7 +39,7 @@ export default function LeaderboardModal({ onClose }) {
       .catch((err) => {
         if (!alive) return;
         setRows([]);
-        setError(err?.message || 'No se pudo cargar la clasificación.');
+        setError(err?.message || 'No se pudo cargar la clasificacion.');
       })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
@@ -51,7 +51,7 @@ export default function LeaderboardModal({ onClose }) {
     <div className="lb-modal" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="lb-modal__panel" onClick={(e) => e.stopPropagation()}>
         <div className="lb-modal__header">
-          <span className="lb-modal__label">◈ CLASIFICACIÓN · TOP 10</span>
+          <span className="lb-modal__label">◈ CLASIFICACION · TOP 10</span>
           <button type="button" className="lb-modal__close" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
 
@@ -85,7 +85,7 @@ export default function LeaderboardModal({ onClose }) {
         </div>
 
         <div className="lb-modal__body">
-          {loading && <div className="lb-modal__state">Cargando clasificación…</div>}
+          {loading && <div className="lb-modal__state">Cargando clasificacion…</div>}
           {!loading && error && <div className="lb-modal__state lb-modal__state--err">{error}</div>}
           {!loading && !error && rows.length === 0 && (
             <div className="lb-modal__state">Sin partidas registradas para este filtro.</div>
@@ -103,7 +103,7 @@ export default function LeaderboardModal({ onClose }) {
                     {fmt.format(row.games_played ?? 0)} partidas · Total {fmt.format(row.total_score ?? 0)}
                   </div>
                   <div className="lb-row__sub">
-                    WPM medio {Math.round(row.avg_wpm ?? 0)} · Precisión {Math.round(row.avg_accuracy ?? 0)}% · Pico {Math.round(row.max_peak_wpm ?? 0)}
+                    WPM medio {Math.round(row.avg_wpm ?? 0)} · Precision {Math.round(row.avg_accuracy ?? 0)}% · Pico {Math.round(row.max_peak_wpm ?? 0)}
                   </div>
                 </div>
                 <div className="lb-row__score">

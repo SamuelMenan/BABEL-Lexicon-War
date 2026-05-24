@@ -9,7 +9,7 @@ export default function PilotNameEditor({ initial = '', onSaved }) {
 
   async function save() {
     setMsg(null); setErr(null);
-    if (!name.trim()) { setErr('Nombre vacío.'); return; }
+    if (!name.trim()) { setErr('Nombre vacio.'); return; }
     setBusy(true);
     const res = await updateDisplayName(name.trim());
     setBusy(false);

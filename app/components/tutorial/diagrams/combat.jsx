@@ -40,10 +40,10 @@ export function DiagObjective() {
           <line x1="0" y1="-46" x2="0" y2="-34" stroke="var(--col-warning)" />
           <line x1="0" y1="46"  x2="0" y2="34"  stroke="var(--col-warning)" />
         </g>
-        <Enemy x="120" y="90" scale="1.3" word="LÉXICO" />
+        <Enemy x="120" y="90" scale="1.3" word="LEXICO" />
         <g transform="translate(34 158)">
           <rect width="172" height="22" rx="1" fill="rgba(0,0,0,0.6)" stroke="var(--col-primary)" strokeOpacity="0.5" />
-          <text x="10" y="15" className="td-text td-text-primary">LÉXIC</text>
+          <text x="10" y="15" className="td-text td-text-primary">LEXIC</text>
           <rect x="52" y="6" width="2" height="11" fill="var(--col-primary)" className="td-blink" />
           <text x="160" y="15" textAnchor="end" className="td-text-sm td-text-dim">5/6</text>
         </g>
@@ -80,7 +80,7 @@ export function DiagLifeBar() {
           <text x="0" y="0" className="td-text-sm td-text-dim">Si baja a cero, pierdes la nave.</text>
           <text x="0" y="18" className="td-text-sm td-text-dim">Los golpes enemigos reducen</text>
           <text x="0" y="36" className="td-text-sm td-text-dim">la barra.</text>
-          <text x="0" y="54" className="td-text-sm td-text-warning">Mantén el HP alto y elimina</text>
+          <text x="0" y="54" className="td-text-sm td-text-warning">Manten el HP alto y elimina</text>
           <text x="0" y="72" className="td-text-sm td-text-warning">amenazas antes que te alcancen.</text>
         </g>
       </Frame>
@@ -116,7 +116,7 @@ export function DiagWaves() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// PROGRESIÓN DE OLEADAS" tone="primary" />
+        <Label text="// PROGRESION DE OLEADAS" tone="primary" />
         <g transform="translate(28 40)">
           <text x="0" y="0" className="td-text-sm td-text-dim">OLEADA</text>
           <text x="0" y="32" className="td-text-xl td-text-primary">07</text>

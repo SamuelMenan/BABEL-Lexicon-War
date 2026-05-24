@@ -44,7 +44,7 @@ export function DiagHangarSlots() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// SELECCIÓN · PILOTO" tone="primary" />
+        <Label text="// SELECCION · PILOTO" tone="primary" />
 
         {/* Tarjeta Kael — activa */}
         <g transform="translate(20 34)" className="td-pulse">

@@ -1,7 +1,7 @@
 import React from "react";
 
 // Mirror del DistanceBar — muestra distancia/progreso del oponente en lado derecho.
-// Recibe distanceOpponent + targetDistance. Estilo idéntico al lado izquierdo.
+// Recibe distanceOpponent + targetDistance. Estilo identico al lado izquierdo.
 export default function RaceOpponentDistanceBar({ distanceOpponent = 0, targetDistance = 500 }) {
   const pct = Math.min(100, ((distanceOpponent || 0) / Math.max(1, targetDistance || 500)) * 100);
   const near = pct >= 85;

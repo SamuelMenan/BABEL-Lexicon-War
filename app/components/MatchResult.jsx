@@ -6,7 +6,7 @@ import { saveMatchResult } from "../services/supabase/leaderboard.js";
 
 function ResultActions({ onMenu, onRetry }) {
   const items = [
-    { id: 'menu',  label: 'Menú Principal', variant: 'secondary', action: onMenu },
+    { id: 'menu',  label: 'Menu Principal', variant: 'secondary', action: onMenu },
     { id: 'retry', label: 'Reintentar',     variant: 'primary',   action: onRetry },
   ];
   return (
@@ -77,8 +77,8 @@ function GrafemaBreakdown({ reward }) {
   const rows = [
     ['Carrera completada',        b.base],
     [`WPM pico ${b.wpm ?? ''}`,   b.bWpm],
-    [`Precisión ${b.accuracy != null ? Math.round(b.accuracy * 100) + '%' : ''}`, b.bAcc],
-    [`Posición ${b.position ?? '--'}`, b.bPos],
+    [`Precision ${b.accuracy != null ? Math.round(b.accuracy * 100) + '%' : ''}`, b.bAcc],
+    [`Posicion ${b.position ?? '--'}`, b.bPos],
   ].filter(([, v]) => v > 0);
 
   return (
@@ -105,6 +105,7 @@ export default function MatchResult({
   raceVictory, peakWPM, timeElapsed, gameMode,
   wordsDestroyed, bestCombo,
   grafemasReward,
+  distanceTraveled,
 }) {
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
@@ -114,7 +115,12 @@ export default function MatchResult({
 
   const effectiveWpm = wpm ?? 0;
   const effectiveAcc = accuracy ?? 0;
-  const grade = calcGrade(effectiveWpm, effectiveAcc);
+  // Display value: distingue null (sin dato) de 0 (typed nada). null → '--', 0 → 0.
+  const wpmDisplay = (wpm == null) ? '--' : wpm;
+  // Grade uses peak when final WPM decayed to 0 (no typing in last 5s before
+  // race timeout / death cinematic). Avoids always-D on otherwise good runs.
+  const gradeWpm = effectiveWpm > 0 ? effectiveWpm : (peakWPM ?? 0);
+  const grade = calcGrade(gradeWpm, effectiveAcc);
   const gradeClass = `mr__grade--${grade.toLowerCase()}`;
 
   const wpmPct  = Math.min(effectiveWpm / 120 * 100, 100);
@@ -178,21 +184,21 @@ export default function MatchResult({
 
           {/* Header */}
           <div className="mr__header">
-            <span className="mr__header-label">◈ Análisis Post-Misión · Protocolo Léxico NRX</span>
+            <span className="mr__header-label">◈ Analisis Post-Mision · Protocolo Lexico NRX</span>
             <span className="mr__header-id">SES:{sessionId}</span>
           </div>
 
           {/* Title row */}
           <div className="mr__title-row">
             <div>
-              <h1 className="mr__title mr__title--defeat">MISIÓN TERMINADA</h1>
+              <h1 className="mr__title mr__title--defeat">MISION TERMINADA</h1>
               <span className={`mr__core mr__core--${coreStatus.toLowerCase()}`}>
-                ◈ NÚCLEO LÉXICO: {coreStatus}
+                ◈ NUCLEO LEXICO: {coreStatus}
               </span>
             </div>
             <div className="mr__grade-wrap">
               <span className={`mr__grade ${gradeClass}`}>{grade}</span>
-              <span className="mr__grade-label">Clasificación</span>
+              <span className="mr__grade-label">Clasificacion</span>
             </div>
           </div>
 
@@ -201,17 +207,17 @@ export default function MatchResult({
             <StatPanel
               label="Oleada Alcanzada"
               value={wave ?? '--'}
-              sub="ÚLTIMA DEFENSA ACTIVA"
+              sub="ULTIMA DEFENSA ACTIVA"
             />
             <StatPanel
-              label="WPM"
-              value={effectiveWpm || '--'}
-              sub="PALABRAS / MINUTO"
+              label="WPM Medio"
+              value={wpmDisplay}
+              sub="PROMEDIO POR MINUTO"
             />
             <StatPanel
-              label="Precisión"
+              label="Precision"
               value={accuracy != null ? `${accuracy}%` : '--'}
-              sub="ÍNDICE DE IMPACTO"
+              sub="INDICE DE IMPACTO"
             />
             <StatPanel
               label="Palabras Destruidas"
@@ -222,13 +228,13 @@ export default function MatchResult({
             <StatPanel
               label="Mayor Combo"
               value={bestCombo ?? '--'}
-              sub="CADENA MÁXIMA"
+              sub="CADENA MAXIMA"
               dim
             />
             <StatPanel
               label="Tiempo de Vuelo"
               value={fmtTime(timeElapsed)}
-              sub="DURACIÓN OPERACIONAL"
+              sub="DURACION OPERACIONAL"
               dim
             />
           </div>
@@ -241,7 +247,7 @@ export default function MatchResult({
               <span className="mr__bar-val">{effectiveWpm || '--'}</span>
             </div>
             <div className="mr__bar-row">
-              <span className="mr__bar-name">Precisión</span>
+              <span className="mr__bar-name">Precision</span>
               <AnimatedBar pct={accPct} variant={accVariant(accPct)} />
               <span className="mr__bar-val">{accuracy != null ? `${accuracy}%` : '--'}</span>
             </div>
@@ -273,7 +279,7 @@ export default function MatchResult({
 
         {/* Header */}
         <div className="mr__header">
-          <span className="mr__header-label">◈ Registro de Transmisión · Protocolo de Carrera</span>
+          <span className="mr__header-label">◈ Registro de Transmision · Protocolo de Carrera</span>
           <span className="mr__header-id">SES:{sessionId}</span>
         </div>
 
@@ -282,12 +288,12 @@ export default function MatchResult({
           <div>
             <h1 className={`mr__title ${titleClass}`}>{titleText}</h1>
             <span className={`mr__core mr__core--${raceVictory ? 'stable' : 'critical'}`}>
-              ◈ TRANSMISIÓN: {txStatus}
+              ◈ TRANSMISION: {txStatus}
             </span>
           </div>
           <div className="mr__grade-wrap">
             <span className={`mr__grade ${gradeClass}`}>{grade}</span>
-            <span className="mr__grade-label">Clasificación</span>
+            <span className="mr__grade-label">Clasificacion</span>
           </div>
         </div>
 
@@ -295,33 +301,33 @@ export default function MatchResult({
         <div className="mr__stats">
           <StatPanel
             label="Distancia"
-            value={<>{score ?? '--'}<span style={{ fontSize: '1rem' }}> / 500</span></>}
+            value={<>{distanceTraveled ?? 500}<span style={{ fontSize: '1rem' }}> / 500</span></>}
             sub="UNIDADES RECORRIDAS"
           />
           <StatPanel
             label="WPM Pico"
             value={peak || '--'}
-            sub="VELOCIDAD MÁXIMA"
+            sub="VELOCIDAD MAXIMA"
           />
           <StatPanel
-            label="Precisión"
+            label="Precision"
             value={accuracy != null ? `${accuracy}%` : '--'}
-            sub="ÍNDICE DE IMPACTO"
+            sub="INDICE DE IMPACTO"
           />
           <StatPanel
-            label="WPM Final"
-            value={effectiveWpm || '--'}
-            sub="VELOCIDAD AL CIERRE"
+            label="WPM Medio"
+            value={wpmDisplay}
+            sub="PROMEDIO POR MINUTO"
             dim
           />
           <StatPanel
             label="Tiempo de Vuelo"
             value={fmtTime(timeElapsed)}
-            sub="DURACIÓN OPERACIONAL"
+            sub="DURACION OPERACIONAL"
             dim
           />
           <StatPanel
-            label="Clasificación"
+            label="Clasificacion"
             value={<span className={gradeClass} style={{ fontSize: '2rem' }}>{grade}</span>}
             sub="RENDIMIENTO GLOBAL"
             dim
@@ -336,7 +342,7 @@ export default function MatchResult({
             <span className="mr__bar-val">{peak || '--'}</span>
           </div>
           <div className="mr__bar-row">
-            <span className="mr__bar-name">Precisión</span>
+            <span className="mr__bar-name">Precision</span>
             <AnimatedBar pct={accPct} variant={accVariant(accPct)} />
             <span className="mr__bar-val">{accuracy != null ? `${accuracy}%` : '--'}</span>
           </div>
@@ -351,7 +357,7 @@ export default function MatchResult({
           </p>
           <div className="mr__actions">
             <button className="mr__btn mr__btn--secondary" onClick={toMenu}>
-              Menú Principal
+              Menu Principal
             </button>
             <button className="mr__btn mr__btn--primary" onClick={restart}>
               Reintentar

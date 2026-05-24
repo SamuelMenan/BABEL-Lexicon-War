@@ -5,7 +5,7 @@ import { EconomySystem } from '../../../game/systems/EconomySystem.js';
 
 const SCOPE_ORDER = [
   { id: 'global',   label: 'Globales' },
-  { id: 'menu',     label: 'Menú' },
+  { id: 'menu',     label: 'Menu' },
   { id: 'hangar',   label: 'Hangar' },
   { id: 'tutorial', label: 'Tutorial' },
   { id: 'modal',    label: 'Modal' },

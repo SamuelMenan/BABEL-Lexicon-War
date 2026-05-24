@@ -68,16 +68,16 @@ export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
           <div className="epilepsy__body">
             <p>
               Este juego contiene efectos visuales que pueden incluir patrones
-              de luz intermitente y destellos que podrían provocar convulsiones
+              de luz intermitente y destellos que podrian provocar convulsiones
               en personas con epilepsia fotosensible.
             </p>
             <p>
               Si usted o alguien de su familia tiene antecedentes de epilepsia,
-              consulte a un médico antes de jugar.
+              consulte a un medico antes de jugar.
             </p>
             <p className="epilepsy__fine">
-              Si experimenta mareos, alteración de la visión, contracciones
-              musculares, desorientación o cualquier tipo de movimiento
+              Si experimenta mareos, alteracion de la vision, contracciones
+              musculares, desorientacion o cualquier tipo de movimiento
               involuntario, deje de jugar inmediatamente.
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
               )}
             </button>
             <p className="epilepsy__countdown">
-              Continúa automáticamente en <strong>{countdown}s</strong>
+              Continua automaticamente en <strong>{countdown}s</strong>
             </p>
           </div>
         </div>

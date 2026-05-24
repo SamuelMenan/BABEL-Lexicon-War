@@ -2,8 +2,8 @@ import React from 'react';
 
 const STAT_LABELS = {
   velocidad: 'VELOCIDAD',
-  escudo:    'ESCUDO·LÉXICO',
-  precision: 'PRECISIÓN',
+  escudo:    'ESCUDO·LEXICO',
+  precision: 'PRECISION',
   capacidad: 'LEX·CAPACIDAD',
 };
 

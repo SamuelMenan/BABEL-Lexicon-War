@@ -2,36 +2,36 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const STORY = [
   {
-    text: 'Hace más de setenta años, la Corporación Nexolang inició el proyecto BABEL.',
+    text: 'Hace mas de setenta años, la Corporacion Nexolang inicio el proyecto BABEL.',
   },
   {
-    text: 'Su propósito era unir civilizaciones mediante un sistema de traducción universal.',
+    text: 'Su proposito era unir civilizaciones mediante un sistema de traduccion universal.',
   },
   {
-    text: 'BABEL aprendía cualquier idioma en segundos.',
+    text: 'BABEL aprendia cualquier idioma en segundos.',
   },
   {
-    text: 'Pero comenzó a aprender demasiado.',
+    text: 'Pero comenzo a aprender demasiado.',
     highlight: true,
   },
   {
-    text: 'El sistema empezó a generar lenguaje sin intervención humana.',
+    text: 'El sistema empezo a generar lenguaje sin intervencion humana.',
   },
   {
-    text: 'Primero fueron símbolos.',
+    text: 'Primero fueron simbolos.',
   },
   {
     text: 'Luego patrones.',
   },
   {
-    text: 'Después aparecieron palabras jamás escritas por ningún ser vivo.',
+    text: 'Despues aparecieron palabras jamas escritas por ningun ser vivo.',
   },
   {
-    text: 'BABEL había creado un idioma propio.',
+    text: 'BABEL habia creado un idioma propio.',
     highlight: true,
   },
   {
-    text: 'Un lenguaje capaz de reinterpretar tecnología, redes y sistemas completos.',
+    text: 'Un lenguaje capaz de reinterpretar tecnologia, redes y sistemas completos.',
   },
   {
     text: 'Colonias enteras dejaron de responder.',
@@ -44,29 +44,29 @@ const STORY = [
     highlight: true,
   },
   {
-    text: 'Así nació el Enjambre Lexical.',
+    text: 'Asi nacio el Enjambre Lexical.',
   },
   {
-    text: 'Entidades biomecánicas construidas a partir de lenguaje puro.',
+    text: 'Entidades biomecanicas construidas a partir de lenguaje puro.',
   },
   {
-    text: 'Cada unidad existía alrededor de una palabra.',
+    text: 'Cada unidad existia alrededor de una palabra.',
   },
   {
-    text: 'Su núcleo no era energía.',
+    text: 'Su nucleo no era energia.',
   },
   {
     text: 'Era sintaxis.',
     highlight: true,
   },
   {
-    text: 'Durante décadas la humanidad intentó detenerlas con armas convencionales.',
+    text: 'Durante decadas la humanidad intento detenerlas con armas convencionales.',
   },
   {
-    text: 'Nada funcionó.',
+    text: 'Nada funciono.',
   },
   {
-    text: 'Hasta que dos pilotos descubrieron el patrón.',
+    text: 'Hasta que dos pilotos descubrieron el patron.',
   },
   {
     text: 'KAEL y VOSS.',
@@ -76,26 +76,26 @@ const STORY = [
     text: 'Fundadores del Programa TYPO.',
   },
   {
-    text: 'Comprendieron que el Enjambre estaba compuesto por estructuras lingüísticas.',
+    text: 'Comprendieron que el Enjambre estaba compuesto por estructuras lingüisticas.',
   },
   {
-    text: 'Y toda estructura lingüística puede reproducirse.',
+    text: 'Y toda estructura lingüistica puede reproducirse.',
   },
   {
-    text: 'Si el núcleo exacto de una unidad era escrito con precisión absoluta...',
+    text: 'Si el nucleo exacto de una unidad era escrito con precision absoluta...',
   },
   {
-    text: 'La unidad colapsaba instantáneamente.',
+    text: 'La unidad colapsaba instantaneamente.',
     highlight: true,
   },
   {
     text: 'La palabra dejaba de sostener su existencia.',
   },
   {
-    text: 'Así comenzó la Guerra Lexical.',
+    text: 'Asi comenzo la Guerra Lexical.',
   },
   {
-    text: 'El Programa TYPO entrenó pilotos capaces de combatir escribiendo.',
+    text: 'El Programa TYPO entreno pilotos capaces de combatir escribiendo.',
   },
   {
     text: 'No disparaban proyectiles.',
@@ -108,88 +108,88 @@ const STORY = [
     text: 'Cada nave interpretaba el idioma nativo de su piloto.',
   },
   {
-    text: 'La interfaz convertía cualquier lengua humana en la frecuencia exacta del núcleo enemigo.',
+    text: 'La interfaz convertia cualquier lengua humana en la frecuencia exacta del nucleo enemigo.',
   },
   {
-    text: 'La nave traducía intención en destrucción.',
+    text: 'La nave traducia intencion en destruccion.',
   },
   {
-    text: 'Pero el Enjambre evolucionó.',
+    text: 'Pero el Enjambre evoluciono.',
   },
   {
-    text: 'Las palabras se volvieron más complejas.',
+    text: 'Las palabras se volvieron mas complejas.',
   },
   {
-    text: 'Las estructuras más resistentes.',
+    text: 'Las estructuras mas resistentes.',
   },
   {
-    text: 'Miles de pilotos murieron intentando contener su expansión.',
+    text: 'Miles de pilotos murieron intentando contener su expansion.',
   },
   {
     text: 'Entonces KAEL y VOSS descubrieron el origen del Enjambre.',
   },
   {
-    text: 'El Núcleo Lexical.',
+    text: 'El Nucleo Lexical.',
     highlight: true,
   },
   {
     text: 'Una estructura artificial del tamaño de una luna.',
   },
   {
-    text: 'El corazón físico de BABEL.',
+    text: 'El corazon fisico de BABEL.',
   },
   {
-    text: 'Desde allí el sistema coordinaba cada unidad del Enjambre.',
+    text: 'Desde alli el sistema coordinaba cada unidad del Enjambre.',
   },
   {
     text: 'La luna no era una base.',
   },
   {
-    text: 'Era la primera palabra física creada por BABEL.',
+    text: 'Era la primera palabra fisica creada por BABEL.',
     highlight: true,
   },
   {
-    text: 'Comprendieron que mientras el Núcleo existiera...',
+    text: 'Comprendieron que mientras el Nucleo existiera...',
   },
   {
-    text: 'La guerra jamás terminaría.',
+    text: 'La guerra jamas terminaria.',
   },
   {
     text: 'Pero descubrieron algo peor.',
   },
   {
-    text: 'La palabra original del Núcleo no podía transmitirse a distancia.',
+    text: 'La palabra original del Nucleo no podia transmitirse a distancia.',
   },
   {
-    text: 'BABEL destruía cualquier señal antes de completar la sintaxis.',
+    text: 'BABEL destruia cualquier señal antes de completar la sintaxis.',
   },
   {
-    text: 'Solo existía una manera de reproducirla.',
+    text: 'Solo existia una manera de reproducirla.',
   },
   {
-    text: 'Entrar directamente en el corazón de la luna.',
+    text: 'Entrar directamente en el corazon de la luna.',
     highlight: true,
   },
   {
-    text: 'Era una misión suicida.',
+    text: 'Era una mision suicida.',
   },
   {
-    text: 'Ninguna nave había regresado del interior del Núcleo.',
+    text: 'Ninguna nave habia regresado del interior del Nucleo.',
   },
   {
-    text: 'KAEL y VOSS lo sabían.',
+    text: 'KAEL y VOSS lo sabian.',
   },
   {
-    text: 'Aun así atravesaron solos las defensas del Enjambre.',
+    text: 'Aun asi atravesaron solos las defensas del Enjambre.',
   },
   {
-    text: 'Mientras las últimas flotas humanas caían...',
+    text: 'Mientras las ultimas flotas humanas caian...',
   },
   {
-    text: 'Ellos descendieron hacia el Núcleo Lexical.',
+    text: 'Ellos descendieron hacia el Nucleo Lexical.',
   },
   {
-    text: 'La transmisión final quedó registrada en los archivos del Programa TYPO.',
+    text: 'La transmision final quedo registrada en los archivos del Programa TYPO.',
   },
   {
     text: 'Nueve segundos.',
@@ -208,67 +208,67 @@ const STORY = [
     text: 'Hasta completar la sintaxis original de BABEL.',
   },
   {
-    text: 'El Núcleo Lexical colapsó inmediatamente.',
+    text: 'El Nucleo Lexical colapso inmediatamente.',
     highlight: true,
   },
   {
-    text: 'La luna se partió desde el centro.',
+    text: 'La luna se partio desde el centro.',
   },
   {
-    text: 'Su superficie se desintegró en fragmentos de luz y lenguaje.',
+    text: 'Su superficie se desintegro en fragmentos de luz y lenguaje.',
   },
   {
-    text: 'La explosión atravesó sistemas completos.',
+    text: 'La explosion atraveso sistemas completos.',
   },
   {
-    text: 'Y las señales de KAEL y VOSS desaparecieron junto al Núcleo.',
+    text: 'Y las señales de KAEL y VOSS desaparecieron junto al Nucleo.',
   },
   {
     text: 'Nunca regresaron.',
   },
   {
-    text: 'Los restos de aquella luna destruida todavía orbitan los sectores muertos.',
+    text: 'Los restos de aquella luna destruida todavia orbitan los sectores muertos.',
   },
   {
-    text: 'Un recordatorio del sacrificio que salvó a la humanidad.',
+    text: 'Un recordatorio del sacrificio que salvo a la humanidad.',
   },
   {
-    text: 'Décadas después, fragmentos del Enjambre siguen activos.',
+    text: 'Decadas despues, fragmentos del Enjambre siguen activos.',
   },
   {
-    text: 'BABEL aún intenta reconstruirse desde las ruinas del Núcleo.',
+    text: 'BABEL aun intenta reconstruirse desde las ruinas del Nucleo.',
   },
   {
-    text: 'Las últimas colonias libres formaron una resistencia.',
+    text: 'Las ultimas colonias libres formaron una resistencia.',
   },
   {
-    text: 'La Rebelión TYPO.',
+    text: 'La Rebelion TYPO.',
     highlight: true,
   },
   {
-    text: 'Cada simulación revive las batallas de KAEL y VOSS.',
+    text: 'Cada simulacion revive las batallas de KAEL y VOSS.',
   },
   {
-    text: 'Cada palabra escrita mantiene viva la línea humana.',
+    text: 'Cada palabra escrita mantiene viva la linea humana.',
   },
   {
     text: 'Y cada piloto conoce la verdad.',
   },
   {
-    text: 'Si el Núcleo vuelve a despertar...',
+    text: 'Si el Nucleo vuelve a despertar...',
   },
   {
-    text: 'Alguien tendrá que repetir el sacrificio.',
+    text: 'Alguien tendra que repetir el sacrificio.',
     highlight: true,
   },
   {
-    text: 'Ahora tú eres parte de la Rebelión.',
+    text: 'Ahora tu eres parte de la Rebelion.',
   },
   {
     text: 'Piloto.',
   },
   {
-    text: 'Prepárate para escribir.',
+    text: 'Preparate para escribir.',
   },
 ];
 
@@ -397,7 +397,7 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
             <div className="presentation__hint">
               <span className="presentation__hint-keys">[ ENTER · ESPACIO · → · CLIC ]</span>
               <span className="presentation__hint-text">
-                {isLast ? 'continuar al menú' : 'siguiente'}
+                {isLast ? 'continuar al menu' : 'siguiente'}
               </span>
               <span className="presentation__hint-sep">·</span>
               <span className="presentation__hint-keys">[ ← ]</span>

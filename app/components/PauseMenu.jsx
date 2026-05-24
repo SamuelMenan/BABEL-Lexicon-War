@@ -14,7 +14,7 @@ export default function PauseMenu() {
   const items = [
     { id: 'resume',   label: 'Reanudar',              icon: '▶', variant: 'primary',
       action: () => Bridge.commands.resumeGame() },
-    { id: 'settings', label: 'Configuración',         variant: 'secondary',
+    { id: 'settings', label: 'Configuracion',         variant: 'secondary',
       action: () => setShowSettings(true) },
     ...(isGameplay ? [{
       id: 'hangar',
@@ -22,7 +22,7 @@ export default function PauseMenu() {
       variant: 'secondary',
       action: () => Bridge.commands.exitToHangar(),
     }] : []),
-    { id: 'menu',     label: 'Volver al Menú Principal', variant: 'ghost',
+    { id: 'menu',     label: 'Volver al Menu Principal', variant: 'ghost',
       action: () => Bridge.commands.exitToMenu() },
   ];
 

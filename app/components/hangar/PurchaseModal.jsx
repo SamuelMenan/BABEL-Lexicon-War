@@ -29,7 +29,7 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="purchase-modal__header">
-          <span className="purchase-modal__label">◈ CONFIRMAR ADQUISICIÓN</span>
+          <span className="purchase-modal__label">◈ CONFIRMAR ADQUISICION</span>
         </div>
 
         <h3 id="purchase-modal-title" className="purchase-modal__ship">{ship.name.toUpperCase()}</h3>

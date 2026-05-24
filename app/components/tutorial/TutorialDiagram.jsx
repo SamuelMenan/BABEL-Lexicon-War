@@ -1,5 +1,5 @@
 // Dispatcher de diagramas de tutorial.
-// Sólo registry + render por `kind`. Diagramas viven en ./diagrams/.
+// Solo registry + render por `kind`. Diagramas viven en ./diagrams/.
 
 import React from 'react';
 import TypingDiagram from './TypingDiagram.jsx';

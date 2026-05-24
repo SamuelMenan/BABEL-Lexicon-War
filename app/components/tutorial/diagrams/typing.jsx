@@ -1,4 +1,4 @@
-// Diagramas exclusivos del tutorial de Mecanografía Táctil.
+// Diagramas exclusivos del tutorial de Mecanografia Tactil.
 
 import React from 'react';
 import { Defs, Frame, Label, VB } from '../../common/svg/HudPrimitives.jsx';
@@ -9,7 +9,7 @@ export function DiagPosture() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// ESTACIÓN DE TRABAJO" tone="primary" />
+        <Label text="// ESTACION DE TRABAJO" tone="primary" />
         <g transform="translate(60 36)">
           <rect width="120" height="78" rx="3" fill="rgba(0,0,0,0.6)" stroke={STK} strokeWidth="1.6" />
           <rect x="6" y="6" width="108" height="66" fill={FILL} stroke={STK} strokeOpacity="0.4" />
@@ -138,7 +138,7 @@ export function DiagPractice() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// MINI PRÁCTICA" tone="primary" />
+        <Label text="// MINI PRACTICA" tone="primary" />
         <g transform="translate(20 38)">
           <rect width="200" height="22" rx="2" fill="rgba(0,0,0,0.5)" stroke="var(--col-primary)" strokeOpacity="0.5" />
           <text x="100" y="15" textAnchor="middle" className="td-text td-text-primary">asdf jkl;</text>

@@ -79,7 +79,7 @@ export default function HUD() {
     currentPhrase, currentPhraseWordIndex,
     wordBuffer, globalWordIndex, wordsCompleted,
     playerPhrasesCompleted, totalPhrases,
-    countdown, countdownActive, timeRemaining,
+    countdown, countdownActive, timeRemaining, deploymentPhase,
     distanceTraveled, targetDistance,
     opponentDistance = 0,
     combatEnemies, swarmRemnants, targetId,
@@ -156,9 +156,9 @@ export default function HUD() {
     '--col-active':           shipHudColor,
     '--col-active-rgb':       shipHudRgb,
     '--col-flow':             shipFlameHex,
-    // ── estadísticas (WPM grande / precisión) ───────
-    '--col-stat-primary':     shipFlameHex,        // WPM — más brillante y vibrante
-    '--col-stat-secondary':   shipLaserHex,        // precisión / secundario
+    // ── estadisticas (WPM grande / precision) ───────
+    '--col-stat-primary':     shipFlameHex,        // WPM — mas brillante y vibrante
+    '--col-stat-secondary':   shipLaserHex,        // precision / secundario
     // ── barras de estado ────────────────────────────
     '--col-hp-fill':          shipRingHex,         // barra HP fill
     '--col-hp-glow':          `rgba(${shipRingRgb}, 0.6)`,
@@ -169,14 +169,14 @@ export default function HUD() {
     '--col-meta-val':         shipNorm2Hex,        // NUCLEO / LONG / FREC valores
     '--col-transmitting':     shipNorm2Hex,        // ● TRANSMITIENDO
     // ── lexicon deck ────────────────────────────────
-    '--col-deck-count':       shipLaserHex,        // número de enemigos
+    '--col-deck-count':       shipLaserHex,        // numero de enemigos
     '--col-bullet':           shipFlameHex,        // ▸ flecha objetivo activo
     '--col-multiplier':       shipFlameHex,        // ×2.0 multiplicador
     // ── wave block ──────────────────────────────────
-    '--col-wave-num':         shipNorm4Hex,        // "03" número de oleada
+    '--col-wave-num':         shipNorm4Hex,        // "03" numero de oleada
     '--col-wave-remnants':    shipLaserHex,        // contador restos del enjambre
     // ── pilot info ──────────────────────────────────
-    '--col-pilot-sub':        shipInnerHex,        // TYPO-07 / PILOTO subtítulo
+    '--col-pilot-sub':        shipInnerHex,        // TYPO-07 / PILOTO subtitulo
     // ── ticker / misc ───────────────────────────────
     '--flow-ticker':          `rgba(${shipLaserRgb}, 0.6)`,
   } : {
@@ -243,14 +243,16 @@ export default function HUD() {
 
   return (
     <div className="hud" style={hudVars}>
-      {showFlash && <div className="edge-flash" />}
+      {/* Race mode: only Flow frame. No edge-flash (red on miss), no LowHpFrame,
+          no WarningIcon (proximity/low-HP) — those are combat-only concepts. */}
       {flowActive && <FlowFrame />}
-      <LowHpFrame level={lowHpLevel} />
       <div className="r-vignette" />
+      {/* Fade cinematico durante landing — tapa el spawn de las naves y el
+          lip del tunel; fade-out automatico al cambiar a tutorial/countdown. */}
+      {deploymentPhase === 'landing' && <div className="race-landing-fade" />}
       <RaceSpeedLines flowActive={flowActive} />
       <div className="hud-safe-zone">
         <WaveAnnouncement wave={waveNotice} />
-        <WarningIcon warnings={warnings} flow={flow} flowActive={flowActive} flowCooldown={flowCooldown} />
         <Countdown countdown={countdown} countdownActive={countdownActive} />
         <RacePilotTag pilotName={pilotName} pilotSub={pilotSub} shipName={shipName} />
         <RaceTopStatus wave={wave} playerPhrasesCompleted={playerPhrasesCompleted} />

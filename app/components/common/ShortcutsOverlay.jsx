@@ -7,7 +7,7 @@ import '../../../styles/components/shortcuts-overlay.css';
 
 const SCOPE_LABELS = {
   global:   'Globales',
-  menu:     'Menú',
+  menu:     'Menu',
   hangar:   'Hangar',
   gameplay: 'Juego',
   tutorial: 'Tutorial',

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Aviso de FLUJO DESBLOQUEADO — hereda paleta de la nave activa vía CSS vars
+// Aviso de FLUJO DESBLOQUEADO — hereda paleta de la nave activa via CSS vars
 // (--ship-flame, --ship-flame-rgb, --ship-ring-rgb). Sin colores hardcoded.
 export default function FlowModeOverlay({ flowActive }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -18,7 +18,7 @@ export default function FlowModeOverlay({ flowActive }) {
 
   if (!showPopup) return null;
 
-  // Fallback al color del HUD si las vars no estuvieran (no debería pasar en runtime).
+  // Fallback al color del HUD si las vars no estuvieran (no deberia pasar en runtime).
   const flameRgb = "var(--ship-flame-rgb, var(--ship-hud-rgb, 0,255,204))";
   const ringRgb  = "var(--ship-ring-rgb,  var(--ship-hud-rgb, 0,255,204))";
   const flameHex = "var(--ship-flame, var(--col-active, #00ffcc))";
@@ -45,7 +45,7 @@ export default function FlowModeOverlay({ flowActive }) {
           100%
         </span>
         <span className="precombat-message" style={{ color: "#fff", textShadow: `0 0 10px rgba(${ringRgb},0.6)` }}>
-          SINCRONIZACIÓN LÉXICA ACTIVA
+          SINCRONIZACION LEXICA ACTIVA
         </span>
       </div>
       <div

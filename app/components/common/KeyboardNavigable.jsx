@@ -1,4 +1,4 @@
-// Wrapper de navegación por teclado para listas/menús.
+// Wrapper de navegacion por teclado para listas/menus.
 // Maneja focus interno, flechas, Enter/Space activar, Escape cancelar, 1-9 jump.
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';

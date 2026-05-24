@@ -32,7 +32,7 @@ export default function TutorialOverlay({ tutorialActive }) {
   }, [confirmSkip]);
 
   // Tutorial scope ya pusheado por App.jsx cuando tutorialActive cambia.
-  // Registrar handlers en scope 'tutorial'. Si el foco está en <input> (práctica),
+  // Registrar handlers en scope 'tutorial'. Si el foco esta en <input> (practica),
   // dejamos pasar para no romper typing local — el handler check e.target.
   useEffect(() => {
     const guard = (fn) => (e) => {
@@ -112,7 +112,7 @@ export default function TutorialOverlay({ tutorialActive }) {
                   spellCheck={false}
                 />
                 <div className={`tut-practice-status ${practiceOk ? 'ok' : ''}`}>
-                  {practiceOk ? '✓ LISTO' : 'Escribe la línea exacta'}
+                  {practiceOk ? '✓ LISTO' : 'Escribe la linea exacta'}
                 </div>
               </div>
             )}
@@ -140,7 +140,7 @@ export default function TutorialOverlay({ tutorialActive }) {
           </button>
           <div className="tut-nav">
             {stepIndex > 0 && (
-              <button className="tut-btn" onClick={back}>← ATRÁS</button>
+              <button className="tut-btn" onClick={back}>← ATRAS</button>
             )}
             {!step.branch && (
               <button

@@ -76,9 +76,12 @@ export default function HangarScreen() {
     scene.loadShip(0);
     Bridge.emit(EventTypes.SHIP_SELECTION_OPENED, {});
 
-    // PRELOAD COMBAT ASSETS WHILE IN HANGAR
+    // PRELOAD COMBAT + RACING ASSETS WHILE IN HANGAR. Both manifests include
+    // cb1 — preloading here means hangar's own `getGLTF` cache hit on next
+    // ship-switch instead of re-downloading 34MB.
     import('../../../game/core/AssetLoader.js').then(({ AssetLoader }) => {
-      AssetLoader.preload('combat').catch(err => console.error("Preload error:", err));
+      AssetLoader.preload('combat').catch(err => console.error('Preload combat error:', err));
+      AssetLoader.preload('racing').catch(err => console.error('Preload racing error:', err));
     });
 
     return () => {
@@ -124,7 +127,7 @@ export default function HangarScreen() {
     return () => offs.forEach(fn => fn());
   }, [navigateTo]);
 
-  // WASD hold para mover cámara orbital. Listener separado del service
+  // WASD hold para mover camara orbital. Listener separado del service
   // porque son teclas continuas (hold), no acciones discretas.
   useEffect(() => {
     const HOLD_KEYS = new Set(['a','A','w','W','s','S','d','D']);
@@ -165,7 +168,7 @@ export default function HangarScreen() {
   async function handleConfirm() {
     if (deployingRef.current) return;
     const shipId = SHIPS[shipIdxRef.current].id;
-    if (!EconomySystem.ownsShip(shipId)) return; // bloqueo: no poseída
+    if (!EconomySystem.ownsShip(shipId)) return; // bloqueo: no poseida
     if (EconomySystem.getEquippedShip() !== shipId) EconomySystem.equipShip(shipId);
     deployingRef.current = true;
     const scene = sceneRef.current;
@@ -173,8 +176,8 @@ export default function HangarScreen() {
     if (scene) {
       await scene.triggerDeployment();
     }
-    // No emitir DEPLOYMENT_ANIMATION_COMPLETE aquí — lo hace game/main.js
-    // tras mount de combat/racing scene para evitar tutorial sobre fondo vacío.
+    // No emitir DEPLOYMENT_ANIMATION_COMPLETE aqui — lo hace game/main.js
+    // tras mount de combat/racing scene para evitar tutorial sobre fondo vacio.
     Bridge.commands.confirmShip(shipId);
   }
   function handleCancel()  { Bridge.commands.cancelShipSelection(); }

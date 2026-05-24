@@ -1,5 +1,5 @@
 // Loop principal del motor — requestAnimationFrame.
-// Medición de perf (FPS / heap) vive en TelemetrySystem.
+// Medicion de perf (FPS / heap) vive en TelemetrySystem.
 
 import { waveTrace } from '../debug/WaveTrace.js';
 

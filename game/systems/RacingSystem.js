@@ -166,6 +166,26 @@ export class RacingSystem {
     this._stateMain.flowStreak             = this._flowStreak;
     Bridge.setState(this._stateMain);
 
+    // Emit local tick for online sync (no-op si offline; broadcast escucha).
+    this._broadcastAcc = (this._broadcastAcc ?? 0) + delta;
+    if (this._broadcastAcc >= 0.1) {  // 10Hz
+      this._broadcastAcc = 0;
+      const state = Bridge.peekState();
+      if (state.onlineEnabled) {
+        const minutes  = Math.max(this._timeElapsed / 60, 1 / 60);
+        const correct  = this._lexicon?.getCorrectKeys?.() ?? 0;
+        const liveAvgWpm = correct > 0 ? Math.round((correct / 5) / minutes) : 0;
+        EventBus.emit('online:race_tick_local', {
+          wpm:         state.wpm ?? 0,
+          avgWpm:      liveAvgWpm,
+          distance:    this._stateMain.distanceTraveled,
+          phrasesDone: this._playerDone,
+          accuracy:    state.accuracy ?? 0,
+          peakWpm:     this._peakWPM,
+        });
+      }
+    }
+
     if (timeRemaining <= 0) this._onTimeUp();
   }
 
@@ -276,6 +296,21 @@ export class RacingSystem {
       timeElapsed: Math.round(this._timeElapsed),
       grafemasReward,
     };
+
+    // Online: broadcast resultado final + flag para que UI resuelva ganador.
+    if (state2.onlineEnabled) {
+      EventBus.emit('online:race_finish_local', {
+        avgWpm:   avgWpm ?? 0,
+        accuracy: state.accuracy ?? 0,
+        peakWpm:  this._peakWPM,
+      });
+      payload.online = {
+        role:           state2.onlineRole,
+        roomId:         state2.onlineRoom?.id,
+        localAvgWpm:    avgWpm ?? 0,
+        localAccuracy:  state.accuracy ?? 0,
+      };
+    }
 
     const evType = victory ? EventTypes.RACE_COMPLETED : EventTypes.RACE_FAILED;
     EventBus.emit(evType, {

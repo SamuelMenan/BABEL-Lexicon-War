@@ -7,7 +7,7 @@
 --   3. SQL Editor → pega este archivo → Run
 --   4. Auth → Providers: habilita Email; Anonymous opcional
 --
--- MIGRACIÓN suave: si un jugador anónimo (sin auth_user_id) se registra y
+-- MIGRACION suave: si un jugador anonimo (sin auth_user_id) se registra y
 -- llama record_match_result con su playerId + auth uid, las filas previas
 -- quedan vinculadas al uid (UPDATE players.auth_user_id).
 
@@ -81,8 +81,8 @@ create index if not exists idx_game_sessions_player_started_at on public.game_se
 -- ────────────────────────────────────────────────────────────────────
 -- RPC: record_match_result
 -- Acepta playerId local (text) + auth_user_id opcional (uuid).
--- Si el jugador local ya tenía filas y ahora se autentica, se vincula
--- el uid a la fila players existente (migración suave).
+-- Si el jugador local ya tenia filas y ahora se autentica, se vincula
+-- el uid a la fila players existente (migracion suave).
 -- security definer: la app NO escribe directo en las tablas.
 -- ────────────────────────────────────────────────────────────────────
 
@@ -117,12 +117,12 @@ declare
 begin
   v_started_at := coalesce(p_started_at, p_finished_at);
 
-  -- El uid efectivo es el de la sesión llamante; si no hay sesión, acepta el pasado.
+  -- El uid efectivo es el de la sesion llamante; si no hay sesion, acepta el pasado.
   -- Esto evita que un cliente arbitrario inyecte el uid de otro usuario.
   v_effective_uid := coalesce(v_caller_uid, p_auth_user_id);
 
-  -- Upsert players. Migración suave: si la fila existe sin auth_user_id y el
-  -- caller está autenticado, vincúlala ahora.
+  -- Upsert players. Migracion suave: si la fila existe sin auth_user_id y el
+  -- caller esta autenticado, vinculala ahora.
   insert into public.players (id, display_name, auth_user_id, last_seen_at)
   values (p_player_id, p_display_name, v_effective_uid, now())
   on conflict (id) do update
@@ -178,8 +178,8 @@ end;
 $$;
 
 -- Permitir a anon + authenticated invocar la RPC. La RPC controla escritura.
--- Si existe una versión vieja con menos params, primero la borramos para evitar
--- conflicto por overload (PostgREST resolvería ambas).
+-- Si existe una version vieja con menos params, primero la borramos para evitar
+-- conflicto por overload (PostgREST resolveria ambas).
 drop function if exists public.record_match_result(
   text, text, text, text, uuid, timestamptz, timestamptz,
   integer, integer, numeric, integer, boolean, integer, integer, integer
@@ -193,10 +193,10 @@ grant execute on function public.record_match_result(
 -- ────────────────────────────────────────────────────────────────────
 -- Row Level Security
 -- Estrategia:
---   - players:        SELECT pública. UPDATE solo dueño (auth_user_id = uid).
+--   - players:        SELECT publica. UPDATE solo dueño (auth_user_id = uid).
 --                     INSERT bloqueado al cliente (lo hace la RPC).
---   - game_sessions:  lectura pública. escritura bloqueada (solo RPC).
---   - match_results:  lectura pública (alimenta leaderboards).
+--   - game_sessions:  lectura publica. escritura bloqueada (solo RPC).
+--   - match_results:  lectura publica (alimenta leaderboards).
 --                     escritura bloqueada (solo RPC).
 -- La RPC es SECURITY DEFINER → bypassa RLS para inserciones.
 -- ────────────────────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ alter table public.players       enable row level security;
 alter table public.game_sessions enable row level security;
 alter table public.match_results enable row level security;
 
--- players: lectura pública
+-- players: lectura publica
 drop policy if exists players_select_all on public.players;
 create policy players_select_all on public.players
   for select using (true);
@@ -219,12 +219,12 @@ create policy players_update_own on public.players
 
 -- players: no INSERT/DELETE desde clientes (la RPC lo hace con security definer)
 
--- game_sessions: lectura pública
+-- game_sessions: lectura publica
 drop policy if exists sessions_select_all on public.game_sessions;
 create policy sessions_select_all on public.game_sessions
   for select using (true);
 
--- match_results: lectura pública (leaderboards)
+-- match_results: lectura publica (leaderboards)
 drop policy if exists matches_select_all on public.match_results;
 create policy matches_select_all on public.match_results
   for select using (true);

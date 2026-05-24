@@ -31,6 +31,8 @@ export class CombatSceneManager {
     this.hudCanvas = hudCanvas; this._cam = cam;
     this.enemies = []; this.tokens = []; this.projectiles = [];
     this.wave = 0; this._waveTimer = 0;
+    this._timeElapsed = 0;          // seconds since first wave started (combat duration)
+    this._countingTime = false;
     this._unsubs = []; this._player = null; this._particles = null;
     this._wordHadError = false;   // se setea en WORD_PROGRESS correct=false; reset al cambiar target
     this._killStreak   = 0;       // racha sin daño ni palabra fallida
@@ -67,6 +69,7 @@ export class CombatSceneManager {
       cam:              this._cam,
       scene:            this.scene,
       getWave:          () => this.wave,
+      getTimeElapsed:   () => this._timeElapsed,
       onPublish:        () => this._hud.publish(this.enemies, this.lexicon.currentTargetId),
     });
   }
@@ -157,6 +160,7 @@ export class CombatSceneManager {
     this._autoTarget();
     this._pruneDeadEnemies();
 
+    if (this._countingTime) this._timeElapsed += delta;
     this._waveTimer += delta * 1000;
     if (this._waveTimer >= WAVE_INTERVAL_MS && this.enemies.filter(e => e.active).length === 0) {
       this._waveTimer = 0;
@@ -250,6 +254,7 @@ export class CombatSceneManager {
   }
 
   _startWave() {
+    this._countingTime = true;
     this.wave++;
     waveTrace.beginWave(this.wave);
     // Speed casi plana — la dificultad real viene de spawn density + word length.

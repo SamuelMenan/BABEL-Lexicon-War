@@ -58,7 +58,16 @@ export async function initGame(mountEl) {
     // Show loading for this mode (cache makes re-entry fast)
     await AssetLoader.preload(mode, engine.renderer);
 
-    Bridge.setState({ isRunning: true, isPaused: false, gameMode: mode });
+    // Reset per-match stat fields to avoid cross-match contamination (B1).
+    // Without this, e.g. peakWPM from previous race carries into a combat row.
+    _lexicon.resetMatchStats?.();
+    Bridge.setState({
+      isRunning: true, isPaused: false, gameMode: mode, gameOver: false,
+      score: null, wpm: null, accuracy: null, wave: null,
+      peakWPM: null, timeElapsed: null, grafemasReward: null,
+      raceVictory: null,
+      wordsDestroyed: null, bestCombo: null,
+    });
 
     if (mode === GAME_MODES.RACING) {
       engine.camController.setRacingMode(true);
@@ -92,10 +101,11 @@ export async function initGame(mountEl) {
       _pendingCountdownStart = () => sm.startCombatWithCountdown();
     }
 
-    // Animación de entrada: la nave usa su propia _entryDuration (3.5s) en ship.update.
-    // Esperamos ~3.8s antes de mostrar tutorial para que aterrice visiblemente.
+    // Animación de entrada por modo: combat ship _entryDuration=3.5s, racing player=5.0s.
+    // Esperar a que la nave aterrice antes de mostrar tutorial.
     Bridge.setState({ deploymentPhase: 'landing' });
-    await new Promise(r => setTimeout(r, 3800));
+    const landingMs = mode === 'racing' ? 5200 : 3800;
+    await new Promise(r => setTimeout(r, landingMs));
 
     // Tras entrada visible, dispara tutorial (si first-time) o START_COUNTDOWN inmediato.
     EventBus.emit(EventTypes.DEPLOYMENT_ANIMATION_COMPLETE, { mode });

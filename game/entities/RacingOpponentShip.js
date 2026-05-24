@@ -5,7 +5,7 @@ import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.
 
 const TARGET_MODEL_LENGTH = 3.2;
 
-// Opponent (cb1): mismo patrón que combat → modelRoot.rotation.y = rotationY + π.
+// Opponent (cb1): mismo patron que combat → modelRoot.rotation.y = rotationY + π.
 // cb1.rotationY = -π/2 → yaw = π/2. Group queda en identidad.
 const OPPONENT_YAW = (-Math.PI/2) + Math.PI;  // = π/2
 
@@ -32,6 +32,8 @@ export class RacingOpponentShip extends ShipBase {
     this._buildFallbackShip();
     this._loadModel();
     this._group.position.copy(this._entryStartPos);
+    // Oculta hasta que el modelo cargue — evita ver el fallback cone antes de tiempo.
+    this._group.visible = false;
   }
 
   _buildFxNodes() {
@@ -76,7 +78,7 @@ export class RacingOpponentShip extends ShipBase {
 
   _configureLoadedMesh(node) {
     node.layers.set(0);
-    node.layers.enable(BLOOM_LAYER);   // bloquea halo del túnel durante bloom pass
+    node.layers.enable(BLOOM_LAYER);   // bloquea halo del tunel durante bloom pass
   }
 
   _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
@@ -155,15 +157,27 @@ export class RacingOpponentShip extends ShipBase {
     if (this._entryActive) {
       if (!this._modelLoaded) {
         this._group.position.copy(this._entryStartPos);
+        this._group.visible = false;
         return;
       }
+      this._group.visible = true;
+      // Pause baked clip during entry — cb1's skeletal clip fights the lerp.
+      this._suspendAnimations = true;
       this._entryTime += delta;
       const k  = Math.min(this._entryTime / this._entryDuration, 1);
       const ek = 1 - Math.pow(1 - k, 3);
       this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
       this._group.quaternion.slerp(new THREE.Quaternion(), delta * 4);
+      // Fade-in escala: nave emerge de "salto hiperespacial" en lugar de pop visible.
+      const fadeK = Math.min(1, k / 0.35);
+      const fadeScale = 0.001 + fadeK * 0.999;
+      this._group.scale.setScalar(fadeScale);
       this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
-      if (k >= 1) this._entryActive = false;
+      if (k >= 1) {
+        this._entryActive = false;
+        this._suspendAnimations = false;
+        this._group.scale.setScalar(1);
+      }
       return;
     }
 
@@ -176,7 +190,7 @@ export class RacingOpponentShip extends ShipBase {
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.2 + 0.8) * 0.24 + Math.cos(t * 0.62 + 0.2) * 0.11 - smoothLead * 0.05;
     this._group.position.y = this._basePosition.y + Math.sin(t * 1.6 + 1.1) * 0.2 + Math.cos(t * 1.05 + 0.4) * 0.08;
-    // Si player adelanta (smoothLead > 0), opponent queda más atrás (z mayor = más cerca cámara, menos avanzado).
+    // Si player adelanta (smoothLead > 0), opponent queda mas atras (z mayor = mas cerca camara, menos avanzado).
     this._group.position.z = zBase + smoothLead * 0.65;
     this._group.rotation.x = -0.05 + Math.sin(t * 1.4 + 0.3) * 0.05;
     this._group.rotation.y = Math.sin(t * 0.75 + 0.6) * 0.07;

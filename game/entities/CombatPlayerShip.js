@@ -36,7 +36,7 @@ export class CombatPlayerShip extends ShipBase {
     this._prevFlowActive = false;
 
     // Entry animation — sync con salida de hangar. Nave llega desde lejos
-    // (atrás de cámara en +Z) y desacelera a _basePosition.
+    // (atras de camara en +Z) y desacelera a _basePosition.
     this._entryActive   = true;
     this._entryTime     = 0;
     this._entryDuration = 3.5;
@@ -46,7 +46,7 @@ export class CombatPlayerShip extends ShipBase {
       this._basePosition.z + 40,
     );
     // Entry hold: no inicia timer hasta que _modelLoaded=true. Evita que la
-    // animación corra con la nave fallback mientras descarga (.glb pesados).
+    // animacion corra con la nave fallback mientras descarga (.glb pesados).
     this._modelLoaded = false;
 
     this._buildFallbackShip();
@@ -180,8 +180,8 @@ export class CombatPlayerShip extends ShipBase {
   setTarget(pos) { this._targetPos = pos; }
   clearTarget()  { this._targetPos = null; }
 
-  // Replica de HangarLoader.getMuzzleShots: devuelve un shot por cañón con
-  // origen, anchor vivo, dirección en mundo, color y scale de la paleta.
+  // Replica de HangarLoader.getMuzzleShots: devuelve un shot por cañon con
+  // origen, anchor vivo, direccion en mundo, color y scale de la paleta.
   getMuzzleShots() {
     if (!this._muzzles.length) return [];
     const out = [];
@@ -196,7 +196,7 @@ export class CombatPlayerShip extends ShipBase {
       const dir = m.forwardLocal.clone().applyQuaternion(tmpQuat).normalize();
       out.push({
         origin,
-        anchor:   m.anchor,   // referencia viva para origen dinámico (laser).
+        anchor:   m.anchor,   // referencia viva para origen dinamico (laser).
         dir,
         color:    m.color,
         emissive: m.emissive,
@@ -234,8 +234,8 @@ export class CombatPlayerShip extends ShipBase {
 
     // ── Entry animation (sync hangar exit) ────────────────────────────────
     // Mientras entryActive: lerp ease-out desde entryStartPos → _basePosition.
-    // Boosters al máximo, sin lógica de target/recoil/float. Skip resto.
-    // Gate: no avanza timer hasta que el modelo esté completamente cargado.
+    // Boosters al maximo, sin logica de target/recoil/float. Skip resto.
+    // Gate: no avanza timer hasta que el modelo este completamente cargado.
     if (this._entryActive) {
       if (!this._modelLoaded) {
         this._group.position.copy(this._entryStartPos);

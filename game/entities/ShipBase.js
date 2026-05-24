@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { Entity } from './Entity.js';
 
@@ -54,8 +55,14 @@ export class ShipBase extends Entity {
   }
 
   _applyLoadedModel(gltf) {
-    const modelScene = gltf?.scene;
-    if (!modelScene) return;
+    if (!gltf?.scene) return;
+
+    // Clone the cached scene per use. AssetLoader caches a single gltf across
+    // hangar/combat/race; combat tuning sets `node.visible=false` on suspected
+    // helper meshes, race shifts root position. Sharing those mutations broke
+    // cb1 in hangar (missing parts → bbox drift → looked mispositioned).
+    // SkeletonUtils handles skinned meshes correctly (cb1 has a skin).
+    const modelScene = SkeletonUtils.clone(gltf.scene);
 
     const modelRoot = new THREE.Group();
     modelRoot.add(modelScene);
@@ -145,7 +152,9 @@ export class ShipBase extends Entity {
 
   update(delta) {
     this._t += delta;
-    this._mixer?.update(delta);
+    // Subclasses can pause baked-clip playback during their entry animation
+    // (cb1 has a skeletal clip that fights the group-level position lerp).
+    if (!this._suspendAnimations) this._mixer?.update(delta);
 
     if (!this._collapseActive) return;
     this._collapseT += delta;

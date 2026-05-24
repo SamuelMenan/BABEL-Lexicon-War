@@ -1,5 +1,5 @@
-// Scout: dash periódico hacia el jugador.
-// Usa _effSpeed (clamped) en vez de enemy.speed raw — evita explosión en waves altas.
+// Scout: dash periodico hacia el jugador.
+// Usa _effSpeed (clamped) en vez de enemy.speed raw — evita explosion en waves altas.
 const DASH_BOOST_FACTOR = 0.35;   // boost relativo a effSpeed
 const DASH_BOOST_CAP    = 0.9;    // tope absoluto units/s extra
 

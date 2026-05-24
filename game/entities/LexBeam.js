@@ -9,7 +9,7 @@ const BEAM_SCALE_BOOST = 1;
 
 export class LexBeam extends Entity {
   // origin: Vector3 (origen fijo) o THREE.Object3D (anchor del muzzle —
-  // worldPosition leída cada frame; evita lag cuando la nave se mueve).
+  // worldPosition leida cada frame; evita lag cuando la nave se mueve).
   constructor(origin, target, onHit, shipColor = null, scaleMul = 1.0) {
     super();
     if (origin && origin.isObject3D) {
@@ -38,7 +38,7 @@ export class LexBeam extends Entity {
       this.active = false;
       return;
     }
-    // Re-leer origen si tenemos anchor dinámico (nave en movimiento).
+    // Re-leer origen si tenemos anchor dinamico (nave en movimiento).
     if (this._anchor) this._anchor.getWorldPosition(this._origin);
     // Tracking real del extremo final cada frame.
     this._visual.setSegment(this._origin, this._target.position);

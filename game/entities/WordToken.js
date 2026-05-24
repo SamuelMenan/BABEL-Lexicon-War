@@ -1,5 +1,5 @@
-// Etiqueta 2D con la palabra-núcleo del enemigo, renderizada sobre canvas HUD
-// La posición 3D del enemigo se convierte a coordenadas de pantalla cada frame.
+// Etiqueta 2D con la palabra-nucleo del enemigo, renderizada sobre canvas HUD
+// La posicion 3D del enemigo se convierte a coordenadas de pantalla cada frame.
 // El DOM lo maneja HUDCanvas.js — WordToken solo expone los datos.
 
 import * as THREE from 'three';
@@ -16,7 +16,7 @@ export class WordToken {
     this.typed = typed;
   }
 
-  // Coordenadas de pantalla — calculadas por HUDCanvas con cámara
+  // Coordenadas de pantalla — calculadas por HUDCanvas con camara
   screenPos(camera, width, height) {
     WordToken._tempPos.copy(this.enemy.position);
     WordToken._tempPos.y += 1.2; // offset sobre el enemigo

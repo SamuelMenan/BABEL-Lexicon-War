@@ -6,7 +6,7 @@ import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.
 
 const TARGET_MODEL_LENGTH = 5.0;
 
-// Mismo patrón que CombatPlayerShip y RacingOpponentShip.
+// Mismo patron que CombatPlayerShip y RacingOpponentShip.
 function getRacingYaw(ship) {
   return (ship?.rotationY ?? 0) + Math.PI;
 }
@@ -27,20 +27,18 @@ export class RacingPlayerShip extends ShipBase {
     this._basePosition = basePosition.clone();
     this._raceState   = null;
 
-    // Entry animation (espejo de CombatPlayerShip): nave parte detrás de cámara,
-    // lerp ease-out hasta basePosition. Quaternion slerp hacia identidad → orientación
-    // racing limpia sin double-rotation.
-    this._entryActive   = true;
-    this._entryTime     = 0;
-    this._entryDuration = 5.0;   // más largo para sensación más suave
-    // Spawn DEEP (más allá de base) → nave aparece pequeña al fondo del túnel
-    // y avanza hacia base. Motion +Z. Para que aparezca nose-first, el group
-    // arranca rotado π (nariz hacia +Z = hacia cámara) y slerp a identidad
-    // (nose -Z = vórtice) al terminar.
+    // Entry animation estandar para TODAS las naves (incluida cb1). Antes habia
+    // un branch cb1 que reusaba el patron opponent — se removio porque generaba
+    // conflictos visuales: la nave entra con un patron distinto al resto.
+    this._entryActive    = true;
+    this._entryTime      = 0;
+    this._entryDuration  = 5.0;
+    this._entrySlerpRate = 1.6;
+    this._entryEasePow   = 5;
     this._entryStartPos = new THREE.Vector3(
       this._basePosition.x,
       this._basePosition.y,
-      this._basePosition.z - 140,  // base=-55 → start=-195 (más allá del vórtice → invisible mientras carga)
+      this._basePosition.z - 140,  // spawn DEEP (mas alla del vortice)
     );
     this._modelLoaded = false;
 
@@ -96,7 +94,7 @@ export class RacingPlayerShip extends ShipBase {
   _configureLoadedMesh(node) {
     node.layers.set(0);
     // Bloom layer en la nave → durante bloom pass se renderiza y escribe depth,
-    // ocluyendo el túnel y evitando que su halo se "sume" encima de la nave.
+    // ocluyendo el tunel y evitando que su halo se "sume" encima de la nave.
     node.layers.enable(BLOOM_LAYER);
   }
 
@@ -196,15 +194,27 @@ export class RacingPlayerShip extends ShipBase {
         return;
       }
       this._group.visible = true;
+      // Suspend baked skeletal clip while entry lerp owns the transform —
+      // cb1's clip animates root bones and otherwise distorts the entry.
+      this._suspendAnimations = true;
       this._entryTime += delta;
       const k  = Math.min(this._entryTime / this._entryDuration, 1);
-      // Quintic ease-out: arranque más suave, llegada más cremosa.
-      const ek = 1 - Math.pow(1 - k, 5);
+      // Ease-out (pow configurable: 5 = quintic estandar, 3 = cubic opponent-style para cb1).
+      const ek = 1 - Math.pow(1 - k, this._entryEasePow);
       this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
-      // Slerp más lento (1.6 vs 4) para que la rotación nariz +Z → -Z sea gradual.
-      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 1.6);
+      // Slerp a identidad — rate configurable segun nave.
+      this._group.quaternion.slerp(new THREE.Quaternion(), delta * this._entrySlerpRate);
+      // Fade-in escala: emerge desde 0 → 1 en primer 35% de la entrada.
+      // Sumado a niebla, hace que la nave "salga del hiperespacio" en vez de aparecer.
+      const fadeK = Math.min(1, k / 0.35);
+      const fadeScale = 0.001 + fadeK * 0.999;
+      this._group.scale.setScalar(fadeScale);
       this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
-      if (k >= 1) this._entryActive = false;
+      if (k >= 1) {
+        this._entryActive = false;
+        this._suspendAnimations = false;
+        this._group.scale.setScalar(1);
+      }
       return;
     }
 
@@ -212,14 +222,14 @@ export class RacingPlayerShip extends ShipBase {
 
     const { t, smoothLead, smoothBurst, typedAdvance, progressZ, smoothProgress } = this._raceState;
     const zBase = (progressZ ?? this._basePosition.z);
-    // Encoge la nave a medida que se aleja → refuerza sensación de avance.
+    // Encoge la nave a medida que se aleja → refuerza sensacion de avance.
     const shrink = THREE.MathUtils.lerp(1.0, 0.5, smoothProgress ?? 0);
     this._group.scale.setScalar(shrink);
 
     this._group.position.x = this._basePosition.x + Math.sin(t * 1.45) * 0.28 + Math.cos(t * 0.68) * 0.14 + smoothLead * 0.06;
     this._group.position.y = this._basePosition.y + Math.sin(t * 2.1) * 0.24 + Math.cos(t * 1.3) * 0.11 + smoothBurst * 0.12;
     this._group.position.z = zBase - smoothLead - typedAdvance;
-    // Group en identidad (orientación viene de modelRoot ya alineado por combat formula).
+    // Group en identidad (orientacion viene de modelRoot ya alineado por combat formula).
     this._group.rotation.x = -0.08 + Math.sin(t * 1.9) * 0.06 - smoothBurst * 0.04;
     this._group.rotation.y = Math.sin(t * 0.92) * 0.08;
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;

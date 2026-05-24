@@ -30,7 +30,7 @@ export class CombatEnemy extends Entity {
     this.reset(word, position, type, speed);
   }
 
-  // Re-init para Object Pooling. Fast path: si el type no cambió desde el último
+  // Re-init para Object Pooling. Fast path: si el type no cambio desde el ultimo
   // build, reusamos materiales/meshes — solo restauramos estado (color, opacidad,
   // intensidad). Evita dispose+rebuild de N materiales en cada acquire del pool.
   reset(word, position, type = ENEMY_TYPES.SCOUT, speed = ENEMY_BASE_SPEED) {
@@ -122,14 +122,14 @@ export class CombatEnemy extends Entity {
     const hull = new THREE.LineSegments(edges, this._lineMat);
     this._group.add(hull);
 
-    // core: nodo wireframe sólido (sin esfera opaca lavando geometría interna).
+    // core: nodo wireframe solido (sin esfera opaca lavando geometria interna).
     this._coreMat = new THREE.MeshStandardMaterial({
       color, emissive: color, emissiveIntensity: cfg.emissiveInt,
       roughness: 0.6, metalness: 0.25, flatShading: true,
       wireframe: true,
     });
     this._core = new THREE.Mesh(sharedCore, this._coreMat);
-    this._core.scale.setScalar(cfg.coreR * 0.55); // núcleo más pequeño = lectura limpia
+    this._core.scale.setScalar(cfg.coreR * 0.55); // nucleo mas pequeño = lectura limpia
     this._group.add(this._core);
 
     // Glow sprite recortado: evita la lectura de esfera. Se reserva para apex en tier HIGH.
@@ -257,7 +257,7 @@ export class CombatEnemy extends Entity {
 
 CombatEnemy.PLAYER_POS = new THREE.Vector3(0, 0.2, 2);
 CombatEnemy._tempDir = new THREE.Vector3();
-// Clamp velocidad efectiva (units/s). Playable a 80-100 wpm. MAX bajo a propósito
+// Clamp velocidad efectiva (units/s). Playable a 80-100 wpm. MAX bajo a proposito
 // — dificultad escala con cantidad/longitud de palabras, no con velocidad.
 CombatEnemy.MIN_APPROACH_SPEED = 1.2;
 CombatEnemy.MAX_APPROACH_SPEED = 2.6;

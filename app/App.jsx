@@ -10,6 +10,7 @@ import TutorialOverlay from "./components/tutorial/TutorialOverlay.jsx";
 import ShortcutsOverlay from "./components/common/ShortcutsOverlay.jsx";
 import EpilepsyWarning from "./components/EpilepsyWarning.jsx";
 import PresentationMenu from "./components/PresentationMenu.jsx";
+import RematchInviteModal from "./components/race/online/RematchInviteModal.jsx";
 import { Bridge } from "../shared/bridge.js";
 import { KeybindService } from "../shared/keybindService.js";
 
@@ -78,6 +79,8 @@ export default function App() {
     gameMode, raceVictory, peakWPM, timeElapsed, grafemasReward,
     wordsDestroyed, bestCombo, distanceTraveled,
     showShipSelection, tutorialActive,
+    onlineEnabled, onlineOpponentStats, onlineRole,
+    onlinePendingInvite,
   } = state;
 
   if (introStage === 'warning') {
@@ -108,14 +111,20 @@ export default function App() {
 
   if (gameOver) {
     return (
-      <MatchResult
-        score={score} wpm={wpm} accuracy={accuracy} wave={wave}
-        gameMode={gameMode} raceVictory={raceVictory}
-        peakWPM={peakWPM} timeElapsed={timeElapsed}
-        grafemasReward={grafemasReward}
-        wordsDestroyed={wordsDestroyed} bestCombo={bestCombo}
-        distanceTraveled={distanceTraveled}
-      />
+      <>
+        <MatchResult
+          score={score} wpm={wpm} accuracy={accuracy} wave={wave}
+          gameMode={gameMode} raceVictory={raceVictory}
+          peakWPM={peakWPM} timeElapsed={timeElapsed}
+          grafemasReward={grafemasReward}
+          wordsDestroyed={wordsDestroyed} bestCombo={bestCombo}
+          distanceTraveled={distanceTraveled}
+          onlineEnabled={onlineEnabled}
+          onlineOpponentStats={onlineOpponentStats}
+          onlineRole={onlineRole}
+        />
+        <RematchInviteModal invite={onlinePendingInvite} />
+      </>
     );
   }
 
@@ -127,6 +136,7 @@ export default function App() {
       {isPaused && <PauseMenu />}
       {tutorialActive && <TutorialOverlay tutorialActive={tutorialActive} />}
       <ShortcutsOverlay open={showHelp} onClose={() => setShowHelp(false)} />
+      <RematchInviteModal invite={onlinePendingInvite} />
     </>
   );
 }

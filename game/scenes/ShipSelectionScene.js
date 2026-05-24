@@ -13,7 +13,7 @@ import { HangarLaser } from './hangar/HangarLaser.js';
 import { Bridge } from '../../shared/bridge.js';
 
 const FIRE_COOLDOWN_MS      = 150;
-const AUTO_FIRE_INTERVAL_MS = 110; // cadencia ráfaga K (corto, continuo)
+const AUTO_FIRE_INTERVAL_MS = 110; // cadencia rafaga K (corto, continuo)
 const FLOW_RAMP_SPEED       = 1 / 0.6; // 0→1 en 0.6s
 
 // Adjusts vertical spawn position of all ships. Negative = lower, positive = higher.
@@ -66,14 +66,45 @@ export class ShipSelectionScene {
     const palette = SHIP_PALETTES[ship?.id] ?? null;
     this._loader.boosters.forEach(b => b.setHangarMode?.(false));
     this._flowModeOff = false;
-    // Snap a baseline ANTES de capturar startPos en DeploymentAnimator.
-    // Evita que deploy arranque desde un offset de flotación residual.
-    this._loader.updateFloat(null);
     const gameMode = Bridge.peekState?.()?.pendingGameMode ?? 'combat';
-    return this._deploy.triggerDeployment(wrapper, palette, gameMode).then((res) => {
-      this._loader.boosters.forEach(b => b.setHangarMode?.(true));
-      this._flowModeOff = true;
-      return res;
+    // Estabilizar nave a pose baseline (lerp suave ~350ms) ANTES de iniciar
+    // launch. Antes se hacia snap instantaneo + animator arrancaba desde
+    // cualquier punto del ciclo de flotacion → nave visualmente desalineada
+    // al despegar. Ahora se ve "asentarse" antes del despegue.
+    return this._stabilizeShip(wrapper).then(() => {
+      return this._deploy.triggerDeployment(wrapper, palette, gameMode).then((res) => {
+        this._loader.boosters.forEach(b => b.setHangarMode?.(true));
+        this._flowModeOff = true;
+        return res;
+      });
+    });
+  }
+
+  // Lerp suave wrapper position.y + rotation.x/z desde valores actuales del ciclo
+  // de flotacion hacia el baseline guardado en HangarLoader.loadShip. Durante el
+  // lerp, _stabilizing=true bloquea updateFloat en el loop para evitar fight.
+  _stabilizeShip(wrapper) {
+    return new Promise((resolve) => {
+      if (!wrapper || !wrapper.userData) { resolve(); return; }
+      const ud = wrapper.userData;
+      if (ud.floatBaseY == null) { resolve(); return; }
+      this._stabilizing = true;
+      const STAB_MS = 350;
+      const startY  = wrapper.position.y;
+      const startRX = wrapper.rotation.x;
+      const startRZ = wrapper.rotation.z;
+      const t0 = performance.now();
+      const tick = () => {
+        if (!this._alive) { this._stabilizing = false; resolve(); return; }
+        const k  = Math.min(1, (performance.now() - t0) / STAB_MS);
+        const ek = 1 - Math.pow(1 - k, 3);  // cubic ease-out
+        wrapper.position.y = startY  + (ud.floatBaseY    - startY)  * ek;
+        wrapper.rotation.x = startRX + (ud.floatBaseRotX - startRX) * ek;
+        wrapper.rotation.z = startRZ + (ud.floatBaseRotZ - startRZ) * ek;
+        if (k < 1) requestAnimationFrame(tick);
+        else { this._stabilizing = false; resolve(); }
+      };
+      requestAnimationFrame(tick);
     });
   }
 
@@ -104,7 +135,7 @@ export class ShipSelectionScene {
       this._loader.boosters.forEach(b => b.setHangarMode?.(false));
       this._flowModeOff = false;
     }
-    // Si pasa a false: hangarMode se restaurará cuando _flowRatio vuelva a 0
+    // Si pasa a false: hangarMode se restaurara cuando _flowRatio vuelva a 0
     // (en el loop), para evitar snap brusco.
   }
   _resetFlowSim() {
@@ -160,7 +191,7 @@ export class ShipSelectionScene {
 
   fireWeapon(cooldownMs = FIRE_COOLDOWN_MS) {
     if (this._deploy.isActive) return;
-    if (this._laserOn) return; // laser activo: no mezclar ráfaga
+    if (this._laserOn) return; // laser activo: no mezclar rafaga
     const now = performance.now();
     if (now - this._lastShotAt < cooldownMs) return;
     const shots = this._loader.getMuzzleShots();
@@ -231,12 +262,16 @@ export class ShipSelectionScene {
         // Durante deploy: NO tocar wrapper transform. DeploymentAnimator es
         // dueño exclusivo de position/rotation. Trail samplea w.position y
         // debe coincidir con el render — cualquier escritura posterior
-        // desfasaría estela vs nave.
+        // desfasaria estela vs nave.
         const d = this._deploy.boosterDrive;
         this._loader.boosters.forEach(b => b.update(dt, d.accel, d.vScale, d.rScale, d.flowRatio));
       } else {
-        this._floatTime += dt;
-        this._loader.updateFloat(this._floatTime);
+        // Stabilize phase: _stabilizeShip dueño exclusivo del wrapper transform.
+        // Skip updateFloat (escribiria sobre el lerp). Boosters siguen activos.
+        if (!this._stabilizing) {
+          this._floatTime += dt;
+          this._loader.updateFloat(this._floatTime);
+        }
         // Rampa flow simulada (tecla J).
         const target = this._flowSim ? 1 : 0;
         if (this._flowRatio !== target) {
@@ -249,14 +284,14 @@ export class ShipSelectionScene {
           this._flowModeOff = true;
         }
         const fr     = this._flowRatio;
-        const vScale = 1.0 + fr * 1.0;  // máx 2.0 (antes 3.2)
-        const rScale = 1.0 + fr * 0.6;  // máx 1.6 (antes 2.6)
+        const vScale = 1.0 + fr * 1.0;  // max 2.0 (antes 3.2)
+        const rScale = 1.0 + fr * 0.6;  // max 1.6 (antes 2.6)
         const accel  = fr > 0.05;
         this._loader.boosters.forEach(b => b.update(dt, accel, vScale, rScale, fr));
       }
       this._loader.mixers.forEach(m => m?.update(dt));
 
-      // Modo láser tiene prioridad sobre ráfaga K.
+      // Modo laser tiene prioridad sobre rafaga K.
       if (isDeploying) {
         this._laser.clear();
       } else if (this._laserOn) {

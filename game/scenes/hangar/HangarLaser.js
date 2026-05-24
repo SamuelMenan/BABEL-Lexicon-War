@@ -8,10 +8,10 @@ const BEAM_LENGTH   = PROJECTILE_DEFAULTS.maxDist; // scene units
 const CORE_RADIUS   = 0.012;
 const GLOW_RADIUS   = 0.034;
 const HALO_RADIAL   = 1.4;
-// Empuja el inicio del haz un pelo delante del anchor para que el núcleo
-// sólido nazca en la boca y nunca se proyecte hacia atrás dentro del casco.
+// Empuja el inicio del haz un pelo delante del anchor para que el nucleo
+// solido nazca en la boca y nunca se proyecte hacia atras dentro del casco.
 const MUZZLE_EPSILON = 0.02;
-// Anillo de boquilla — aro aditivo en cada cañón, color de la paleta.
+// Anillo de boquilla — aro aditivo en cada cañon, color de la paleta.
 const RING_RADIUS = GLOW_RADIUS * 2.2;
 const RING_TUBE   = GLOW_RADIUS * 0.35;
 
@@ -24,16 +24,16 @@ export class HangarLaser {
     this._coreGeo = new THREE.CylinderGeometry(CORE_RADIUS, CORE_RADIUS, BEAM_LENGTH, 10, 1, false);
     this._glowGeo = new THREE.CylinderGeometry(GLOW_RADIUS, GLOW_RADIUS, BEAM_LENGTH, 12, 1, false);
     this._haloGeo = new THREE.CylinderGeometry(GLOW_RADIUS, GLOW_RADIUS, BEAM_LENGTH * 1.04, 12, 1, false);
-    // Mover origen de cada geometría a su BASE (-Y) en lugar del centro.
+    // Mover origen de cada geometria a su BASE (-Y) en lugar del centro.
     // Resultado: cilindro ocupa Y ∈ [0, L] en local. Al posicionar el root en
-    // la boca del cañón y rotar +Y→dir, todo el volumen se proyecta SOLO hacia
-    // dir (jamás detrás).
+    // la boca del cañon y rotar +Y→dir, todo el volumen se proyecta SOLO hacia
+    // dir (jamas detras).
     this._coreGeo.translate(0, BEAM_LENGTH * 0.5, 0);
     this._glowGeo.translate(0, BEAM_LENGTH * 0.5, 0);
     this._haloGeo.translate(0, BEAM_LENGTH * 1.04 * 0.5, 0);
 
     // Torus default: plano XY, eje = +Z. Rotamos a eje = +Y para usar la misma
-    // alineación setFromUnitVectors(+Y, dir) que el haz.
+    // alineacion setFromUnitVectors(+Y, dir) que el haz.
     this._ringGeo = new THREE.TorusGeometry(RING_RADIUS, RING_TUBE, 8, 20);
     this._ringGeo.rotateX(Math.PI / 2);
 
@@ -157,8 +157,8 @@ export class HangarLaser {
       const beam = this._ensureBeam(i, color);
       const ring = this._ensureRing(i, color);
       const dir = s.dir.clone().normalize();
-      // Geometría trasladada: base en Y=0, punta en Y=+L. Root va a la boca.
-      // Rotación +Y → dir asegura que la totalidad del haz vive en +dir.
+      // Geometria trasladada: base en Y=0, punta en Y=+L. Root va a la boca.
+      // Rotacion +Y → dir asegura que la totalidad del haz vive en +dir.
       const start = s.origin.clone().addScaledVector(dir, MUZZLE_EPSILON);
       beam.root.position.copy(start);
       beam.root.quaternion.setFromUnitVectors(ALIGN_AXIS, dir);

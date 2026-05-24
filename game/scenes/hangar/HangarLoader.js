@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getShipsForHangar } from '../../../shared/shopCatalog.js';
+import { AssetLoader } from '../../core/AssetLoader.js';
 
 const SHIPS = getShipsForHangar();
 import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../../rendering/BoosterEffect.js';
@@ -9,6 +11,16 @@ import { SHIP_MUZZLE_CONFIGS } from '../../rendering/booster/MuzzleConfig.js';
 // Adjusts vertical position of all ships. Negative = lower, positive = higher.
 const SHIP_SPAWN_OFFSET = { x: 0, y: -0.1, z: 0 };
 
+// Detach only — DO NOT dispose materials/geometries. Hangar shares model
+// resources with AssetLoader cache (race/combat reuse the same parsed gltf).
+// Disposing here breaks the next reload of the same ship (cb1 in particular)
+// and corrupts race/combat instances that hold the cached gltf.
+function detachGroup(group) {
+  while (group.children.length) {
+    group.remove(group.children[0]);
+  }
+}
+// Hard dispose — only on unmount/destroy when scene is going away for good.
 function disposeGroup(group) {
   while (group.children.length) {
     const child = group.children[0];
@@ -41,6 +53,7 @@ export class HangarLoader {
     this.muzzles          = [];
     this.mixers           = [];
     this.currentShipIndex = 0;
+    this._loadGen         = 0;     // increments per loadShip — stale callbacks no-op
   }
 
   loadStation() {
@@ -76,16 +89,23 @@ export class HangarLoader {
     this.currentShipIndex = index;
     this._onLoadStart();
 
-    disposeGroup(this.shipGroup);
+    detachGroup(this.shipGroup);
     this.boosters.forEach(b => b.dispose());
     this.boosters = [];
     this.muzzles  = [];
     this.mixers   = [];
 
     const ship = SHIPS[index];
-    this._loader.load(
-      ship.url,
-      (gltf) => {
+    const gen  = ++this._loadGen;
+
+    const onLoaded = (gltfSrc) => {
+      // Stale callback — user already switched to another ship.
+      if (gen !== this._loadGen) return;
+      // Clone scene so cached gltf can be reused by race/combat without
+      // three.js re-parenting it away from us (or vice versa). SkeletonUtils
+      // handles skinned meshes correctly (cb1 has a skin).
+      const sceneClone = SkeletonUtils.clone(gltfSrc.scene);
+      const gltf = { scene: sceneClone, animations: gltfSrc.animations };
         // 1. Calculate bounding box to center mesh at local origin
         const box    = new THREE.Box3().setFromObject(gltf.scene);
         const center = new THREE.Vector3();
@@ -216,9 +236,22 @@ export class HangarLoader {
 
         this._saveModelOriginals(wrapper);
         this._onLoadEnd();
-      },
+    };
+
+    // Prefer AssetLoader cache — preloaded during race/combat preload. Avoids
+    // re-downloading 34MB cb1 every hangar switch. Fall back to GLTFLoader if
+    // the ship wasn't in the manifest yet.
+    const cached = AssetLoader.getGLTF(ship.url);
+    if (cached) {
+      onLoaded(cached);
+      return;
+    }
+    this._loader.load(
+      ship.url,
+      (gltf) => { AssetLoader.setGLTF(ship.url, gltf); onLoaded(gltf); },
       undefined,
       (err) => {
+        if (gen !== this._loadGen) return;
         console.warn('[HangarLoader] ship load failed:', ship.url, err);
         this._onLoadEnd();
       }
@@ -340,7 +373,7 @@ export class HangarLoader {
   }
 
   // ─── Floating idle ───────────────────────────────────────────────────────
-  // Llamar cada frame mientras NO esté en deployment. `time` en segundos
+  // Llamar cada frame mientras NO este en deployment. `time` en segundos
   // (acumulado por el caller). Bob vertical + roll/pitch leve relativo al
   // baseline guardado en loadShip. Resetea al baseline si time es null.
   updateFloat(time) {
@@ -372,7 +405,11 @@ export class HangarLoader {
   dispose() {
     this.boosters.forEach(b => b.dispose());
     this.boosters = [];
-    disposeGroup(this.shipGroup);
-    disposeGroup(this.stationGroup);
+    // Detach only — materials/geometries are shared with AssetLoader cache
+    // (race/combat reuse them). Disposing here kills cached resources and
+    // makes the next reload render empty (cb1 specifically observed broken
+    // after race→hangar round-trip). GC reclaims when refs drop naturally.
+    detachGroup(this.shipGroup);
+    detachGroup(this.stationGroup);
   }
 }

@@ -31,7 +31,7 @@ export class DeploymentAnimator {
   // Flag: cuando true, DeploymentAnimator escribe camera.position/lookAt
   // directamente. ShipSelectionScene debe omitir _cam.applyPosition.
   get cameraTakeover()  { return !!this._state?.cameraTakeover; }
-  // Phase-aware booster drive — leído por ShipSelectionScene cada frame.
+  // Phase-aware booster drive — leido por ShipSelectionScene cada frame.
   get boosterDrive() {
     return this._state?.boosterDrive ?? { accel: false, vScale: 1.0, rScale: 1.0, flowRatio: 0 };
   }
@@ -70,7 +70,7 @@ export class DeploymentAnimator {
         warpFlashSpawned: false,
         shockwavesSpawned: { t1: false, t2: false },
         boosterDrive: { accel: false, vScale: 1.0, rScale: 1.0, flowRatio: 0 },
-        // Camera coreografía
+        // Camera coreografia
         gameMode,
         endPose,
         cameraTakeover:    false,
@@ -107,7 +107,7 @@ export class DeploymentAnimator {
     // Slow orbital pan while suspended — scene stays alive
     if (t < T1) this._cameraController.orbit.theta += 0.40 * dt;
 
-    // ── PHASE 3 CAMERA: alinear detrás de la nave ──────────────────────────
+    // ── PHASE 3 CAMERA: alinear detras de la nave ──────────────────────────
     // Lerp theta→π, phi→0.18, radius hacia 6.5 durante T2→T3 para preparar
     // pose final. Suavizado por phaseT.
     if (t >= T2 && t < T3) {
@@ -188,7 +188,7 @@ export class DeploymentAnimator {
 
     // ── PHASE 4 CAMERA TAKEOVER ─────────────────────────────────────────────
     // T3→T4: bypass orbit. Lerp pos/look/fov directo hacia pose final
-    // (combat o racing). Garantiza llegada exacta a la cámara del modo.
+    // (combat o racing). Garantiza llegada exacta a la camara del modo.
     if (t >= T3) {
       if (!s.f4Snapshot) {
         // Snapshot pos/look/fov al entrar a F4. lookAt actual = focal.
@@ -202,8 +202,8 @@ export class DeploymentAnimator {
       const k = ss(clamp01((t - T3) / (T4 - T3)));
       // Position lerp.
       this._camera.position.lerpVectors(s.f4Snapshot.pos, s.endPose.pos, k);
-      // lookAt: punto frente a la cámara a la MISMA altura (nivel horizontal).
-      // Resultado: cámara detrás de la nave, mirando recto, sin pitch hacia abajo.
+      // lookAt: punto frente a la camara a la MISMA altura (nivel horizontal).
+      // Resultado: camara detras de la nave, mirando recto, sin pitch hacia abajo.
       s.currentLookTarget.copy(w.position);
       s.currentLookTarget.y = this._camera.position.y;
       this._camera.up.set(0, 1, 0);
@@ -215,9 +215,9 @@ export class DeploymentAnimator {
     }
 
     // ── BOOSTER DRIVE (phase-aware) ──────────────────────────────────────────
-    // Rampa vScale/rScale/flowRatio según fase. flowRatio>0 → BoosterEffect
+    // Rampa vScale/rScale/flowRatio segun fase. flowRatio>0 → BoosterEffect
     // usa FLOW_PALETTE (white-hot). Requiere setHangarMode(false) externamente.
-    // Rampas suaves: crecimiento visible pero controlado. Máximos contenidos
+    // Rampas suaves: crecimiento visible pero controlado. Maximos contenidos
     // para evitar boosters/aros desproporcionados durante warp.
     let bvScale, brScale, bflow;
     if (t < T1) {
@@ -244,7 +244,7 @@ export class DeploymentAnimator {
     s.boosterDrive = { accel: true, vScale: bvScale, rScale: brScale, flowRatio: bflow };
 
     // ── SHOCKWAVES ───────────────────────────────────────────────────────────
-    // T1: ignición plena. T2: punch de máximo empuje (más grande).
+    // T1: ignicion plena. T2: punch de maximo empuje (mas grande).
     if (!s.shockwavesSpawned.t1 && t >= T1 * 0.85) {
       s.shockwavesSpawned.t1 = true;
       new Shockwave(this._scene, w.position.clone(), { palette: s.palette, size: 2.2, life: 0.55 });
@@ -261,7 +261,7 @@ export class DeploymentAnimator {
       s.trail.update(dt, w.position, speedNorm);
     }
 
-    // ── DUST PUFF (ignición) ─────────────────────────────────────────────────
+    // ── DUST PUFF (ignicion) ─────────────────────────────────────────────────
     s.dust?.update(dt);
 
     // ── WARP FLASH (entrada a fase 4) ────────────────────────────────────────

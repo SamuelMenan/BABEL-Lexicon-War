@@ -133,9 +133,9 @@ export class BoosterEffect {
   setHangarMode(enabled) {
     if (enabled !== this._hangarMode) {
       this._hangarMode = enabled;
-      // Marca para que el próximo update snap-ee smoothFlowSize/Opacity al
+      // Marca para que el proximo update snap-ee smoothFlowSize/Opacity al
       // target nuevo, sin lerp visible (evita parpadeo de opacidad al cambiar
-      // entre hangar-idle y simulación/despliegue).
+      // entre hangar-idle y simulacion/despliegue).
       this._modeSwitchPending = true;
     } else {
       this._hangarMode = enabled;

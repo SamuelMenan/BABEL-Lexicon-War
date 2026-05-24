@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
 // Ribbon aditiva con tinte de paleta. Reemplaza el Points lineal anterior.
-// Construcción: strip de quads (2 vértices por sample, perpendiculares al
+// Construccion: strip de quads (2 vertices por sample, perpendiculares al
 // world-up). Fade por cola via brightness de vertex colors (no necesita
-// alpha por vértice ni shader custom — AdditiveBlending interpreta el
-// brillo como contribución).
+// alpha por vertice ni shader custom — AdditiveBlending interpreta el
+// brillo como contribucion).
 
 const MAX_SAMPLES   = 140;
 const SAMPLE_DT     = 0.012;  // seg entre samples
@@ -28,7 +28,7 @@ export class DeploymentTrail {
     this._baseCol = new THREE.Color(baseHex);
     this._hotCol  = new THREE.Color(0xffffff);
 
-    // Buffers: 2 vértices por sample (left/right).
+    // Buffers: 2 vertices por sample (left/right).
     this._positions = new Float32Array(MAX_SAMPLES * 2 * 3);
     this._colors    = new Float32Array(MAX_SAMPLES * 2 * 3);
     this._indices   = new Uint16Array((MAX_SAMPLES - 1) * 6);
@@ -86,7 +86,7 @@ export class DeploymentTrail {
     this._scene.add(this._sparks);
   }
 
-  // headPos: posición actual de la nave. speedNorm: ∈[0,1].
+  // headPos: posicion actual de la nave. speedNorm: ∈[0,1].
   update(dt, headPos, speedNorm = 0) {
     this._t     += dt;
     this._timer += dt;
@@ -156,9 +156,9 @@ export class DeploymentTrail {
     this._geo.attributes.color.needsUpdate    = true;
     this._geo.setDrawRange(0, (n - 1) * 6);
 
-    // ── Sparks update + emisión ────────────────────────────────────────
-    // Emite mientras hay velocidad. Dirección lateral random + componente
-    // contraria al avance (despide hacia atrás).
+    // ── Sparks update + emision ────────────────────────────────────────
+    // Emite mientras hay velocidad. Direccion lateral random + componente
+    // contraria al avance (despide hacia atras).
     this._sparkTimer += dt;
     if (speedNorm > 0.05 && this._sparkTimer >= SPARK_EMIT_RATE) {
       this._sparkTimer = 0;

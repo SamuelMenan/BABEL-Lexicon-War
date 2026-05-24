@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 
-// NOTE: NO usa BLOOM_LAYER por la misma razón que BoltVisual: bloom selectivo
-// en combate dejaría que el glow se viera a través del casco.
+// NOTE: NO usa BLOOM_LAYER por la misma razon que BoltVisual: bloom selectivo
+// en combate dejaria que el glow se viera a traves del casco.
 
-// Beam aditivo reutilizable (combate láser flow + cualquier escena).
+// Beam aditivo reutilizable (combate laser flow + cualquier escena).
 // Cilindros con base trasladada en Y=0 (punta en Y=1). Posicionar root en
 // el origen, rotar +Y → dir, scale Y = distancia. Resultado: haz exacto
-// desde origin hasta target. depthTest:true → oclusión por geometría.
+// desde origin hasta target. depthTest:true → oclusion por geometria.
 
 const CORE_RADIUS = 0.045;
 const GLOW_RADIUS = 0.11;
@@ -80,7 +80,7 @@ export function createBeam({ color = 0xffffff, scale = 1.0 } = {}) {
   }
 
   function fade(k) {
-    // k ∈ [0,1]: opacidad relativa al máximo inicial.
+    // k ∈ [0,1]: opacidad relativa al maximo inicial.
     coreMat.opacity = coreOp0 * k;
     glowMat.opacity = glowOp0 * k;
     haloMat.opacity = haloOp0 * k;

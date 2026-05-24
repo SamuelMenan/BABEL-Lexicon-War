@@ -43,7 +43,7 @@ export class Shockwave {
     const k = this._t / this._life;
     if (k >= 1) { this.dispose(); return; }
 
-    // Easing: rápido al inicio, suaviza al final.
+    // Easing: rapido al inicio, suaviza al final.
     const ease = 1 - Math.pow(1 - k, 2.4);
     const scale = 0.2 + ease * this._size;
     this._mesh.scale.set(scale, 1, scale);

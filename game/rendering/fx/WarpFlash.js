@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-// Plano aditivo blanco anclado a la cámara. Pico al inicio de warp (T3),
-// decae rápido. No requiere shader/composer pass — sólo overlay geométrico.
+// Plano aditivo blanco anclado a la camara. Pico al inicio de warp (T3),
+// decae rapido. No requiere shader/composer pass — solo overlay geometrico.
 
 const FADE_IN_S  = 0.08;
 const FADE_OUT_S = 0.45;
@@ -47,7 +47,7 @@ export class WarpFlash {
     }
     this._mat.opacity = op;
 
-    // Mantener el plano pegado a la cámara, mirando hacia ella.
+    // Mantener el plano pegado a la camara, mirando hacia ella.
     this._camera.getWorldDirection(this._tmpFwd);
     this._mesh.position.copy(this._camera.position).addScaledVector(this._tmpFwd, 0.5);
     this._mesh.quaternion.copy(this._camera.quaternion);

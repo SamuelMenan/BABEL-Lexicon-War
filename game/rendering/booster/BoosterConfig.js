@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { SHIP_PALETTES } from '../../../shared/constants.js';
 
 // 10-level opacity ramp: flowRatio 0→1 maps across estos valores.
-// Ascendente real: idle (fr=0) muy tenue (0.05) → FLOW final (fr=1) máxima
-// intensidad (1.0). Aplicada con fórmula aditiva rawOp + (1-rawOp)*fop.
+// Ascendente real: idle (fr=0) muy tenue (0.05) → FLOW final (fr=1) maxima
+// intensidad (1.0). Aplicada con formula aditiva rawOp + (1-rawOp)*fop.
 const DEFAULT_OPACITY_RAMP = [0.05, 0.15, 0.28, 0.42, 0.56, 0.68, 0.79, 0.88, 0.95, 1.0];
 
 export const BOOST_PALETTE = {
@@ -110,7 +110,7 @@ export const SHIP_BOOSTER_CONFIGS = {
   // ringColor, hangarColor, normalRamp, flowRamp) are spread from SHIP_PALETTES.
 
   // spaceship.glb — 2 boosters, lado a lado en la trasera
-  // localPosition: fracción de half-bbox. z=-1.0 → cara -Z (trasera real del modelo).
+  // localPosition: fraccion de half-bbox. z=-1.0 → cara -Z (trasera real del modelo).
   // flipZ: invierte el root 180° para que la llama apunte hacia afuera (-Z).
   hangar_spaceship_0: {
     ...pal('spaceship'),
@@ -164,7 +164,7 @@ export const SHIP_BOOSTER_CONFIGS = {
     sizeMax:       0.6,
   },
 
-  // cb1 — 2 propulsores, simétricos a cada lado del motor central
+  // cb1 — 2 propulsores, simetricos a cada lado del motor central
   // bbox: x=58.44 y=11.81 z=50.62 | scale=0.038 | rotationY=-π/2
   hangar_cb1_0: {
     ...pal('cb1'),
@@ -199,7 +199,7 @@ export const SHIP_BOOSTER_CONFIGS = {
     sizeMax:       0.7,
   },
 
-  // ig127.glb — 4 boosters, formación cuadrada (2 arriba + 2 abajo)
+  // ig127.glb — 4 boosters, formacion cuadrada (2 arriba + 2 abajo)
   hangar_ig127_0: {
     ...pal('ig127'),
     localPosition: new THREE.Vector3(-0.29, 0.05, 0.91),
@@ -278,7 +278,7 @@ export const SHIP_BOOSTER_CONFIGS = {
     sizeMax:       0.5,
   },
 
-  // waldeinsamkeit.glb — 1 booster naranja intenso, GRANDE (motor único)
+  // waldeinsamkeit.glb — 1 booster naranja intenso, GRANDE (motor unico)
   hangar_waldeinsamkeit_0: {
     ...pal('waldeinsamkeit'),
     localPosition: new THREE.Vector3(0, -0.1, 0.9),

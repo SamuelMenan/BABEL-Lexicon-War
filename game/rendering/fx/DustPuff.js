@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// Polvo levantado bajo la nave durante ignición. Points aditivos suaves
+// Polvo levantado bajo la nave durante ignicion. Points aditivos suaves
 // que expanden radialmente en plano XZ y caen ligeramente. One-shot.
 
 const PARTICLES = 110;

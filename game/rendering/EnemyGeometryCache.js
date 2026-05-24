@@ -1,4 +1,4 @@
-// Cache compartido de geometrías para enemigos — evita regenerar EdgesGeometry / TorusGeometry
+// Cache compartido de geometrias para enemigos — evita regenerar EdgesGeometry / TorusGeometry
 // en cada spawn (drop de FPS al cambiar oleada).
 
 import * as THREE from 'three';
@@ -6,7 +6,7 @@ import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry.js'
 
 const PHI = (1 + Math.sqrt(5)) / 2; // golden ratio
 
-// Normaliza puntos a radio máximo r — preserva proporciones del polítopo.
+// Normaliza puntos a radio maximo r — preserva proporciones del politopo.
 function _normalizeToRadius(points, r) {
   let max = 0;
   for (const p of points) { const l = p.length(); if (l > max) max = l; }
@@ -15,8 +15,8 @@ function _normalizeToRadius(points, r) {
   return points;
 }
 
-// Stellation por extrusión piramidal: cada triángulo de baseGeo se reemplaza
-// por 3 triángulos con ápice externo. Aproximación de Kepler-Poinsot.
+// Stellation por extrusion piramidal: cada triangulo de baseGeo se reemplaza
+// por 3 triangulos con apice externo. Aproximacion de Kepler-Poinsot.
 function _stellateGeometry(baseGeo, spikeFactor = 1.6) {
   const inPos = baseGeo.attributes.position.array;
   const triCount = inPos.length / 9;
@@ -52,7 +52,7 @@ export function getSharedEdges(type, factory, prebuilt = false) {
   return _sharedEdges[type];
 }
 
-// Tesseract: 16 vértices 4D proyectados como cubo interior + exterior + 8 conectores.
+// Tesseract: 16 vertices 4D proyectados como cubo interior + exterior + 8 conectores.
 // 32 aristas total. Sin caras rellenas.
 export function buildTesseractEdgesGeometry() {
   const cube = [
@@ -87,9 +87,9 @@ export function getSharedRing(r, tube) {
   return _sharedRings[key];
 }
 
-// ── Polítopos uniformes (convexos) via ConvexGeometry ─────────────────────────
+// ── Politopos uniformes (convexos) via ConvexGeometry ─────────────────────────
 
-// Rhombicuboctahedron — 26 caras (8 triángulos + 18 cuadrados), 24 vértices.
+// Rhombicuboctahedron — 26 caras (8 triangulos + 18 cuadrados), 24 vertices.
 export function buildRhombicuboctaGeometry(r = 0.95) {
   const t = 1 + Math.SQRT2;
   const pts = [];
@@ -102,14 +102,14 @@ export function buildRhombicuboctaGeometry(r = 0.95) {
   return new ConvexGeometry(_normalizeToRadius(pts, r));
 }
 
-// Icosidodecahedron — 32 caras (20 tri + 12 pent), 30 vértices. Cristalino.
+// Icosidodecahedron — 32 caras (20 tri + 12 pent), 30 vertices. Cristalino.
 export function buildIcosidodecaGeometry(r = 0.95) {
   const pts = [];
-  // (±φ, 0, 0) y perms cíclicas
+  // (±φ, 0, 0) y perms ciclicas
   for (const v of [[PHI,0,0],[0,PHI,0],[0,0,PHI]]) {
     for (const s of [-1,1]) pts.push(new THREE.Vector3(v[0]*s, v[1]*s, v[2]*s));
   }
-  // (±1/2, ±φ/2, ±φ²/2) y perms cíclicas
+  // (±1/2, ±φ/2, ±φ²/2) y perms ciclicas
   const phi2 = PHI * PHI;
   const triples = [[0.5, PHI/2, phi2/2],[PHI/2, phi2/2, 0.5],[phi2/2, 0.5, PHI/2]];
   for (const [a,b,c] of triples) {
@@ -120,8 +120,8 @@ export function buildIcosidodecaGeometry(r = 0.95) {
   return new ConvexGeometry(_normalizeToRadius(pts, r));
 }
 
-// Truncated Octahedron — 14 caras (8 hex + 6 cuad), 24 vértices.
-// Vértices = todas las permutaciones de (0, ±1, ±2).
+// Truncated Octahedron — 14 caras (8 hex + 6 cuad), 24 vertices.
+// Vertices = todas las permutaciones de (0, ±1, ±2).
 export function buildTruncatedOctaGeometry(r = 0.95) {
   const triples = [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
   const pts = [];
@@ -137,16 +137,16 @@ export function buildTruncatedOctaGeometry(r = 0.95) {
   return new ConvexGeometry(_normalizeToRadius(pts, r));
 }
 
-// ── Polítopos de Kepler-Poinsot (no convexos) via stellation ──────────────────
+// ── Politopos de Kepler-Poinsot (no convexos) via stellation ──────────────────
 
-// Small Stellated Dodecahedron — aproximación: dodecaedro con pirámide
+// Small Stellated Dodecahedron — aproximacion: dodecaedro con piramide
 // extruida en cada cara pentagonal (3 tris por cara → spike).
 export function buildSmallStellatedDodecaGeometry(r = 0.65, spike = 1.85) {
   return _stellateGeometry(new THREE.DodecahedronGeometry(r, 0), spike);
 }
 
-// Great Dodecahedron — aproximación: icosaedro stellated (apex moderado).
-// Resultado: 20 caras triangulares con picos cruzados, lectura matemática.
+// Great Dodecahedron — aproximacion: icosaedro stellated (apex moderado).
+// Resultado: 20 caras triangulares con picos cruzados, lectura matematica.
 export function buildGreatDodecaGeometry(r = 0.78, spike = 1.45) {
   return _stellateGeometry(new THREE.IcosahedronGeometry(r, 0), spike);
 }

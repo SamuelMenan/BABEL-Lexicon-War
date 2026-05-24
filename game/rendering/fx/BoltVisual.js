@@ -4,9 +4,9 @@ import * as THREE from 'three';
 // Cilindros aditivos: core/glow/halo. depthTest:true → casco/enemigos
 // ocluyen el bolt correctamente.
 //
-// NOTE: NO usa BLOOM_LAYER. En combate el bloom es selectivo (sólo objetos
-// con BLOOM_LAYER renderizan en el bloom RT); la nave está en layer 0 y no
-// escribiría depth ahí, lo que hace que el glow se vea "a través" del casco.
+// NOTE: NO usa BLOOM_LAYER. En combate el bloom es selectivo (solo objetos
+// con BLOOM_LAYER renderizan en el bloom RT); la nave esta en layer 0 y no
+// escribiria depth ahi, lo que hace que el glow se vea "a traves" del casco.
 // El material ya es AdditiveBlending con opacidad alta — el brillo lo da el
 // material, no el UnrealBloomPass.
 
@@ -41,7 +41,7 @@ function _makeMat(color, opacity, doubleSide = false) {
 }
 
 // Crea un bolt instanciado (mats propias para poder modular opacidad/disposear).
-// Geometrías compartidas vía cache de módulo.
+// Geometrias compartidas via cache de modulo.
 export function createBolt({ color = 0xff2222, scale = 1.0, flowBoost = false } = {}) {
   _ensureGeo();
 

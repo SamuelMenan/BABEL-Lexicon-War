@@ -109,7 +109,7 @@ export class PostProcessing {
     this._bloomComposer.setSize(bw, bh);
     this._bloomComposer.addPass(renderPass);
 
-    // Bloom muy suave — solo halos brillantes en VFX, sin lavar geometría de naves.
+    // Bloom muy suave — solo halos brillantes en VFX, sin lavar geometria de naves.
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(bw, bh), 0.06, 0.04, 0.96);
     this._bloomComposer.addPass(bloomPass);
 

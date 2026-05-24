@@ -17,8 +17,8 @@ function getPalette(cfg) {
   if (!cfg?.normalRamp) return null;
   if (_paletteCache.has(cfg)) return _paletteCache.get(cfg);
   
-  // flowRamp: puede ser un array de 5 colores O un color único (hex)
-  // Si es un color único, replicarlo en los 5 slots
+  // flowRamp: puede ser un array de 5 colores O un color unico (hex)
+  // Si es un color unico, replicarlo en los 5 slots
   const flowRampArray = typeof cfg.flowRamp === 'number'
     ? [cfg.flowRamp, cfg.flowRamp, cfg.flowRamp, cfg.flowRamp, cfg.flowRamp]
     : cfg.flowRamp;
@@ -55,7 +55,7 @@ export function computeColors(s, flicker, lb, flowRatio, boost, flow, out, cfg) 
   const pal = getPalette(cfg);
 
   if (pal) {
-    // Single ramp (normalRamp): pálido[0] → saturado[N-1].
+    // Single ramp (normalRamp): palido[0] → saturado[N-1].
     // t_slot = base(slot) + fr * range(slot) + jitter(s,flicker,lb).
     // fr=0 → muestreo cerca del extremo claro; fr=1 → extremo profundo.
     const ramp = pal.normal;

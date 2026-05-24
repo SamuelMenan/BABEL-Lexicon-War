@@ -1,4 +1,4 @@
-// Colapso léxico — partículas que se disuelven al destruir un enemigo
+// Colapso lexico — particulas que se disuelven al destruir un enemigo
 
 import * as THREE from 'three';
 import { COLORS, BLOOM_LAYER } from '../../shared/constants.js';

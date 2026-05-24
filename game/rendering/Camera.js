@@ -20,7 +20,7 @@ export class Camera {
     this._racingTarget   = new THREE.Vector3(0, 0, -55);
     this._racingLookAt   = new THREE.Vector3(0, 0, -180);
     this._racingCamPos   = new THREE.Vector3(0, 1.4, 8);
-    this._racingVoidPhase = 0; // 0..1 — boost cinemático para void anim
+    this._racingVoidPhase = 0; // 0..1 — boost cinematico para void anim
 
     this._shakeIntensity = 0;
     this._shakeDuration  = 0;
@@ -62,10 +62,10 @@ export class Camera {
     this._racingFOV = targetFOV;
   }
 
-  // Chase target: pos del jugador (cámara lo sigue desde +Z atrás).
+  // Chase target: pos del jugador (camara lo sigue desde +Z atras).
   setRacingChaseTarget(pos) { if (pos) this._racingTarget.copy(pos); }
 
-  // Punto al que mira la cámara (típicamente el vórtice).
+  // Punto al que mira la camara (tipicamente el vortice).
   setRacingLookAt(pos) { if (pos) this._racingLookAt.copy(pos); }
 
   // 0 = normal, 1 = ganador entra al hole (zoom in extremo).
@@ -104,13 +104,13 @@ export class Camera {
   }
 
   _updateRacing(delta) {
-    // Chase cam: 6u detrás del player, 1.4u arriba, con sway suave.
+    // Chase cam: 6u detras del player, 1.4u arriba, con sway suave.
     const sway = Math.sin(this._t * 0.22) * 0.06;
     const bob  = Math.sin(this._t * 0.18) * 0.05;
-    // Chase X muy suave para preservar simetría visual entre naves (≈0.15).
+    // Chase X muy suave para preservar simetria visual entre naves (≈0.15).
     const tx = this._racingTarget.x * 0.15 + sway;
     const ty = this._racingTarget.y * 0.35 + 1.4 + bob;
-    const tz = this._racingTarget.z + 6;                  // 6u detrás del player
+    const tz = this._racingTarget.z + 6;                  // 6u detras del player
     // Lerp suave hacia target pos para evitar jitter.
     const k = Math.min(delta * 4.5, 1);
     this._racingCamPos.x += (tx - this._racingCamPos.x) * k;
@@ -118,10 +118,10 @@ export class Camera {
     this._racingCamPos.z += (tz - this._racingCamPos.z) * k;
     this.instance.position.copy(this._racingCamPos);
 
-    // Mirar al vórtice (lookAt fijo o el provisto por scene manager).
+    // Mirar al vortice (lookAt fijo o el provisto por scene manager).
     this.instance.lookAt(this._racingLookAt.x, this._racingLookAt.y, this._racingLookAt.z);
 
-    // Banking lateral suave: tilt Z según offset X del player.
+    // Banking lateral suave: tilt Z segun offset X del player.
     this.instance.rotation.z += this._racingTarget.x * -0.012;
 
     // FOV: combina target externo (setRacingFOV) + boost void anim.

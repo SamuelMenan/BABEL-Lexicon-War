@@ -49,6 +49,24 @@
   background: radial-gradient(ellipse at center, transparent 65%, rgba(0, 0, 0, 0.32) 100%);
 }
 
+/* Cinematic fade durante landing phase. Cubre el spawn de naves y el lip
+   lejano del tunel mientras la camara se asienta. Auto fade-out al desmontarse
+   (deploymentPhase deja de ser 'landing' → componente desaparece). */
+.race-landing-fade {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 11;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.95) 80%);
+  animation: race-landing-fade-out 1s ease-out forwards;
+}
+
+@keyframes race-landing-fade-out {
+  0%   { opacity: 1; }
+  35%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
 /* ── TOP-LEFT: pilot tag ──────────────────────────────────── */
 
 .r-pilot-tag {
@@ -246,7 +264,7 @@
   justify-items: center;
   row-gap: 8px;
   align-items: start;
-  height: 220px;       /* más corto (360 → 220) */
+  height: 220px;       /* mas corto (360 → 220) */
   font-family: var(--font-mono);
 }
 
@@ -538,7 +556,7 @@
   font-size: 3.1rem;
   font-weight: 300;
   line-height: 0.9;
-  /* Siempre color de la nave activa (no el cyan genérico). */
+  /* Siempre color de la nave activa (no el cyan generico). */
   color: var(--ship-primary, var(--col-active));
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -600,7 +618,9 @@
   font-family: var(--font-mono);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  /* space-between distribuye SESION (top), FRASES (middle), PICO (bottom)
+     llenando toda la altura minima. Antes quedaba contenido apilado arriba. */
+  justify-content: space-between;
   align-items: flex-end;
   text-align: right;
   padding: 0.7rem 0.9rem;
@@ -705,7 +725,7 @@
     font-size: 0.55rem;
   }
 
-  /* Mazo léxico (lexicon-deck) oculto en móvil táctil — duplica info del word panel */
+  /* Mazo lexico (lexicon-deck) oculto en movil tactil — duplica info del word panel */
   .lexicon-deck { display: none; }
 }
 
@@ -739,7 +759,7 @@
   /* Top status / ticker bajado para no chocar telemetry */
   .r-top-status { top: 3.6rem; left: 50%; right: auto; font-size: 0.5rem; }
 
-  /* Mazo léxico oculto — duplica info word-panel */
+  /* Mazo lexico oculto — duplica info word-panel */
   .lexicon-deck { display: none; }
 }
 
@@ -763,7 +783,7 @@
   z-index: 5;
   font-family: var(--font-mono);
 }
-/* Separación constante (1.5rem) entre cajas laterales y bloques esquineros.
+/* Separacion constante (1.5rem) entre cajas laterales y bloques esquineros.
    r-flow-block / r-run-stats min-width = 170px, anclados a 1.8rem del borde.
    PPM/TIME van pegados a esos: borde + flow-block + gap. */
 .r-side--left  { left:  calc(1.8rem + 170px + 1.5rem); }

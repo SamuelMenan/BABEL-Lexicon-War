@@ -37,7 +37,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Móvil: panel compacto y reposicionado abajo-izquierda para no chocar
+/* Movil: panel compacto y reposicionado abajo-izquierda para no chocar
    con pilot-tag (top-left) ni con pause-fab (top-right). */
 @media (max-width: 480px) {
   .telemetry-panel {

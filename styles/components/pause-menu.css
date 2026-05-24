@@ -157,7 +157,7 @@
   line-height: 1;
 }
 
-/* Configuración — outlined */
+/* Configuracion — outlined */
 .pause-menu__btn--secondary {
   background: transparent;
   color: var(--col-primary);

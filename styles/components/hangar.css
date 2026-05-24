@@ -235,7 +235,7 @@
 }
 
 @media (max-width: 480px) {
-  /* Stats / arsenal ocultan; navegación + botones únicamente */
+  /* Stats / arsenal ocultan; navegacion + botones unicamente */
   .hangar-stats,
   .hangar-arsenal { display: none; }
 
@@ -256,8 +256,8 @@
   .purchase-modal__btn { width: 100%; min-height: 44px; }
 }
 
-/* ── Touch / tablets ≤900px: ocultar paneles laterales + decoración ──
-   Solo telemetría y controles esenciales permanecen. */
+/* ── Touch / tablets ≤900px: ocultar paneles laterales + decoracion ──
+   Solo telemetria y controles esenciales permanecen. */
 @media (pointer: coarse), (max-width: 900px) {
   /* Paneles que tapan la nave / fondo: fuera */
   .hangar-stats,
@@ -281,7 +281,7 @@
     margin-top: 0.2rem;
   }
 
-  /* Título sin clipping */
+  /* Titulo sin clipping */
   .hangar-title { top: 4.6rem; }
   .hangar-title__name {
     font-size: clamp(1.1rem, 5.5vw, 2rem);
@@ -302,7 +302,7 @@
   .hangar-controls__btn-row { flex-wrap: wrap; justify-content: center; }
   .hangar-controls__btn { min-height: 44px; padding: 0.55rem 1rem; font-size: 0.7rem; }
 
-  /* Frame de la nave ocupa más espacio sin paneles laterales */
+  /* Frame de la nave ocupa mas espacio sin paneles laterales */
   .hangar-frame__viewport { width: min(92vw, 600px); height: min(48vh, 360px); }
 }
 

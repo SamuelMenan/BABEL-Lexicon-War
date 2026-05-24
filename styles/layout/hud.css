@@ -613,7 +613,7 @@
 
 /* ─────────────────────────────────────────────────────────────
    MOBILE OVERRIDES — Combat HUD (≤480px)
-   El escalado rem global ya reduce tamaños; aquí solo arreglamos
+   El escalado rem global ya reduce tamaños; aqui solo arreglamos
    componentes con min-width o posicionamiento que invaden centro.
    ───────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
@@ -648,7 +648,7 @@
   .status-bar__track { min-width: 60px; height: 6px; }
   .status-bar__value { width: 2.2rem; font-size: 0.78rem; }
 
-  /* Wave block — reducir número gigante */
+  /* Wave block — reducir numero gigante */
   .wave-block       { margin-top: 0.4rem; }
   .wave-block__num  { font-size: 1.9rem; }
 
@@ -670,7 +670,7 @@
   .combat__word-header { font-size: 0.52rem; }
   .combat__word-meta   { font-size: 0.5rem; gap: 0.3rem; }
 
-  /* Lexicon deck — ocultar en móvil: tapa juego y ya hay panel de palabra */
+  /* Lexicon deck — ocultar en movil: tapa juego y ya hay panel de palabra */
   .lexicon-deck { display: none; }
 }
 
@@ -687,7 +687,7 @@
   .hud__ticker { top: 0; height: 1.6rem; }
   .hud__ticker-text { font-size: 0.5rem; opacity: 0.6; }
 
-  /* Stats WPM/ACC apilados o más compactos para no chocar con PauseFAB */
+  /* Stats WPM/ACC apilados o mas compactos para no chocar con PauseFAB */
   .combat__top-right {
     top: 0.4rem;
     right: 58px; /* deja paso al PauseFAB (42–48px) */
@@ -773,6 +773,6 @@
   .combat__word-prompt { font-size: 0.9rem; }
   .combat__letter      { font-size: 1.3rem; width: 1.05ch; }
 
-  /* Lexicon deck oculto en todo móvil/touch */
+  /* Lexicon deck oculto en todo movil/touch */
   .lexicon-deck { display: none; }
 }

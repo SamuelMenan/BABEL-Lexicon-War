@@ -177,7 +177,7 @@
 }
 
 /* filter:blur fullscreen colapsa iGPUs (root cause de FPS drop por wave).
-   Reemplazo: solo opacity+transform — efecto visual similar, costo GPU mínimo. */
+   Reemplazo: solo opacity+transform — efecto visual similar, costo GPU minimo. */
 @keyframes wave-fullscreen-in {
   0%   { opacity: 0; transform: scale(0.9); }
   20%  { opacity: 1; transform: scale(1.02); }

@@ -186,7 +186,7 @@
   text-transform: uppercase;
   font-family: var(--font-hud);
 
-  /* Chrome metálico — gradient silver→dark→silver */
+  /* Chrome metalico — gradient silver→dark→silver */
   background-image: linear-gradient(
     180deg,
     #ffffff 0%,

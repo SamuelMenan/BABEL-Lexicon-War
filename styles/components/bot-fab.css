@@ -48,7 +48,7 @@
 
 .bot-fab--on .bot-fab__label { opacity: 1; }
 
-/* Pantallas pequeñas: FAB más compacto */
+/* Pantallas pequeñas: FAB mas compacto */
 @media (max-width: 480px) {
   .bot-fab { width: 48px; height: 48px; }
   .bot-fab__icon  { font-size: 16px; }

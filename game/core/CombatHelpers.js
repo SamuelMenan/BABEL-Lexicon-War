@@ -4,7 +4,7 @@ import { WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG } from 
 // Moon vive en (0, 0, -78) con radio aproximado de ~18u. Buffer extra 4u.
 const MOON_CENTER  = new THREE.Vector3(0, 0, -78);
 const MOON_AVOID_R = 22;
-const MIN_SPAWN_SEPARATION = 7; // distancia mínima entre 2 spawns de la misma oleada
+const MIN_SPAWN_SEPARATION = 7; // distancia minima entre 2 spawns de la misma oleada
 const MAX_RETRIES = 12;
 
 function _samplePoint() {
@@ -24,8 +24,8 @@ function _samplePoint() {
   return new THREE.Vector3(x, y, z);
 }
 
-// recent: array de Vector3 ya spawned esta oleada. Garantiza separación mínima
-// y evita la luna. Si tras MAX_RETRIES no encuentra hueco, devuelve la última
+// recent: array de Vector3 ya spawned esta oleada. Garantiza separacion minima
+// y evita la luna. Si tras MAX_RETRIES no encuentra hueco, devuelve la ultima
 // candidata empujada radialmente.
 export function randomSpawnPosition(recent = []) {
   let p = null;
@@ -39,7 +39,7 @@ export function randomSpawnPosition(recent = []) {
     if (!collision) return candidate;
     p = candidate;
   }
-  // fallback: empuja radialmente fuera del último candidato hacia x-extremo
+  // fallback: empuja radialmente fuera del ultimo candidato hacia x-extremo
   if (p) p.x += (p.x >= 0 ? 8 : -8);
   return p ?? _samplePoint();
 }
@@ -52,7 +52,7 @@ export function randomWord(wave, exclude = [], tierHint = null) {
   else if (tierHint === 'medium') base = WORD_POOL_MEDIUM;
   else if (tierHint === 'long')   base = WORD_POOL_LONG;
   else {
-    // Curva más amable: long capped a 0.25 (antes 0.50).
+    // Curva mas amable: long capped a 0.25 (antes 0.50).
     const shortW  = wave <= 3 ? 0.65 : wave <= 7 ? 0.35 : 0.20;
     const mediumW = wave <= 3 ? 0.35 : wave <= 7 ? 0.50 : 0.55;
     const longW   = wave <= 3 ? 0.00 : wave <= 7 ? 0.15 : 0.25;

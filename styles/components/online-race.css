@@ -1,0 +1,392 @@
+/* ─────────────────────────────────────────────────────────────
+   BABEL: Lexicon War — Modo Carrera Online (fase 1)
+   - RaceModeSelectModal
+   - LobbyBrowser
+   - RoomScreen
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Mode select modal ────────────────────────────────────── */
+
+.race-mode-modal {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.race-mode-modal__panel {
+  position: relative;
+  min-width: 480px; max-width: 560px;
+  background: rgba(8, 12, 18, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.4rem 1.6rem 1.2rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
+}
+
+.race-mode-modal__header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.race-mode-modal__close {
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; font-size: 1rem;
+}
+
+.race-mode-modal__title {
+  font-family: var(--font-hud);
+  font-size: 1.6rem; margin: 0 0 1rem; letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.race-mode-modal__list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.race-mode-modal__btn {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--btn-accent, var(--col-active));
+  cursor: pointer; text-align: left;
+  color: rgba(255, 255, 255, 0.85);
+  transition: background 0.15s, border-color 0.15s;
+}
+.race-mode-modal__btn:hover,
+.race-mode-modal__btn--focused {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--btn-accent, var(--col-active));
+}
+.race-mode-modal__btn--disabled { opacity: 0.4; cursor: not-allowed; }
+.race-mode-modal__btn-label { font-family: var(--font-hud); font-size: 1rem; letter-spacing: 0.06em; }
+.race-mode-modal__btn-desc  { font-family: var(--font-mono); font-size: 0.75rem; color: rgba(255,255,255,0.45); }
+.race-mode-modal__hint { font-family: var(--font-mono); font-size: 0.7rem; color: var(--col-warning); margin-top: 0.6rem; }
+
+
+/* ── Lobby browser ────────────────────────────────────────── */
+
+.lobby {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.lobby__panel {
+  width: 720px; max-width: 92vw;
+  max-height: 84vh; overflow: hidden;
+  background: rgba(8, 12, 18, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.4rem 1.6rem 1.2rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
+}
+
+.lobby__header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.45); text-transform: uppercase;
+}
+
+.lobby__close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1rem; }
+
+.lobby__actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.lobby__btn {
+  padding: 0.5rem 0.9rem;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85); cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
+}
+.lobby__btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.35); }
+.lobby__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.lobby__btn--primary { background: rgba(0,255,204,0.12); border-color: rgba(0,255,204,0.6); color: var(--col-active); }
+.lobby__btn--ghost   { background: transparent; }
+
+.lobby__code-input { display: flex; gap: 0.4rem; align-items: center; }
+.lobby__code-input input {
+  width: 130px; padding: 0.45rem 0.6rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.9);
+  font-family: var(--font-mono); font-size: 0.95rem; letter-spacing: 0.3em; text-align: center;
+}
+
+.lobby__error {
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: #ffaaaa; padding: 0.5rem 0.7rem;
+  font-family: var(--font-mono); font-size: 0.75rem;
+}
+
+.lobby__list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.4rem; }
+.lobby__state {
+  padding: 1rem; text-align: center;
+  font-family: var(--font-mono); font-size: 0.85rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.lobby__row {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.lobby__row-main { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; }
+.lobby__row-host { font-family: var(--font-hud); font-size: 0.95rem; color: rgba(255,255,255,0.9); }
+.lobby__row-sub  { font-family: var(--font-mono); font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+
+.lobby__create-modal {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.7);
+}
+.lobby__create-panel {
+  background: rgba(8,12,18,0.98);
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 1.2rem 1.4rem;
+  min-width: 320px;
+}
+.lobby__create-panel h3 { margin: 0 0 0.8rem; font-family: var(--font-hud); }
+.lobby__create-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.6rem 0; font-family: var(--font-mono); font-size: 0.85rem; color: rgba(255,255,255,0.85); cursor: pointer; }
+.lobby__create-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+
+
+/* ── Room screen ──────────────────────────────────────────── */
+
+.room {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.room__panel {
+  width: 880px; max-width: 96vw;
+  max-height: 92vh; overflow-y: auto;
+  background: rgba(8, 12, 18, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 1.4rem 1.6rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+
+.room__header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.45); text-transform: uppercase;
+}
+
+.room__close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1rem; }
+
+.room__slots {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+
+.room__slot {
+  padding: 0.9rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 3px solid var(--col-active);
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.room__slot--empty { opacity: 0.5; border-left-color: rgba(255,255,255,0.2); }
+
+.room__slot-title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.28em; color: rgba(255,255,255,0.4); }
+.room__slot-pilot { font-family: var(--font-hud); font-size: 1.1rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.9); }
+.room__slot-ship  { font-family: var(--font-mono); font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+.room__slot-ready { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; color: rgba(255,255,255,0.4); }
+.room__slot-ready--ok { color: var(--col-active); }
+
+.room__section-title {
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.32em;
+  color: rgba(255,255,255,0.45); margin: 0.4rem 0 0.2rem;
+}
+
+.room__ship-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.room__ship {
+  position: relative;
+  padding: 0.7rem 0.6rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.85); cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.15rem;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.room__ship:hover:not(:disabled) { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.32); }
+.room__ship:disabled { cursor: not-allowed; opacity: 0.45; }
+.room__ship--selected { border-color: var(--col-active); background: rgba(0,255,204,0.08); }
+.room__ship--taken { opacity: 0.35; }
+.room__ship-name { font-family: var(--font-hud); font-size: 0.85rem; color: rgba(255,255,255,0.92); }
+.room__ship-code { font-family: var(--font-mono); font-size: 0.65rem; color: rgba(255,255,255,0.4); letter-spacing: 0.15em; }
+.room__ship-badge {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(255,80,80,0.25); border: 1px solid rgba(255,80,80,0.55);
+  color: #ffaaaa;
+  font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.15em;
+  padding: 1px 5px;
+}
+.room__ship-badge--ok {
+  background: rgba(0,255,204,0.18); border-color: rgba(0,255,204,0.55); color: var(--col-active);
+}
+
+.room__error {
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  color: #ffaaaa; padding: 0.5rem 0.7rem;
+  font-family: var(--font-mono); font-size: 0.75rem;
+}
+
+.room__actions { display: flex; gap: 0.5rem; align-items: center; }
+
+.room__btn {
+  padding: 0.6rem 1.1rem;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85); cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.room__btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); }
+.room__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.room__btn--primary { background: rgba(0,255,204,0.12); border-color: rgba(0,255,204,0.6); color: var(--col-active); }
+.room__btn--active  { background: rgba(0,255,204,0.32); }
+.room__btn--ghost   { background: transparent; }
+
+.room__hint {
+  font-family: var(--font-mono); font-size: 0.72rem; color: rgba(255,255,255,0.45);
+  letter-spacing: 0.1em;
+}
+
+.room__state { padding: 1rem; text-align: center; font-family: var(--font-mono); color: rgba(255,255,255,0.5); }
+
+
+/* ── In-race opponent HUD ────────────────────────────────── */
+
+.online-opp {
+  position: absolute;
+  top: 8rem;
+  right: 1.8rem;
+  min-width: 200px;
+  padding: 0.6rem 0.9rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  box-shadow: 0 0 12px rgba(255, 80, 80, 0.1);
+  font-family: var(--font-mono);
+  color: rgba(255, 255, 255, 0.85);
+  z-index: 12;
+}
+
+.online-opp__label {
+  font-size: 0.6rem; letter-spacing: 0.28em;
+  color: rgba(255, 120, 120, 0.85);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.online-opp__row {
+  display: flex; align-items: baseline; gap: 6px;
+  font-family: var(--font-hud);
+}
+
+.online-opp__num {
+  font-size: 1.6rem; font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--col-danger, #ff5566);
+  line-height: 1;
+}
+.online-opp__micro {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 0.24em;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+}
+
+.online-opp__row--sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
+  margin-top: 0.2rem;
+}
+.online-opp__sub { font-size: 0.7rem; color: rgba(255,255,255,0.5); }
+
+/* ── Rematch invite modal ────────────────────────────────── */
+
+.rematch-invite {
+  position: fixed; inset: 0; z-index: 95;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(4px);
+}
+.rematch-invite__panel {
+  min-width: 360px;
+  background: rgba(8, 12, 18, 0.97);
+  border: 1px solid rgba(0, 255, 204, 0.5);
+  box-shadow: 0 0 24px rgba(0, 255, 204, 0.18);
+  padding: 1.2rem 1.4rem;
+  font-family: var(--font-mono);
+  color: rgba(255,255,255,0.9);
+}
+.rematch-invite__title {
+  font-family: var(--font-hud); font-size: 1.4rem; letter-spacing: 0.18em;
+  color: var(--col-active); margin-bottom: 0.6rem;
+}
+.rematch-invite__msg { font-size: 0.9rem; color: rgba(255,255,255,0.75); margin-bottom: 1rem; }
+.rematch-invite__actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.rematch-invite__btn {
+  padding: 0.55rem 1.1rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.85); cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.rematch-invite__btn:hover { background: rgba(255,255,255,0.12); }
+.rematch-invite__btn--accept {
+  background: rgba(0,255,204,0.18); border-color: rgba(0,255,204,0.65); color: var(--col-active);
+}
+
+.online-opp--lost {
+  border-color: rgba(255, 200, 80, 0.6);
+  background: rgba(80, 60, 0, 0.4);
+  animation: online-opp-blink 1.2s ease-in-out infinite;
+}
+@keyframes online-opp-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* ── MatchResult online banner ───────────────────────────── */
+
+.mr__online-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(0,255,204,0.06);
+  border: 1px solid rgba(0,255,204,0.4);
+  margin-bottom: 0.8rem;
+  font-family: var(--font-mono);
+}
+.mr__online-banner--lose { background: rgba(255,80,80,0.08); border-color: rgba(255,80,80,0.5); }
+.mr__online-banner--draw { background: rgba(255,200,80,0.08); border-color: rgba(255,200,80,0.5); }
+.mr__online-banner__verdict {
+  font-family: var(--font-hud); font-size: 1.4rem; letter-spacing: 0.16em;
+  color: var(--col-active);
+}
+.mr__online-banner--lose .mr__online-banner__verdict { color: var(--col-danger); }
+.mr__online-banner--draw .mr__online-banner__verdict { color: var(--col-warning); }
+.mr__online-banner__sub { font-size: 0.78rem; color: rgba(255,255,255,0.6); }
+

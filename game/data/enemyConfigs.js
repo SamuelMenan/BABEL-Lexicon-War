@@ -1,5 +1,5 @@
-// Data estática de enemigos — separada de la lógica de la entidad.
-// CFGS define geometría, colores, anillos, multiplicadores y habilidad especial por tipo.
+// Data estatica de enemigos — separada de la logica de la entidad.
+// CFGS define geometria, colores, anillos, multiplicadores y habilidad especial por tipo.
 
 import * as THREE from 'three';
 import {
@@ -12,17 +12,17 @@ import {
 } from '../rendering/EnemyGeometryCache.js';
 
 export const ENEMY_TYPES = {
-  SCOUT:       'scout',       // icosaedro pequeño, cyan, rápido
+  SCOUT:       'scout',       // icosaedro pequeño, cyan, rapido
   SENTINEL:    'sentinel',    // octaedro medio, violeta, 3 anillos
   GUARDIAN:    'guardian',    // dodecaedro grande, naranja, lento
-  PHANTOM:     'phantom',     // tetraedro, teal translúcido, sin anillos
+  PHANTOM:     'phantom',     // tetraedro, teal translucido, sin anillos
   APEX:        'apex',        // icosaedro grande, dorado, boss
-  TESSERACT:   'tesseract',   // hipercubo wireframe, élite
+  TESSERACT:   'tesseract',   // hipercubo wireframe, elite
   STELLATED:   'stellated',   // small stellated dodecahedron, mini-boss tank
   GREAT:       'great',       // great dodecahedron, elite cruzado
   RHOMBICUB:   'rhombicub',   // rhombicuboctahedron, enjambre balanceado
-  ICOSIDODEC:  'icosidodec',  // icosidodecahedron, élite cristalino
-  TRUNCOCTA:   'truncocta',   // truncated octahedron, filler rápido
+  ICOSIDODEC:  'icosidodec',  // icosidodecahedron, elite cristalino
+  TRUNCOCTA:   'truncocta',   // truncated octahedron, filler rapido
 };
 
 export const CFGS = {
@@ -149,7 +149,7 @@ export const CFGS = {
     special: 'pulse', specialCd: 3.8, specialPower: 0.60, threatBase: 0.65,
   },
 
-  // Rhombicuboctahedron — enjambre balanceado, geometría redondeada cuadrada.
+  // Rhombicuboctahedron — enjambre balanceado, geometria redondeada cuadrada.
   rhombicub: {
     geo: () => buildRhombicuboctaGeometry(),
     color: 0x44ddaa, glowColor: 0x22bb88,
@@ -165,7 +165,7 @@ export const CFGS = {
     special: 'dash', specialCd: 3.2, specialPower: 0.42, threatBase: 0.50,
   },
 
-  // Icosidodecahedron — élite cristalino, mezcla triángulos + pentágonos.
+  // Icosidodecahedron — elite cristalino, mezcla triangulos + pentagonos.
   icosidodec: {
     geo: () => buildIcosidodecaGeometry(),
     color: 0x66ccff, glowColor: 0x3399ff,
@@ -182,7 +182,7 @@ export const CFGS = {
     special: 'phase', specialCd: 3.4, specialPower: 0.55, threatBase: 0.62,
   },
 
-  // Truncated Octahedron — filler rápido (hexágonos + cuadrados).
+  // Truncated Octahedron — filler rapido (hexagonos + cuadrados).
   truncocta: {
     geo: () => buildTruncatedOctaGeometry(),
     color: 0xffaa44, glowColor: 0xff8822,

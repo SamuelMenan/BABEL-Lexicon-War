@@ -76,6 +76,7 @@ export default function App() {
     isRunning, isPaused, gameOver,
     score, wpm, accuracy, wave,
     gameMode, raceVictory, peakWPM, timeElapsed, grafemasReward,
+    wordsDestroyed, bestCombo,
     showShipSelection, tutorialActive,
   } = state;
 
@@ -112,6 +113,7 @@ export default function App() {
         gameMode={gameMode} raceVictory={raceVictory}
         peakWPM={peakWPM} timeElapsed={timeElapsed}
         grafemasReward={grafemasReward}
+        wordsDestroyed={wordsDestroyed} bestCombo={bestCombo}
       />
     );
   }

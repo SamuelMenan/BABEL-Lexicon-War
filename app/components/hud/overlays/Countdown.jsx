@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 
 export default function Countdown({ countdown, countdownActive }) {
   const [showGo, setShowGo] = useState(false);
-  const prevActive = useRef(true);
+  const prevActive = useRef(false);
+  const wasActive = useRef(false);
 
   useEffect(() => {
     let timerId;
-    if (prevActive.current && !countdownActive) {
+    if (countdownActive) wasActive.current = true;
+    if (prevActive.current && !countdownActive && wasActive.current) {
       setShowGo(true);
       timerId = setTimeout(() => setShowGo(false), 900);
     }

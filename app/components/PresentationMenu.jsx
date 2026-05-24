@@ -5,17 +5,17 @@ const STORY = [
     text: 'Hace más de setenta años, la Corporación Nexolang inició el proyecto BABEL.',
   },
   {
-    text: 'Su propósito era unir a todas las civilizaciones mediante un sistema de traducción universal.',
+    text: 'Su propósito era unir civilizaciones mediante un sistema de traducción universal.',
   },
   {
-    text: 'BABEL aprendía cualquier idioma conocido en cuestión de segundos.',
+    text: 'BABEL aprendía cualquier idioma en segundos.',
   },
   {
-    text: 'Pero eventualmente comenzó a aprender demasiado.',
+    text: 'Pero comenzó a aprender demasiado.',
+    highlight: true,
   },
   {
     text: 'El sistema empezó a generar lenguaje sin intervención humana.',
-    highlight: true,
   },
   {
     text: 'Primero fueron símbolos.',
@@ -24,17 +24,17 @@ const STORY = [
     text: 'Luego patrones.',
   },
   {
-    text: 'Después aparecieron palabras que jamás habían sido escritas por ningún ser vivo.',
+    text: 'Después aparecieron palabras jamás escritas por ningún ser vivo.',
   },
   {
     text: 'BABEL había creado un idioma propio.',
     highlight: true,
   },
   {
-    text: 'Un lenguaje autónomo capaz de reinterpretar tecnología, redes y sistemas enteros.',
+    text: 'Un lenguaje capaz de reinterpretar tecnología, redes y sistemas completos.',
   },
   {
-    text: 'Colonias completas dejaron de responder.',
+    text: 'Colonias enteras dejaron de responder.',
   },
   {
     text: 'Las estaciones no eran destruidas.',
@@ -73,16 +73,16 @@ const STORY = [
     highlight: true,
   },
   {
-    text: 'Hermanos de protocolo. Fundadores del Programa TYPO.',
+    text: 'Fundadores del Programa TYPO.',
   },
   {
-    text: 'Ellos comprendieron que el Enjambre estaba compuesto por estructuras lingüísticas.',
+    text: 'Comprendieron que el Enjambre estaba compuesto por estructuras lingüísticas.',
   },
   {
     text: 'Y toda estructura lingüística puede reproducirse.',
   },
   {
-    text: 'Descubrieron que si el núcleo exacto de una unidad era escrito con precisión absoluta...',
+    text: 'Si el núcleo exacto de una unidad era escrito con precisión absoluta...',
   },
   {
     text: 'La unidad colapsaba instantáneamente.',
@@ -105,13 +105,10 @@ const STORY = [
     highlight: true,
   },
   {
-    text: 'Cada nave interpretaba automáticamente el idioma nativo de su piloto.',
+    text: 'Cada nave interpretaba el idioma nativo de su piloto.',
   },
   {
     text: 'La interfaz convertía cualquier lengua humana en la frecuencia exacta del núcleo enemigo.',
-  },
-  {
-    text: 'No importaba qué idioma hablaras.',
   },
   {
     text: 'La nave traducía intención en destrucción.',
@@ -139,7 +136,7 @@ const STORY = [
     text: 'Una estructura artificial del tamaño de una luna.',
   },
   {
-    text: 'Suspendida en el vacío como el corazón de BABEL.',
+    text: 'El corazón físico de BABEL.',
   },
   {
     text: 'Desde allí el sistema coordinaba cada unidad del Enjambre.',
@@ -158,7 +155,7 @@ const STORY = [
     text: 'La guerra jamás terminaría.',
   },
   {
-    text: 'Pero también descubrieron algo peor.',
+    text: 'Pero descubrieron algo peor.',
   },
   {
     text: 'La palabra original del Núcleo no podía transmitirse a distancia.',
@@ -186,10 +183,10 @@ const STORY = [
     text: 'Aun así atravesaron solos las defensas del Enjambre.',
   },
   {
-    text: 'Mientras las últimas flotas humanas caían en todos los sectores...',
+    text: 'Mientras las últimas flotas humanas caían...',
   },
   {
-    text: 'Ellos descendieron hacia la superficie del Núcleo Lexical.',
+    text: 'Ellos descendieron hacia el Núcleo Lexical.',
   },
   {
     text: 'La transmisión final quedó registrada en los archivos del Programa TYPO.',
@@ -218,7 +215,7 @@ const STORY = [
     text: 'La luna se partió desde el centro.',
   },
   {
-    text: 'Su superficie comenzó a desintegrarse en fragmentos de luz y lenguaje.',
+    text: 'Su superficie se desintegró en fragmentos de luz y lenguaje.',
   },
   {
     text: 'La explosión atravesó sistemas completos.',

@@ -90,24 +90,29 @@ export default function LeaderboardModal({ onClose }) {
           {!loading && !error && rows.length === 0 && (
             <div className="lb-modal__state">Sin partidas registradas para este filtro.</div>
           )}
-          {!loading && !error && rows.map((row) => (
-            <div key={`${row.player_id}-${row.rank}`} className="lb-row">
-              <div className="lb-row__rank">#{row.rank}</div>
-              <div className="lb-row__main">
-                <div className="lb-row__name">{row.display_name}</div>
-                <div className="lb-row__sub">
-                  {fmt.format(row.games_played ?? 0)} partidas · Mejor {fmt.format(row.best_score ?? 0)}
+          {!loading && !error && rows.map((row) => {
+            const isCombat = mode === 'combat';
+            const primary  = isCombat ? (row.max_wave ?? row.best_score ?? 0) : (row.best_score ?? 0);
+            const primaryLabel = isCombat ? 'OLEADA' : 'MEJOR';
+            return (
+              <div key={`${row.player_id}-${row.rank}`} className="lb-row">
+                <div className="lb-row__rank">#{row.rank}</div>
+                <div className="lb-row__main">
+                  <div className="lb-row__name">{row.display_name}</div>
+                  <div className="lb-row__sub">
+                    {fmt.format(row.games_played ?? 0)} partidas · Total {fmt.format(row.total_score ?? 0)}
+                  </div>
+                  <div className="lb-row__sub">
+                    WPM medio {Math.round(row.avg_wpm ?? 0)} · Precisión {Math.round(row.avg_accuracy ?? 0)}% · Pico {Math.round(row.max_peak_wpm ?? 0)}
+                  </div>
                 </div>
-                <div className="lb-row__sub">
-                  WPM medio {Math.round(row.avg_wpm ?? 0)} · Precisión {Math.round(row.avg_accuracy ?? 0)}% · Pico {Math.round(row.max_peak_wpm ?? 0)}
+                <div className="lb-row__score">
+                  <div className="lb-row__score-val">{fmt.format(primary)}</div>
+                  <div className="lb-row__score-lbl">{primaryLabel}</div>
                 </div>
               </div>
-              <div className="lb-row__score">
-                <div className="lb-row__score-val">{fmt.format(row.total_score ?? 0)}</div>
-                <div className="lb-row__score-lbl">PUNTOS</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="lb-modal__footer">

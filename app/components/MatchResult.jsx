@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
+import { Bridge } from "../../shared/bridge.js";
 import { loadProfile } from "../../shared/playerProfile.js";
 import { saveMatchResult } from "../services/supabase/leaderboard.js";
 
@@ -108,7 +109,8 @@ export default function MatchResult({
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
   const syncOnce = useRef(false);
-  const restart = () => window.location.reload();
+  const restart = () => Bridge.commands.exitToHangar();
+  const toMenu  = () => Bridge.commands.exitToMenu();
 
   const effectiveWpm = wpm ?? 0;
   const effectiveAcc = accuracy ?? 0;
@@ -158,10 +160,12 @@ export default function MatchResult({
       peakWPM: Number.isFinite(peakWPM) ? peakWPM : null,
       timeElapsed: elapsedSeconds,
       grafemasReward: Number.isFinite(grafemasReward?.amount) ? grafemasReward.amount : null,
+      wordsDestroyed: Number.isFinite(wordsDestroyed) ? wordsDestroyed : null,
+      bestCombo:      Number.isFinite(bestCombo)      ? bestCombo      : null,
     }).catch((error) => {
       console.warn('[Supabase] No se pudo guardar el resultado', error);
     });
-  }, [accuracy, gameMode, grafemasReward, isRacing, peakWPM, raceVictory, score, sessionId, timeElapsed, wave, wpm]);
+  }, [accuracy, bestCombo, gameMode, grafemasReward, isRacing, peakWPM, raceVictory, score, sessionId, timeElapsed, wave, wordsDestroyed, wpm]);
 
   /* ── Combat ──────────────────────────────────────────────── */
   if (!isRacing) {
@@ -246,9 +250,9 @@ export default function MatchResult({
           {/* Bottom */}
           <div className="mr__bottom">
             <p className="mr__quote">
-              "Las palabras no se acaban.<br />Solo cambian de mano."
+              "Error de sintaxis.<br />Coincidencia fallida."
             </p>
-            <ResultActions onMenu={restart} onRetry={restart} />
+            <ResultActions onMenu={toMenu} onRetry={restart} />
           </div>
 
         </div>
@@ -343,10 +347,10 @@ export default function MatchResult({
         {/* Bottom */}
         <div className="mr__bottom">
           <p className="mr__quote">
-            "Las palabras no se acaban.<br />Solo cambian de mano."
+            "Error de sintaxis.<br />Coincidencia fallida."
           </p>
           <div className="mr__actions">
-            <button className="mr__btn mr__btn--secondary" onClick={restart}>
+            <button className="mr__btn mr__btn--secondary" onClick={toMenu}>
               Menú Principal
             </button>
             <button className="mr__btn mr__btn--primary" onClick={restart}>

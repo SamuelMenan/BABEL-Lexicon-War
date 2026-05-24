@@ -29,6 +29,8 @@ export async function saveMatchResult({
   peakWPM,
   timeElapsed,
   grafemasReward,
+  wordsDestroyed,
+  bestCombo,
 }) {
   if (!supabase) {
     return { ok: false, skipped: true, reason: 'supabase-not-configured' };
@@ -63,6 +65,8 @@ export async function saveMatchResult({
     p_peak_wpm:        toInteger(peakWPM),
     p_time_elapsed:    toInteger(timeElapsed),
     p_grafemas_reward: toInteger(grafemasReward),
+    p_words_destroyed: toInteger(wordsDestroyed),
+    p_best_combo:      toInteger(bestCombo),
   };
 
   const { data, error } = await supabase.rpc('record_match_result', payload);

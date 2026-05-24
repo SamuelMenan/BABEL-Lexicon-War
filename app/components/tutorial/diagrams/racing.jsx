@@ -7,7 +7,7 @@ export function DiagRacingType() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// PROPULSIÓN POR INPUT" tone="primary" />
+        <Label text="// PROPULSION POR INPUT" tone="primary" />
         <line x1="0" y1="105" x2="240" y2="105" stroke="var(--col-primary)" strokeOpacity="0.5" />
         <line x1="0" y1="95"  x2="240" y2="95"  stroke="var(--col-primary)" strokeOpacity="0.15" strokeDasharray="8 12" />
         <line x1="0" y1="115" x2="240" y2="115" stroke="var(--col-primary)" strokeOpacity="0.15" strokeDasharray="8 12" />
@@ -59,7 +59,7 @@ export function DiagTimer() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame tone="warning">
-        <Label text="// CRONÓMETRO" tone="warning" />
+        <Label text="// CRONOMETRO" tone="warning" />
         <g transform="translate(120 105)">
           <circle r="58" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.6" />
           <circle r="54" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="6" />
@@ -82,16 +82,16 @@ export function DiagPhrase() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// PÁRRAFO ACTIVO" tone="primary" />
+        <Label text="// PARRAFO ACTIVO" tone="primary" />
         <g transform="translate(18 48)">
           <path d="M0 4 L4 0 L200 0 L204 4 L204 100 L200 104 L4 104 L0 100 Z"
             fill="rgba(0,0,0,0.55)" stroke="var(--col-primary)" strokeOpacity="0.5" />
-          <text x="14" y="26" className="td-text-sm td-text-dim">las palabras no se</text>
+          <text x="14" y="26" className="td-text-sm td-text-dim">error de sintaxis</text>
           <g transform="translate(14 50)">
-            <text className="td-text td-text-primary" filter="url(#glow-p)">ACABAN</text>
-            <rect x="46" y="-10" width="2" height="14" fill="var(--col-primary)" className="td-blink" />
+            <text className="td-text td-text-primary" filter="url(#glow-p)">COINCIDENCIA</text>
+            <rect x="98" y="-10" width="2" height="14" fill="var(--col-primary)" className="td-blink" />
           </g>
-          <text x="14" y="76" className="td-text-sm td-text-dim">solo cambian de mano</text>
+          <text x="14" y="76" className="td-text-sm td-text-dim">fallida</text>
           <g transform="translate(14 90)">
             {[...Array(20)].map((_, i) => (
               <rect key={i} x={i * 9} y="0" width="6" height="2"
@@ -111,7 +111,7 @@ export function DiagOpponent() {
         <Label text="// RIVAL DETECTADO" tone="warning" />
         <g transform="translate(50 65)">
           <Ship scale="1.3" />
-          <text x="0" y="38" textAnchor="middle" className="td-text-sm td-text-primary">TÚ</text>
+          <text x="0" y="38" textAnchor="middle" className="td-text-sm td-text-primary">TU</text>
           <g transform="translate(-22 46)">
             <rect width="44" height="6" fill="rgba(0,0,0,0.5)" stroke="var(--col-primary)" strokeOpacity="0.4" />
             <rect width="34" height="6" fill="var(--col-primary)" />
@@ -138,7 +138,7 @@ export function DiagWpmAccuracy() {
   return (
     <svg viewBox={VB} className="td-svg"><Defs />
       <Frame>
-        <Label text="// MÉTRICAS EN VIVO" tone="primary" />
+        <Label text="// METRICAS EN VIVO" tone="primary" />
         <g transform="translate(24 38)">
           <path d="M0 4 L4 0 L90 0 L94 4 L94 56 L90 60 L4 60 L0 56 Z"
             fill="rgba(0,255,204,0.06)" stroke="var(--col-primary)" strokeOpacity="0.5" />
@@ -158,7 +158,7 @@ export function DiagWpmAccuracy() {
             fill="none" stroke="var(--col-primary)" strokeWidth="1.5" className="td-draw" />
           <line x1="0" y1="40" x2="194" y2="40" stroke="rgba(255,255,255,0.1)" />
         </g>
-        <text x="120" y="180" textAnchor="middle" className="td-text-sm td-text-warning">precisión &gt; velocidad</text>
+        <text x="120" y="180" textAnchor="middle" className="td-text-sm td-text-warning">precision &gt; velocidad</text>
       </Frame>
     </svg>
   );

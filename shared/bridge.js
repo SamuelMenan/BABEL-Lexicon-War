@@ -80,6 +80,19 @@ let _state = {
   tutorialActive:  null,           // { id, stepIndex } | null
   deploymentPhase: null,           // 'landing' | 'tutorial' | 'countdown' | 'playing' | null
   tutorialsSeen:   {},             // mirror del perfil
+  // Online race (fase 1: lobby + sala; fase 2 anyade race sync)
+  onlineEnabled:        false,     // true = sesion online activa (override del flujo offline)
+  onlineRoom:           null,      // { id, code, isPrivate, hostId, guestId, status, hostShip, guestShip, hostReady, guestReady }
+  onlineRole:           null,      // 'host' | 'guest'
+  onlinePilot:          null,      // 'kael' | 'voss'
+  onlineOpponentPilot:  null,
+  onlineOpponentShip:   null,
+  onlineOpponentReady:  false,
+  onlineOpponentStats:  null,      // { wpm, avgWpm, distance, phrasesDone, accuracy } — fase 2
+  onlineConnection:     'idle',    // 'idle' | 'connecting' | 'connected' | 'lost'
+  // Rematch coordination — sobrevive a unmount de MainMenu durante MatchResult.
+  onlinePendingInvite:  null,      // { newRoomId, fromPilot } — modal en App.jsx
+  onlinePendingRoom:    null,      // { roomId, role } — MainMenu lo abre en mount
 };
 
 const stateListeners = new Set();
@@ -193,6 +206,36 @@ export const Bridge = {
     exitToHangar() {
       const mode = _state.gameMode;
       EventBus.emit(EventTypes.EXIT_TO_HANGAR, { mode });
+    },
+    // Online race — invocado desde RoomScreen cuando ambos ready + status=starting.
+    // Setea selectedShip + onlineRoom + role, salta el flujo de hangar y dispara
+    // GAME_START en racing. main.js detecta onlineRoom y arma OnlineRacingSystem.
+    startOnlineRace({ room, role, ship, opponentShip, pilot, opponentPilot }) {
+      Object.assign(_state, {
+        selectedShip:        ship,
+        onlineEnabled:       true,
+        onlineRoom:          room,
+        onlineRole:          role,
+        onlinePilot:         pilot,
+        onlineOpponentShip:  opponentShip,
+        onlineOpponentPilot: opponentPilot,
+        onlineOpponentReady: true,
+        onlineOpponentStats: null,
+        onlineConnection:    'connected',
+        showShipSelection:   false,
+        pendingGameMode:     null,
+      });
+      notifyStateChange();
+      EventBus.emit(EventTypes.GAME_START, { mode: 'racing' });
+    },
+    // Limpieza al salir de modo online (volver a menu o pausa→menu).
+    clearOnlineRace() {
+      Object.assign(_state, {
+        onlineEnabled: false, onlineRoom: null, onlineRole: null,
+        onlinePilot: null, onlineOpponentShip: null, onlineOpponentPilot: null,
+        onlineOpponentReady: false, onlineOpponentStats: null, onlineConnection: 'idle',
+      });
+      notifyStateChange();
     },
   },
 };

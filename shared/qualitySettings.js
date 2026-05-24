@@ -39,7 +39,7 @@ const QUALITY_PROFILES = Object.freeze({
     boosterLightMult:      1.0,
     bloomEnabled:          true,
     // Bloom a 60% res — UnrealBloomPass tiene strength=0.06, calidad indistinguible visualmente
-    // del 100% pero ~3× más barato. Es solo el RT interno; final composite sigue full res.
+    // del 100% pero ~3× mas barato. Es solo el RT interno; final composite sigue full res.
     bloomResScale:         0.60,
   },
 });

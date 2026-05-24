@@ -1,4 +1,4 @@
-// Decide qué tutorial mostrar y orquesta gate landing→tutorial→countdown.
+// Decide que tutorial mostrar y orquesta gate landing→tutorial→countdown.
 // Inicializa una vez desde app/main.jsx.
 
 import { Bridge } from './bridge.js';
@@ -55,14 +55,14 @@ export function initTutorialController() {
     });
   });
 
-  // Hangar tutorial — al abrir selección de nave
+  // Hangar tutorial — al abrir seleccion de nave
   EventBus.on(EventTypes.SHIP_SELECTION_OPENED, () => {
-    // Pequeño delay para que cámara hangar estabilice antes del modal
+    // Pequeño delay para que camara hangar estabilice antes del modal
     setTimeout(() => { maybeStartTutorial('hangar'); }, 500);
   });
 
-  // Standalone typing tutorial (lanzado desde menú)
-  // Expuesto vía Bridge.commands.startTutorial('typing')
+  // Standalone typing tutorial (lanzado desde menu)
+  // Expuesto via Bridge.commands.startTutorial('typing')
 
   // Reset state on game over (permite mostrar tutorial otra vez si jugador resetea perfil mid-session)
   EventBus.on(EventTypes.PROFILE_RESET, () => {

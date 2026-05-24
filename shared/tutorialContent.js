@@ -1,4 +1,4 @@
-// Contenido declarativo de tutoriales. Sin lógica de motor.
+// Contenido declarativo de tutoriales. Sin logica de motor.
 // Cada step: { title, body, highlight?, diagram?, ctaContinue?, ctaSkip? }
 // diagram = { kind: 'keyboard'|'combat-intro'|'branch-typing'|'combat-objective'
 //                  |'hp-bar'|'hud-statbars'|'lex-heat'|'flow-mode'|'proximity'|'waves'
@@ -13,29 +13,29 @@ export const TUTORIALS = {
     steps: [
       {
         title: 'Bienvenido, piloto TYPO',
-        body: 'El Enjambre Lexical se acerca. Cada unidad porta una palabra-núcleo. Tipearla con precisión = colapso. Tu teclado es tu arma.',
+        body: 'El Enjambre Lexical se acerca. Cada unidad porta una palabra-nucleo. Tipearla con precision = colapso. Tu teclado es tu arma.',
         diagram: { kind: 'combat-intro' },
       },
       {
-        title: '¿Sabes mecanografía táctil?',
-        body: 'Antes de pelear, asegúrate de saber qué dedo presiona qué tecla. Si nunca lo aprendiste, recomendamos verlo. Toma 2 minutos.',
-        branch: { typing: 'Enséñame mecanografía', skip: 'Ya sé, continuar' },
+        title: '¿Sabes mecanografia tactil?',
+        body: 'Antes de pelear, asegurate de saber que dedo presiona que tecla. Si nunca lo aprendiste, recomendamos verlo. Toma 2 minutos.',
+        branch: { typing: 'Enseñame mecanografia', skip: 'Ya se, continuar' },
         diagram: { kind: 'branch-typing' },
       },
       {
         title: 'Objetivo',
-        body: 'Una palabra cuelga sobre cada enemigo. Escríbela exacto y la unidad colapsa. Si llega a tu nave, recibes daño.',
+        body: 'Una palabra cuelga sobre cada enemigo. Escribela exacto y la unidad colapsa. Si llega a tu nave, recibes daño.',
         diagram: { kind: 'combat-objective' },
       },
       {
         title: 'HP / Flow',
-        body: 'Esquina inferior izquierda: tus stats básicos. HP baja con golpes. Flow recompensa precisión. Los sistemas de sobrecalentamiento y escudo quedan reservados para una futura versión del tutorial.',
+        body: 'Esquina inferior izquierda: tus stats basicos. HP baja con golpes. Flow recompensa precision. Los sistemas de sobrecalentamiento y escudo quedan reservados para una futura version del tutorial.',
         highlight: 'bottom-left',
         diagram: { kind: 'hud-statbars' },
       },
             {
         title: 'HP',
-        body: 'La barra de vida es tu HP. Se reduce cuando te golpean y, si llega a cero, pierdes la nave. Vigílala antes de dejar que los enemigos se acerquen demasiado.',
+        body: 'La barra de vida es tu HP. Se reduce cuando te golpean y, si llega a cero, pierdes la nave. Vigilala antes de dejar que los enemigos se acerquen demasiado.',
         highlight: 'bottom-left',
         diagram: { kind: 'hp-bar' },
       },
@@ -46,7 +46,7 @@ export const TUTORIALS = {
       },
       {
         title: 'Avisos de proximidad',
-        body: 'Marco amarillo = enemigo cerca. Rojo = inminente o HP bajo. Prioriza el más cercano.',
+        body: 'Marco amarillo = enemigo cerca. Rojo = inminente o HP bajo. Prioriza el mas cercano.',
         diagram: { kind: 'proximity' },
       },
       {
@@ -57,7 +57,7 @@ export const TUTORIALS = {
       },
       {
         title: 'Grafemas (₲)',
-        body: 'Cada kill da grafemas. La cartera vive arriba a la derecha. Cómpra naves nuevas en el hangar.',
+        body: 'Cada kill da grafemas. La cartera vive arriba a la derecha. Compra naves nuevas en el hangar.',
         diagram: { kind: 'grafemas' },
       },
       {
@@ -79,9 +79,9 @@ export const TUTORIALS = {
         diagram: { kind: 'racing-typing' },
       },
       {
-        title: '¿Sabes mecanografía táctil?',
+        title: '¿Sabes mecanografia tactil?',
         body: 'La carrera premia la fluidez. Si nunca aprendiste a escribir sin mirar, recomendamos verlo. Toma 2 minutos.',
-        branch: { typing: 'Enséñame mecanografía', skip: 'Ya sé, continuar' },
+        branch: { typing: 'Enseñame mecanografia', skip: 'Ya se, continuar' },
         diagram: { kind: 'branch-typing' },
       },
       {
@@ -132,16 +132,16 @@ export const TUTORIALS = {
     steps: [
       {
         title: 'Tu hangar',
-        body: 'Aquí guardas tus naves. Preview 3D al centro, arsenal a un costado, stats técnicas. Elige nave antes de cada misión.',
+        body: 'Aqui guardas tus naves. Preview 3D al centro, arsenal a un costado, stats tecnicas. Elige nave antes de cada mision.',
         diagram: { kind: 'hangar-overview' },
       },
       {
         title: 'Tu piloto',
-        body: 'Elige a Kael o Voss desde el botón PILOTO. Sólo uno queda ACTIVO y se guarda. Su nombre y rol aparecen arriba-izquierda en combate, carrera y hangar.',
+        body: 'Elige a Kael o Voss desde el boton PILOTO. Solo uno queda ACTIVO y se guarda. Su nombre y rol aparecen arriba-izquierda en combate, carrera y hangar.',
         diagram: { kind: 'hangar-slots' },
       },
       {
-        title: 'Navegación',
+        title: 'Navegacion',
         body: 'Flechas ←/→ para cambiar de nave. Enter para desplegar. Si tienes grafemas suficientes, puedes comprar nuevas.',
         ctaContinue: 'ENTENDIDO',
         diagram: { kind: 'hangar-nav' },
@@ -151,7 +151,7 @@ export const TUTORIALS = {
 
   typing: {
     id: 'typing',
-    titleChip: 'MECANOGRAFÍA TÁCTIL',
+    titleChip: 'MECANOGRAFIA TACTIL',
     steps: [
       {
         title: 'Postura',
@@ -160,22 +160,22 @@ export const TUTORIALS = {
       },
       {
         title: 'Home Row',
-        body: 'Tus dedos descansan sobre ASDF (izq) y JKL; (der). Pulgares sobre la barra espaciadora. F y J tienen un relieve — encuéntralo sin mirar.',
+        body: 'Tus dedos descansan sobre ASDF (izq) y JKL; (der). Pulgares sobre la barra espaciadora. F y J tienen un relieve — encuentralo sin mirar.',
         diagram: { kind: 'keyboard', highlight: ['leftPinky','leftRing','leftMiddle','leftIndex','rightIndex','rightMiddle','rightRing','rightPinky'] },
       },
       {
         title: 'Mano izquierda',
-        body: 'Meñique: A Q Z 1. Anular: S W X 2. Medio: D E C 3. Índice: F G R T V B 4 5.',
+        body: 'Meñique: A Q Z 1. Anular: S W X 2. Medio: D E C 3. Indice: F G R T V B 4 5.',
         diagram: { kind: 'keyboard', highlight: ['leftPinky','leftRing','leftMiddle','leftIndex'] },
       },
       {
         title: 'Mano derecha',
-        body: 'Índice: J H U Y M N 6 7. Medio: K I , 8. Anular: L O . 9. Meñique: Ñ ; P 0 -.',
+        body: 'Indice: J H U Y M N 6 7. Medio: K I , 8. Anular: L O . 9. Meñique: Ñ ; P 0 -.',
         diagram: { kind: 'keyboard', highlight: ['rightIndex','rightMiddle','rightRing','rightPinky'] },
       },
       {
         title: 'Pulgares',
-        body: 'Solo barra espaciadora. Alterna según conveniencia. Nunca uses el índice para el espacio.',
+        body: 'Solo barra espaciadora. Alterna segun conveniencia. Nunca uses el indice para el espacio.',
         diagram: { kind: 'keyboard', highlight: ['leftThumb','rightThumb'] },
       },
       {
@@ -184,12 +184,12 @@ export const TUTORIALS = {
         diagram: { kind: 'no-look' },
       },
       {
-        title: 'Precisión > velocidad',
+        title: 'Precision > velocidad',
         body: 'No persigas WPM. Persigue accuracy. La velocidad sube sola cuando los errores bajan.',
         diagram: { kind: 'accuracy' },
       },
       {
-        title: 'Mini práctica',
+        title: 'Mini practica',
         body: 'Tipea: asdf jkl;  asdf jkl;  asdf jkl;',
         practice: 'asdf jkl; asdf jkl; asdf jkl;',
         diagram: { kind: 'practice' },

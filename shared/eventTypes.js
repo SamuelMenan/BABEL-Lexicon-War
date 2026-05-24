@@ -1,4 +1,4 @@
-// Catálogo central de tipos de evento — UI ↔ Motor
+// Catalogo central de tipos de evento — UI ↔ Motor
 // NUNCA usar strings literales fuera de este archivo
 
 export const EventTypes = {
@@ -26,7 +26,7 @@ export const EventTypes = {
   PLAYER_STATS:         'player:stats',      // { hp, energy }
   PLAYER_OVERHEAT_START: 'player:overheat_start',
   PLAYER_OVERHEAT_END:   'player:overheat_end',
-  PLAYER_RESOURCE_UPDATE: 'player:resource_update', // telemetría: { hull, shield, lexHeat }
+  PLAYER_RESOURCE_UPDATE: 'player:resource_update', // telemetria: { hull, shield, lexHeat }
 
   // --- HUD / UI ---
   HUD_UPDATE:         'hud:update',
@@ -60,7 +60,7 @@ export const EventTypes = {
   SHIP_CONFIRMED:           'ship:confirmed',            // { shipId }
   SHIP_SELECTION_CANCELLED: 'ship:selection_cancelled',
 
-  // --- Economía ---
+  // --- Economia ---
   GRAFEMAS_AWARDED:  'grafemas:awarded',   // { amount, source, breakdown }
   GRAFEMAS_SPENT:    'grafemas:spent',     // { amount, reason }
   SHIP_PURCHASED:    'ship:purchased',     // { shipId, price }
@@ -69,7 +69,7 @@ export const EventTypes = {
   PROFILE_RESET:     'profile:reset',
   CHARACTER_SELECTED: 'character:selected', // { characterId }
 
-  // --- Navegación in-app desde pause ---
+  // --- Navegacion in-app desde pause ---
   EXIT_TO_MENU:      'app:exit_to_menu',
   EXIT_TO_HANGAR:    'app:exit_to_hangar',   // { mode }
 

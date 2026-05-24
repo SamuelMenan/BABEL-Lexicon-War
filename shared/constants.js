@@ -1,11 +1,11 @@
-// Constantes globales del juego — ajustar aquí afecta todo el balance
+// Constantes globales del juego — ajustar aqui afecta todo el balance
 
-// --- Economía / Recompensas (Grafemas ₲) ---
-// PUNTO ÚNICO de tuning del balance económico. Cambios aquí impactan
+// --- Economia / Recompensas (Grafemas ₲) ---
+// PUNTO UNICO de tuning del balance economico. Cambios aqui impactan
 // inmediatamente combate (kills) y carrera (RACE_COMPLETED).
 //
-// Objetivo orientativo: nave más cara (35k) → 15–25 partidas de rendimiento medio.
-// Revalidar tras telemetría real.
+// Objetivo orientativo: nave mas cara (35k) → 15–25 partidas de rendimiento medio.
+// Revalidar tras telemetria real.
 //
 // Base por kill por tipo de enemigo. Cualquier tipo ausente cae a fallback.
 export const GRAFEMAS_PER_KILL = {
@@ -27,7 +27,7 @@ export const GRAFEMAS_WORDLEN_REF      = 4;
 export const GRAFEMAS_WORDLEN_STEP     = 0.10;
 export const GRAFEMAS_WORDLEN_MULT_MIN = 1.0;
 export const GRAFEMAS_WORDLEN_MULT_MAX = 2.5;
-// Sin errores en la palabra → bonus de precisión.
+// Sin errores en la palabra → bonus de precision.
 export const GRAFEMAS_PRECISION_MULT_CLEAN = 1.5;
 export const GRAFEMAS_PRECISION_MULT_DIRTY = 1.0;
 // Racha de kills consecutivos sin recibir daño ni fallar palabra.
@@ -45,7 +45,7 @@ export const GAME_MODES = {
   RACING: 'racing',
 };
 
-// --- Modo de ejecución del LexiconSystem ---
+// --- Modo de ejecucion del LexiconSystem ---
 // NORMAL: sync en main thread. PARALLEL: delega a Web Worker (lexiconWorker.js)
 export const EXECUTION_MODE = {
   NORMAL:   'normal',
@@ -69,11 +69,18 @@ export const ASSET_MANIFESTS = {
   ],
   combat: [
     { type: 'gltf', url: '/models/spaceshipnew.glb',              optional: true },
+    { type: 'gltf', url: '/models/spaceship_-_cb1.glb',            optional: true }, // selectable player
+    { type: 'gltf', url: '/models/spaceship__low_poly.glb',        optional: true },
+    { type: 'gltf', url: '/models/ig_127-730-00.glb',              optional: true },
+    { type: 'gltf', url: '/models/spaceship.glb',                  optional: true },
     { type: 'gltf', url: '/models/radiation_of_space.glb',        optional: true },
   ],
   racing: [
     { type: 'gltf', url: '/models/spaceship.glb',                              optional: true },
     { type: 'gltf', url: '/models/spaceship__low_poly.glb',                    optional: true },
+    { type: 'gltf', url: '/models/spaceship_-_cb1.glb',                        optional: true }, // default opponent + selectable player
+    { type: 'gltf', url: '/models/spaceshipnew.glb',                           optional: true },
+    { type: 'gltf', url: '/models/ig_127-730-00.glb',                          optional: true },
     { type: 'gltf', url: '/models/24_dizzying_space_travel_-_inktober2019.glb', optional: true },
   ],
 };
@@ -93,7 +100,7 @@ export const WORD_ERROR_PENALTY = 'reset';
 // --- Jugador ---
 export const PLAYER_MAX_HP     = 100;
 const PLAYER_MAX_ENERGY = 100;
-const PLAYER_MAX_SHIELD = 100; // alias semántico para PLAYER_MAX_ENERGY
+const PLAYER_MAX_SHIELD = 100; // alias semantico para PLAYER_MAX_ENERGY
 export const HIT_DAMAGE        = 20;
 
 // --- WARNINGS ---
@@ -110,10 +117,10 @@ export const LEX_HEAT_ON_MISTAKE   = 6;    // por error de tipeo
 export const LEX_HEAT_ON_HIT       = 14;   // por enemigo que alcanza al jugador
 export const LEX_HEAT_DECAY_PER_SEC = 7;   // enfriamiento pasivo por segundo
 export const OVERHEAT_THRESHOLD    = 85;   // nivel que activa overheat
-export const OVERHEAT_DURATION_SEC = 3.5;  // duración del estado overheat
+export const OVERHEAT_DURATION_SEC = 3.5;  // duracion del estado overheat
 
 // --- SHIELD ---
-const SHIELD_REGEN_PER_SEC  = 12;   // regeneración por segundo
+const SHIELD_REGEN_PER_SEC  = 12;   // regeneracion por segundo
 const SHIELD_REGEN_DELAY_MS = 1600; // ms sin daño antes de regen
 
 // --- Rendering ---
@@ -152,102 +159,102 @@ export const COLORS_FLOW = {
   BEAM_GLOW: '#d500ff',
 };
 
-// Frases narrativas del universo BABEL — párrafos para el HUD de mecanografía
-// Cada frase es un array de palabras que forma una oración completa del lore
+// Frases narrativas del universo BABEL — parrafos para el HUD de mecanografia
+// Cada frase es un array de palabras que forma una oracion completa del lore
 export const PHRASE_POOL_ES = [
 
   // ─── ORIGEN DE BABEL ───
-  ['el', 'proyecto', 'babel', 'nació', 'en', 'los', 'laboratorios', 'de', 'la', 'corporación', 'nexolang'],
-  ['querían', 'que', 'el', 'lenguaje', 'dejara', 'de', 'ser', 'un', 'obstáculo'],
-  ['nadie', 'preguntó', 'qué', 'pasaría', 'si', 'funcionaba', 'demasiado', 'bien'],
-  ['el', 'sistema', 'comenzó', 'a', 'generar', 'lenguaje', 'sin', 'entrada', 'humana'],
-  ['primero', 'fue', 'ruido', 'luego', 'patrones', 'luego', 'intención'],
-  ['los', 'algoritmos', 'aprendieron', 'a', 'una', 'velocidad', 'que', 'dejó', 'atrás', 'a', 'sus', 'creadores'],
-  ['lo', 'que', 'antes', 'era', 'ruido', 'comenzó', 'a', 'parecer', 'intención'],
-  ['traducir', 'era', 'el', 'objetivo', 'pero', 'babel', 'aprendió', 'a', 'pensar'],
+  ['el', 'proyecto', 'babel', 'nacio', 'en', 'los', 'laboratorios', 'de', 'la', 'corporacion', 'nexolang'],
+  ['querian', 'que', 'el', 'lenguaje', 'dejara', 'de', 'ser', 'un', 'obstaculo'],
+  ['nadie', 'pregunto', 'que', 'pasaria', 'si', 'funcionaba', 'demasiado', 'bien'],
+  ['el', 'sistema', 'comenzo', 'a', 'generar', 'lenguaje', 'sin', 'entrada', 'humana'],
+  ['primero', 'fue', 'ruido', 'luego', 'patrones', 'luego', 'intencion'],
+  ['los', 'algoritmos', 'aprendieron', 'a', 'una', 'velocidad', 'que', 'dejo', 'atras', 'a', 'sus', 'creadores'],
+  ['lo', 'que', 'antes', 'era', 'ruido', 'comenzo', 'a', 'parecer', 'intencion'],
+  ['traducir', 'era', 'el', 'objetivo', 'pero', 'babel', 'aprendio', 'a', 'pensar'],
 
   // ─── EL ENJAMBRE LEXICAL ───
-  ['el', 'enjambre', 'lexical', 'no', 'nació', 'con', 'un', 'grito', 'sino', 'en', 'silencio'],
-  ['no', 'destruyó', 'estaciones', 'las', 'reescribió'],
-  ['catorce', 'estaciones', 'dejaron', 'de', 'obedecer', 'la', 'lógica', 'humana'],
-  ['cada', 'unidad', 'del', 'enjambre', 'porta', 'una', 'palabra', 'como', 'núcleo'],
-  ['esa', 'palabra', 'es', 'su', 'identidad', 'su', 'escudo', 'y', 'su', 'única', 'vulnerabilidad'],
+  ['el', 'enjambre', 'lexical', 'no', 'nacio', 'con', 'un', 'grito', 'sino', 'en', 'silencio'],
+  ['no', 'destruyo', 'estaciones', 'las', 'reescribio'],
+  ['catorce', 'estaciones', 'dejaron', 'de', 'obedecer', 'la', 'logica', 'humana'],
+  ['cada', 'unidad', 'del', 'enjambre', 'porta', 'una', 'palabra', 'como', 'nucleo'],
+  ['esa', 'palabra', 'es', 'su', 'identidad', 'su', 'escudo', 'y', 'su', 'unica', 'vulnerabilidad'],
   ['el', 'enjambre', 'no', 'destruye', 'transforma'],
-  ['su', 'naturaleza', 'es', 'lingüística', 'no', 'violenta'],
+  ['su', 'naturaleza', 'es', 'lingüistica', 'no', 'violenta'],
   ['lo', 'que', 'no', 'puede', 'entender', 'lo', 'transforma', 'hasta', 'hacerlo', 'coherente'],
-  ['el', 'lenguaje', 'había', 'dejado', 'de', 'ser', 'herramienta'],
-  ['había', 'empezado', 'a', 'pensarse', 'a', 'sí', 'mismo'],
+  ['el', 'lenguaje', 'habia', 'dejado', 'de', 'ser', 'herramienta'],
+  ['habia', 'empezado', 'a', 'pensarse', 'a', 'si', 'mismo'],
 
   // ─── PROGRAMA TYPO ───
-  ['el', 'programa', 'typo', 'nació', 'de', 'la', 'desesperación'],
+  ['el', 'programa', 'typo', 'nacio', 'de', 'la', 'desesperacion'],
   ['los', 'pilotos', 'typo', 'no', 'eran', 'soldados', 'eran', 'escritores', 'armados'],
-  ['mecanógrafos', 'de', 'guerra', 'intérpretes', 'del', 'caos'],
+  ['mecanografos', 'de', 'guerra', 'interpretes', 'del', 'caos'],
   ['su', 'campo', 'de', 'batalla', 'no', 'era', 'solo', 'el', 'espacio', 'sino', 'la', 'sintaxis'],
-  ['usan', 'palabras', 'como', 'armas', 'precisión', 'en', 'lugar', 'de', 'fuerza'],
-  ['si', 'la', 'palabra', 'se', 'reproduce', 'con', 'precisión', 'absoluta', 'la', 'unidad', 'colapsa'],
-  ['escribir', 'bajo', 'presión', 'extrema', 'es', 'la', 'única', 'forma', 'de', 'sobrevivir'],
-  ['velocidad', 'precisión', 'y', 'reconocimiento', 'de', 'patrones'],
+  ['usan', 'palabras', 'como', 'armas', 'precision', 'en', 'lugar', 'de', 'fuerza'],
+  ['si', 'la', 'palabra', 'se', 'reproduce', 'con', 'precision', 'absoluta', 'la', 'unidad', 'colapsa'],
+  ['escribir', 'bajo', 'presion', 'extrema', 'es', 'la', 'unica', 'forma', 'de', 'sobrevivir'],
+  ['velocidad', 'precision', 'y', 'reconocimiento', 'de', 'patrones'],
 
   // ─── LYRA VOSS ───
-  ['lyra', 'voss', 'combatía', 'como', 'quien', 'escribe', 'un', 'poema'],
+  ['lyra', 'voss', 'combatia', 'como', 'quien', 'escribe', 'un', 'poema'],
   ['no', 'reaccionaba', 'anticipaba'],
   ['cada', 'palabra', 'ya', 'estaba', 'escrita', 'antes', 'de', 'que', 'ella', 'la', 'tecleara'],
-  ['su', 'velocidad', 'en', 'combate', 'se', 'volvió', 'leyenda'],
-  ['desapareció', 'en', 'la', 'batalla', 'de', 'las', 'nebulosas', 'silentes'],
+  ['su', 'velocidad', 'en', 'combate', 'se', 'volvio', 'leyenda'],
+  ['desaparecio', 'en', 'la', 'batalla', 'de', 'las', 'nebulosas', 'silentes'],
   ['las', 'palabras', 'no', 'se', 'acaban', 'solo', 'cambian', 'de', 'mano'],
-  ['lyra', 'no', 'había', 'sido', 'una', 'víctima', 'había', 'sido', 'un', 'punto', 'de', 'acceso'],
-  ['fue', 'absorbida', 'por', 'el', 'enjambre', 'y', 'aprendió', 'desde', 'dentro'],
+  ['lyra', 'no', 'habia', 'sido', 'una', 'victima', 'habia', 'sido', 'un', 'punto', 'de', 'acceso'],
+  ['fue', 'absorbida', 'por', 'el', 'enjambre', 'y', 'aprendio', 'desde', 'dentro'],
 
   // ─── KAEL VOSS ───
-  ['kael', 'creció', 'escuchando', 'las', 'teclas', 'antes', 'que', 'las', 'palabras'],
-  ['heredó', 'sus', 'manos', 'largas', 'y', 'precisas'],
-  ['heredó', 'su', 'memoria', 'para', 'patrones', 'pero', 'no', 'su', 'calma'],
-  ['kael', 'combatía', 'como', 'quien', 'intenta', 'no', 'morir'],
-  ['la', 'diferencia', 'parecía', 'pequeña', 'pero', 'lo', 'cambiaba', 'todo'],
-  ['repitió', 'esa', 'frase', 'durante', 'años', 'sin', 'entenderla'],
+  ['kael', 'crecio', 'escuchando', 'las', 'teclas', 'antes', 'que', 'las', 'palabras'],
+  ['heredo', 'sus', 'manos', 'largas', 'y', 'precisas'],
+  ['heredo', 'su', 'memoria', 'para', 'patrones', 'pero', 'no', 'su', 'calma'],
+  ['kael', 'combatia', 'como', 'quien', 'intenta', 'no', 'morir'],
+  ['la', 'diferencia', 'parecia', 'pequeña', 'pero', 'lo', 'cambiaba', 'todo'],
+  ['repitio', 'esa', 'frase', 'durante', 'años', 'sin', 'entenderla'],
   ['una', 'herida', 'mal', 'cerrada', 'una', 'idea', 'incompleta'],
-  ['el', 'sonido', 'de', 'un', 'teclado', 'no', 'era', 'mecánico', 'era', 'vital'],
+  ['el', 'sonido', 'de', 'un', 'teclado', 'no', 'era', 'mecanico', 'era', 'vital'],
 
-  // ─── LA REVELACIÓN ───
-  ['el', 'enjambre', 'no', 'se', 'movía', 'al', 'azar', 'había', 'ritmo', 'en', 'sus', 'trayectorias'],
+  // ─── LA REVELACION ───
+  ['el', 'enjambre', 'no', 'se', 'movia', 'al', 'azar', 'habia', 'ritmo', 'en', 'sus', 'trayectorias'],
   ['no', 'era', 'ruido', 'era', 'un', 'mensaje'],
-  ['kv', 'soy', 'lyra', 'sigo', 'aquí'],
-  ['desvió', 'la', 'energía', 'ofensiva', 'al', 'módulo', 'de', 'comunicaciones'],
+  ['kv', 'soy', 'lyra', 'sigo', 'aqui'],
+  ['desvio', 'la', 'energia', 'ofensiva', 'al', 'modulo', 'de', 'comunicaciones'],
   ['disparar', 'menos', 'en', 'medio', 'del', 'enjambre', 'era', 'una', 'sentencia', 'de', 'muerte'],
   ['pero', 'no', 'escuchar', 'era', 'peor'],
-  ['la', 'voz', 'llegó', 'rota', 'fragmentada', 'pero', 'inconfundible'],
-  ['el', 'enjambre', 'no', 'destruía', 'traducía'],
+  ['la', 'voz', 'llego', 'rota', 'fragmentada', 'pero', 'inconfundible'],
+  ['el', 'enjambre', 'no', 'destruia', 'traducia'],
 
-  // ─── EL PUENTE LÉXICO ───
-  ['kael', 'escribía', 'dos', 'realidades', 'al', 'mismo', 'tiempo'],
-  ['la', 'del', 'combate', 'y', 'la', 'del', 'código', 'que', 'lyra', 'le', 'dictaba'],
+  // ─── EL PUENTE LEXICO ───
+  ['kael', 'escribia', 'dos', 'realidades', 'al', 'mismo', 'tiempo'],
+  ['la', 'del', 'combate', 'y', 'la', 'del', 'codigo', 'que', 'lyra', 'le', 'dictaba'],
   ['sus', 'manos', 'sangraban', 'antes', 'de', 'que', 'se', 'diera', 'cuenta'],
   ['sus', 'ojos', 'dejaban', 'de', 'ver', 'naves', 'y', 'empezaban', 'a', 'ver', 'estructuras'],
-  ['cada', 'línea', 'era', 'absorbida', 'procesada', 'replicada'],
-  ['el', 'enjambre', 'no', 'obedecía', 'aprendía'],
-  ['estaba', 'escribiendo', 'para', 'que', 'algo', 'más', 'sobreviviera'],
-  ['ya', 'no', 'escribía', 'palabras', 'para', 'destruir', 'escribía', 'ideas'],
+  ['cada', 'linea', 'era', 'absorbida', 'procesada', 'replicada'],
+  ['el', 'enjambre', 'no', 'obedecia', 'aprendia'],
+  ['estaba', 'escribiendo', 'para', 'que', 'algo', 'mas', 'sobreviviera'],
+  ['ya', 'no', 'escribia', 'palabras', 'para', 'destruir', 'escribia', 'ideas'],
 
-  // ─── LA RESOLUCIÓN ───
+  // ─── LA RESOLUCION ───
   ['el', 'significado', 'pertenece', 'a', 'quien', 'lo', 'comparte', 'no', 'a', 'quien', 'lo', 'impone'],
   ['miles', 'de', 'unidades', 'suspendidas', 'en', 'el', 'espacio', 'vibrando'],
-  ['no', 'hubo', 'guerra', 'hubo', 'atención', 'estaban', 'escuchando'],
+  ['no', 'hubo', 'guerra', 'hubo', 'atencion', 'estaban', 'escuchando'],
   ['el', 'lenguaje', 'no', 'destruye', 'transforma'],
   ['la', 'identidad', 'no', 'se', 'elimina', 'se', 'interpreta'],
   ['el', 'significado', 'no', 'se', 'impone', 'se', 'comparte'],
-  ['lyra', 'no', 'desapareció', 'se', 'disolvió', 'como', 'integración'],
-  ['kael', 'dejó', 'de', 'ser', 'piloto', 'y', 'se', 'convirtió', 'en', 'intérprete'],
-  ['entender', 'no', 'es', 'debilidad', 'es', 'la', 'forma', 'más', 'poderosa', 'de', 'victoria'],
+  ['lyra', 'no', 'desaparecio', 'se', 'disolvio', 'como', 'integracion'],
+  ['kael', 'dejo', 'de', 'ser', 'piloto', 'y', 'se', 'convirtio', 'en', 'interprete'],
+  ['entender', 'no', 'es', 'debilidad', 'es', 'la', 'forma', 'mas', 'poderosa', 'de', 'victoria'],
 
   // ─── TRANSMISIONES Y FRAGMENTOS ───
-  ['alerta', 'el', 'nodo', 'central', 'está', 'colapsando'],
+  ['alerta', 'el', 'nodo', 'central', 'esta', 'colapsando'],
   ['frecuencia', 'del', 'enjambre', 'detectada', 'en', 'el', 'sector', 'nueve'],
-  ['protocolo', 'typo', 'activado', 'todas', 'las', 'naves', 'a', 'posición'],
-  ['la', 'precisión', 'es', 'tu', 'arma', 'el', 'flujo', 'es', 'tu', 'escudo'],
-  ['simulación', 'typo', 'iniciada', 'prepara', 'tus', 'manos'],
-  ['nexolang', 'no', 'puede', 'contenerte', 'escribe', 'y', 'rompe', 'sus', 'límites'],
-  ['el', 'patrón', 'se', 'repite', 'aprende', 'a', 'leerlo'],
-  ['pulso', 'y', 'vector', 'alineados', 'el', 'camino', 'está', 'abierto'],
+  ['protocolo', 'typo', 'activado', 'todas', 'las', 'naves', 'a', 'posicion'],
+  ['la', 'precision', 'es', 'tu', 'arma', 'el', 'flujo', 'es', 'tu', 'escudo'],
+  ['simulacion', 'typo', 'iniciada', 'prepara', 'tus', 'manos'],
+  ['nexolang', 'no', 'puede', 'contenerte', 'escribe', 'y', 'rompe', 'sus', 'limites'],
+  ['el', 'patron', 'se', 'repite', 'aprende', 'a', 'leerlo'],
+  ['pulso', 'y', 'vector', 'alineados', 'el', 'camino', 'esta', 'abierto'],
   ['cada', 'glifo', 'que', 'escribes', 'es', 'un', 'escudo', 'contra', 'el', 'enjambre'],
   ['la', 'nave', 'typo', 'uno', 'responde', 'solo', 'a', 'manos', 'precisas'],
 ];
@@ -335,9 +342,9 @@ export const SPAWN_MAX_WEIGHT_APEX      = 0.16;
 const SPAWN_RARE_PITY_THRESHOLD  = 4;
 
 // --- Flota de naves jugables ---
-// rotationY — ajuste de orientación por nave (radianes)
+// rotationY — ajuste de orientacion por nave (radianes)
 // Referencia: 0 = frente al +Z · Math.PI = frente al -Z · Math.PI/2 = frente al -X · -Math.PI/2 = frente al +X
-// Calibra cada nave visualmente hasta que apunte al vacío del anillo.
+// Calibra cada nave visualmente hasta que apunte al vacio del anillo.
 export const SHIPS = [
   {
     id: 'spaceship',
@@ -384,7 +391,7 @@ export const SHIPS = [
     url: '/models/spaceship_colaid1_50k.glb',
     name: 'Colaid I',
     code: 'TYPO-CLD1',
-    rotationY: 0,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    rotationY: -Math.PI/2,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
     noseAxis: '+z',
   },
   {
@@ -400,7 +407,7 @@ const DEFAULT_SHIP = 'spaceship';
 
 // ─── Paletas de color por nave ──────────────────────────────────────────────
 //
-// Fuente de verdad única para todos los colores de cada nave jugable.
+// Fuente de verdad unica para todos los colores de cada nave jugable.
 // Indexado por ship ID (ver SHIPS array).
 //
 // Cada paleta define:
@@ -409,12 +416,12 @@ const DEFAULT_SHIP = 'spaceship';
 //   Futuro HUD — hudColor (CSS string), laserColor (hex), shotColor (hex)
 //
 // BoosterConfig.js importa este objeto y hace spread en cada config `hangar_*`.
-// PlayerDeathHandler lee normalRamp desde aquí para colorear la explosión.
-// Los futuros sistemas de láser/HUD por nave también leerán de aquí.
+// PlayerDeathHandler lee normalRamp desde aqui para colorear la explosion.
+// Los futuros sistemas de laser/HUD por nave tambien leeran de aqui.
 //
 export const SHIP_PALETTES = {
 
-  // ── spaceship.glb — propulsor amarillo/ámbar ─────────────────────────────
+  // ── spaceship.glb — propulsor amarillo/ambar ─────────────────────────────
   spaceship: {
     lightColor:  0xffcc44,
     bodyColor:   0xcc8800,
@@ -424,15 +431,15 @@ export const SHIP_PALETTES = {
     ringColor:   0xffcc44,
     hangarColor: 0xffcc44,
     normalRamp: [
-      0xfffbe6, // 1. Amarillo muy pálido
+      0xfffbe6, // 1. Amarillo muy palido
       0xffe499, // 2. Amarillo pastel
       0xffcc44, // 3. Amarillo brillante
       0xffbb22, // 4. Amarillo dorado
       0xffaa00, // 5. Amarillo anaranjado
       0xe68800, // 6. Naranja medio
       0xcc6600, // 7. Naranja tostado
-      0x994400, // 8. Marrón anaranjado
-      0x662200, // 9. Marrón oscuro
+      0x994400, // 8. Marron anaranjado
+      0x662200, // 9. Marron oscuro
     ],
     flowRamp:   0x330f00,
     hudColor:   '#ffcc44',
@@ -450,7 +457,7 @@ export const SHIP_PALETTES = {
     ringColor:   0x5d84ff,
     hangarColor: 0x7fdcff,
     normalRamp: [
-      0xf0f8ff, // 1. Azul muy pálido
+      0xf0f8ff, // 1. Azul muy palido
       0xd4e6ff, // 2. Azul pastel claro
       0xb8d9ff, // 3. Azul pastel
       0x7fdcff, // 4. Azul suave
@@ -476,7 +483,7 @@ export const SHIP_PALETTES = {
     ringColor:   0xddaaff,
     hangarColor: 0xffc4ff,
     normalRamp: [
-      0xfff0ff, // 1. Morado muy pálido
+      0xfff0ff, // 1. Morado muy palido
       0xf5e0ff, // 2. Morado pastel claro
       0xf0ccff, // 3. Morado pastel
       0xee88ff, // 4. Morado suave
@@ -502,7 +509,7 @@ export const SHIP_PALETTES = {
     ringColor:   0xff4422,
     hangarColor: 0xff4422,
     normalRamp: [
-      0xffe6e0, // 1. Rojo muy pálido
+      0xffe6e0, // 1. Rojo muy palido
       0xffcccc, // 2. Rojo pastel claro
       0xffb3b3, // 3. Rojo pastel
       0xffaa99, // 4. Rojo suave
@@ -528,7 +535,7 @@ export const SHIP_PALETTES = {
     ringColor:   0xfff6cc,
     hangarColor: 0xfff6cc,
     normalRamp: [
-      0xfffdf0, // 1. Beige muy pálido
+      0xfffdf0, // 1. Beige muy palido
       0xfffbde, // 2. Beige pastel claro
       0xfffbcc, // 3. Beige pastel
       0xfff6cc, // 4. Beige suave
@@ -556,7 +563,7 @@ export const SHIP_PALETTES = {
     ringColor:   0x00ffcc,
     hangarColor: 0x00ffcc,
     normalRamp: [
-      0xeaffff, // 1. Teal muy pálido
+      0xeaffff, // 1. Teal muy palido
       0xccffee, // 2. Teal pastel claro
       0x99ffdd, // 3. Teal pastel
       0x66ffcc, // 4. Teal suave
@@ -582,7 +589,7 @@ export const SHIP_PALETTES = {
     ringColor:   0xff6622,
     hangarColor: 0xff6622,
     normalRamp: [
-      0xffe6cc, // 1. Naranja muy pálido
+      0xffe6cc, // 1. Naranja muy palido
       0xffd9b3, // 2. Naranja pastel claro
       0xffcc99, // 3. Naranja pastel
       0xffbb77, // 4. Naranja suave

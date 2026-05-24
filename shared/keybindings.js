@@ -1,5 +1,5 @@
-// Catálogo central de acciones + bindings por defecto.
-// Una acción = una tecla canónica (más alias opcional).
+// Catalogo central de acciones + bindings por defecto.
+// Una accion = una tecla canonica (mas alias opcional).
 // Debug actions gated por playerProfile.debugEnabled.
 
 export const SCOPES = Object.freeze({
@@ -11,12 +11,12 @@ export const SCOPES = Object.freeze({
   MODAL:    'modal',
 });
 
-// Cada acción: { default, alias?, debug?, description, scopes }
+// Cada accion: { default, alias?, debug?, description, scopes }
 // 'default' / 'alias' = KeyboardEvent.key normalizado (case-insensitive)
 export const ACTIONS = Object.freeze({
   // ── Universal ─────────────────────────────────────────────────────
-  CONFIRM:        { default: 'Enter',     alias: ' ',         scopes: ['menu','hangar','tutorial','modal'], description: 'Confirmar / acción primaria' },
-  CANCEL:         { default: 'Escape',                        scopes: ['menu','hangar','tutorial','modal','gameplay'], description: 'Cancelar / atrás / pausa' },
+  CONFIRM:        { default: 'Enter',     alias: ' ',         scopes: ['menu','hangar','tutorial','modal'], description: 'Confirmar / accion primaria' },
+  CANCEL:         { default: 'Escape',                        scopes: ['menu','hangar','tutorial','modal','gameplay'], description: 'Cancelar / atras / pausa' },
   NAV_UP:         { default: 'ArrowUp',                       scopes: ['menu','modal'],   description: 'Navegar arriba' },
   NAV_DOWN:       { default: 'ArrowDown',                     scopes: ['menu','modal'],   description: 'Navegar abajo' },
   NAV_PREV:       { default: 'ArrowLeft',                     scopes: ['menu','hangar','tutorial'], description: 'Anterior / izquierda' },
@@ -24,20 +24,20 @@ export const ACTIONS = Object.freeze({
   SHOW_HELP:      { default: '?',                             scopes: ['*'],              description: 'Mostrar atajos' },
 
   // ── Hangar ────────────────────────────────────────────────────────
-  HANGAR_CAM_CYCLE: { default: 'c',                           scopes: ['hangar'], description: 'Ciclar vistas de cámara' },
-  HANGAR_CAM_RESET: { default: 'r',                           scopes: ['hangar'], description: 'Reset cámara' },
+  HANGAR_CAM_CYCLE: { default: 'c',                           scopes: ['hangar'], description: 'Ciclar vistas de camara' },
+  HANGAR_CAM_RESET: { default: 'r',                           scopes: ['hangar'], description: 'Reset camara' },
 
   // ── Gameplay ──────────────────────────────────────────────────────
-  // Typing es manejado aparte (cualquier carácter imprimible) — no registrado como action discreta.
+  // Typing es manejado aparte (cualquier caracter imprimible) — no registrado como action discreta.
 
   // ── Debug (solo si profile.debugEnabled) ──────────────────────────
   DEBUG_PERF:        { default: 'F9',          debug: true, scopes: ['*'], description: 'Toggle modo rendimiento' },
-  DEBUG_TELEMETRY:   { default: 'F10',         debug: true, scopes: ['*'], description: 'Toggle panel telemetría (FPS)' },
+  DEBUG_TELEMETRY:   { default: 'F10',         debug: true, scopes: ['*'], description: 'Toggle panel telemetria (FPS)' },
   DEBUG_BOT:         { default: 'F11',         debug: true, scopes: ['*'], description: 'Toggle AutoTyper bot' },
   DEBUG_MARKERS:     { default: 'F12',         debug: true, scopes: ['*'], description: 'Toggle markers debug (hangar)' },
   DEBUG_RESET_TUT:   { default: 'Insert',      debug: true, scopes: ['*'], description: 'Reset flags de tutoriales (sin reload)' },
   DEBUG_DEATH:       { default: 'Home',        debug: true, scopes: ['gameplay'], description: 'Forzar muerte del jugador' },
-  DEBUG_SKIP_WAVE:   { default: 'End',         debug: true, scopes: ['gameplay'], description: 'Saltar a próxima oleada' },
+  DEBUG_SKIP_WAVE:   { default: 'End',         debug: true, scopes: ['gameplay'], description: 'Saltar a proxima oleada' },
   DEBUG_GRAF_PLUS:   { default: 'PageUp',      debug: true, scopes: ['*'], description: '+50 grafemas' },
   DEBUG_GRAF_MINUS:  { default: 'PageDown',    debug: true, scopes: ['*'], description: '-50 grafemas' },
   DEBUG_FREEZE:      { default: 'Pause',       debug: true, scopes: ['*'], description: 'Freeze hard del loop' },
@@ -45,7 +45,7 @@ export const ACTIONS = Object.freeze({
   DEBUG_SNAPSHOT:    { default: 'PrintScreen', debug: true, scopes: ['*'], description: 'Volcar estado a consola' },
 });
 
-// Normaliza una tecla para comparación case-insensitive (letras únicas).
+// Normaliza una tecla para comparacion case-insensitive (letras unicas).
 // Teclas especiales (Enter, ArrowUp, F9, etc.) se preservan tal cual.
 export function normalizeKey(key) {
   if (!key) return '';

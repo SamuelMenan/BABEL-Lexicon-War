@@ -1,4 +1,4 @@
-// Servicio central de keybindings — único window keydown listener.
+// Servicio central de keybindings — unico window keydown listener.
 // Scope stack: top scope tiene prioridad. 'global' siempre activo en base.
 //
 // Uso:
@@ -14,7 +14,7 @@ import { ACTIONS, SCOPES, normalizeKey, resolveBinding } from './keybindings.js'
 
 // scope → Map<actionId, handler>
 const _handlers = new Map();
-// scope stack — top = más prioritario. 'global' siempre presente.
+// scope stack — top = mas prioritario. 'global' siempre presente.
 const _scopeStack = [SCOPES.GLOBAL];
 let _overrides = {};
 let _debugEnabled = false;
@@ -48,7 +48,7 @@ let _keyMap = buildKeyToActionMap();
 function rebuild() { _keyMap = buildKeyToActionMap(); }
 
 function topScope() {
-  // Devuelve scope con mayor precedencia (último pushed). Global se evalúa como fallback.
+  // Devuelve scope con mayor precedencia (ultimo pushed). Global se evalua como fallback.
   return _scopeStack[_scopeStack.length - 1];
 }
 
@@ -61,7 +61,7 @@ function dispatch(e) {
   const candidates = actionsForKey(e);
   if (candidates.length === 0) return false;
 
-  // Resolver scope: top-down. Primero el scope más alto que tenga handler.
+  // Resolver scope: top-down. Primero el scope mas alto que tenga handler.
   const stack = _scopeStack;
   for (let i = stack.length - 1; i >= 0; i--) {
     const scope = stack[i];
@@ -91,7 +91,7 @@ function isEditableTarget(t) {
 }
 
 function onKeyDown(e) {
-  // Si el foco está en un input/textarea editable, no interceptar nada.
+  // Si el foco esta en un input/textarea editable, no interceptar nada.
   // Permite tipear, borrar, navegar dentro de formularios (auth, name editor, etc.).
   if (isEditableTarget(e.target)) return;
   const consumed = dispatch(e);

@@ -1,4 +1,4 @@
-// Bus de eventos global — comunicación desacoplada entre motor y UI
+// Bus de eventos global — comunicacion desacoplada entre motor y UI
 
 const listeners = new Map();
 
@@ -7,7 +7,7 @@ export const EventBus = {
    * Suscribirse a un evento.
    * @param {string} type - EventTypes.*
    * @param {Function} handler - fn(payload)
-   * @returns {Function} unsub — llama para cancelar suscripción
+   * @returns {Function} unsub — llama para cancelar suscripcion
    */
   on(type, handler) {
     if (!listeners.has(type)) listeners.set(type, new Set());

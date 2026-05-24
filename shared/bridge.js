@@ -38,7 +38,7 @@ let _state = {
   showShipSelection: false,
   pendingGameMode:   null,
   selectedShip:      null,
-  // Economía (mirror de EconomySystem; no mutar desde fuera)
+  // Economia (mirror de EconomySystem; no mutar desde fuera)
   grafemas:          0,
   ownedShips:        [],
   equippedShip:      null,
@@ -186,7 +186,7 @@ export const Bridge = {
       Object.assign(_state, { tutorialsSeen: {}, tutorialActive: null, deploymentPhase: null });
       notifyStateChange();
     },
-    // Salir desde pause sin reload — preserva flags de epilepsia/presentación.
+    // Salir desde pause sin reload — preserva flags de epilepsia/presentacion.
     exitToMenu() {
       EventBus.emit(EventTypes.EXIT_TO_MENU);
     },

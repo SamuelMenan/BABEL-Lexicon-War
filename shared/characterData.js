@@ -1,4 +1,4 @@
-// Catálogo de personajes/pilotos seleccionables en hangar.
+// Catalogo de personajes/pilotos seleccionables en hangar.
 
 export const CHARACTERS = {
   kael: {
@@ -6,7 +6,7 @@ export const CHARACTERS = {
     name:     'Kael',
     codename: 'K-07',
     role:     'Vanguard',
-    bio:      'Piloto de asalto. Lectura rápida, reflejos quirúrgicos.',
+    bio:      'Piloto de asalto. Lectura rapida, reflejos quirurgicos.',
     portrait:       '/characters/Kael.png',
     portraitChosen: '/characters/KaelElegido.png',
   },
@@ -15,7 +15,7 @@ export const CHARACTERS = {
     name:     'Voss',
     codename: 'V-12',
     role:     'Strider',
-    bio:      'Estratega de flujo. Mantiene cadencias bajo presión.',
+    bio:      'Estratega de flujo. Mantiene cadencias bajo presion.',
     portrait:       '/characters/Voss.png',
     portraitChosen: '/characters/VossElegida.png',
   },

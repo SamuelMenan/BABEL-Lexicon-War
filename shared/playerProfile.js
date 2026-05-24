@@ -1,5 +1,5 @@
 // Perfil persistente del jugador. Wallet + inventario.
-// Persistencia: localStorage. Migraciones por versión.
+// Persistencia: localStorage. Migraciones por version.
 
 import { SHIP_CATALOG } from './shopCatalog.js';
 import { DEFAULT_CHARACTER_ID, CHARACTERS } from './characterData.js';
@@ -43,7 +43,7 @@ export function makeDefaultProfile() {
       totalGrafemasSpent:   0,
     },
     tutorialsSeen: {},  // { combat:'v1', racing:'v1', hangar:'v1', typing:'v1' }
-    keybindOverrides: {},  // { actionId: keyString } — vacío = defaults de keybindings.js
+    keybindOverrides: {},  // { actionId: keyString } — vacio = defaults de keybindings.js
     debugEnabled: false,   // gate de DEBUG_* actions (F9, F10, etc.)
   };
 }
@@ -76,6 +76,12 @@ export function loadProfile() {
       parsed.selectedCharacter = DEFAULT_CHARACTER_ID;
     }
     if (typeof parsed.isGuest !== 'boolean') parsed.isGuest = true;
+    // Fallback if equippedShip points to a now-hidden ship (e.g. colaid1).
+    const equippedEntry = SHIP_CATALOG[parsed.equippedShip];
+    if (!equippedEntry || equippedEntry.hidden) parsed.equippedShip = DEFAULT_SHIP_ID;
+    // Strip hidden ships from owned list so they never resurface in selection.
+    parsed.ownedShips = parsed.ownedShips.filter(id => !SHIP_CATALOG[id]?.hidden);
+    if (!parsed.ownedShips.includes(DEFAULT_SHIP_ID)) parsed.ownedShips.unshift(DEFAULT_SHIP_ID);
     if (typeof parsed.displayName !== 'string' || !parsed.displayName) {
       parsed.displayName = parsed.isGuest ? GUEST_DISPLAY_NAME : 'Pilot';
     }

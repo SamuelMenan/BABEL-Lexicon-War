@@ -70,6 +70,7 @@ export class CombatSceneManager {
       scene:            this.scene,
       getWave:          () => this.wave,
       getTimeElapsed:   () => this._timeElapsed,
+      getLexicon:       () => this.lexicon,
       onPublish:        () => this._hud.publish(this.enemies, this.lexicon.currentTargetId),
     });
   }
@@ -173,15 +174,15 @@ export class CombatSceneManager {
   }
 
   // Pre-compila programas WebGL + uploads de geometry para cada tipo de enemy.
-  // renderer.compile() solo procesa programs si el objeto está visible+inFrustum,
-  // por eso forzamos `frustumCulled=false` y posición frente a la cámara.
-  // Además hacemos un render real a una RT temporal para garantizar JIT completo
-  // (upload de VBOs, init de uniforms, link de programa, evaluación de defines).
+  // renderer.compile() solo procesa programs si el objeto esta visible+inFrustum,
+  // por eso forzamos `frustumCulled=false` y posicion frente a la camara.
+  // Ademas hacemos un render real a una RT temporal para garantizar JIT completo
+  // (upload de VBOs, init de uniforms, link de programa, evaluacion de defines).
   warmShaders(renderer, camera) {
     if (!renderer || !camera) return;
     const t0 = performance.now();
 
-    // Posición frente a la cámara — dentro del frustum garantizado.
+    // Posicion frente a la camara — dentro del frustum garantizado.
     const camPos  = camera.position;
     const fwd     = new THREE.Vector3();
     camera.getWorldDirection(fwd);
@@ -192,7 +193,7 @@ export class CombatSceneManager {
       const pos = warmBase.clone();
       pos.x += (i - 5) * 1.5; // spread lateral para que cada uno tenga su propio AABB
       const e = this._pool.acquire('warm', pos, type, 0);
-      // Forzar inclusión en render list: visible + sin culling.
+      // Forzar inclusion en render list: visible + sin culling.
       e._group.visible = true;
       e._group.traverse(obj => { obj.frustumCulled = false; });
       acquired.push(e);
@@ -201,7 +202,7 @@ export class CombatSceneManager {
     try {
       // Pass 1: compile programs.
       renderer.compile(this.scene, camera);
-      // Pass 2: render real → fuerza upload de VBOs + ejecución del program GL.
+      // Pass 2: render real → fuerza upload de VBOs + ejecucion del program GL.
       // Usamos una WebGLRenderTarget temporal para no flashear pantalla.
       const rt = new THREE.WebGLRenderTarget(64, 64);
       const prevTarget = renderer.getRenderTarget();
@@ -210,7 +211,7 @@ export class CombatSceneManager {
       renderer.setRenderTarget(prevTarget);
       rt.dispose();
     } catch (err) {
-      console.warn('[warmShaders] render warm falló:', err);
+      console.warn('[warmShaders] render warm fallo:', err);
     }
 
     for (const e of acquired) this._pool.release(e);
@@ -289,7 +290,7 @@ export class CombatSceneManager {
     const { flowActive } = Bridge.peekState();
     const shots = this._player.getMuzzleShots();
     shots.forEach((m, i) => {
-      // Solo el primer cañón dispara hitFlash para evitar N flashes por ráfaga.
+      // Solo el primer cañon dispara hitFlash para evitar N flashes por rafaga.
       const onHit = (i === 0) ? () => enemy.hitFlash?.() : () => {};
       const shot  = flowActive
         ? new LexBeam(m.anchor ?? m.origin, enemy, onHit, m.color, m.scale)
@@ -409,7 +410,7 @@ export class CombatSceneManager {
   }
 
   _pruneDeadEnemies() {
-    // Safety net: filtra inactivos si por alguna razón quedaron en el array.
+    // Safety net: filtra inactivos si por alguna razon quedaron en el array.
     if (this.enemies.length     > 100) this.enemies     = this.enemies.filter(e => e.active);
     if (this.tokens.length      > 100) this.tokens      = this.tokens.filter(t => t.enemy.active);
     if (this.projectiles.length > 100) this.projectiles = this.projectiles.filter(pp => pp.active);

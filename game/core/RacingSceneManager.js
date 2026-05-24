@@ -385,8 +385,12 @@ export class RacingSceneManager {
     }
   }
   _loadShips(){
+    // En modo online, opponentShipModel viene del Bridge (otro jugador escogio).
+    // Offline default = cb1 (parametro default del constructor).
+    const st = Bridge.peekState();
+    const oppShipId = st.onlineEnabled ? (st.onlineOpponentShip || 'cb1') : 'cb1';
     this._playerShip = new RacingPlayerShip(this._playerBase);
-    this._opponentShip = new RacingOpponentShip(this._opponentBase);
+    this._opponentShip = new RacingOpponentShip(this._opponentBase, oppShipId);
     this._addToScene(this._playerShip.mesh);
     this._addToScene(this._opponentShip.mesh);
   }

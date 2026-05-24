@@ -38,6 +38,12 @@ export class LexiconSystem {
     finally { this._matchInflight = false; }
   }
   setExecutionMode(mode) { workerBridge.setMode(mode); }
+  // Total correct keystrokes since last resetMatchStats(). Used by Racing/Combat
+  // systems to compute average WPM per match (avg = (correctKeys/5)/minutes),
+  // estandar de mecanografia competitiva. Mas fiable que la ventana rolling de
+  // 5s usada para WPM en vivo, especialmente para definir ganadores online.
+  getCorrectKeys() { return this._correctKeys; }
+  getTotalKeys()   { return this._totalKeys; }
   // Per-match counters reset. Called from game/main.js on GAME_START to avoid
   // bleed of combo/words/keystrokes from previous match into the new row.
   resetMatchStats() {
@@ -65,6 +71,9 @@ export class LexiconSystem {
       this._statsAcc = 0;
       const wpm = this._calcWPM(); const accuracy = this._calcAccuracy();
       if (wpm > this._peakWPM) this._peakWPM = wpm;
+      // No publicar mientras gameOver — el payload final del match (avgWPM, etc.)
+      // sobrescribiria con la ventana rolling de 5s que decae a 0 segundos despues.
+      if (Bridge.peekState().gameOver) return;
       if (wpm !== this._lastWpm || accuracy !== this._lastAcc) {
         this._lastWpm = wpm; this._lastAcc = accuracy;
         Bridge.setState({ wpm, accuracy, peakWPM: this._peakWPM });

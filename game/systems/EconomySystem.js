@@ -1,4 +1,4 @@
-// EconomySystem — único mutador del perfil del jugador.
+// EconomySystem — unico mutador del perfil del jugador.
 // Resto del juego solo emite eventos; EconomySystem los escucha,
 // muta el perfil, persiste y reemite PROFILE_UPDATED.
 
@@ -46,7 +46,7 @@ class EconomySystemImpl {
     return this._profile.grafemas >= entry.price;
   }
 
-  // ── Mutación ─────────────────────────────────────────────────────────────
+  // ── Mutacion ─────────────────────────────────────────────────────────────
   award(amount, source = 'unknown', breakdown = null) {
     if (!Number.isFinite(amount) || amount <= 0) return;
     this._profile.grafemas += amount;
@@ -134,7 +134,7 @@ class EconomySystemImpl {
 
 export const EconomySystem = new EconomySystemImpl();
 
-// Convenience helpers — útiles para tests y debug en consola.
+// Convenience helpers — utiles para tests y debug en consola.
 if (typeof window !== 'undefined') {
   window.__economy = EconomySystem;
 }

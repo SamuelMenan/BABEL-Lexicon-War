@@ -157,7 +157,7 @@ export class RacingSystem {
     this._stateMain.playerPhrasesCompleted = this._playerDone;
     this._stateMain.phraseProgress         = timeProgress;
     this._stateMain.distanceTraveled       = Math.round(timeProgress * RACE_TARGET_DISTANCE);
-    // Distancia del rival = ritmo opponent constante, llega a target al final de duración.
+    // Distancia del rival = ritmo opponent constante, llega a target al final de duracion.
     this._stateMain.opponentDistance       = Math.round(
       (this._oppDone / (OPP_PHRASES_PER_SEC * RACE_DURATION)) * RACE_TARGET_DISTANCE,
     );
@@ -246,14 +246,33 @@ export class RacingSystem {
       grafemasReward = reward;
     }
 
+    // WPM Medio (estandar competitivo): (correctChars / 5) / minutos.
+    // Metrica primaria para modo online. Convencion: 5 chars = 1 word.
+    // Fallback en cascada:
+    //  1) correctChars / 5 / minutos    (mas exacto)
+    //  2) wordsCompleted / minutos      (si lexicon no expone keys o reset bug)
+    //  3) peakWPM                       (ultimo recurso, sigue siendo numero real)
+    const minutesElapsed = Math.max(this._timeElapsed / 60, 1 / 60); // minimo 1s para no dividir por casi-cero
+    const correctKeys    = this._lexicon?.getCorrectKeys?.() ?? 0;
+    const fromKeys  = correctKeys > 0       ? Math.round((correctKeys / 5) / minutesElapsed) : 0;
+    const fromWords = this._wordsCompleted > 0 ? Math.round(this._wordsCompleted / minutesElapsed) : 0;
+    const avgWpm    = fromKeys > 0 ? fromKeys
+                    : fromWords > 0 ? fromWords
+                    : (this._peakWPM > 0 ? this._peakWPM : null);
+    const state2 = Bridge.peekState();
     const payload = {
       raceVictory: victory,
       // Race: `score` = phrases completed (mode-specific semantic; see B3 note).
       score:       this._playerDone,
+      // Distancia visual de UI — siempre llega a RACE_TARGET_DISTANCE al cierre.
+      distanceTraveled: state2.distanceTraveled ?? RACE_TARGET_DISTANCE,
       wave:        null,
-      wpm:         state.wpm,        // 0-100 unit; schema numeric
+      // wpm = WPM Medio del match (estandar mecanografia). Reemplaza el antiguo
+      // "WPM Final" que usaba la ventana rolling de 5s (poco fiable).
+      wpm:         avgWpm,
       accuracy:    state.accuracy,   // 0-100 percent (DB column matches)
-      peakWPM:     this._peakWPM,
+      // Peak nunca inferior al medio. Garantiza coherencia visual y de DB.
+      peakWPM:     Math.max(this._peakWPM || 0, avgWpm || 0) || null,
       timeElapsed: Math.round(this._timeElapsed),
       grafemasReward,
     };

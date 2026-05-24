@@ -1,13 +1,13 @@
-// Captura typing en gameplay. NO maneja teclas de acción (Escape, F-keys, debug).
-// Service global (shared/keybindService.js) maneja todo lo demás.
+// Captura typing en gameplay. NO maneja teclas de accion (Escape, F-keys, debug).
+// Service global (shared/keybindService.js) maneja todo lo demas.
 
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 
-// Teclas que NUNCA emiten KEY_TYPED (modificadores, función, navegación, debug).
+// Teclas que NUNCA emiten KEY_TYPED (modificadores, funcion, navegacion, debug).
 // El service ya consume las que tienen action binding. Esta lista es defensa extra
-// para teclas físicas que el service no consume (ej. Shift/Tab) y no deben tipear.
+// para teclas fisicas que el service no consume (ej. Shift/Tab) y no deben tipear.
 const NON_TYPING_KEYS = new Set([
   'Tab', 'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'AltGraph',
   'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
@@ -38,16 +38,16 @@ export class InputSystem {
 
   _onKeyDown(e) {
     if (!this._active) return;
-    // Bloqueo durante tutorial — input local de práctica vive en React.
+    // Bloqueo durante tutorial — input local de practica vive en React.
     if (Bridge.peekState().tutorialActive) return;
-    // Si el service ya consumió la tecla (action binding), no tipear.
+    // Si el service ya consumio la tecla (action binding), no tipear.
     if (e.defaultPrevented) return;
     // Bloquear modificadores combinados (sin copy-paste accidental).
     if (e.ctrlKey || e.metaKey) return;
 
     if (NON_TYPING_KEYS.has(e.key)) return;
 
-    // Backspace → borrar carácter
+    // Backspace → borrar caracter
     if (e.key === 'Backspace') {
       e.preventDefault();
       EventBus.emit(EventTypes.KEY_BACKSPACE);

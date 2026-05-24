@@ -1,6 +1,6 @@
-// AutoTyper — bot de mecanografía para testing
+// AutoTyper — bot de mecanografia para testing
 // INSERT  → toggle bot on/off
-// Ctrl+F  → toggle panel de telemetría (FPS / heap)
+// Ctrl+F  → toggle panel de telemetria (FPS / heap)
 
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
@@ -84,7 +84,7 @@ function _isTouch() {
 
 function _createIndicator() {
   if (_indicatorEl) return;
-  if (_isTouch()) return; // En táctil el FAB ya muestra el estado.
+  if (_isTouch()) return; // En tactil el FAB ya muestra el estado.
   _indicatorEl = document.createElement('div');
   _indicatorEl.id = 'autotyper-indicator';
   _indicatorEl.style.cssText = _indicatorBaseCss;
@@ -103,7 +103,7 @@ function _updateIndicator() {
   }
 }
 
-// ── Telemetry toggle (público para DebugBindings) ───────────────────────
+// ── Telemetry toggle (publico para DebugBindings) ───────────────────────
 export function toggleTelemetry() {
   const current = Bridge.peekState().telemetryVisible !== false;
   Bridge.setState({ telemetryVisible: !current });

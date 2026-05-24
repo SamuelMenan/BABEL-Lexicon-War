@@ -228,7 +228,7 @@ export class SpawnDirector {
     if (this._recentWords.length > 10) this._recentWords.shift();
     const pos = randomSpawnPosition(this._waveSpawnPositions);
     this._waveSpawnPositions.push(pos.clone());
-    // Cap memoria — solo trackear las últimas 24 posiciones (suficiente para wave size).
+    // Cap memoria — solo trackear las ultimas 24 posiciones (suficiente para wave size).
     if (this._waveSpawnPositions.length > 24) this._waveSpawnPositions.shift();
     this._spawnOne(type, speed, word, pos);
   }

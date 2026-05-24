@@ -1,4 +1,4 @@
-// Cálculo de recompensas en Grafemas — combate y carrera.
+// Calculo de recompensas en Grafemas — combate y carrera.
 // Funciones puras. No mutan estado. CombatSceneManager las llama y
 // pasa el resultado a EconomySystem.award.
 

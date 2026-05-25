@@ -28,8 +28,16 @@ export default function App() {
       const target = e.target;
       if (target && typeof target.closest === 'function') {
         if (target.closest('canvas') || target.closest('.hangar__canvas')) return;
-        if (target.closest('button') || target.closest('.btn') || target.closest('[role="button"]')) {
-          playSfx('ui.click');
+        const btn = target.closest('button, .btn, [role="button"]');
+        if (btn) {
+          // Back/cancel/close/decline → menuback.press instead of ui.click
+          const sel = '.btn--back, .btn--cancel, .btn--close, .btn--decline';
+          const cls = (btn.className && typeof btn.className === 'string') ? btn.className.toLowerCase() : '';
+          const txt = (btn.textContent || '').trim();
+          const isBack = (btn.matches && btn.matches(sel)) ||
+            /cancel|back|close|decline/.test(cls) ||
+            /cancel|back|close|decline|cancelar|volver|cerrar|rechazar/i.test(txt);
+          playSfx(isBack ? 'menuback.press' : 'ui.click');
         }
       }
     };

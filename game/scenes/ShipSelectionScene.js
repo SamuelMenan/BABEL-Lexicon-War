@@ -126,6 +126,7 @@ export class ShipSelectionScene {
   toggleLaser() {
     if (this._deploy.isActive) return;
     this._laserOn = !this._laserOn;
+    if (this._laserOn) playSfx('hangarlaser.toggle');
     if (!this._laserOn) this._laser.clear();
   }
   _stopAllFire() {
@@ -138,6 +139,7 @@ export class ShipSelectionScene {
   toggleFlowSim() {
     if (this._deploy.isActive) return;
     this._flowSim = !this._flowSim;
+    if (this._flowSim) playSfx('hangarboost.toggle');
     if (this._flowSim) {
       // Salir de hangarMode → permite que la rampa flow afecte size/opacity/color.
       this._loader.boosters.forEach(b => b.setHangarMode?.(false));
@@ -183,6 +185,7 @@ export class ShipSelectionScene {
 
   // Cycle entre vistas predefinidas (front/top/rear/side).
   cycleCameraView() {
+    playSfx('hangarcamera.orbit');
     this._viewIdx = ((this._viewIdx ?? 0) + 1) % 4;
     switch (this._viewIdx) {
       case 0: this._cam.resetOrbit();   break; // front

@@ -98,7 +98,16 @@ export function playBgm(key, optsOrLoop) {
   const paths = getSoundPaths(key);
   if (!paths || paths.length === 0) return;
   const path = paths[0];
-  if (currentBgmKey === key && currentBgm) return;
+  if (currentBgmKey === key && currentBgm) {
+    // Reintenta play si quedo pausado (autoplay block / visibility / fade roto).
+    try {
+      if (typeof currentBgm.playing === 'function' && !currentBgm.playing()) {
+        currentBgm.volume(settings.bgmVolume);
+        currentBgm.play();
+      }
+    } catch (e) {}
+    return;
+  }
 
   pendingFadeOuts.forEach(({ timeout }) => clearTimeout(timeout));
   pendingFadeOuts = [];

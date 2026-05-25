@@ -48,7 +48,12 @@ export default function GuestPromptModal({ feature = 'default', onClose, onAuthS
           <button type="button" className="guest-prompt__btn guest-prompt__btn--ghost" onClick={onClose}>
             {t('auth.guestPrompt.stayGuest')}
           </button>
-          <button type="button" className="guest-prompt__btn guest-prompt__btn--primary" onClick={() => setShowAuth(true)}>
+          <button
+            type="button"
+            className="guest-prompt__btn guest-prompt__btn--primary"
+            onClick={() => setShowAuth(true)}
+            autoFocus
+          >
             {t('auth.guestPrompt.signIn')}
           </button>
         </div>

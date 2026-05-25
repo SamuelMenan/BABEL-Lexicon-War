@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { KeybindService } from '../../../shared/keybindService.js';
+import KeyboardNavigable from '../common/KeyboardNavigable.jsx';
 import {
   fetchLeaderboard, fetchOnlineWinsLeaderboard, isLeaderboardSyncAvailable,
 } from '../../../game/services/supabase/leaderboard.js';
@@ -69,34 +70,48 @@ export default function LeaderboardModal({ onClose }) {
         <div className="lb-modal__controls">
           <div className="lb-modal__group" style={mode === 'online-wins' ? { opacity: 0.4, pointerEvents: 'none' } : null}>
             <span className="lb-modal__group-label">{t('leaderboard.period')}</span>
-            <div className="lb-modal__chips">
-              {PERIODS.map(p => (
+            <KeyboardNavigable
+              items={PERIODS}
+              orientation="horizontal"
+              autoFocus
+              initialIndex={Math.max(0, PERIODS.findIndex(p => p.value === period))}
+              onActivate={(p) => setPeriod(p.value)}
+              className="lb-modal__chips"
+            >
+              {(p, { focused, activate }) => (
                 <button
                   key={p.value}
                   type="button"
-                  className={`lb-modal__chip${period === p.value ? ' lb-modal__chip--active' : ''}`}
-                  onClick={() => setPeriod(p.value)}
+                  className={`lb-modal__chip${period === p.value ? ' lb-modal__chip--active' : ''}${focused ? ' lb-modal__chip--focused' : ''}`}
+                  onClick={activate}
                   disabled={mode === 'online-wins'}
                 >{p.label}</button>
-              ))}
-            </div>
+              )}
+            </KeyboardNavigable>
           </div>
           <div className="lb-modal__group">
             <span className="lb-modal__group-label">{t('leaderboard.mode')}</span>
-            <div className="lb-modal__chips">
-              {MODES.map(m => (
+            <KeyboardNavigable
+              items={MODES}
+              orientation="horizontal"
+              autoFocus={false}
+              initialIndex={Math.max(0, MODES.findIndex(m => m.value === mode))}
+              onActivate={(m) => setMode(m.value)}
+              className="lb-modal__chips"
+            >
+              {(m, { focused, activate }) => (
                 <button
                   key={m.value}
                   type="button"
-                  className={`lb-modal__chip${mode === m.value ? ' lb-modal__chip--active' : ''}`}
-                  onClick={() => setMode(m.value)}
+                  className={`lb-modal__chip${mode === m.value ? ' lb-modal__chip--active' : ''}${focused ? ' lb-modal__chip--focused' : ''}`}
+                  onClick={activate}
                 >{m.label}</button>
-              ))}
-            </div>
+              )}
+            </KeyboardNavigable>
           </div>
         </div>
 
-        <div className="lb-modal__body">
+        <div className="lb-modal__body" tabIndex={0}>
           {loading && <div className="lb-modal__state">{t('leaderboard.loading')}</div>}
           {!loading && error && <div className="lb-modal__state lb-modal__state--err">{error}</div>}
           {!loading && !error && rows.length === 0 && (

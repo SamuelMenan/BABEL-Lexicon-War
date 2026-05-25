@@ -20,8 +20,17 @@ export default function TutorialOverlay({ tutorialActive }) {
   const [confirmSkip, setConfirmSkip] = useState(false);
   const [practiceValue, setPracticeValue] = useState('');
   const rootRef = useRef(null);
+  const branchSkipRef = useRef(null);
+  const didFocusBranchRef = useRef(false);
 
-  useEffect(() => { setPracticeValue(''); setConfirmSkip(false); }, [stepIndex, id]);
+  useEffect(() => { setPracticeValue(''); setConfirmSkip(false); didFocusBranchRef.current = false; }, [stepIndex, id]);
+
+  useEffect(() => {
+    if (step?.branch && !didFocusBranchRef.current && branchSkipRef.current) {
+      branchSkipRef.current.focus();
+      didFocusBranchRef.current = true;
+    }
+  }, [step]);
 
   useEffect(() => {
     const prev = getCurrentBgmKey();
@@ -132,7 +141,7 @@ export default function TutorialOverlay({ tutorialActive }) {
                 <button className="tut-btn tut-btn-primary" onClick={() => handleBranch('typing')}>
                   {step.branch.typing}
                 </button>
-                <button className="tut-btn" onClick={() => handleBranch('skip')}>
+                <button ref={branchSkipRef} className="tut-btn" onClick={() => handleBranch('skip')}>
                   {step.branch.skip}
                 </button>
               </div>

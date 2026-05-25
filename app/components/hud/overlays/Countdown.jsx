@@ -12,25 +12,35 @@ export default function Countdown({ countdown, countdownActive }) {
   const goFiredRef = useRef(false);
 
   // SFX: tick por cada decremento entero > 0; go al llegar a 0 (una vez).
+  // En carrera, React batchea setState({countdown:0}) + setState({countdownActive:false})
+  // en un solo render → nunca se ve el frame con n===0 && active. Por eso detectamos
+  // transicion active true→false como trigger alternativo del go.
   useEffect(() => {
+    const fireGo = () => {
+      if (goFiredRef.current) return;
+      goFiredRef.current = true;
+      playSfx('countdown.go');
+      try {
+        const mode = Bridge.peekState?.()?.gameMode;
+        if (mode === 'racing') playSfx('racestart.start');
+      } catch (e) {}
+    };
     if (!countdownActive) {
+      // Transicion: si veniamos de activo, dispara go (cubre el batch de race).
+      if (prevActive.current) fireGo();
       lastTickRef.current = null;
-      goFiredRef.current = false;
+      // No reseteamos goFiredRef aqui; se resetea al armar nuevo countdown abajo.
       return;
     }
+    // Nuevo countdown armado — resetea flag go.
+    if (!prevActive.current) goFiredRef.current = false;
     const n = typeof countdown === 'number' ? Math.max(0, Math.ceil(countdown)) : null;
     if (n == null) return;
     if (n > 0 && lastTickRef.current !== n) {
       lastTickRef.current = n;
       playSfx('countdown.tick');
-    } else if (n === 0 && !goFiredRef.current) {
-      goFiredRef.current = true;
-      playSfx('countdown.go');
-      // Race mode → tambien dispara racestart.start al final del countdown.
-      try {
-        const mode = Bridge.peekState?.()?.gameMode;
-        if (mode === 'racing') playSfx('racestart.start');
-      } catch (e) {}
+    } else if (n === 0) {
+      fireGo();
     }
   }, [countdown, countdownActive]);
 

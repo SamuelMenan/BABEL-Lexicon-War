@@ -63,6 +63,7 @@
 .hangar-controls__dot--active{background:var(--col-primary);}
 .hangar-controls__btn-row{display:flex;gap:0.65rem;align-items:center;}
 .hangar-controls__btn{font-family:var(--font-hud);font-size:0.76rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.62rem 1.4rem;cursor:pointer;border:1px solid;line-height:1;transition:background var(--anim-instant),box-shadow var(--anim-instant);}
+.hangar-controls__btn:focus-visible,.hangar-nav__btn:focus-visible{outline:2px solid rgba(0,255,204,0.85);outline-offset:2px;}
 .hangar-controls__btn--secondary{color:var(--col-primary);background:transparent;border-color:var(--border-primary-strong);}
 .hangar-controls__btn--secondary:hover{background:rgba(0,255,204,0.07);}
 .hangar-controls__btn--danger{color:var(--col-danger);background:transparent;border-color:rgba(255,68,102,0.38);}

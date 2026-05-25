@@ -26,6 +26,11 @@ const _unlockOnce = () => { unlockAudio(); };
 window.addEventListener('pointerdown', _unlockOnce, { once: true, capture: true });
 window.addEventListener('keydown', _unlockOnce, { once: true, capture: true });
 
+// Reanuda BGM/loops al volver al tab (visibilitychange suspende AudioContext).
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') unlockAudio();
+});
+
 KeybindService.init();
 const _bootProfile = loadProfile();
 KeybindService.setOverrides(_bootProfile.keybindOverrides || {});

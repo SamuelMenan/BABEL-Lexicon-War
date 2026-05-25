@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { KeybindService } from '../../../../shared/keybindService.js';
 import useTranslation from '../../../../shared/i18n/useTranslation.js';
 
 export default function OnlineRivalLeftModal({ open, onClose }) {
@@ -8,6 +9,14 @@ export default function OnlineRivalLeftModal({ open, onClose }) {
     if (!open) return;
     const tTimer = setTimeout(() => onClose?.(), 5000);
     return () => clearTimeout(tTimer);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    KeybindService.pushScope('modal');
+    const offCancel  = KeybindService.register('modal', 'CANCEL',  () => onClose?.());
+    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onClose?.());
+    return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
   }, [open, onClose]);
 
   if (!open) return null;

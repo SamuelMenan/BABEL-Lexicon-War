@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { KeybindService } from '../../../shared/keybindService.js';
 import KeyHint from '../common/KeyHint.jsx';
 import Icon from '../common/Icon.jsx';
@@ -28,12 +28,20 @@ export default function CreditsModal({ onClose }) {
     return () => { playBgm(prev || 'bgm.main_menu'); };
   }, []);
 
+  const closeBtnRef = useRef(null);
+  const didFocusRef = useRef(false);
+  useEffect(() => {
+    if (didFocusRef.current) return;
+    if (closeBtnRef.current) { closeBtnRef.current.focus(); didFocusRef.current = true; }
+  }, []);
+
   return (
     <div className="credits" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="credits__panel" onClick={(e) => e.stopPropagation()}>
         <header className="credits__header">
           <span className="credits__label">{t('credits.label')}</span>
           <button
+            ref={closeBtnRef}
             type="button"
             className="credits__close"
             onClick={onClose}
@@ -41,7 +49,7 @@ export default function CreditsModal({ onClose }) {
           ><Icon name="close" size={16} /></button>
         </header>
 
-        <div className="credits__scroll">
+        <div className="credits__scroll" tabIndex={0}>
           <div className="credits__intro">
             {/* Reusa estilo chrome + glitch del MainMenu para coherencia. */}
             <h1 className="main-menu__title credits__title" data-text="BABEL">BABEL:</h1>

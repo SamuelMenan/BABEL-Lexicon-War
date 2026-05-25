@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ACTIONS, SCOPES } from '../../../shared/keybindings.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { EconomySystem } from '../../../game/systems/EconomySystem.js';
 import useTranslation from '../../../shared/i18n/useTranslation.js';
+import KeyboardNavigable from '../common/KeyboardNavigable.jsx';
 
 function formatKey(k) {
   if (!k) return '—';
@@ -113,14 +114,27 @@ export default function ControlsSection() {
         return (
           <div key={scope} className="ctrl-group">
             <h3 className="ctrl-group__title">{label}</h3>
-            <ul className="ctrl-list">
-              {ids.map((actionId) => {
+            <KeyboardNavigable
+              items={ids}
+              orientation="vertical"
+              autoFocus={false}
+              allowNumberJump={false}
+              className="ctrl-list ctrl-list--kbnav"
+              onActivate={(actionId) => {
+                setRebindingId(prev => (prev === actionId ? null : actionId));
+              }}
+              onCancel={() => setRebindingId(null)}
+            >
+              {(actionId, ctx) => {
                 const def = ACTIONS[actionId];
                 const binding = KeybindService.getBinding(actionId);
                 const overridden = profile.keybindOverrides?.[actionId] != null;
                 const rebinding = rebindingId === actionId;
                 return (
-                  <li key={actionId} className={`ctrl-row${def.debug ? ' ctrl-row--debug' : ''}`}>
+                  <div
+                    key={actionId}
+                    className={`ctrl-row${def.debug ? ' ctrl-row--debug' : ''}${ctx.focused ? ' ctrl-row--focused' : ''}`}
+                  >
                     <span className="ctrl-row__desc">{t(def.description)}</span>
                     <span className="ctrl-row__keys">
                       <span className="ctrl-row__key">
@@ -134,7 +148,7 @@ export default function ControlsSection() {
                       <button
                         type="button"
                         className="ctrl-row__btn"
-                        onClick={() => setRebindingId(rebinding ? null : actionId)}
+                        onClick={() => { ctx.setFocus(); setRebindingId(rebinding ? null : actionId); }}
                       >
                         {rebinding ? t('settings.controls.cancel') : t('settings.controls.change')}
                       </button>
@@ -148,10 +162,10 @@ export default function ControlsSection() {
                         </button>
                       )}
                     </span>
-                  </li>
+                  </div>
                 );
-              })}
-            </ul>
+              }}
+            </KeyboardNavigable>
           </div>
         );
       })}

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getCharacter } from '../../../../shared/characterData.js';
+import { KeybindService } from '../../../../shared/keybindService.js';
 import KeyHint from '../../common/KeyHint.jsx';
 import Icon from '../../common/Icon.jsx';
 import useTranslation from '../../../../shared/i18n/useTranslation.js';
@@ -16,6 +17,14 @@ import useTranslation from '../../../../shared/i18n/useTranslation.js';
 //   showWelcome — bool
 export default function OnlinePilotBadge({ myPilot, rivalPilot, onDismiss, showWelcome }) {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!showWelcome) return;
+    KeybindService.pushScope('modal');
+    const offCancel  = KeybindService.register('modal', 'CANCEL',  () => onDismiss?.());
+    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onDismiss?.());
+    return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
+  }, [showWelcome, onDismiss]);
 
   if (!showWelcome) return null;
   const me    = getCharacter(myPilot)    || {};

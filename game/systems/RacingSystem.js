@@ -155,7 +155,7 @@ export class RacingSystem {
       if (this._countdown <= 0) {
         this._countdownActive = false;
         this._active = true;
-        if (!this._raceBgmFired) { this._raceBgmFired = true; playBgm('bgm.race'); }
+        playBgm('bgm.race');
         Bridge.setState(this._stateCountdownStop);
         this._setWord();
       }
@@ -200,8 +200,7 @@ export class RacingSystem {
       playSfx('race.milestone');
     }
     // final stretch BGM: ultimos 100m antes del target
-    if (!this._finalStretchBgmFired && dist >= RACE_TARGET_DISTANCE - 100) {
-      this._finalStretchBgmFired = true;
+    if (dist >= RACE_TARGET_DISTANCE - 100) {
       playBgm('bgm.final_stretch');
     }
     // photo finish: near target + tight gap

@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from '../../common/Icon.jsx';
+import KeyboardNavigable from '../../common/KeyboardNavigable.jsx';
+import { KeybindService } from '../../../../shared/keybindService.js';
 import { loadProfile } from '../../../../shared/playerProfile.js';
 import {
   createRoom, joinRoomById, joinRoomByCode, listPublicRooms, cleanupStaleRooms,
@@ -40,6 +42,21 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     const id = setInterval(refresh, 5000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  // Modal scope: ESC cierra.
+  useEffect(() => {
+    KeybindService.pushScope('modal');
+    const off = KeybindService.register('modal', 'CANCEL', () => onClose?.());
+    return () => { off(); KeybindService.popScope('modal'); };
+  }, [onClose]);
+
+  // autoFocus en "Crear sala" solo al primer mount.
+  const createBtnRef = useRef(null);
+  const didFocusRef = useRef(false);
+  useEffect(() => {
+    if (didFocusRef.current) return;
+    if (createBtnRef.current) { createBtnRef.current.focus(); didFocusRef.current = true; }
+  }, []);
 
   const handleCreate = async () => {
     setBusy(true); setError('');
@@ -90,7 +107,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
         </header>
 
         <div className="lobby__actions">
-          <button type="button" className="lobby__btn lobby__btn--primary" onClick={() => setShowCreate(true)} disabled={busy}>
+          <button ref={createBtnRef} type="button" className="lobby__btn lobby__btn--primary" onClick={() => setShowCreate(true)} disabled={busy}>
             {t('race.lobby.createRoom')}
           </button>
           <div className="lobby__code-input">
@@ -100,6 +117,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
               placeholder={t('race.lobby.codePlaceholder')}
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              onKeyDown={(e) => { if (e.key === 'Enter' && codeInput.length === 4 && !busy) { e.preventDefault(); handleJoinByCode(); } }}
               disabled={busy}
             />
             <button type="button" className="lobby__btn" onClick={handleJoinByCode} disabled={busy || codeInput.length !== 4}>
@@ -118,19 +136,28 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
           {!loading && rooms.length === 0 && (
             <div className="lobby__state">{t('race.lobby.noRooms')}</div>
           )}
-          {!loading && rooms.map((r) => (
-            <div key={r.id} className="lobby__row">
-              <div className="lobby__row-main">
-                <div className="lobby__row-host">{r.host_name || t('race.lobbyExtra.anonymous')}</div>
-                <div className="lobby__row-sub">
-                  {t('race.lobbyExtra.createdAt', { when: timeAgo(r.created_at, t) })}
+          {!loading && rooms.length > 0 && (
+            <KeyboardNavigable
+              items={rooms}
+              orientation="vertical"
+              autoFocus={false}
+              onActivate={(r) => handleJoin(r.id)}
+            >
+              {(r, { focused, activate }) => (
+                <div key={r.id} className={`lobby__row${focused ? ' lobby__row--focused' : ''}`}>
+                  <div className="lobby__row-main">
+                    <div className="lobby__row-host">{r.host_name || t('race.lobbyExtra.anonymous')}</div>
+                    <div className="lobby__row-sub">
+                      {t('race.lobbyExtra.createdAt', { when: timeAgo(r.created_at, t) })}
+                    </div>
+                  </div>
+                  <button type="button" className="lobby__btn lobby__btn--primary" onClick={activate} disabled={busy}>
+                    {t('race.lobby.joinByCode')}
+                  </button>
                 </div>
-              </div>
-              <button type="button" className="lobby__btn lobby__btn--primary" onClick={() => handleJoin(r.id)} disabled={busy}>
-                {t('race.lobby.joinByCode')}
-              </button>
-            </div>
-          ))}
+              )}
+            </KeyboardNavigable>
+          )}
         </div>
 
         {showCreate && (

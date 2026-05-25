@@ -45,3 +45,15 @@
 @import './components/grafema-toasts.css';
 @import './components/telemetry.css';
 @import './components/bot-fab.css';
+
+/* Global keyboard focus indicator (browser-managed via Tab). */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--col-active, #00ffcc);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
+}

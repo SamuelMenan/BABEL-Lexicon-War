@@ -184,6 +184,12 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exiting, setExiting] = useState(false);
   const completedRef = useRef(false);
+  const nextBtnRef = useRef(null);
+  const didFocusRef = useRef(false);
+  useEffect(() => {
+    if (didFocusRef.current) return;
+    if (nextBtnRef.current) { nextBtnRef.current.focus(); didFocusRef.current = true; }
+  }, []);
 
   const finish = useCallback(() => {
     if (completedRef.current) return;
@@ -329,6 +335,7 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
                 ← {t('presentation.prevBtn')}
               </button>
               <button
+                ref={nextBtnRef}
                 type="button"
                 className="presentation__btn presentation__btn--primary"
                 onClick={advance}

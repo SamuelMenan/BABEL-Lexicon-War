@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
 import { EXECUTION_MODE } from "../../shared/constants.js";
 import { workerBridge } from "../../game/workers/workerBridge.js";
 import { EconomySystem } from "../../game/systems/EconomySystem.js";
@@ -66,18 +67,40 @@ function applySettings(s) {
 /* ── Primitives ──────────────────────────────────────────────── */
 
 function SciSelect({ options, value, onChange }) {
+  const onKeyDown = (e) => {
+    const idx = options.findIndex(o => o.value === value);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const i = (idx - 1 + options.length) % options.length;
+      onChange(options[i].value);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const i = (idx + 1) % options.length;
+      onChange(options[i].value);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); onChange(options[0].value);
+    } else if (e.key === 'End') {
+      e.preventDefault(); onChange(options[options.length - 1].value);
+    }
+  };
   return (
-    <div className="settings__select">
-      {options.map(o => (
-        <button
-          key={o.value}
-          type="button"
-          className={`settings__select-opt${value === o.value ? ' settings__select-opt--active' : ''}`}
-          onClick={() => onChange(o.value)}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="settings__select" role="radiogroup" onKeyDown={onKeyDown}>
+      {options.map(o => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            className={`settings__select-opt${active ? ' settings__select-opt--active' : ''}`}
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -285,13 +308,25 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
     KeybindService.pushScope('modal');
     const offCancel = KeybindService.register('modal', 'CANCEL', () => onClose?.());
     const offPrev   = KeybindService.register('modal', 'NAV_PREV', () => {
-      setTab(t => { const i = TABS.findIndex(x => x.id === t); return TABS[(i - 1 + TABS.length) % TABS.length].id; });
+      setTab(cur => { const i = TABS.findIndex(x => x.id === cur); return TABS[(i - 1 + TABS.length) % TABS.length].id; });
     });
     const offNext   = KeybindService.register('modal', 'NAV_NEXT', () => {
-      setTab(t => { const i = TABS.findIndex(x => x.id === t); return TABS[(i + 1) % TABS.length].id; });
+      setTab(cur => { const i = TABS.findIndex(x => x.id === cur); return TABS[(i + 1) % TABS.length].id; });
     });
     return () => { offCancel(); offPrev(); offNext(); KeybindService.popScope('modal'); };
   }, [onClose]);
+
+  // autoFocus primer interactive del panel cuando tab CAMBIA (no mount inicial).
+  const contentRef = useRef(null);
+  const prevTabRef = useRef(normalizedInitial);
+  useEffect(() => {
+    if (prevTabRef.current === tab) return;
+    prevTabRef.current = tab;
+    const el = contentRef.current?.querySelector(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    el?.focus?.();
+  }, [tab]);
 
   const set = useCallback((key, val) => {
     setS(prev => {
@@ -329,24 +364,35 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="settings__tabs" role="tablist">
-          {TABS.map(t => (
+        {/* Sidebar + content */}
+        <div className="settings__body">
+        <KeyboardNavigable
+          items={TABS}
+          orientation="vertical"
+          autoFocus={false}
+          allowNumberJump={false}
+          onActivate={(item) => setTab(item.id)}
+          onCancel={() => onClose?.()}
+          initialIndex={Math.max(0, TABS.findIndex(x => x.id === tab))}
+          className="settings__tabs"
+        >
+          {(item, ctx) => (
             <button
-              key={t.id}
+              key={item.id}
               type="button"
               role="tab"
-              aria-selected={tab === t.id}
-              className={`settings__tab${tab === t.id ? ' settings__tab--active' : ''}`}
-              onClick={() => setTab(t.id)}
+              aria-selected={tab === item.id}
+              tabIndex={ctx.focused ? 0 : -1}
+              className={`settings__tab${tab === item.id ? ' settings__tab--active' : ''}${ctx.focused ? ' settings__tab--focused' : ''}`}
+              onClick={() => { ctx.setFocus(); setTab(item.id); }}
             >
-              {t.label}
+              {item.label}
             </button>
-          ))}
-        </div>
+          )}
+        </KeyboardNavigable>
 
         {/* Content */}
-        <div className="settings__content">
+        <div className="settings__content" ref={contentRef}>
 
           {tab === 'rendimiento' && (
             <div className="settings__section" key="rendimiento">
@@ -390,6 +436,7 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
           {tab === 'controls' && <ControlsSection />}
           {tab === 'profile'  && <ProfileSection />}
 
+        </div>
         </div>
 
         {/* Footer */}

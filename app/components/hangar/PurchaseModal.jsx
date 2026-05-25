@@ -11,13 +11,15 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
 
   const fmt = (n) => formatter.format(n ?? 0);
 
+  const canAfford = (grafemas ?? 0) >= (ship.price ?? 0);
+
   // Modal scope push/pop + CONFIRM/CANCEL via service.
   useEffect(() => {
     KeybindService.pushScope('modal');
     const offCancel  = KeybindService.register('modal', 'CANCEL',  () => onCancel());
-    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onConfirm());
+    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => { if (canAfford) onConfirm(); });
     return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
-  }, [onConfirm, onCancel]);
+  }, [onConfirm, onCancel, canAfford]);
 
   useEffect(() => { playSfx('modal.open'); return () => playSfx('modal.close'); }, []);
 
@@ -62,7 +64,7 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
           <button className="purchase-modal__btn purchase-modal__btn--cancel" onClick={onCancel}>
             {t('common.cancel')}
           </button>
-          <button className="purchase-modal__btn purchase-modal__btn--confirm" onClick={onConfirm} autoFocus>
+          <button className="purchase-modal__btn purchase-modal__btn--confirm" onClick={onConfirm} disabled={!canAfford} autoFocus>
             {t('hangar.purchase.confirmBtn')}
           </button>
         </div>

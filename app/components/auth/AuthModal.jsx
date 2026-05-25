@@ -116,14 +116,28 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
           <span className="auth-modal__label">◈ {t('auth.label')}</span>
         </div>
 
-        <div className="auth-modal__tabs">
+        <div
+          className="auth-modal__tabs"
+          role="tablist"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              e.preventDefault();
+              const next = mode === 'signin' ? 'signup' : 'signin';
+              setMode(next); setError(null); setInfo(null);
+            }
+          }}
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'signin'}
             className={`auth-modal__tab${mode === 'signin' ? ' auth-modal__tab--active' : ''}`}
             onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
           >{t('auth.signIn')}</button>
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'signup'}
             className={`auth-modal__tab${mode === 'signup' ? ' auth-modal__tab--active' : ''}`}
             onClick={() => { setMode('signup'); setError(null); setInfo(null); }}
           >{t('auth.signUp')}</button>
@@ -145,6 +159,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
               placeholder={t('auth.pilotNamePlaceholder')}
               maxLength={32}
               autoComplete="nickname"
+              autoFocus
             />
           </label>
         )}
@@ -159,6 +174,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
             placeholder={t('auth.emailPlaceholder')}
             autoComplete="email"
             required
+            autoFocus={mode === 'signin'}
           />
           {emailTouched && !emailLooksValid && (
             <span className="auth-modal__field-warn">{t('auth.emailInvalid')}</span>

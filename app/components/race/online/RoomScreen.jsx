@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from '../../common/Icon.jsx';
+import { KeybindService } from '../../../../shared/keybindService.js';
 import { loadProfile } from '../../../../shared/playerProfile.js';
 import {
   fetchRoom, subscribeRoom, leaveRoom, touchRoom,
@@ -115,6 +116,21 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
     onLeave?.();
   }, [roomId, myId, onLeave]);
 
+  // Modal scope: ESC sale de la sala.
+  useEffect(() => {
+    KeybindService.pushScope('modal');
+    const off = KeybindService.register('modal', 'CANCEL', () => handleLeave());
+    return () => { off(); KeybindService.popScope('modal'); };
+  }, [handleLeave]);
+
+  // autoFocus on Salir button.
+  const leaveBtnRef = useRef(null);
+  const didFocusRef = useRef(false);
+  useEffect(() => {
+    if (didFocusRef.current) return;
+    if (leaveBtnRef.current) { leaveBtnRef.current.focus(); didFocusRef.current = true; }
+  }, [room]);
+
   if (!room) {
     return (
       <div className="room" role="dialog" aria-modal="true">
@@ -165,7 +181,7 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
         {error && <div className="room__error">{error}</div>}
 
         <div className="room__actions">
-          <button type="button" className="room__btn room__btn--ghost" onClick={handleLeave}>
+          <button ref={leaveBtnRef} type="button" className="room__btn room__btn--ghost" onClick={handleLeave}>
             {t('race.room.leave')}
           </button>
         </div>

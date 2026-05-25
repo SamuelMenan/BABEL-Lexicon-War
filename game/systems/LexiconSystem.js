@@ -171,7 +171,8 @@ export class LexiconSystem {
   _onFlowEnter() {
     this._flowActive = true; this._flowEnterTime = performance.now(); this._flowWordsTyped = 0;
     Bridge.setState({ flow: FLOW_MAX, flowActive: true });
-    playSfx('flow.unlocked');
+    // Racing usa burst SFX dedicado; combat conserva flow.unlocked.
+    playSfx(Bridge.peekState?.()?.gameMode === 'racing' ? 'race.flow_burst' : 'flow.unlocked');
     EventBus.emit(EventTypes.FLOW_ENTER, { wpm: this._calcWPM() });
   }
   _onFlowExit() {

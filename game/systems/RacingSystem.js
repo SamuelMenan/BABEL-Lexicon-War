@@ -1,7 +1,7 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
-import { playSfx } from '../../shared/audioManager.js';
+import { playSfx, playLoopSfx, stopLoopSfx, playBgm } from '../../shared/audioManager.js';
 import { EconomySystem } from './EconomySystem.js';
 import { computeRaceReward } from './GrafemaRewards.js';
 import {
@@ -92,6 +92,14 @@ export class RacingSystem {
     this._flowMultiplier = 1.0;
     this._peakWPM        = 0;
     this._timeElapsed    = 0;
+    this._lastWarnSec    = 11;
+    this._lastMilestone  = 0;
+    this._photoFinishFired = false;
+    this._consecutiveCorrect = 0;
+    this._finalStretchBgmFired = false;
+    this._raceBgmFired = false;
+
+    playLoopSfx('raceengine.engine_loop', 0.5);
 
     // Pre-fill buffer
     this._fillBuffer();
@@ -130,6 +138,7 @@ export class RacingSystem {
     this._unsubs.forEach(fn => fn());
     this._unsubs  = [];
     this._active  = false;
+    stopLoopSfx('raceengine.engine_loop');
     this._lexicon.clearTarget();
   }
 
@@ -146,6 +155,7 @@ export class RacingSystem {
       if (this._countdown <= 0) {
         this._countdownActive = false;
         this._active = true;
+        if (!this._raceBgmFired) { this._raceBgmFired = true; playBgm('bgm.race'); }
         Bridge.setState(this._stateCountdownStop);
         this._setWord();
       }
@@ -175,6 +185,33 @@ export class RacingSystem {
     this._stateMain.flowMultiplier         = this._flowMultiplier;
     this._stateMain.flowStreak             = this._flowStreak;
     Bridge.setState(this._stateMain);
+
+    // time_warning: integer crossings ≤10
+    const tSec = Math.ceil(timeRemaining);
+    if (tSec <= 10 && tSec >= 1 && tSec < this._lastWarnSec) {
+      this._lastWarnSec = tSec;
+      playSfx('race.time_warning');
+    }
+    // milestone: cross 100,200,300,400
+    const dist = this._stateMain.distanceTraveled;
+    const ms = Math.floor(dist / 100) * 100;
+    if (ms >= 100 && ms > this._lastMilestone && ms < RACE_TARGET_DISTANCE) {
+      this._lastMilestone = ms;
+      playSfx('race.milestone');
+    }
+    // final stretch BGM: ultimos 100m antes del target
+    if (!this._finalStretchBgmFired && dist >= RACE_TARGET_DISTANCE - 100) {
+      this._finalStretchBgmFired = true;
+      playBgm('bgm.final_stretch');
+    }
+    // photo finish: near target + tight gap
+    if (!this._photoFinishFired && dist > RACE_TARGET_DISTANCE - 50) {
+      const rival = this._stateMain.opponentDistance ?? 0;
+      if (Math.abs(dist - rival) <= 20) {
+        this._photoFinishFired = true;
+        playSfx('race.photo_finish');
+      }
+    }
 
     // Emit local tick for online sync (no-op si offline; broadcast escucha).
     this._broadcastAcc = (this._broadcastAcc ?? 0) + delta;
@@ -219,6 +256,9 @@ export class RacingSystem {
     this._flowStreak++;
     this._wordsCompleted++;
     this._playerDone++;
+    this._consecutiveCorrect = (this._consecutiveCorrect ?? 0) + 1;
+    playSfx('race.phrase_done');
+    if (this._consecutiveCorrect % 5 === 0) playSfx('race.boost_streak');
     this._updateFlow();
 
     this._globalIdx++;
@@ -248,6 +288,7 @@ export class RacingSystem {
     if (!correct) {
       this._flowStreak     = 0;
       this._flowMultiplier = 1.0;
+      this._consecutiveCorrect = 0;
     }
   }
 
@@ -323,6 +364,7 @@ export class RacingSystem {
     }
 
     playSfx(victory ? 'raceend.victory' : 'raceend.defeat');
+    playBgm(victory ? 'bgm.victory' : 'bgm.defeat');
     const evType = victory ? EventTypes.RACE_COMPLETED : EventTypes.RACE_FAILED;
     EventBus.emit(evType, {
       winner:          victory ? 'player' : 'opponent',

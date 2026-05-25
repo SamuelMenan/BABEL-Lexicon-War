@@ -1,7 +1,7 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
-import { playLoopSfx, stopLoopSfx } from '../../shared/audioManager.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
 import {
   PLAYER_MAX_HP,
   LEX_HEAT_MAX, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
@@ -38,6 +38,7 @@ export class ProgressionSystem {
 
   // Damage goes directly to hull.
   applyDamage(amount) {
+    if (amount > 0 && this._hull > 0) playSfx('playerhit.hit');
     this._hull = Math.max(0, this._hull - amount);
     this._publish();
   }

@@ -2,7 +2,7 @@ import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import { SHIP_PALETTES } from '../../shared/constants.js';
-import { playSfx, stopLoopSfx } from '../../shared/audioManager.js';
+import { playSfx, stopLoopSfx, playBgm } from '../../shared/audioManager.js';
 
 const CINEMATIC_DELAY_MS = 1800; // breathing room after destruction before Game Over
 
@@ -88,6 +88,7 @@ export class PlayerDeathHandler {
 
       this._gameOverTimer = setTimeout(() => {
         this._gameOverTimer = null;
+        playBgm('bgm.defeat');
         const snap    = this._statsSnapshot || {};
         const elapsed = this._getTimeElapsed();
         // WPM Medio (estandar mecanografia competitiva): (correctChars/5)/minutos.

@@ -379,6 +379,77 @@
 
 /* ── Pilot welcome modal (online) — reusa estilo CharacterSelectModal ─ */
 
+.char-modal--online .char-modal__panel {
+  width: min(840px, 92vw);
+  max-height: 88vh;
+  padding: 1.15rem 1.2rem 1rem;
+}
+
+.char-modal--online .char-modal__header {
+  margin-bottom: 0.25rem;
+}
+
+.char-modal--online .char-modal__title {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.char-modal--online .char-modal__notice {
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.char-modal--online .char-modal__grid {
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.char-modal--online .char-card {
+  padding: 0.7rem;
+  gap: 0.5rem;
+}
+
+.char-modal--online .char-card__badge {
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.5rem;
+  padding: 0.16rem 0.38rem;
+}
+
+.char-modal--online .char-card__name {
+  font-size: 0.9rem;
+}
+
+.char-modal--online .char-card__code {
+  font-size: 0.52rem;
+}
+
+.char-modal--online .char-card__bio {
+  font-size: 0.58rem;
+  margin-top: 0.15rem;
+  line-height: 1.32;
+}
+
+.char-modal--online .char-modal__actions {
+  margin-top: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.char-modal--online .char-modal__hint {
+  margin: 0;
+  text-align: left;
+}
+
+.char-modal--online .char-modal__btn {
+  padding: 0.5rem 1rem;
+}
+
+.char-modal--online .char-card__portrait-wrap {
+  aspect-ratio: 1 / 0.92;
+}
+
 .char-modal--online .char-card--readonly { cursor: default; pointer-events: none; }
 .char-modal--online .char-card--me    { border-color: rgba(0, 255, 204, 0.55); }
 .char-modal--online .char-card--rival { border-color: rgba(255, 80, 80, 0.55); }
@@ -449,6 +520,11 @@
   pointer-events: none;
 }
 
+#hud-root .online-hangar-ctrls { pointer-events: none; }
+#hud-root .online-hangar-ctrls__row { pointer-events: auto; }
+#hud-root .online-hangar-ctrls__keys { pointer-events: none; }
+#hud-root .online-hangar-ctrls__hint--top { pointer-events: none; }
+
 /* Buttons row — posicion LOCKED, bottom: 1.4rem original. */
 .online-hangar-ctrls__row {
   position: absolute;
@@ -485,8 +561,8 @@
   pointer-events: auto;
 }
 
-/* KeyHint — posicion LOCKED. Justo encima de buttons, misma altura visual
-   que .hangar-controls__hints en hangar single. */
+/* KeyHint — posicion LOCKED. Display only, no pointer events para no bloquear
+   clicks de buttons (se solapan visualmente con la fila inferior). */
 .online-hangar-ctrls__keys {
   position: absolute;
   left: 2rem; right: 2rem;
@@ -495,7 +571,7 @@
   justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
-  pointer-events: auto;
+  pointer-events: none;
   box-sizing: border-box;
 }
 .online-hangar-ctrls__btn {
@@ -562,22 +638,18 @@
 .online-rival-ship-tag {
   position: absolute;
   /* Encima del bottom-bar de controles (≈5rem), debajo de la nave. */
-  bottom: 6.5rem;
+  bottom: 10rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 13;
-  padding: 0.4rem 0.9rem;
+  padding: 0.55rem 1.2rem;
   background: rgba(80, 30, 30, 0.7);
   border: 1px solid rgba(255, 80, 80, 0.65);
   font-family: var(--font-mono);
-  font-size: 0.7rem; letter-spacing: 0.2em;
+  font-size: 0.85rem; letter-spacing: 0.22em;
   color: #ffaaaa;
   text-transform: uppercase;
-  animation: online-rival-tag-pulse 1.4s ease-in-out infinite;
-}
-@keyframes online-rival-tag-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.55; }
+  box-shadow: 0 0 14px rgba(255, 80, 80, 0.25);
 }
 
 /* ── Toast de error al elegir nave (collision con rival) ── */

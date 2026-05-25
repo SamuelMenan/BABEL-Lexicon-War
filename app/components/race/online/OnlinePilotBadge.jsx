@@ -1,6 +1,7 @@
 import React from 'react';
 import { getCharacter } from '../../../../shared/characterData.js';
 import KeyHint from '../../common/KeyHint.jsx';
+import Icon from '../../common/Icon.jsx';
 import useTranslation from '../../../../shared/i18n/useTranslation.js';
 
 // Modal welcome al entrar al OnlineRoomHangar — muestra piloto asignado al
@@ -28,23 +29,30 @@ export default function OnlinePilotBadge({ myPilot, rivalPilot, onDismiss, showW
 
         <h3 className="char-modal__title">{t('race.pilotBadge.title')}</h3>
 
+        <div className="char-modal__notice" role="note">
+          <Icon name="info" size={16} />
+          <div className="char-modal__notice-text">
+            <strong>{t('race.pilotBadge.autoTag')}</strong>
+            <span>{t('race.pilotBadge.autoDesc')}</span>
+          </div>
+        </div>
+
         <div className="char-modal__grid">
           <PilotCard char={me}    label={t('race.pilotBadge.you')} highlight="me"    chosen />
           <PilotCard char={rival} label={t('race.pilotBadge.rival')} highlight="rival" chosen={false} />
         </div>
 
         <div className="char-modal__actions">
+          <KeyHint
+            className="char-modal__hint"
+            items={[{ key: '↵', label: t('race.hangarExtra.continueHint') }]}
+          />
           <button
             className="char-modal__btn char-modal__btn--confirm"
             onClick={onDismiss}
             autoFocus
           >{t('race.pilotBadge.continue')}</button>
         </div>
-
-        <KeyHint
-          className="char-modal__hint"
-          items={[{ key: '↵', label: t('race.hangarExtra.continueHint') }]}
-        />
       </div>
     </div>
   );

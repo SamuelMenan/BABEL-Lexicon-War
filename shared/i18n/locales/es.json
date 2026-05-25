@@ -265,7 +265,9 @@
       "you": "TU",
       "rival": "RIVAL",
       "continue": "ENTENDIDO",
-      "hint": "Tu piloto fue asignado automaticamente"
+      "hint": "Tu piloto fue asignado automaticamente",
+      "autoTag": "ASIGNACION AUTOMATICA",
+      "autoDesc": "El sistema te asigno este piloto. No puedes cambiarlo en modo online — solo en el hangar local."
     },
     "rematch": {
       "title": "REVANCHA",

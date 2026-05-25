@@ -436,8 +436,16 @@ begin
 
   v_room_id := replace(gen_random_uuid()::text, '-', '');
 
-  insert into public.race_rooms (id, code, is_private, host_id, status, last_activity_at)
-  values (v_room_id, case when p_is_private then v_code else null end, p_is_private, p_host_id, 'lobby', now());
+  insert into public.race_rooms (id, code, is_private, host_id, host_ship, status, last_activity_at)
+  values (
+    v_room_id,
+    case when p_is_private then v_code else null end,
+    p_is_private,
+    p_host_id,
+    'spaceship',
+    'lobby',
+    now()
+  );
 
   return v_room_id;
 end;
@@ -455,6 +463,8 @@ set search_path = public
 as $$
 declare
   v_room public.race_rooms%rowtype;
+  v_host_ship text;
+  v_guest_ship text;
 begin
   select * into v_room from public.race_rooms where id = p_room_id for update;
   if not found then return false; end if;
@@ -464,7 +474,18 @@ begin
 
   perform public.ensure_player(p_guest_id, p_guest_name);
 
-  update public.race_rooms set guest_id = p_guest_id, last_activity_at = now() where id = p_room_id;
+  v_host_ship  := coalesce(v_room.host_ship, 'spaceship');
+  v_guest_ship := coalesce(
+    v_room.guest_ship,
+    case when v_host_ship = 'spaceshipnew' then 'spaceship' else 'spaceshipnew' end
+  );
+
+  update public.race_rooms
+    set guest_id = p_guest_id,
+        host_ship = v_host_ship,
+        guest_ship = v_guest_ship,
+        last_activity_at = now()
+    where id = p_room_id;
   return true;
 end;
 $$;
@@ -481,6 +502,8 @@ set search_path = public
 as $$
 declare
   v_room public.race_rooms%rowtype;
+  v_host_ship text;
+  v_guest_ship text;
 begin
   select * into v_room from public.race_rooms
     where code = p_code and status = 'lobby' for update;
@@ -490,7 +513,18 @@ begin
 
   perform public.ensure_player(p_guest_id, p_guest_name);
 
-  update public.race_rooms set guest_id = p_guest_id, last_activity_at = now() where id = v_room.id;
+  v_host_ship  := coalesce(v_room.host_ship, 'spaceship');
+  v_guest_ship := coalesce(
+    v_room.guest_ship,
+    case when v_host_ship = 'spaceshipnew' then 'spaceship' else 'spaceshipnew' end
+  );
+
+  update public.race_rooms
+    set guest_id = p_guest_id,
+        host_ship = v_host_ship,
+        guest_ship = v_guest_ship,
+        last_activity_at = now()
+    where id = v_room.id;
   return v_room.id;
 end;
 $$;
@@ -507,28 +541,17 @@ set search_path = public
 as $$
 declare
   v_room public.race_rooms%rowtype;
-  v_other_ship text;
 begin
   select * into v_room from public.race_rooms where id = p_room_id for update;
   if not found then return false; end if;
   if v_room.status <> 'lobby' then return false; end if;
 
   if p_player_id = v_room.host_id then
-    v_other_ship := v_room.guest_ship;
+    update public.race_rooms set host_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
   elsif p_player_id = v_room.guest_id then
-    v_other_ship := v_room.host_ship;
+    update public.race_rooms set guest_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
   else
     return false;
-  end if;
-
-  if v_other_ship is not null and v_other_ship = p_ship_id then
-    return false;  -- nave ocupada por el rival
-  end if;
-
-  if p_player_id = v_room.host_id then
-    update public.race_rooms set host_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
-  else
-    update public.race_rooms set guest_ship = p_ship_id, last_activity_at = now() where id = p_room_id;
   end if;
 
   return true;

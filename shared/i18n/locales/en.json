@@ -265,7 +265,9 @@
       "you": "YOU",
       "rival": "RIVAL",
       "continue": "GOT IT",
-      "hint": "Your pilot was assigned automatically"
+      "hint": "Your pilot was assigned automatically",
+      "autoTag": "AUTOMATIC ASSIGNMENT",
+      "autoDesc": "The system assigned this pilot to you. You cannot change it in online mode — only in the local hangar."
     },
     "rematch": {
       "title": "REMATCH",

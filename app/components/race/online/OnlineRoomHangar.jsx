@@ -29,6 +29,8 @@ import OnlinePilotBadge from './OnlinePilotBadge.jsx';
 import OnlineRivalLeftModal from './OnlineRivalLeftModal.jsx';
 
 const SHIPS = getShipsForHangar();
+const DEFAULT_HOST_SHIP  = 'spaceship';
+const DEFAULT_GUEST_SHIP = 'spaceshipnew';
 const MIN_LOADING_MS = 1200;
 const PROGRESS_TICK  = 80;
 const PROGRESS_STEP  = 3.5;
@@ -63,6 +65,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   const onMatchStartedRef = useRef(false);  // guard contra trigger doble
   const pickTimerRef   = useRef(null);
   const hadGuestRef    = useRef(false);     // tracking abandono guest
+  const initShipAttemptRef = useRef(false);
 
   // ──────────────────────────────────────────────────────────────────────
   // Scene mount + loading progress (clon de HangarScreen)
@@ -172,6 +175,43 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   const otherJoined = role === 'host' ? !!guestId : !!hostId;
 
   // ──────────────────────────────────────────────────────────────────────
+  // Asignacion inicial de nave (evita conflicto host/guest en la primera carga)
+  // ──────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    initShipAttemptRef.current = false;
+  }, [roomId, role]);
+
+  useEffect(() => {
+    if (!room || status !== 'lobby') return;
+    if (myShip || initShipAttemptRef.current) return;
+
+    let preferred = role === 'host' ? DEFAULT_HOST_SHIP : DEFAULT_GUEST_SHIP;
+    if (!SHIPS.some(s => s.id === preferred)) {
+      preferred = SHIPS[0]?.id;
+    }
+    if (!preferred) return;
+    if (otherShip && preferred === otherShip) {
+      const fallback = SHIPS.find(s => s.id !== otherShip)?.id;
+      if (fallback) preferred = fallback;
+    }
+
+    initShipAttemptRef.current = true;
+    setRoomShip({ roomId, playerId: myId, shipId: preferred })
+      .catch(() => { initShipAttemptRef.current = false; });
+  }, [room, status, myShip, otherShip, role, roomId, myId]);
+
+  // Sync UI con la nave asignada en room (por defecto o por seleccion previa).
+  useEffect(() => {
+    if (!myShip || deployingRef.current) return;
+    const idx = SHIPS.findIndex(s => s.id === myShip);
+    if (idx >= 0 && idx !== shipIdxRef.current) {
+      shipIdxRef.current = idx;
+      setShipIdx(idx);
+      sceneRef.current?.loadShip(idx);
+    }
+  }, [myShip]);
+
+  // ──────────────────────────────────────────────────────────────────────
   // Detectar abandono del rival
   // ──────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -236,11 +276,6 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
       if (pickTimerRef.current) clearTimeout(pickTimerRef.current);
       pickTimerRef.current = setTimeout(async () => {
         const shipId = SHIPS[clamped].id;
-        if (shipId === otherShip) {
-          setPickError(t('race.hangar.shipTaken'));
-          setTimeout(() => setPickError(null), 2500);
-          return;
-        }
         try {
           await setRoomShip({ roomId, playerId: myId, shipId });
           setPickError(null);
@@ -360,7 +395,6 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   // ──────────────────────────────────────────────────────────────────────
   const ship     = SHIPS[shipIdx];
   const shipData = getShipData(ship.id);
-  const isRivalShip = ship.id === otherShip;
 
   return (
     <>
@@ -392,13 +426,6 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
               price={ship.price}
             />
 
-            {/* Aviso si la nave actual es del rival */}
-            {isRivalShip && (
-              <div className="online-rival-ship-tag">
-                <span>{t('race.hangar.shipBlocked')}</span>
-              </div>
-            )}
-
             <ShipStats coreId={shipData.coreId} stats={shipData.stats} />
             <ShipArsenal arsenal={shipData.arsenal} />
 
@@ -408,6 +435,10 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
               onPrev={() => navigateTo(shipIdx - 1)}
               onNext={() => navigateTo(shipIdx + 1)}
             />
+
+            {otherShip && ship?.id === otherShip && (
+              <div className="online-rival-ship-tag">{t('race.hangar.shipBlocked')}</div>
+            )}
 
             <OnlineHangarControls
               myShip={myShip}

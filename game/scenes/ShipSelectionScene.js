@@ -74,7 +74,7 @@ export class ShipSelectionScene {
     this._loader.boosters.forEach(b => b.setHangarMode?.(false));
     this._flowModeOff = false;
     const gameMode = Bridge.peekState?.()?.pendingGameMode ?? 'combat';
-    playSfx('propulsion.ignite');
+    playSfx('propulsion.ignite', 0.55);
     // Estabilizar nave a pose baseline (lerp suave ~350ms) ANTES de iniciar
     // launch. Antes se hacia snap instantaneo + animator arrancaba desde
     // cualquier punto del ciclo de flotacion → nave visualmente desalineada

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { playSfx } from '../../../shared/audioManager.js';
 
 export class HangarCameraController {
   constructor(camera) {
@@ -15,6 +16,9 @@ export class HangarCameraController {
   updateFromKeys(keys, deployActive) {
     if (deployActive) return;
     const o = this.orbit;
+    const any = keys.has('a')||keys.has('A')||keys.has('d')||keys.has('D')||keys.has('w')||keys.has('W')||keys.has('s')||keys.has('S');
+    if (any && !this._wasOrbitKey) playSfx('hangarCamera.orbit', 0.35);
+    this._wasOrbitKey = any;
     if (keys.has('a') || keys.has('A')) o.theta -= 0.022;
     if (keys.has('d') || keys.has('D')) o.theta += 0.022;
     if (keys.has('w') || keys.has('W')) o.radius = Math.max(o.radiusMin, o.radius - 0.05);
@@ -43,6 +47,7 @@ export class HangarCameraController {
     this.orbit.isDragging = true;
     this.orbit.lastX = x;
     this.orbit.lastY = y;
+    playSfx('hangarCamera.orbit', 0.35);
   }
 
   drag(x, y) {

@@ -11,6 +11,7 @@
 //   KeybindService.setDebugEnabled(bool)        — gate de DEBUG_* actions
 
 import { ACTIONS, SCOPES, normalizeKey, resolveBinding } from './keybindings.js';
+import { playSfx } from './audioManager.js';
 
 // scope → Map<actionId, handler>
 const _handlers = new Map();
@@ -96,6 +97,7 @@ function onKeyDown(e) {
   if (isEditableTarget(e.target)) return;
   const consumed = dispatch(e);
   if (consumed) {
+    if (normalizeKey(e.key) === 'Escape') playSfx('menuBack.press', 0.6);
     e.preventDefault();
   }
 }

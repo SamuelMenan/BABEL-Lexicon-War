@@ -72,5 +72,39 @@
   "word": {
     "completed": ["/audio/sfx/Word/Word_completed.wav"],
     "error":     ["/audio/sfx/Word/Word_error.wav"]
+  },
+  "playerHit": {
+    "hit": ["/audio/sfx/PlayerHit/PlayerHit_hit.wav"]
+  },
+  "hangarCamera": {
+    "orbit": ["/audio/sfx/HangarCamera/HangarCamera_orbit.wav"]
+  },
+  "hangarLaser": {
+    "toggle": ["/audio/sfx/HangarLaser/HangarLaser_toggle.wav"]
+  },
+  "hangarBoost": {
+    "toggle": ["/audio/sfx/HangarBoost/HangarBoost_toggle.wav"]
+  },
+  "menuBack": {
+    "press": ["/audio/sfx/MenuBack/MenuBack_press.wav"]
+  },
+  "shipArrival": {
+    "land": ["/audio/sfx/ShipArrival/ShipArrival_land.wav"]
+  },
+  "blackHole": {
+    "pulse_loop": ["/audio/sfx/BlackHole/BlackHole_pulse_loop.wav"]
+  },
+  "raceEngine": {
+    "engine_loop": ["/audio/sfx/RaceEngine/RaceEngine_engine_loop.wav"],
+    "surge":       ["/audio/sfx/RaceEngine/RaceEngine_surge.wav"]
+  },
+  "race": {
+    "opponent_pass": ["/audio/sfx/Race/Race_opponent_pass.wav"],
+    "milestone":     ["/audio/sfx/Race/Race_milestone.wav"],
+    "phrase_done":   ["/audio/sfx/Race/Race_phrase_done.wav"],
+    "flow_burst":    ["/audio/sfx/Race/Race_flow_burst.wav"],
+    "time_warning":  ["/audio/sfx/Race/Race_time_warning.wav"],
+    "boost_streak":  ["/audio/sfx/Race/Race_boost_streak.wav"],
+    "photo_finish":  ["/audio/sfx/Race/Race_photo_finish.wav"]
   }
 }

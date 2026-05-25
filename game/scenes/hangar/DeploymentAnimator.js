@@ -257,7 +257,7 @@ export class DeploymentAnimator {
     }
     if (!s.boostSoundSpawned && t >= T2) {
       s.boostSoundSpawned = true;
-      playSfx('propulsion.boost');
+      playSfx('propulsion.boost', 0.5);
     }
 
     // ── TRAIL ────────────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ export class DeploymentAnimator {
     if (!s.warpFlashSpawned && t >= T3) {
       s.warpFlashSpawned = true;
       s.warpFlash = new WarpFlash(this._scene, this._camera);
-      playSfx('propulsion.warp');
+      playSfx('propulsion.warp', 0.5);
     }
     s.warpFlash?.update(dt);
 

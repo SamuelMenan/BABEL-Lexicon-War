@@ -40,22 +40,22 @@ function gapFor(name) {
   return MIN_GAP_BY_CATEGORY[cat] ?? MIN_GAP_BY_CATEGORY.default;
 }
 
-export function playSfx(name) {
+export function playSfx(name, volume = 1) {
   const paths = getSoundPaths(name);
   if (!paths || paths.length === 0) return;
-  _playSound(paths[0], gapFor(name));
+  _playSound(paths[0], gapFor(name), volume);
 }
 
-export function playRandomSfx(name) {
+export function playRandomSfx(name, volume = 1) {
   const paths = getSoundPaths(name);
   if (!paths || paths.length === 0) return;
   const path = paths[Math.floor(Math.random() * paths.length)];
-  _playSound(path, gapFor(name));
+  _playSound(path, gapFor(name), volume);
 }
 
 const lastPlayTimes = {};
 
-function _playSound(path, gap = 60) {
+function _playSound(path, gap = 60, volume = 1) {
   if (settings.muted) return;
   const now = Date.now();
   if (lastPlayTimes[path] && (now - lastPlayTimes[path]) < gap) {
@@ -68,16 +68,17 @@ function _playSound(path, gap = 60) {
       if (!sfxCache[path]) {
         sfxCache[path] = new Howl({ src: [path], volume: 1 });
       }
-      sfxCache[path].play();
+      const id = sfxCache[path].play();
+      if (volume !== 1) sfxCache[path].volume(volume, id);
     } else {
       const audio = new Audio(path);
-      audio.volume = settings.volume;
+      audio.volume = settings.volume * volume;
       audio.play().catch(() => {});
     }
   } catch (e) {
     try {
       const audio = new Audio(path);
-      audio.volume = settings.volume;
+      audio.volume = settings.volume * volume;
       audio.play().catch(() => {});
     } catch (err) {}
   }

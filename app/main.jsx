@@ -10,10 +10,21 @@ import { setQualityTier, QUALITY } from '../shared/qualitySettings.js';
 import { workerBridge } from '../game/workers/workerBridge.js';
 import { EXECUTION_MODE } from '../shared/constants.js';
 import { initLocale } from '../shared/i18n/index.js';
+import { preloadAll, unlockAudio } from '../shared/audioManager.js';
 
 // i18n boot ANTES de KeybindService — autodetecta navigator.language o usa
 // localStorage. Bridge.state.locale queda seteado antes del primer render.
 initLocale();
+
+// Audio preload idle + autoplay unlock on first user gesture.
+try {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(() => preloadAll());
+  else setTimeout(() => preloadAll(), 0);
+} catch { preloadAll(); }
+
+const _unlockOnce = () => { unlockAudio(); };
+window.addEventListener('pointerdown', _unlockOnce, { once: true, capture: true });
+window.addEventListener('keydown', _unlockOnce, { once: true, capture: true });
 
 KeybindService.init();
 const _bootProfile = loadProfile();

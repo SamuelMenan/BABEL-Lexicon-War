@@ -1,0 +1,76 @@
+{
+  "ui": {
+    "click": ["/audio/sfx/UI_Buttons/sfx_025.wav"],
+    "select": ["/audio/sfx/UI_Buttons/sfx_025.wav"],
+    "confirm": ["/audio/sfx/UI_Buttons/sfx_025.wav"]
+  },
+  "weapons": {
+    "laser": ["/audio/sfx/Weapons/sfx_075.wav"],
+    "shoot": ["/audio/sfx/Weapons/sfx_074.wav"]
+  },
+  "explosion": {
+    "detonate": ["/audio/sfx/Explosion/sfx_02.wav"]
+  },
+  "propulsion": {
+    "boost":  ["/audio/sfx/Propulsion/sfx_01.wav"],
+    "ignite": ["/audio/sfx/Propulsion/sfx_04.wav"],
+    "warp":   ["/audio/sfx/Propulsion/sfx_04.wav"]
+  },
+  "countdown": {
+    "tick": ["/audio/sfx/Countdown/Countdowntick.wav"],
+    "go":   ["/audio/sfx/Countdown/Countdowngo.wav"]
+  },
+  "enemydeath": {
+    "collapse": ["/audio/sfx/EnemyDeath/EnemyDeathcollapse.wav"]
+  },
+  "flow": {
+    "unlocked": ["/audio/sfx/Flow/Flow_unlocked.wav"],
+    "break":    ["/audio/sfx/Flow/Flow_break.wav"]
+  },
+  "hangar": {
+    "ship_change": ["/audio/sfx/Hangar/Hangar_ship_change.wav"]
+  },
+  "health": {
+    "high_loop":     ["/audio/sfx/Health/high_loop.wav"],
+    "medium_loop":   ["/audio/sfx/Health/sfx_03.wav"],
+    "critical_loop": ["/audio/sfx/Health/Critical_low_health.wav"]
+  },
+  "loading": {
+    "ambient_loop": ["/audio/sfx/Loading/Loading_ambient_loop.wav"],
+    "complete":     ["/audio/sfx/Loading/Loading_complete.wav"]
+  },
+  "menu": {
+    "hover":  ["/audio/sfx/Menu/Menu_hover.wav"],
+    "select": ["/audio/sfx/Menu/Menu_select.wav"]
+  },
+  "modal": {
+    "open":  ["/audio/sfx/Modal/Modal_open.wav"],
+    "close": ["/audio/sfx/Modal/Modal_close.wav"]
+  },
+  "purchase": {
+    "success": ["/audio/sfx/Purchase/Purchase_success.wav"],
+    "fail":    ["/audio/sfx/Purchase/Purchase_fail.wav"]
+  },
+  "raceend": {
+    "victory": ["/audio/sfx/RaceEnd/RaceEnd_victory.wav"],
+    "defeat":  ["/audio/sfx/RaceEnd/RaceEnd_defeat.wav"]
+  },
+  "racestart": {
+    "start": ["/audio/sfx/RaceStart/RaceStart_start.wav"]
+  },
+  "rival": {
+    "joined":         ["/audio/sfx/Rival/Rivaljoined.wav"],
+    "left":           ["/audio/sfx/Rival/Rival_left.wav"],
+    "rematch_invite": ["/audio/sfx/Rival/Rival_rematch_invite.wav"]
+  },
+  "waitingrival": {
+    "loop": ["/audio/sfx/WaitingRival/WaitingRival_loop.wav"]
+  },
+  "wave": {
+    "alert": ["/audio/sfx/Wave/Wavealert.wav"]
+  },
+  "word": {
+    "completed": ["/audio/sfx/Word/Word_completed.wav"],
+    "error":     ["/audio/sfx/Word/Word_error.wav"]
+  }
+}

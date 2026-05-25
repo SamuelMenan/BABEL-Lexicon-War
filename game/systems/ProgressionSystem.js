@@ -1,6 +1,7 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
+import { playLoopSfx, stopLoopSfx } from '../../shared/audioManager.js';
 import {
   PLAYER_MAX_HP,
   LEX_HEAT_MAX, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
@@ -124,6 +125,16 @@ export class ProgressionSystem {
     return 'none';
   }
 
+  // Switch entre 3 loops de salud, asegurando que solo uno suene a la vez.
+  _setHealthLoop(level) {
+    stopLoopSfx('health.high_loop');
+    stopLoopSfx('health.medium_loop');
+    stopLoopSfx('health.critical_loop');
+    if (level === 'red')         playLoopSfx('health.critical_loop', 0.5);
+    else if (level === 'yellow') playLoopSfx('health.medium_loop', 0.5);
+    else                          playLoopSfx('health.high_loop', 0.5);
+  }
+
   _publish() {
     const previousWarnings = Bridge.getState().warnings ?? {};
     const previousLowHpLevel = this._lowHpLevel;
@@ -153,6 +164,7 @@ export class ProgressionSystem {
     }
 
     if (previousLowHpLevel !== lowHpLevel) {
+      this._setHealthLoop(lowHpLevel);
       EventBus.emit(EventTypes.WARNING_CHANGED, {
         source: 'progression',
         warnings,

@@ -2,6 +2,7 @@ import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 import { SHIP_PALETTES } from '../../shared/constants.js';
+import { playSfx, stopLoopSfx } from '../../shared/audioManager.js';
 
 const CINEMATIC_DELAY_MS = 1800; // breathing room after destruction before Game Over
 
@@ -35,6 +36,10 @@ export class PlayerDeathHandler {
 
   start() {
     this._started = true;
+    // Stop combat health loops al iniciar secuencia de muerte.
+    stopLoopSfx('health.high_loop');
+    stopLoopSfx('health.medium_loop');
+    stopLoopSfx('health.critical_loop');
     // Snapshot stats AT death moment (before cinematic). WPM uses a 5s rolling
     // window; reading after the 1.8s cinematic risks decay to 0 if the player
     // wasn't typing in the final seconds. Peak survives regardless.
@@ -77,6 +82,7 @@ export class PlayerDeathHandler {
     // Ship shakes for ~0.85s, then onDone fires → particles + Game Over timer
     this._getPlayer()?.startCollapse(this._scene, () => {
       if (colPos) {
+        playSfx('explosion.detonate');
         this._getParticles().playerDeathSequence(colPos, colorRamp);
       }
 

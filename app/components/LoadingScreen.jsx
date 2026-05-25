@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GAME_MODES } from '../../shared/constants.js';
 import useTranslation from '../../shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
 
 export default function LoadingScreen({ progress = 0, mode = null, message = '' }) {
   const { t } = useTranslation();
@@ -14,6 +15,14 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
   useEffect(() => {
     const id = setInterval(() => setCursorOn(v => !v), 480);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    playLoopSfx('loading.ambient_loop', 0.4);
+    return () => {
+      stopLoopSfx('loading.ambient_loop');
+      playSfx('loading.complete');
+    };
   }, []);
 
   const pct       = Math.round(Math.max(0, Math.min(100, progress)));

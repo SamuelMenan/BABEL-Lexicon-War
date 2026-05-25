@@ -11,6 +11,7 @@ import { DeploymentAnimator } from './hangar/DeploymentAnimator.js';
 import { HangarProjectiles } from './hangar/HangarProjectiles.js';
 import { HangarLaser } from './hangar/HangarLaser.js';
 import { Bridge } from '../../shared/bridge.js';
+import { playSfx } from '../../shared/audioManager.js';
 
 const FIRE_COOLDOWN_MS      = 150;
 const AUTO_FIRE_INTERVAL_MS = 110; // cadencia rafaga K (corto, continuo)
@@ -55,6 +56,9 @@ export class ShipSelectionScene {
     if (!this._alive) return;
     this._stopAllFire();
     this._resetFlowSim();
+    // Skip primer load (mount inicial) — solo dispara en cambios de nave.
+    if (this._loadShipCalled) playSfx('hangar.ship_change');
+    this._loadShipCalled = true;
     this._loader.loadShip(index);
     this._cam.focal.set(0, 0, 0);
     this._flowModeOff = true; // boosters nuevos arrancan en hangarMode true (default false → fuerza estado conocido).
@@ -70,6 +74,7 @@ export class ShipSelectionScene {
     this._loader.boosters.forEach(b => b.setHangarMode?.(false));
     this._flowModeOff = false;
     const gameMode = Bridge.peekState?.()?.pendingGameMode ?? 'combat';
+    playSfx('propulsion.ignite');
     // Estabilizar nave a pose baseline (lerp suave ~350ms) ANTES de iniciar
     // launch. Antes se hacia snap instantaneo + animator arrancaba desde
     // cualquier punto del ciclo de flotacion → nave visualmente desalineada
@@ -158,6 +163,7 @@ export class ShipSelectionScene {
     const palette = ship ? SHIP_PALETTES[ship.id] : null;
     const colorRamp = palette?.normalRamp ?? null;
     const pos = new THREE.Vector3(0, SHIP_SPAWN_OFFSET.y, 0);
+    playSfx('explosion.detonate');
     this._particles.playerDeathSequence(pos, colorRamp, 0.3);
   }
 
@@ -196,6 +202,7 @@ export class ShipSelectionScene {
     const shots = this._loader.getMuzzleShots();
     if (!shots.length) return;
     this._lastShotAt = now;
+    playSfx(this._flowSim ? 'weapons.laser' : 'weapons.shoot');
     shots.forEach(s => {
       this._projectiles.spawn(s.origin, s.dir, {
         color:    s.color,

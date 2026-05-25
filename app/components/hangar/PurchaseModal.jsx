@@ -3,6 +3,7 @@ import { KeybindService } from '../../../shared/keybindService.js';
 import KeyHint from '../common/KeyHint.jsx';
 import useTranslation from '../../../shared/i18n/useTranslation.js';
 import { getNumberFormatter } from '../../../shared/i18n/index.js';
+import { playSfx } from '../../../shared/audioManager.js';
 
 export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
   const { t } = useTranslation();
@@ -17,6 +18,8 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
     const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onConfirm());
     return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
   }, [onConfirm, onCancel]);
+
+  useEffect(() => { playSfx('modal.open'); return () => playSfx('modal.close'); }, []);
 
   const after = Math.max(0, (grafemas ?? 0) - (ship.price ?? 0));
 

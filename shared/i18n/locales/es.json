@@ -67,8 +67,15 @@
     "header": "CONFIGURACION DE SISTEMA · BABEL NRX",
     "tabs": {
       "performance": "Rendimiento",
+      "audio": "Audio",
       "controls": "Controles",
       "profile": "Perfil"
+    },
+    "audio": {
+      "volume": "Volumen Global",
+      "volumeHint": "Ajusta el volumen de efectos y musica",
+      "mute": "Silencio",
+      "muteHint": "Desactiva todos los sonidos"
     },
     "footerNote": "Los cambios se aplican y guardan automaticamente",
     "restore": "Restaurar Valores",

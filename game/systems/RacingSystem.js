@@ -1,6 +1,7 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
+import { playSfx } from '../../shared/audioManager.js';
 import { EconomySystem } from './EconomySystem.js';
 import { computeRaceReward } from './GrafemaRewards.js';
 import {
@@ -136,8 +137,11 @@ export class RacingSystem {
     if (this._finished) return;
 
     if (this._countdownActive) {
+      const prevTick = Math.max(0, Math.ceil(this._countdown));
       this._countdown -= delta;
-      this._stateCountdown.countdown = Math.max(0, Math.ceil(this._countdown));
+      const nextTick = Math.max(0, Math.ceil(this._countdown));
+      // SFX countdown ahora canonical en Countdown.jsx (UI source of truth).
+      this._stateCountdown.countdown = nextTick;
       Bridge.setState(this._stateCountdown);
       if (this._countdown <= 0) {
         this._countdownActive = false;
@@ -318,6 +322,7 @@ export class RacingSystem {
       };
     }
 
+    playSfx(victory ? 'raceend.victory' : 'raceend.defeat');
     const evType = victory ? EventTypes.RACE_COMPLETED : EventTypes.RACE_FAILED;
     EventBus.emit(evType, {
       winner:          victory ? 'player' : 'opponent',

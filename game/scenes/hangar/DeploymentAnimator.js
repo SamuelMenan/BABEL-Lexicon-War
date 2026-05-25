@@ -3,6 +3,7 @@ import { DeploymentTrail } from '../../rendering/fx/DeploymentTrail.js';
 import { Shockwave } from '../../rendering/fx/Shockwave.js';
 import { WarpFlash } from '../../rendering/fx/WarpFlash.js';
 import { DustPuff } from '../../rendering/fx/DustPuff.js';
+import { playSfx } from '../../../shared/audioManager.js';
 
 // Pose final por modo — debe coincidir con Camera.js (_updateCombat/_updateRacing).
 const END_POSES = {
@@ -68,6 +69,7 @@ export class DeploymentAnimator {
         dust,
         warpFlash: null,
         warpFlashSpawned: false,
+        boostSoundSpawned: false,
         shockwavesSpawned: { t1: false, t2: false },
         boosterDrive: { accel: false, vScale: 1.0, rScale: 1.0, flowRatio: 0 },
         // Camera coreografia
@@ -253,6 +255,10 @@ export class DeploymentAnimator {
       s.shockwavesSpawned.t2 = true;
       new Shockwave(this._scene, w.position.clone(), { palette: s.palette, size: 4.5, life: 0.75 });
     }
+    if (!s.boostSoundSpawned && t >= T2) {
+      s.boostSoundSpawned = true;
+      playSfx('propulsion.boost');
+    }
 
     // ── TRAIL ────────────────────────────────────────────────────────────────
     const speedNorm = Math.min(speed / 28, 1);
@@ -268,6 +274,7 @@ export class DeploymentAnimator {
     if (!s.warpFlashSpawned && t >= T3) {
       s.warpFlashSpawned = true;
       s.warpFlash = new WarpFlash(this._scene, this._camera);
+      playSfx('propulsion.warp');
     }
     s.warpFlash?.update(dt);
 

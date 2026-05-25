@@ -6,6 +6,7 @@ import { EventTypes } from '../../../shared/eventTypes.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { getShipsForHangar } from '../../../shared/shopCatalog.js';
 import { EconomySystem } from '../../../game/systems/EconomySystem.js';
+import { playSfx } from '../../../shared/audioManager.js';
 
 const SHIPS = getShipsForHangar();
 import { getShipData } from '../../../game/data/shipData.js';
@@ -225,7 +226,8 @@ export default function HangarScreen() {
   function confirmPurchase() {
     const shipId = SHIPS[shipIdxRef.current].id;
     const res = EconomySystem.purchaseShip(shipId);
-    if (res.ok) forceUpdate();
+    if (res.ok) { playSfx('purchase.success'); forceUpdate(); }
+    else playSfx('purchase.fail');
     setPendingBuy(false);
   }
   function cancelPurchase() { setPendingBuy(false); }

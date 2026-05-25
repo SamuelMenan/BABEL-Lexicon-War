@@ -1,6 +1,9 @@
 import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
+import { playSfx } from '../../shared/audioManager.js';
+
+const COUNT_STEPS = new Set(['5', '4', '3', '2', '1']);
 
 const PREPARE_MS = 600;
 const STEP_MS    = 700;
@@ -75,6 +78,8 @@ export class PreCombatController {
   }
 
   _tick(step, value, level) {
+    if (COUNT_STEPS.has(step)) playSfx('countdown.tick');
+    else if (step === 'engage') playSfx('countdown.go');
     EventBus.emit(EventTypes.COMBAT_COUNTDOWN_TICK, { step, value, level });
     Bridge.setState({
       preCombatActive: true, preCombatStep: step,

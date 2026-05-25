@@ -8,6 +8,7 @@ import { KeybindService } from "../../shared/keybindService.js";
 import { QUALITY, setQualityTier, getQualityTier } from "../../shared/qualitySettings.js";
 import useTranslation from "../../shared/i18n/useTranslation.js";
 import { getNumberFormatter } from "../../shared/i18n/index.js";
+import { getAudioSettings, setVolume, mute, playSfx } from "../../shared/audioManager.js";
 import ControlsSection from "./settings/ControlsSection.jsx";
 import Icon from "./common/Icon.jsx";
 import "../../styles/components/controls-section.css";
@@ -185,11 +186,58 @@ function ProfileSection() {
   );
 }
 
+function AudioSection() {
+  const { t } = useTranslation();
+  const [audioState, setAudioState] = useState(() => getAudioSettings());
+
+  const handleVolumeChange = (e) => {
+    const val = parseFloat(e.target.value);
+    setVolume(val);
+    setAudioState(prev => ({ ...prev, volume: val }));
+  };
+
+  const handleMuteChange = (e) => {
+    const val = e.target.checked;
+    mute(val);
+    setAudioState(prev => ({ ...prev, muted: val }));
+  };
+
+  return (
+    <div className="settings__section" key="audio">
+      <Row label={t('settings.audio.volume')} hint={t('settings.audio.volumeHint')}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={audioState.volume}
+            onChange={handleVolumeChange}
+            className="settings__slider"
+            style={{ flex: 1, accentColor: 'var(--col-active, #00ffcc)' }}
+          />
+          <span className="settings__readout" style={{ marginLeft: '12px', minWidth: '3em', display: 'inline-block', textAlign: 'right' }}>
+            {Math.round(audioState.volume * 100)}%
+          </span>
+        </div>
+      </Row>
+      <Row label={t('settings.audio.mute')} hint={t('settings.audio.muteHint')}>
+        <input
+          type="checkbox"
+          checked={audioState.muted}
+          onChange={handleMuteChange}
+          style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--col-active, #00ffcc)' }}
+        />
+      </Row>
+    </div>
+  );
+}
+
 /* ── Main component ──────────────────────────────────────────── */
 
 export default function Settings({ onClose, initialTab = 'rendimiento' }) {
-  // Re-mapeo de tabs legacy ('visuals'/'audio'/'protocol' → 'rendimiento').
-  const normalizedInitial = ['visuals', 'audio', 'protocol'].includes(initialTab)
+  // Re-mapeo de tabs legacy ('visuals'/'protocol' → 'rendimiento').
+  const normalizedInitial = ['visuals', 'protocol'].includes(initialTab)
     ? 'rendimiento'
     : initialTab;
   const [tab, setTab] = useState(normalizedInitial);
@@ -198,6 +246,7 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
 
   const TABS = [
     { id: 'rendimiento', label: t('settings.tabs.performance') },
+    { id: 'audio',       label: t('settings.tabs.audio') },
     { id: 'controls',    label: t('settings.tabs.controls') },
     { id: 'profile',     label: t('settings.tabs.profile') },
   ];
@@ -217,6 +266,12 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
   useEffect(() => {
     applySettings(s);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // SFX modal open/close.
+  useEffect(() => {
+    playSfx('modal.open');
+    return () => playSfx('modal.close');
   }, []);
 
   useEffect(() => {
@@ -329,6 +384,7 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
             </div>
           )}
 
+          {tab === 'audio'    && <AudioSection />}
           {tab === 'controls' && <ControlsSection />}
           {tab === 'profile'  && <ProfileSection />}
 

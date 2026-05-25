@@ -8,6 +8,7 @@ import {
   DEFAULT_EXECUTION_MODE,
 } from '../../shared/constants.js';
 import { workerBridge } from '../workers/workerBridge.js';
+import { playSfx } from '../../shared/audioManager.js';
 
 const FLOW_IDLE_THRESHOLD_MS = 1500;
 const FLOW_PUBLISH_HZ        = 10;
@@ -170,11 +171,13 @@ export class LexiconSystem {
   _onFlowEnter() {
     this._flowActive = true; this._flowEnterTime = performance.now(); this._flowWordsTyped = 0;
     Bridge.setState({ flow: FLOW_MAX, flowActive: true });
+    playSfx('flow.unlocked');
     EventBus.emit(EventTypes.FLOW_ENTER, { wpm: this._calcWPM() });
   }
   _onFlowExit() {
     const duration = (performance.now() - this._flowEnterTime) / 1000;
     this._flowActive = false; this._flow = 0; this._flowCooldown = true;
+    playSfx('flow.break');
     Bridge.setState({ flow: 0, flowActive: false, flowCooldown: true });
     EventBus.emit(EventTypes.FLOW_EXIT, { duration, wordsTyped: this._flowWordsTyped });
     if (this._flowCooldownTimer) clearTimeout(this._flowCooldownTimer);

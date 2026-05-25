@@ -1,11 +1,38 @@
 import React, { useEffect, useRef, useState } from "react";
 import useTranslation from "../../../../shared/i18n/useTranslation.js";
+import { Bridge } from "../../../../shared/bridge.js";
+import { playSfx } from "../../../../shared/audioManager.js";
 
 export default function Countdown({ countdown, countdownActive }) {
   const { t } = useTranslation();
   const [showGo, setShowGo] = useState(false);
   const prevActive = useRef(false);
   const wasActive = useRef(false);
+  const lastTickRef = useRef(null);
+  const goFiredRef = useRef(false);
+
+  // SFX: tick por cada decremento entero > 0; go al llegar a 0 (una vez).
+  useEffect(() => {
+    if (!countdownActive) {
+      lastTickRef.current = null;
+      goFiredRef.current = false;
+      return;
+    }
+    const n = typeof countdown === 'number' ? Math.max(0, Math.ceil(countdown)) : null;
+    if (n == null) return;
+    if (n > 0 && lastTickRef.current !== n) {
+      lastTickRef.current = n;
+      playSfx('countdown.tick');
+    } else if (n === 0 && !goFiredRef.current) {
+      goFiredRef.current = true;
+      playSfx('countdown.go');
+      // Race mode → tambien dispara racestart.start al final del countdown.
+      try {
+        const mode = Bridge.peekState?.()?.gameMode;
+        if (mode === 'racing') playSfx('racestart.start');
+      } catch (e) {}
+    }
+  }, [countdown, countdownActive]);
 
   useEffect(() => {
     let timerId;

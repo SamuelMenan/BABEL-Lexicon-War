@@ -5,6 +5,7 @@ import { EventTypes } from "../../shared/eventTypes.js";
 import { GAME_MODES, SHIP_PALETTES, SHIPS } from "../../shared/constants.js";
 import { getCharacter } from "../../shared/characterData.js";
 import useTranslation from "../../shared/i18n/useTranslation.js";
+import { playSfx } from "../../shared/audioManager.js";
 
 import CombatTicker from "./hud/combat/CombatTicker.jsx";
 import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
@@ -65,6 +66,14 @@ export default function HUD() {
       clearTimeout(timerRef.current);
       dispatchWordFx({ type: correct ? 'correct' : 'wrong' });
       timerRef.current = setTimeout(() => dispatchWordFx({ type: 'reset' }), correct ? 150 : 340);
+      if (correct) {
+        const { gameMode } = Bridge.peekState();
+        if (gameMode === 'racing') {
+          playSfx('word.completed');
+        }
+      } else {
+        playSfx('word.error');
+      }
     });
   }, []);
 
@@ -73,6 +82,7 @@ export default function HUD() {
       clearTimeout(waveTimerRef.current);
       setWaveNotice(waveNumber);
       waveTimerRef.current = setTimeout(() => setWaveNotice(null), 1450);
+      playSfx('wave.alert');
     });
     return () => { clearTimeout(waveTimerRef.current); unsub(); };
   }, []);

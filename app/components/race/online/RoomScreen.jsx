@@ -6,6 +6,7 @@ import {
 } from '../../../../game/services/supabase/rooms.js';
 import { supabase } from '../../../../game/services/supabase/client.js';
 import useTranslation from '../../../../shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '../../../../shared/audioManager.js';
 
 // Pantalla de matchmaking — muestra sala recien creada/joinada con estado
 // "esperando rival". Cuando ambos jugadores estan presentes, llama
@@ -90,6 +91,23 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
     }, 600);
     return () => clearTimeout(t);
   }, [room?.host_id, room?.guest_id, room?.status, role]);
+
+  // SFX: loop esperando rival → al unirse, stop + ping rival.joined.
+  const bothJoinedSfx = !!(room?.host_id && room?.guest_id);
+  const prevBothJoinedRef = useRef(false);
+  useEffect(() => {
+    if (!room) return;
+    if (bothJoinedSfx) {
+      stopLoopSfx('waitingrival.loop');
+      playSfx('rival.joined');
+    } else {
+      // transicion true→false = rival se fue.
+      if (prevBothJoinedRef.current) playSfx('rival.left');
+      playLoopSfx('waitingrival.loop', 0.5);
+    }
+    prevBothJoinedRef.current = bothJoinedSfx;
+    return () => { stopLoopSfx('waitingrival.loop'); };
+  }, [bothJoinedSfx, !!room]);
 
   const handleLeave = useCallback(async () => {
     setBusy(true);

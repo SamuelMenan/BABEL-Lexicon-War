@@ -15,12 +15,43 @@ import OnlineNoticeBanner from "./components/OnlineNoticeBanner.jsx";
 import { Bridge } from "../shared/bridge.js";
 import { KeybindService } from "../shared/keybindService.js";
 import { getSession } from "../game/services/supabase/auth.js";
+import { playSfx } from "../shared/audioManager.js";
 
 export default function App() {
   const [state, setState] = useState(() => Bridge.getState());
   const [showHelp, setShowHelp] = useState(false);
   // Usuarios autenticados saltan warning + prologo. Invitados los ven cada carga.
   const [introStage, setIntroStage] = useState('checking');
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      const target = e.target;
+      if (target && typeof target.closest === 'function') {
+        if (target.closest('canvas') || target.closest('.hangar__canvas')) return;
+        if (target.closest('button') || target.closest('.btn') || target.closest('[role="button"]')) {
+          playSfx('ui.click');
+        }
+      }
+    };
+    // Throttle per-element — evita spam al mover mouse dentro del mismo btn.
+    let lastHoveredEl = null;
+    const handleGlobalHover = (e) => {
+      const t = e.target;
+      if (!t || typeof t.closest !== 'function') return;
+      if (t.closest('canvas') || t.closest('.hangar__canvas')) return;
+      const btn = t.closest('button, .btn, [role="button"]');
+      if (!btn) { lastHoveredEl = null; return; }
+      if (btn === lastHoveredEl) return;
+      lastHoveredEl = btn;
+      playSfx('menu.hover');
+    };
+    document.addEventListener('click', handleGlobalClick, true);
+    document.addEventListener('mouseover', handleGlobalHover, true);
+    return () => {
+      document.removeEventListener('click', handleGlobalClick, true);
+      document.removeEventListener('mouseover', handleGlobalHover, true);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;

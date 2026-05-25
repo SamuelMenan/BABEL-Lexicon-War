@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useTranslation from '../../shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
 
 export default function ShipSelectLoadingScreen({ progress = 0 }) {
   const { t } = useTranslation();
@@ -17,6 +18,14 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
   useEffect(() => {
     const id = setInterval(() => setCursorOn(v => !v), 480);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    playLoopSfx('loading.ambient_loop', 0.4);
+    return () => {
+      stopLoopSfx('loading.ambient_loop');
+      playSfx('loading.complete');
+    };
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import { CombatEnemy, ENEMY_TYPES } from '../entities/CombatEnemy.js';
 import { EnemyPool } from './EnemyPool.js';
 import { CombatPlayerShip } from '../entities/CombatPlayerShip.js';
@@ -22,6 +22,8 @@ import {
   ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES,
   WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
 } from '../../shared/constants.js';
+
+import { playRandomSfx, playSfx, playLoopSfx, stopLoopSfx } from '../../shared/audioManager.js';
 
 const ACTIVE_ARENA_SCENARIO = ARENA_SCENARIO_2;
 
@@ -79,6 +81,10 @@ export class CombatSceneManager {
     this._death.dispose();
     this._preCombat.stop();
     this._resources.reset();
+    // Start baseline health loop — ProgressionSystem switchea segun lowHpLevel.
+    stopLoopSfx('health.medium_loop');
+    stopLoopSfx('health.critical_loop');
+    playLoopSfx('health.high_loop', 0.5);
     this._arena.build(ACTIVE_ARENA_SCENARIO);
     this._buildPlayer();
     this._particles = new ParticleEmitter(this.scene);
@@ -98,6 +104,10 @@ export class CombatSceneManager {
   }
 
   destroy() {
+    // Stop combat health loops — evita leak al volver al menu.
+    stopLoopSfx('health.high_loop');
+    stopLoopSfx('health.medium_loop');
+    stopLoopSfx('health.critical_loop');
     this._death.dispose();
     this._preCombat.dispose();
     this._spawn.dispose();
@@ -261,6 +271,7 @@ export class CombatSceneManager {
     // Speed casi plana — la dificultad real viene de spawn density + word length.
     // Wave1=2.0, wave10≈2.14, wave30≈2.20. Cap MAX=2.6 nunca dispara con scout (1.25×).
     const speed = ENEMY_BASE_SPEED + Math.min(0.25, Math.log2(this.wave + 1) * 0.05);
+    playSfx('wave.alert');
     EventBus.emit(EventTypes.WAVE_START, { waveNumber: this.wave });
     Bridge.setState({ wave: this.wave });
     waveTrace.bracket('SpawnDirector.beginWave', () =>
@@ -288,6 +299,13 @@ export class CombatSceneManager {
   _fireAt(enemy) {
     if (!this._player || !enemy?.active) return;
     const { flowActive } = Bridge.peekState();
+
+    if (flowActive) {
+      playSfx('weapons.laser');
+    } else {
+      playSfx('weapons.shoot');
+    }
+
     const shots = this._player.getMuzzleShots();
     shots.forEach((m, i) => {
       // Solo el primer cañon dispara hitFlash para evitar N flashes por rafaga.
@@ -349,6 +367,7 @@ export class CombatSceneManager {
     this.hudCanvas.setTokens(this.tokens.filter(t => t.enemy.active));
     this._hud.publish(this.enemies, this.lexicon.currentTargetId);
     this._player?.clearTarget();
+    playSfx('enemydeath.collapse');
     EventBus.emit(EventTypes.ENEMY_COLLAPSED, { id: enemyId, word: enemy.word });
 
     // Recompensa en Grafemas.

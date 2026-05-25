@@ -3,6 +3,7 @@ import { KeybindService } from '../../../shared/keybindService.js';
 import { listCharacters } from '../../../shared/characterData.js';
 import KeyHint from '../common/KeyHint.jsx';
 import useTranslation from '../../../shared/i18n/useTranslation.js';
+import { playSfx } from '../../../shared/audioManager.js';
 
 export default function CharacterSelectModal({ currentId, onConfirm, onCancel }) {
   const { t } = useTranslation();
@@ -19,6 +20,8 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
     });
     return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
   }, [focusIdx, onConfirm, onCancel, CHARACTERS]);
+
+  useEffect(() => { playSfx('modal.open'); return () => playSfx('modal.close'); }, []);
 
   useEffect(() => {
     function onKey(e) {

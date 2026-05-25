@@ -74,6 +74,10 @@
     "audio": {
       "volume": "Volumen Global",
       "volumeHint": "Ajusta el volumen de efectos y musica",
+      "sfxVolume": "Volumen Efectos",
+      "sfxVolumeHint": "Sonidos de combate, UI, motores",
+      "bgmVolume": "Volumen Musica",
+      "bgmVolumeHint": "Musica de fondo de cada escena",
       "mute": "Silencio",
       "muteHint": "Desactiva todos los sonidos"
     },

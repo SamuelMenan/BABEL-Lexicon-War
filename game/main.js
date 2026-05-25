@@ -13,6 +13,7 @@ import { EventTypes } from '../shared/eventTypes.js';
 import { Bridge } from '../shared/bridge.js';
 import { GAME_MODES } from '../shared/constants.js';
 import { initAutoTyper, destroyAutoTyper } from './systems/AutoTyper.js';
+import { playSfx } from '../shared/audioManager.js';
 
 let engine       = null;
 let _lexicon     = null;
@@ -108,6 +109,7 @@ export async function initGame(mountEl) {
     // Animacion de entrada por modo: combat ship _entryDuration=3.5s, racing player=5.0s.
     // Esperar a que la nave aterrice antes de mostrar tutorial.
     Bridge.setState({ deploymentPhase: 'landing' });
+    playSfx('shiparrival.land');
     const landingMs = mode === 'racing' ? 5200 : 3800;
     await new Promise(r => setTimeout(r, landingMs));
 

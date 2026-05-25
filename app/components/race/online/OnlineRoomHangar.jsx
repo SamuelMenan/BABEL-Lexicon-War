@@ -10,6 +10,7 @@ import { loadProfile } from '../../../../shared/playerProfile.js';
 import { getShipData } from '../../../../game/data/shipData.js';
 import { getCharacter } from '../../../../shared/characterData.js';
 import useTranslation from '../../../../shared/i18n/useTranslation.js';
+import { playBgm, playSfx } from '../../../../shared/audioManager.js';
 
 import {
   fetchRoom, subscribeRoom, setRoomShip, setRoomReady, leaveRoom, touchRoom,
@@ -70,6 +71,8 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   // ──────────────────────────────────────────────────────────────────────
   // Scene mount + loading progress (clon de HangarScreen)
   // ──────────────────────────────────────────────────────────────────────
+  useEffect(() => { playBgm('bgm.lobby'); }, []);
+
   const tryReady = useCallback(() => {
     if (sceneReadyRef.current && minTimeRef.current) {
       setLoadProgress(100);
@@ -334,7 +337,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   // WASD orbital
   useEffect(() => {
     const HOLD_KEYS = new Set(['a','A','w','W','s','S','d','D']);
-    const onKeyDown = (e) => { if (HOLD_KEYS.has(e.key)) sceneRef.current?.addKey(e.key); };
+    const onKeyDown = (e) => { if (HOLD_KEYS.has(e.key)) { if (!e.repeat) playSfx('hangarcamera.orbit'); sceneRef.current?.addKey(e.key); } };
     const onKeyUp   = (e) => { if (HOLD_KEYS.has(e.key)) sceneRef.current?.removeKey(e.key); };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup',   onKeyUp);

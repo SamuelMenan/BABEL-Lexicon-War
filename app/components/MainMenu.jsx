@@ -23,6 +23,7 @@ import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName,
 import { loadProfile } from '../../shared/playerProfile.js';
 import { getCharacter } from '../../shared/characterData.js';
 import useTranslation from '../../shared/i18n/useTranslation.js';
+import { playBgm } from '../../shared/audioManager.js';
 
 export default function MainMenu() {
   const { t } = useTranslation();
@@ -72,6 +73,15 @@ export default function MainMenu() {
       }
     });
   }, [onlineRoom]);
+
+  useEffect(() => { playBgm('bgm.main_menu'); }, []);
+
+  // Leaderboard panel: usa bgm.leaderboard mientras esta abierto, restaura
+  // bgm.main_menu al cerrarlo. Modal de creditos maneja su propio prev/restore.
+  useEffect(() => {
+    if (showLeaderboard) playBgm('bgm.leaderboard');
+    else playBgm('bgm.main_menu');
+  }, [showLeaderboard]);
 
   useEffect(() => {
     let mounted = true;

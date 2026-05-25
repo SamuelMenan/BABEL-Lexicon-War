@@ -6,7 +6,7 @@ import { EventTypes } from '../../../shared/eventTypes.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { getShipsForHangar } from '../../../shared/shopCatalog.js';
 import { EconomySystem } from '../../../game/systems/EconomySystem.js';
-import { playSfx } from '../../../shared/audioManager.js';
+import { playSfx, playBgm } from '../../../shared/audioManager.js';
 
 const SHIPS = getShipsForHangar();
 import { getShipData } from '../../../game/data/shipData.js';
@@ -52,6 +52,8 @@ export default function HangarScreen() {
       setTimeout(() => setPhase('ready'), 300);
     }
   }, []);
+
+  useEffect(() => { playBgm('bgm.hangar'); }, []);
 
   useEffect(() => {
     const tickId = setInterval(() => {
@@ -167,7 +169,10 @@ export default function HangarScreen() {
   useEffect(() => {
     const HOLD_KEYS = new Set(['a','A','w','W','s','S','d','D']);
     function onKeyDown(e) {
-      if (HOLD_KEYS.has(e.key)) sceneRef.current?.addKey(e.key);
+      if (HOLD_KEYS.has(e.key)) {
+        if (!e.repeat) playSfx('hangarcamera.orbit');
+        sceneRef.current?.addKey(e.key);
+      }
     }
     function onKeyUp(e) {
       if (HOLD_KEYS.has(e.key)) sceneRef.current?.removeKey(e.key);

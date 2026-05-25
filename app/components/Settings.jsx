@@ -8,7 +8,7 @@ import { KeybindService } from "../../shared/keybindService.js";
 import { QUALITY, setQualityTier, getQualityTier } from "../../shared/qualitySettings.js";
 import useTranslation from "../../shared/i18n/useTranslation.js";
 import { getNumberFormatter } from "../../shared/i18n/index.js";
-import { getAudioSettings, setVolume, mute, playSfx } from "../../shared/audioManager.js";
+import { getAudioSettings, setSfxVolume, setBgmVolume, mute, playSfx } from "../../shared/audioManager.js";
 import ControlsSection from "./settings/ControlsSection.jsx";
 import Icon from "./common/Icon.jsx";
 import "../../styles/components/controls-section.css";
@@ -190,10 +190,16 @@ function AudioSection() {
   const { t } = useTranslation();
   const [audioState, setAudioState] = useState(() => getAudioSettings());
 
-  const handleVolumeChange = (e) => {
+  const handleSfxChange = (e) => {
     const val = parseFloat(e.target.value);
-    setVolume(val);
-    setAudioState(prev => ({ ...prev, volume: val }));
+    setSfxVolume(val);
+    setAudioState(prev => ({ ...prev, sfxVolume: val }));
+  };
+
+  const handleBgmChange = (e) => {
+    const val = parseFloat(e.target.value);
+    setBgmVolume(val);
+    setAudioState(prev => ({ ...prev, bgmVolume: val }));
   };
 
   const handleMuteChange = (e) => {
@@ -202,32 +208,28 @@ function AudioSection() {
     setAudioState(prev => ({ ...prev, muted: val }));
   };
 
+  const sliderStyle = { flex: 1, accentColor: 'var(--col-active, #00ffcc)' };
+  const readoutStyle = { marginLeft: '12px', minWidth: '3em', display: 'inline-block', textAlign: 'right' };
+
   return (
     <div className="settings__section" key="audio">
-      <Row label={t('settings.audio.volume')} hint={t('settings.audio.volumeHint')}>
+      <Row label={t('settings.audio.sfxVolume')} hint={t('settings.audio.sfxVolumeHint')}>
         <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={audioState.volume}
-            onChange={handleVolumeChange}
-            className="settings__slider"
-            style={{ flex: 1, accentColor: 'var(--col-active, #00ffcc)' }}
-          />
-          <span className="settings__readout" style={{ marginLeft: '12px', minWidth: '3em', display: 'inline-block', textAlign: 'right' }}>
-            {Math.round(audioState.volume * 100)}%
-          </span>
+          <input type="range" min="0" max="1" step="0.05" value={audioState.sfxVolume}
+            onChange={handleSfxChange} className="settings__slider" style={sliderStyle} />
+          <span className="settings__readout" style={readoutStyle}>{Math.round(audioState.sfxVolume * 100)}%</span>
+        </div>
+      </Row>
+      <Row label={t('settings.audio.bgmVolume')} hint={t('settings.audio.bgmVolumeHint')}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <input type="range" min="0" max="1" step="0.05" value={audioState.bgmVolume}
+            onChange={handleBgmChange} className="settings__slider" style={sliderStyle} />
+          <span className="settings__readout" style={readoutStyle}>{Math.round(audioState.bgmVolume * 100)}%</span>
         </div>
       </Row>
       <Row label={t('settings.audio.mute')} hint={t('settings.audio.muteHint')}>
-        <input
-          type="checkbox"
-          checked={audioState.muted}
-          onChange={handleMuteChange}
-          style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--col-active, #00ffcc)' }}
-        />
+        <input type="checkbox" checked={audioState.muted} onChange={handleMuteChange}
+          style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--col-active, #00ffcc)' }} />
       </Row>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useTranslation from '../../shared/i18n/useTranslation.js';
+import { playBgm } from '../../shared/audioManager.js';
 
 const STORY_ES = [
   { text: 'Hace mas de setenta años, la Corporacion Nexolang inicio el proyecto BABEL.' },
@@ -208,6 +209,8 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
   const handleSkip = useCallback(() => {
     if (skipEnabled) finish();
   }, [skipEnabled, finish]);
+
+  useEffect(() => { playBgm('bgm.warning'); }, []);
 
   useEffect(() => {
     const onKey = (e) => {

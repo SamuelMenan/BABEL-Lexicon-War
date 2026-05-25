@@ -3,7 +3,7 @@ import { KeybindService } from '../../../shared/keybindService.js';
 import KeyHint from '../common/KeyHint.jsx';
 import Icon from '../common/Icon.jsx';
 import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { playSfx } from '../../../shared/audioManager.js';
+import { playSfx, playBgm, getCurrentBgmKey } from '../../../shared/audioManager.js';
 
 // Escena de creditos — full-screen modal con secciones por rol del equipo y
 // agradecimientos especiales. Los nombres son placeholders; reemplazar con
@@ -21,6 +21,12 @@ export default function CreditsModal({ onClose }) {
   }, [onClose]);
 
   useEffect(() => { playSfx('modal.open'); return () => playSfx('modal.close'); }, []);
+
+  useEffect(() => {
+    const prev = getCurrentBgmKey();
+    playBgm('bgm.credits');
+    return () => { playBgm(prev || 'bgm.main_menu'); };
+  }, []);
 
   return (
     <div className="credits" role="dialog" aria-modal="true" onClick={onClose}>

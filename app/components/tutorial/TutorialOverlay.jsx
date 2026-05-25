@@ -7,6 +7,7 @@ import Icon from '../common/Icon.jsx';
 import { EventTypes } from '../../../shared/eventTypes.js';
 import TutorialDiagram from './TutorialDiagram.jsx';
 import useTranslation from '../../../shared/i18n/useTranslation.js';
+import { playBgm, getCurrentBgmKey } from '../../../shared/audioManager.js';
 import '../../../styles/components/tutorial.css';
 
 export default function TutorialOverlay({ tutorialActive }) {
@@ -21,6 +22,12 @@ export default function TutorialOverlay({ tutorialActive }) {
   const rootRef = useRef(null);
 
   useEffect(() => { setPracticeValue(''); setConfirmSkip(false); }, [stepIndex, id]);
+
+  useEffect(() => {
+    const prev = getCurrentBgmKey();
+    playBgm('bgm.tutorial');
+    return () => { if (prev) playBgm(prev); };
+  }, []);
 
   const advance = useCallback(() => {
     if (isLast) Bridge.commands.completeTutorial();

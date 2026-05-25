@@ -10,6 +10,7 @@ import { Bridge } from "../../shared/bridge.js";
 import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "../../shared/constants.js";
 import { RacingLightingRig } from "../rendering/RacingLightingRig.js";
 import { getSoftGlowTexture } from "../../shared/softVisuals.js";
+import { playSfx, playLoopSfx, stopLoopSfx } from "../../shared/audioManager.js";
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage","nave","propulsor"];
 const HOLE_NODE_NAME  = "Vortex_1";   // ancla del agujero negro dentro del GLB
@@ -42,6 +43,8 @@ export class RacingSceneManager {
     this._raceState={ t:0, smoothProgress:0, smoothLead:0, smoothBurst:0, progressPush:0, typedAdvance:0, wpm:0, progressZ: SHIP_SPAWN_Z };
   }
   init(){
+    playLoopSfx('blackhole.pulse_loop', 0.4);
+    this._rivalAhead = false;
     this._buildBackground(); this._loadTunnel();
     this._rig=new RacingLightingRig(this.scene); this._rig.init();
     this._loadShips();
@@ -56,6 +59,7 @@ export class RacingSceneManager {
     );
   }
   destroy(){
+    stopLoopSfx('blackhole.pulse_loop');
     this._unsubs.forEach(fn=>fn()); this._unsubs=[];
     this._tunnelMixer?.stopAllAction(); this._particles?.dispose();
     this._tunnelMotes = null; this._holeRimLight = null;
@@ -93,6 +97,10 @@ export class RacingSceneManager {
 
     this._opponentDist+=(RACE_OPPONENT_WPM/WORDS_PER_MINUTE_SCALE)*delta;
     const playerDist=state.distanceTraveled||0;
+    // Rival pass detection: false→true edge plays opponent_pass.
+    const rivalAheadNow = this._opponentDist > playerDist;
+    if (rivalAheadNow && !this._rivalAhead) playSfx('race.opponent_pass');
+    this._rivalAhead = rivalAheadNow;
     const targetDist=state.targetDistance||500;
     const progressRatio=THREE.MathUtils.clamp(playerDist/targetDist,0,1);
     const rawLead=THREE.MathUtils.clamp((playerDist-this._opponentDist)*0.012,-1.2,1.2);
@@ -396,6 +404,7 @@ export class RacingSceneManager {
   }
   _addToScene(obj){ this.scene.add(obj); this._sceneObjects.push(obj); }
   _onWordCompleted(){
+    playSfx('raceengine.surge', 0.7);
     this._playerWordBurst=Math.min(this._playerWordBurst+1.0,3.4);
     this._playerWordLead =Math.min(this._playerWordLead +0.5,3.6);
   }

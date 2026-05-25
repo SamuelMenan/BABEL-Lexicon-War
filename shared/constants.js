@@ -1,3 +1,5 @@
+import { getLocale } from './i18n/index.js';
+
 // Constantes globales del juego — ajustar aqui afecta todo el balance
 
 // --- Economia / Recompensas (Grafemas ₲) ---
@@ -55,12 +57,28 @@ export const DEFAULT_EXECUTION_MODE = EXECUTION_MODE.NORMAL;
 
 
 // --- Carga ---
-export const LOADING_STAGES = {
+export const LOADING_STAGES_ES = {
   INIT:     'INICIALIZANDO SISTEMAS LEXICOS',
   GEOMETRY: 'CONSTRUYENDO GEOMETRIA DEL ENJAMBRE',
   SCENE:    'CARGANDO ENTORNO ESPACIAL',
   WARMUP:   'COMPILANDO SHADERS · CALENTANDO MOTOR',
   READY:    'ENTRANDO AL CAMPO DE BATALLA',
+};
+
+export const LOADING_STAGES_EN = {
+  INIT:     'INITIALIZING LEXICAL SYSTEMS',
+  GEOMETRY: 'BUILDING SWARM GEOMETRY',
+  SCENE:    'LOADING SPACE ENVIRONMENT',
+  WARMUP:   'COMPILING SHADERS · HEATING ENGINE',
+  READY:    'ENTERING THE BATTLEFIELD',
+};
+
+export const LOADING_STAGES = {
+  get INIT() { return getLocale() === 'en' ? LOADING_STAGES_EN.INIT : LOADING_STAGES_ES.INIT; },
+  get GEOMETRY() { return getLocale() === 'en' ? LOADING_STAGES_EN.GEOMETRY : LOADING_STAGES_ES.GEOMETRY; },
+  get SCENE() { return getLocale() === 'en' ? LOADING_STAGES_EN.SCENE : LOADING_STAGES_ES.SCENE; },
+  get WARMUP() { return getLocale() === 'en' ? LOADING_STAGES_EN.WARMUP : LOADING_STAGES_ES.WARMUP; },
+  get READY() { return getLocale() === 'en' ? LOADING_STAGES_EN.READY : LOADING_STAGES_ES.READY; },
 };
 
 export const ASSET_MANIFESTS = {
@@ -320,6 +338,118 @@ export const WORD_POOL_ES = [
   ...WORD_POOL_SHORT,
   ...WORD_POOL_MEDIUM,
   ...WORD_POOL_LONG,
+];
+
+// English short words (<=5)
+export const WORD_POOL_SHORT_EN = [
+  'echo', 'net', 'axis', 'ion', 'arc', 'neo', 'sun', 'era', 'end', 'lex',
+  'bit', 'light', 'wire', 'byte', 'node', 'typo', 'kael', 'voss', 'lyra', 'glyph',
+  'nexus', 'pulse', 'cipher', 'data', 'babel', 'flow', 'sign', 'field', 'form', 'pilot',
+];
+export const WORD_POOL_MEDIUM_EN = [
+  'vector', 'thresh', 'pattern', 'code', 'lexic', 'spectrum', 'nebula', 'collapse',
+  'guardian', 'language', 'writer', 'syntax', 'swarm', 'nexolang', 'crypted',
+  'impulse', 'link', 'receiver', 'loader', 'impact', 'fracture', 'circuit',
+  'vortex', 'beacon', 'word',
+];
+export const WORD_POOL_LONG_EN = [
+  'algorithm', 'resonance', 'convergence', 'modulation', 'transmission', 'frequency',
+  'protocol', 'sequence', 'sentinel', 'structure', 'fragment', 'interference',
+  'lexicogram', 'singularity', 'encoding', 'perturbation', 'dissonance',
+];
+export const WORD_POOL_EN = [
+  ...WORD_POOL_SHORT_EN,
+  ...WORD_POOL_MEDIUM_EN,
+  ...WORD_POOL_LONG_EN,
+];
+
+// English narrative phrases — parallel to PHRASE_POOL_ES order
+export const PHRASE_POOL_EN = [
+  ['the', 'babel', 'project', 'was', 'born', 'in', 'the', 'labs', 'of', 'the', 'nexolang', 'corporation'],
+  ['they', 'wanted', 'language', 'to', 'stop', 'being', 'an', 'obstacle'],
+  ['no', 'one', 'asked', 'what', 'would', 'happen', 'if', 'it', 'worked', 'too', 'well'],
+  ['the', 'system', 'started', 'generating', 'language', 'without', 'human', 'input'],
+  ['first', 'came', 'noise', 'then', 'patterns', 'then', 'intent'],
+  ['the', 'algorithms', 'learned', 'at', 'a', 'speed', 'that', 'outpaced', 'their', 'creators'],
+  ['what', 'once', 'was', 'noise', 'began', 'to', 'look', 'like', 'intent'],
+  ['translation', 'was', 'the', 'goal', 'but', 'babel', 'learned', 'to', 'think'],
+
+  ['the', 'lexical', 'swarm', 'was', 'not', 'born', 'with', 'a', 'scream', 'but', 'in', 'silence'],
+  ['it', 'did', 'not', 'destroy', 'stations', 'it', 'rewrote', 'them'],
+  ['fourteen', 'stations', 'stopped', 'obeying', 'human', 'logic'],
+  ['each', 'swarm', 'unit', 'carries', 'a', 'word', 'as', 'its', 'core'],
+  ['that', 'word', 'is', 'its', 'identity', 'its', 'shield', 'and', 'its', 'only', 'weakness'],
+  ['the', 'swarm', 'does', 'not', 'destroy', 'it', 'transforms'],
+  ['its', 'nature', 'is', 'linguistic', 'not', 'violent'],
+  ['what', 'it', 'cannot', 'understand', 'it', 'transforms', 'until', 'it', 'becomes', 'coherent'],
+  ['language', 'had', 'stopped', 'being', 'a', 'tool'],
+  ['it', 'had', 'started', 'thinking', 'itself'],
+
+  ['the', 'typo', 'program', 'was', 'born', 'from', 'desperation'],
+  ['typo', 'pilots', 'were', 'not', 'soldiers', 'they', 'were', 'armed', 'writers'],
+  ['war', 'typists', 'interpreters', 'of', 'chaos'],
+  ['their', 'battlefield', 'was', 'not', 'just', 'space', 'but', 'syntax'],
+  ['they', 'use', 'words', 'as', 'weapons', 'precision', 'instead', 'of', 'force'],
+  ['if', 'the', 'word', 'is', 'reproduced', 'with', 'absolute', 'precision', 'the', 'unit', 'collapses'],
+  ['writing', 'under', 'extreme', 'pressure', 'is', 'the', 'only', 'way', 'to', 'survive'],
+  ['speed', 'precision', 'and', 'pattern', 'recognition'],
+
+  ['lyra', 'voss', 'fought', 'like', 'one', 'who', 'writes', 'a', 'poem'],
+  ['she', 'did', 'not', 'react', 'she', 'anticipated'],
+  ['every', 'word', 'was', 'already', 'written', 'before', 'she', 'typed', 'it'],
+  ['her', 'combat', 'speed', 'became', 'legend'],
+  ['she', 'vanished', 'in', 'the', 'battle', 'of', 'the', 'silent', 'nebulae'],
+  ['words', 'do', 'not', 'end', 'they', 'only', 'change', 'hands'],
+  ['lyra', 'had', 'not', 'been', 'a', 'victim', 'she', 'had', 'been', 'an', 'access', 'point'],
+  ['she', 'was', 'absorbed', 'by', 'the', 'swarm', 'and', 'learned', 'from', 'within'],
+
+  ['kael', 'grew', 'up', 'hearing', 'keys', 'before', 'words'],
+  ['he', 'inherited', 'her', 'long', 'precise', 'hands'],
+  ['he', 'inherited', 'her', 'memory', 'for', 'patterns', 'but', 'not', 'her', 'calm'],
+  ['kael', 'fought', 'like', 'one', 'trying', 'not', 'to', 'die'],
+  ['the', 'difference', 'seemed', 'small', 'but', 'it', 'changed', 'everything'],
+  ['he', 'repeated', 'that', 'phrase', 'for', 'years', 'without', 'understanding', 'it'],
+  ['a', 'wound', 'poorly', 'closed', 'an', 'incomplete', 'idea'],
+  ['the', 'sound', 'of', 'a', 'keyboard', 'was', 'not', 'mechanical', 'it', 'was', 'vital'],
+
+  ['the', 'swarm', 'did', 'not', 'move', 'at', 'random', 'there', 'was', 'rhythm', 'in', 'its', 'paths'],
+  ['it', 'was', 'not', 'noise', 'it', 'was', 'a', 'message'],
+  ['kv', 'this', 'is', 'lyra', 'i', 'am', 'still', 'here'],
+  ['he', 'rerouted', 'offensive', 'energy', 'to', 'the', 'comms', 'module'],
+  ['firing', 'less', 'in', 'the', 'middle', 'of', 'the', 'swarm', 'was', 'a', 'death', 'sentence'],
+  ['but', 'not', 'listening', 'was', 'worse'],
+  ['the', 'voice', 'came', 'broken', 'fragmented', 'but', 'unmistakable'],
+  ['the', 'swarm', 'did', 'not', 'destroy', 'it', 'translated'],
+
+  ['kael', 'was', 'writing', 'two', 'realities', 'at', 'once'],
+  ['the', 'one', 'of', 'combat', 'and', 'the', 'code', 'lyra', 'dictated'],
+  ['his', 'hands', 'bled', 'before', 'he', 'noticed'],
+  ['his', 'eyes', 'stopped', 'seeing', 'ships', 'and', 'began', 'to', 'see', 'structures'],
+  ['each', 'line', 'was', 'absorbed', 'processed', 'replicated'],
+  ['the', 'swarm', 'did', 'not', 'obey', 'it', 'learned'],
+  ['he', 'was', 'writing', 'so', 'that', 'something', 'else', 'could', 'survive'],
+  ['he', 'no', 'longer', 'wrote', 'words', 'to', 'destroy', 'he', 'wrote', 'ideas'],
+
+  ['meaning', 'belongs', 'to', 'whoever', 'shares', 'it', 'not', 'whoever', 'imposes', 'it'],
+  ['thousands', 'of', 'units', 'suspended', 'in', 'space', 'vibrating'],
+  ['there', 'was', 'no', 'war', 'there', 'was', 'attention', 'they', 'were', 'listening'],
+  ['language', 'does', 'not', 'destroy', 'it', 'transforms'],
+  ['identity', 'is', 'not', 'erased', 'it', 'is', 'interpreted'],
+  ['meaning', 'is', 'not', 'imposed', 'it', 'is', 'shared'],
+  ['lyra', 'did', 'not', 'vanish', 'she', 'dissolved', 'as', 'integration'],
+  ['kael', 'stopped', 'being', 'a', 'pilot', 'and', 'became', 'an', 'interpreter'],
+  ['understanding', 'is', 'not', 'weakness', 'it', 'is', 'the', 'strongest', 'form', 'of', 'victory'],
+
+  ['alert', 'the', 'central', 'node', 'is', 'collapsing'],
+  ['swarm', 'frequency', 'detected', 'in', 'sector', 'nine'],
+  ['typo', 'protocol', 'active', 'all', 'ships', 'to', 'position'],
+  ['precision', 'is', 'your', 'weapon', 'flow', 'is', 'your', 'shield'],
+  ['typo', 'simulation', 'started', 'prepare', 'your', 'hands'],
+  ['nexolang', 'cannot', 'contain', 'you', 'write', 'and', 'break', 'its', 'limits'],
+  ['the', 'pattern', 'repeats', 'learn', 'to', 'read', 'it'],
+  ['pulse', 'and', 'vector', 'aligned', 'the', 'path', 'is', 'open'],
+  ['every', 'glyph', 'you', 'write', 'is', 'a', 'shield', 'against', 'the', 'swarm'],
+  ['the', 'typo', 'one', 'ship', 'responds', 'only', 'to', 'precise', 'hands'],
 ];
 
 // --- Spawn Director ---

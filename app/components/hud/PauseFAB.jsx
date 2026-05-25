@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Bridge } from '../../../shared/bridge.js';
+import Icon from '../common/Icon.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 
 function isTouchDevice() {
   if (typeof window === 'undefined') return false;
@@ -9,6 +11,7 @@ function isTouchDevice() {
 }
 
 export default function PauseFAB() {
+  const { t } = useTranslation();
   const [touch] = useState(isTouchDevice);
   const [paused, setPaused] = useState(() => !!Bridge.peekState().isPaused);
 
@@ -30,10 +33,10 @@ export default function PauseFAB() {
       type="button"
       className={`pause-fab${paused ? ' pause-fab--paused' : ''}`}
       onPointerDown={handle}
-      aria-label={paused ? 'Reanudar' : 'Pausar'}
+      aria-label={paused ? t('pauseMenu.resume') : t('pauseMenu.pause')}
       aria-pressed={paused}
     >
-      <span className="pause-fab__icon">{paused ? '▶' : '❚❚'}</span>
+      <span className="pause-fab__icon"><Icon name={paused ? 'play_arrow' : 'pause'} size={22} /></span>
     </button>
   );
 }

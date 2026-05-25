@@ -94,6 +94,8 @@ let _state = {
   onlinePendingInvite:  null,      // { newRoomId, fromPilot } — modal en App.jsx
   onlinePendingRoom:    null,      // { roomId, role } — MainMenu lo abre en mount
   onlineNotice:         null,      // { kind, message } — banner global (rechazo de revancha, etc.)
+  onlineHangarActive:   false,     // true cuando OnlineRoomHangar montado — App.jsx setea scope 'hangar'
+  locale:               'es',      // i18n — 'es' | 'en'. shared/i18n setea el real via initLocale().
 };
 
 const stateListeners = new Set();

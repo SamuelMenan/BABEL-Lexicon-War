@@ -1,8 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { signIn, signUp, signInWithGoogle, isAuthAvailable } from '../../services/supabase/auth.js';
+import { signIn, signUp, signInWithGoogle, isAuthAvailable } from '../../../game/services/supabase/auth.js';
 import { KeybindService } from '../../../shared/keybindService.js';
+import KeyHint from '../common/KeyHint.jsx';
+import Icon from '../common/Icon.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
+
+function passwordStrength(p, t) {
+  if (!p) return { score: 0, label: '', cls: '' };
+  let s = 0;
+  if (p.length >= 8)  s++;
+  if (p.length >= 12) s++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+  if (/\d/.test(p))                       s++;
+  if (/[^A-Za-z0-9]/.test(p))             s++;
+  const tiers = [
+    { key: 'veryWeak',   cls: 'weak' },
+    { key: 'weak',       cls: 'weak' },
+    { key: 'ok',         cls: 'mid' },
+    { key: 'strong',     cls: 'strong' },
+    { key: 'veryStrong', cls: 'strong' },
+  ];
+  const tier = tiers[Math.min(s, 4)];
+  return { score: Math.min(s, 4), label: t(`auth.strength.${tier.key}`), cls: tier.cls };
+}
+
+function validEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
 
 export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,8 +37,13 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [info, setInfo]   = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsOn, setCapsOn] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const available = isAuthAvailable();
+  const strength  = mode === 'signup' ? passwordStrength(password, t) : null;
+  const emailLooksValid = !email || validEmail(email);
 
   useEffect(() => {
     KeybindService.pushScope('modal');
@@ -23,19 +55,21 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
     e?.preventDefault();
     if (busy) return;
     setError(null); setInfo(null);
-    if (!available) { setError('Supabase no configurado. Modo offline activo.'); return; }
-    if (!email || !password) { setError('Email y contraseña requeridos.'); return; }
+    if (!available) { setError(t('auth.supabaseMissing')); return; }
+    if (!email || !password) { setError(t('auth.passwordRequired')); return; }
+    if (!validEmail(email))  { setError(t('auth.emailInvalid')); return; }
+    if (password.length < 6) { setError(t('auth.passwordMin')); return; }
     setBusy(true);
     try {
       const res = mode === 'signup'
         ? await signUp({ email, password, displayName: displayName || null })
         : await signIn({ email, password });
       if (!res.ok) {
-        setError(res.error?.message || 'No se pudo completar la operacion.');
+        setError(res.error?.message || t('auth.couldNotComplete'));
         return;
       }
       if (mode === 'signup' && !res.session) {
-        setInfo('Cuenta creada. Revisa tu email para confirmar (si la verificacion esta activada).');
+        setInfo(t('auth.signupConfirmEmail'));
         return;
       }
       onSuccess?.(res.user);
@@ -54,12 +88,12 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
   async function handleGoogle() {
     if (busy) return;
     setError(null); setInfo(null);
-    if (!available) { setError('Supabase no configurado.'); return; }
+    if (!available) { setError(t('auth.supabaseMissingShort')); return; }
     setBusy(true);
     const res = await signInWithGoogle();
     setBusy(false);
     if (!res.ok) {
-      setError(res.error?.message || 'No se pudo iniciar con Google.');
+      setError(res.error?.message || t('auth.couldNotGoogle'));
       return;
     }
     // Redirige a Google. Al volver, onAuthChange dispara onSuccess via MainMenu.
@@ -79,7 +113,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
         onSubmit={handleSubmit}
       >
         <div className="auth-modal__header">
-          <span className="auth-modal__label">◈ ACCESO · PILOTO</span>
+          <span className="auth-modal__label">◈ {t('auth.label')}</span>
         </div>
 
         <div className="auth-modal__tabs">
@@ -87,28 +121,28 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
             type="button"
             className={`auth-modal__tab${mode === 'signin' ? ' auth-modal__tab--active' : ''}`}
             onClick={() => { setMode('signin'); setError(null); setInfo(null); }}
-          >Iniciar sesion</button>
+          >{t('auth.signIn')}</button>
           <button
             type="button"
             className={`auth-modal__tab${mode === 'signup' ? ' auth-modal__tab--active' : ''}`}
             onClick={() => { setMode('signup'); setError(null); setInfo(null); }}
-          >Registrarse</button>
+          >{t('auth.signUp')}</button>
         </div>
 
         {!available && (
           <p className="auth-modal__warn">
-            Supabase no configurado. Define <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>.
+            {t('auth.supabaseMissingDetail')}
           </p>
         )}
 
         {mode === 'signup' && (
           <label className="auth-modal__field">
-            <span>Nombre de piloto</span>
+            <span>{t('auth.pilotName')}</span>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Kael"
+              placeholder={t('auth.pilotNamePlaceholder')}
               maxLength={32}
               autoComplete="nickname"
             />
@@ -116,28 +150,64 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
         )}
 
         <label className="auth-modal__field">
-          <span>Email</span>
+          <span>{t('auth.email')}</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="piloto@dominio.com"
+            onBlur={() => setEmailTouched(true)}
+            placeholder={t('auth.emailPlaceholder')}
             autoComplete="email"
             required
           />
+          {emailTouched && !emailLooksValid && (
+            <span className="auth-modal__field-warn">{t('auth.emailInvalid')}</span>
+          )}
         </label>
 
-        <label className="auth-modal__field">
-          <span>Contraseña</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            minLength={6}
-            required
-          />
+        <label className="auth-modal__field auth-modal__field--password">
+          <span>{t('auth.password')}</span>
+          <div className="auth-modal__pw-wrap">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => setCapsOn(e.getModifierState?.('CapsLock') ?? false)}
+              onKeyUp={(e)   => setCapsOn(e.getModifierState?.('CapsLock') ?? false)}
+              placeholder={showPassword ? t('auth.passwordPlaceholder') : '••••••••'}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              minLength={6}
+              required
+            />
+            <button
+              type="button"
+              className="auth-modal__pw-toggle"
+              onClick={() => setShowPassword(v => !v)}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+              tabIndex={-1}
+            ><Icon name={showPassword ? 'visibility_off' : 'visibility'} /></button>
+          </div>
+          {capsOn && (
+            <span className="auth-modal__field-warn">
+              <Icon name="warning" size={14} /> {t('auth.capsOn')}
+            </span>
+          )}
+          {mode === 'signup' && password && (
+            <div className={`auth-modal__strength auth-modal__strength--${strength.cls}`}>
+              <div className="auth-modal__strength-bars">
+                {[0, 1, 2, 3, 4].map(i => (
+                  <span
+                    key={i}
+                    className={`auth-modal__strength-bar${i < strength.score ? ' auth-modal__strength-bar--on' : ''}`}
+                  />
+                ))}
+              </div>
+              <span className="auth-modal__strength-label">{strength.label}</span>
+            </div>
+          )}
+          {mode === 'signup' && (
+            <span className="auth-modal__field-hint">{t('auth.passwordHint')}</span>
+          )}
         </label>
 
         {error && <p className="auth-modal__error">{error}</p>}
@@ -145,14 +215,14 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
 
         <div className="auth-modal__actions">
           <button type="button" className="auth-modal__btn auth-modal__btn--cancel" onClick={onClose} disabled={busy}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button type="submit" className="auth-modal__btn auth-modal__btn--confirm" disabled={busy || !available}>
-            {busy ? 'Procesando…' : mode === 'signup' ? 'Crear cuenta' : 'Entrar'}
+            {busy ? t('auth.processing') : mode === 'signup' ? t('auth.submitSignUp') : t('auth.submitSignIn')}
           </button>
         </div>
 
-        <div className="auth-modal__divider"><span>o</span></div>
+        <div className="auth-modal__divider"><span>{t('auth.or')}</span></div>
 
         <button
           type="button"
@@ -166,7 +236,7 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
             <path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.48 12c0-.73.13-1.45.36-2.11V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84Z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.05l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/>
           </svg>
-          Continuar con Google
+          {t('auth.google')}
         </button>
 
         <div className="auth-modal__alt">
@@ -176,11 +246,14 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
             onClick={handleGuest}
             disabled={busy}
           >
-            Continuar como invitado
+            {t('auth.guest')}
           </button>
         </div>
 
-        <p className="auth-modal__hint">ESC cancelar</p>
+        <KeyHint
+          className="auth-modal__hint"
+          items={[{ key: 'ESC', label: t('auth.cancelKey') }]}
+        />
       </form>
     </div>
   );

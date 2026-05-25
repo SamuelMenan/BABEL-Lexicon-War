@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
 import { Bridge } from "../../shared/bridge.js";
 import { loadProfile } from "../../shared/playerProfile.js";
-import { saveMatchResult } from "../services/supabase/leaderboard.js";
-import { proposeRematch } from "../services/online/rematchCoordinator.js";
+import { saveMatchResult } from "../../game/services/supabase/leaderboard.js";
+import { proposeRematch } from "../../game/services/online/rematchCoordinator.js";
+import useTranslation from "../../shared/i18n/useTranslation.js";
 
 function ResultActions({ onMenu, onRetry }) {
+  const { t } = useTranslation();
   const items = [
-    { id: 'menu',  label: 'Menu Principal', variant: 'secondary', action: onMenu },
-    { id: 'retry', label: 'Reintentar',     variant: 'primary',   action: onRetry },
+    { id: 'menu',  label: t('matchResult.menu'), variant: 'secondary', action: onMenu },
+    { id: 'retry', label: t('matchResult.retry'),     variant: 'primary',   action: onRetry },
   ];
   return (
     <KeyboardNavigable
@@ -73,18 +75,19 @@ function StatPanel({ label, value, sub, dim }) {
 }
 
 function GrafemaBreakdown({ reward }) {
+  const { t } = useTranslation();
   if (!reward || !reward.amount) return null;
   const b = reward.breakdown || {};
   const rows = [
-    ['Carrera completada',        b.base],
-    [`WPM pico ${b.wpm ?? ''}`,   b.bWpm],
-    [`Precision ${b.accuracy != null ? Math.round(b.accuracy * 100) + '%' : ''}`, b.bAcc],
-    [`Posicion ${b.position ?? '--'}`, b.bPos],
+    [t('matchResultExtra.rewardRaceCompleted'), b.base],
+    [t('matchResultExtra.rewardWpmPeak', { wpm: b.wpm ?? '' }), b.bWpm],
+    [t('matchResultExtra.rewardAccuracy', { pct: b.accuracy != null ? Math.round(b.accuracy * 100) : '' }), b.bAcc],
+    [t('matchResultExtra.rewardPosition', { pos: b.position ?? '--' }), b.bPos],
   ].filter(([, v]) => v > 0);
 
   return (
     <div className="mr__grafemas">
-      <div className="mr__grafemas-title">RECOMPENSA</div>
+      <div className="mr__grafemas-title">{t('matchResultExtra.rewardTitle')}</div>
       <div className="mr__grafemas-rows">
         {rows.map(([label, val]) => (
           <div key={label} className="mr__grafemas-row">
@@ -93,7 +96,7 @@ function GrafemaBreakdown({ reward }) {
           </div>
         ))}
         <div className="mr__grafemas-row mr__grafemas-row--total">
-          <span className="mr__grafemas-label">Total</span>
+          <span className="mr__grafemas-label">{t('matchResultExtra.rewardTotal')}</span>
           <span className="mr__grafemas-val">+{reward.amount} ₲</span>
         </div>
       </div>
@@ -109,6 +112,7 @@ export default function MatchResult({
   distanceTraveled,
   onlineEnabled, onlineOpponentStats, onlineRole,
 }) {
+  const { t } = useTranslation();
   const isRacing = gameMode === "racing";
   const sessionId = useRef(genSessionId()).current;
   const syncOnce = useRef(false);
@@ -197,57 +201,57 @@ export default function MatchResult({
 
           {/* Header */}
           <div className="mr__header">
-            <span className="mr__header-label">◈ Analisis Post-Mision · Protocolo Lexico NRX</span>
+            <span className="mr__header-label">{t('matchResultExtra.combatHeader')}</span>
             <span className="mr__header-id">SES:{sessionId}</span>
           </div>
 
           {/* Title row */}
           <div className="mr__title-row">
             <div>
-              <h1 className="mr__title mr__title--defeat">MISION TERMINADA</h1>
+              <h1 className="mr__title mr__title--defeat">{t('matchResultExtra.combatTitle')}</h1>
               <span className={`mr__core mr__core--${coreStatus.toLowerCase()}`}>
-                ◈ NUCLEO LEXICO: {coreStatus}
+                ◈ {t('matchResultExtra.coreLabel')}: {coreStatus}
               </span>
             </div>
             <div className="mr__grade-wrap">
               <span className={`mr__grade ${gradeClass}`}>{grade}</span>
-              <span className="mr__grade-label">Clasificacion</span>
+              <span className="mr__grade-label">{t('matchResult.grade')}</span>
             </div>
           </div>
 
           {/* Stats grid — 3 cols × 2 rows */}
           <div className="mr__stats">
             <StatPanel
-              label="Oleada Alcanzada"
+              label={t('matchResult.waveReached')}
               value={wave ?? '--'}
-              sub="ULTIMA DEFENSA ACTIVA"
+              sub={t('matchResultExtra.subLastDefense')}
             />
             <StatPanel
-              label="WPM Medio"
+              label={t('matchResult.wpmAvg')}
               value={wpmDisplay}
-              sub="PROMEDIO POR MINUTO"
+              sub={t('matchResultExtra.subAvgPerMin')}
             />
             <StatPanel
-              label="Precision"
+              label={t('matchResult.accuracy')}
               value={accuracy != null ? `${accuracy}%` : '--'}
-              sub="INDICE DE IMPACTO"
+              sub={t('matchResultExtra.subImpactIndex')}
             />
             <StatPanel
-              label="Palabras Destruidas"
+              label={t('matchResult.wordsDestroyed')}
               value={wordsDestroyed ?? '--'}
-              sub="LEXEMAS NEUTRALIZADOS"
+              sub={t('matchResultExtra.subLexemesNeutralized')}
               dim
             />
             <StatPanel
-              label="Mayor Combo"
+              label={t('matchResult.bestCombo')}
               value={bestCombo ?? '--'}
-              sub="CADENA MAXIMA"
+              sub={t('matchResultExtra.subMaxChain')}
               dim
             />
             <StatPanel
-              label="Tiempo de Vuelo"
+              label={t('matchResult.timeFlight')}
               value={fmtTime(timeElapsed)}
-              sub="DURACION OPERACIONAL"
+              sub={t('matchResultExtra.subOperationalDuration')}
               dim
             />
           </div>
@@ -255,12 +259,12 @@ export default function MatchResult({
           {/* Bar stats */}
           <div className="mr__bar-stats">
             <div className="mr__bar-row">
-              <span className="mr__bar-name">Velocidad WPM</span>
+              <span className="mr__bar-name">{t('matchResultExtra.speedWpm')}</span>
               <AnimatedBar pct={wpmPct} variant={wpmVariant(wpmPct)} />
               <span className="mr__bar-val">{effectiveWpm || '--'}</span>
             </div>
             <div className="mr__bar-row">
-              <span className="mr__bar-name">Precision</span>
+              <span className="mr__bar-name">{t('matchResult.accuracy')}</span>
               <AnimatedBar pct={accPct} variant={accVariant(accPct)} />
               <span className="mr__bar-val">{accuracy != null ? `${accuracy}%` : '--'}</span>
             </div>
@@ -269,7 +273,7 @@ export default function MatchResult({
           {/* Bottom */}
           <div className="mr__bottom">
             <p className="mr__quote">
-              "Error de sintaxis.<br />Coincidencia fallida."
+              {t('matchResultExtra.quoteLine1')}<br />{t('matchResultExtra.quoteLine2')}
             </p>
             <ResultActions onMenu={toMenu} onRetry={restart} />
           </div>
@@ -284,9 +288,9 @@ export default function MatchResult({
   if (onlineEnabled) {
     const localAvg  = wpm ?? 0;
     const remoteAvg = onlineOpponentStats?.avgWpm ?? 0;
-    if (localAvg > remoteAvg) onlineVerdict = { kind: 'win',  label: 'GANASTE' };
-    else if (remoteAvg > localAvg) onlineVerdict = { kind: 'lose', label: 'PERDISTE' };
-    else onlineVerdict = { kind: 'draw', label: 'EMPATE' };
+    if (localAvg > remoteAvg) onlineVerdict = { kind: 'win',  label: t('matchResult.win') };
+    else if (remoteAvg > localAvg) onlineVerdict = { kind: 'lose', label: t('matchResult.lose') };
+    else onlineVerdict = { kind: 'draw', label: t('matchResult.draw') };
   }
 
   /* ── Racing ──────────────────────────────────────────────── */
@@ -296,15 +300,15 @@ export default function MatchResult({
   // ganador real lo decide WPM Medio vs rival humano (onlineVerdict).
   let titleText, titleClass, txStatus;
   if (onlineEnabled && onlineVerdict) {
-    titleText  = onlineVerdict.label;  // GANASTE / PERDISTE / EMPATE
+    titleText  = onlineVerdict.label;
     titleClass = onlineVerdict.kind === 'win'  ? 'mr__title--victory'
               : onlineVerdict.kind === 'draw' ? 'mr__title--defeat'
               : 'mr__title--defeat';
-    txStatus   = onlineVerdict.kind === 'win' ? 'GANADA' : onlineVerdict.kind === 'draw' ? 'EMPATE' : 'PERDIDA';
+    txStatus   = onlineVerdict.kind === 'win' ? t('matchResultExtra.txWon') : onlineVerdict.kind === 'draw' ? t('matchResultExtra.txDraw') : t('matchResultExtra.txLost');
   } else {
-    titleText  = raceVictory ? 'VICTORIA' : 'TIEMPO AGOTADO';
+    titleText  = raceVictory ? t('matchResult.victoryRace') : t('matchResult.defeatRace');
     titleClass = raceVictory ? 'mr__title--victory' : 'mr__title--defeat';
-    txStatus   = raceVictory ? 'COMPLETADA' : 'INTERRUMPIDA';
+    txStatus   = raceVictory ? t('matchResultExtra.txCompleted') : t('matchResultExtra.txInterrupted');
   }
 
   return (
@@ -313,7 +317,7 @@ export default function MatchResult({
 
         {/* Header */}
         <div className="mr__header">
-          <span className="mr__header-label">◈ Registro de Transmision · Protocolo de Carrera</span>
+          <span className="mr__header-label">{t('matchResultExtra.racingHeader')}</span>
           <span className="mr__header-id">SES:{sessionId}</span>
         </div>
 
@@ -321,7 +325,7 @@ export default function MatchResult({
         {onlineVerdict && (
           <div className={`mr__online-banner mr__online-banner--${onlineVerdict.kind}`}>
             <span className="mr__online-banner__sub">
-              Tu WPM Medio {wpm ?? '--'} · Rival {onlineOpponentStats?.avgWpm ?? '--'}
+              {t('matchResultExtra.onlineVerdictSub', { my: wpm ?? '--', rival: onlineOpponentStats?.avgWpm ?? '--' })}
             </span>
           </div>
         )}
@@ -331,48 +335,48 @@ export default function MatchResult({
           <div>
             <h1 className={`mr__title ${titleClass}`}>{titleText}</h1>
             <span className={`mr__core mr__core--${raceVictory ? 'stable' : 'critical'}`}>
-              ◈ TRANSMISION: {txStatus}
+              ◈ {t('matchResultExtra.transmission')}: {txStatus}
             </span>
           </div>
           <div className="mr__grade-wrap">
             <span className={`mr__grade ${gradeClass}`}>{grade}</span>
-            <span className="mr__grade-label">Clasificacion</span>
+            <span className="mr__grade-label">{t('matchResult.grade')}</span>
           </div>
         </div>
 
         {/* Stats grid */}
         <div className="mr__stats">
           <StatPanel
-            label="Distancia"
+            label={t('matchResult.distance')}
             value={<>{distanceTraveled ?? 500}<span style={{ fontSize: '1rem' }}> / 500</span></>}
-            sub="UNIDADES RECORRIDAS"
+            sub={t('matchResultExtra.subUnitsTraveled')}
           />
           <StatPanel
-            label="WPM Pico"
+            label={t('matchResult.wpmPeak')}
             value={peak || '--'}
-            sub="VELOCIDAD MAXIMA"
+            sub={t('matchResultExtra.subMaxSpeed')}
           />
           <StatPanel
-            label="Precision"
+            label={t('matchResult.accuracy')}
             value={accuracy != null ? `${accuracy}%` : '--'}
-            sub="INDICE DE IMPACTO"
+            sub={t('matchResultExtra.subImpactIndex')}
           />
           <StatPanel
-            label="WPM Medio"
+            label={t('matchResult.wpmAvg')}
             value={wpmDisplay}
-            sub="PROMEDIO POR MINUTO"
+            sub={t('matchResultExtra.subAvgPerMin')}
             dim
           />
           <StatPanel
-            label="Tiempo de Vuelo"
+            label={t('matchResult.timeFlight')}
             value={fmtTime(timeElapsed)}
-            sub="DURACION OPERACIONAL"
+            sub={t('matchResultExtra.subOperationalDuration')}
             dim
           />
           <StatPanel
-            label="Clasificacion"
+            label={t('matchResult.grade')}
             value={<span className={gradeClass} style={{ fontSize: '2rem' }}>{grade}</span>}
-            sub="RENDIMIENTO GLOBAL"
+            sub={t('matchResultExtra.subOverallPerf')}
             dim
           />
         </div>
@@ -380,12 +384,12 @@ export default function MatchResult({
         {/* Bar stats */}
         <div className="mr__bar-stats">
           <div className="mr__bar-row">
-            <span className="mr__bar-name">WPM Pico</span>
+            <span className="mr__bar-name">{t('matchResult.wpmPeak')}</span>
             <AnimatedBar pct={peakPct} variant={wpmVariant(peakPct)} />
             <span className="mr__bar-val">{peak || '--'}</span>
           </div>
           <div className="mr__bar-row">
-            <span className="mr__bar-name">Precision</span>
+            <span className="mr__bar-name">{t('matchResult.accuracy')}</span>
             <AnimatedBar pct={accPct} variant={accVariant(accPct)} />
             <span className="mr__bar-val">{accuracy != null ? `${accuracy}%` : '--'}</span>
           </div>
@@ -396,14 +400,14 @@ export default function MatchResult({
         {/* Bottom */}
         <div className="mr__bottom">
           <p className="mr__quote">
-            "Error de sintaxis.<br />Coincidencia fallida."
+            {t('matchResultExtra.quoteLine1')}<br />{t('matchResultExtra.quoteLine2')}
           </p>
           <div className="mr__actions">
             <button className="mr__btn mr__btn--secondary" onClick={toMenu}>
-              {onlineEnabled ? 'Salir' : 'Menu Principal'}
+              {onlineEnabled ? t('matchResult.exit') : t('matchResult.menu')}
             </button>
             <button className="mr__btn mr__btn--primary" onClick={restart}>
-              {onlineEnabled ? 'Revancha' : 'Reintentar'}
+              {onlineEnabled ? t('matchResult.rematch') : t('matchResult.retry')}
             </button>
           </div>
         </div>

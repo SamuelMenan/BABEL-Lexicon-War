@@ -67,6 +67,65 @@
   box-shadow:0 0 12px rgba(0,255,204,0.25);
 }
 
+/* Password field: input + toggle ojo */
+.auth-modal__pw-wrap{ position:relative; display:flex; }
+.auth-modal__pw-wrap > input{
+  flex:1;
+  background:rgba(0,0,8,0.6);
+  border:1px solid rgba(0,255,204,0.25);
+  color:var(--text-primary);
+  font-family:var(--font-mono); font-size:0.85rem;
+  padding:0.55rem 2.4rem 0.55rem 0.7rem;
+  outline:none;
+  transition:border-color var(--anim-instant), box-shadow var(--anim-instant);
+}
+.auth-modal__pw-wrap > input:focus{
+  border-color:var(--col-primary);
+  box-shadow:0 0 12px rgba(0,255,204,0.25);
+}
+.auth-modal__pw-toggle{
+  position:absolute; right:0.4rem; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer;
+  padding:0.2rem 0.4rem;
+  font-size:1rem; line-height:1;
+  color:rgba(255,255,255,0.6);
+  filter:grayscale(0.4);
+}
+.auth-modal__pw-toggle:hover{ color:var(--col-primary); filter:none; }
+
+/* Warn + hint inline en fields */
+.auth-modal__field-warn{
+  font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.08em;
+  color:var(--col-warning, #ffcc55);
+  margin-top:0.1rem;
+}
+.auth-modal__field-hint{
+  font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.06em;
+  color:rgba(255,255,255,0.4);
+  margin-top:0.15rem;
+}
+
+/* Password strength meter (signup) */
+.auth-modal__strength{
+  display:flex; align-items:center; gap:0.5rem;
+  margin-top:0.3rem;
+}
+.auth-modal__strength-bars{ display:flex; gap:3px; flex:1; }
+.auth-modal__strength-bar{
+  flex:1; height:3px;
+  background:rgba(255,255,255,0.1);
+  transition:background 0.2s;
+}
+.auth-modal__strength--weak   .auth-modal__strength-bar--on{ background:var(--col-danger, #ff5566); }
+.auth-modal__strength--mid    .auth-modal__strength-bar--on{ background:var(--col-warning, #ffcc55); }
+.auth-modal__strength--strong .auth-modal__strength-bar--on{ background:var(--col-active, #00ffcc); }
+.auth-modal__strength-label{
+  font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.12em;
+  color:rgba(255,255,255,0.55);
+  text-transform:uppercase;
+  min-width:5rem; text-align:right;
+}
+
 .auth-modal__error{
   font-family:var(--font-mono); font-size:0.65rem; letter-spacing:0.06em;
   color:var(--col-danger); margin:0;

@@ -5,23 +5,29 @@ import { EconomySystem } from './EconomySystem.js';
 import { computeRaceReward } from './GrafemaRewards.js';
 import {
   PHRASE_POOL_ES,
+  PHRASE_POOL_EN,
   RACE_COUNTDOWN_SECS,
   RACE_DURATION,
   RACE_TARGET_DISTANCE,
   RACE_OPPONENT_WPM,
   FLOW_STEPS,
 } from '../../shared/constants.js';
+import { getLocale } from '../../shared/i18n/index.js';
 
 const BUFFER_SIZE    = 300; // visible word pool (90s × 120 WPM = 180 words max)
 const REFILL_AT      = 60;  // refill when fewer than this many words remain ahead
 
-const AVG_WORDS = PHRASE_POOL_ES.reduce((s, p) => s + p.length, 0) / PHRASE_POOL_ES.length;
-// opponent phrases completed per second
-const OPP_PHRASES_PER_SEC = (RACE_OPPONENT_WPM / 60) / AVG_WORDS;
+function activePool() {
+  return getLocale() === 'en' ? PHRASE_POOL_EN : PHRASE_POOL_ES;
+}
+
+const AVG_WORDS_ES = PHRASE_POOL_ES.reduce((s, p) => s + p.length, 0) / PHRASE_POOL_ES.length;
+// opponent phrases completed per second — use ES baseline (similar in EN)
+const OPP_PHRASES_PER_SEC = (RACE_OPPONENT_WPM / 60) / AVG_WORDS_ES;
 
 /** Flat word array from a shuffled copy of the pool. */
 function buildWordStream() {
-  const pool = [...PHRASE_POOL_ES];
+  const pool = [...activePool()];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];

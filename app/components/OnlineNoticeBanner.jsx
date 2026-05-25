@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Bridge } from '../../shared/bridge.js';
+import Icon from './common/Icon.jsx';
 
 // Banner toast global para avisos online (rechazo revancha, etc.).
 // Auto-dismiss en 4s.
@@ -20,7 +21,7 @@ export default function OnlineNoticeBanner({ notice }) {
         className="online-notice__close"
         onClick={() => Bridge.setState({ onlineNotice: null })}
         aria-label="Cerrar aviso"
-      >✕</button>
+      ><Icon name="close" size={14} /></button>
     </div>
   );
 }

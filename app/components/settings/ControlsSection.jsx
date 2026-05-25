@@ -2,15 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ACTIONS, SCOPES } from '../../../shared/keybindings.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { EconomySystem } from '../../../game/systems/EconomySystem.js';
-
-const SCOPE_ORDER = [
-  { id: 'global',   label: 'Globales' },
-  { id: 'menu',     label: 'Menu' },
-  { id: 'hangar',   label: 'Hangar' },
-  { id: 'tutorial', label: 'Tutorial' },
-  { id: 'modal',    label: 'Modal' },
-  { id: 'gameplay', label: 'Juego' },
-];
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 
 function formatKey(k) {
   if (!k) return '—';
@@ -34,8 +26,18 @@ function groupActionsByScope(includeDebug) {
 }
 
 export default function ControlsSection() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(() => EconomySystem.getProfile());
   const [rebindingId, setRebindingId] = useState(null);
+
+  const SCOPE_ORDER = [
+    { id: 'global',   label: t('settings.controls.scopes.global') },
+    { id: 'menu',     label: t('settings.controls.scopes.menu') },
+    { id: 'hangar',   label: t('settings.controls.scopes.hangar') },
+    { id: 'tutorial', label: t('settings.controls.scopes.tutorial') },
+    { id: 'modal',    label: t('settings.controls.scopes.modal') },
+    { id: 'gameplay', label: t('settings.controls.scopes.gameplay') },
+  ];
 
   const refresh = useCallback(() => setProfile(EconomySystem.getProfile()), []);
   const debugOn = !!profile.debugEnabled;
@@ -82,25 +84,25 @@ export default function ControlsSection() {
     <div className="settings__section" key="controls">
       <div className="settings__row">
         <div className="settings__row-meta">
-          <span className="settings__row-label">Modo desarrollador</span>
-          <span className="settings__row-hint">Habilita teclas debug (F9, F10, F11, etc.)</span>
+          <span className="settings__row-label">{t('settings.controls.devMode')}</span>
+          <span className="settings__row-hint">{t('settings.controls.devModeHint')}</span>
         </div>
         <div className="settings__row-control">
           <label className="settings__toggle-label-wrap">
             <input type="checkbox" checked={debugOn} onChange={onToggleDebug} />
-            <span>{debugOn ? 'ON' : 'OFF'}</span>
+            <span>{debugOn ? t('settings.controls.on') : t('settings.controls.off')}</span>
           </label>
         </div>
       </div>
 
       <div className="settings__row">
         <div className="settings__row-meta">
-          <span className="settings__row-label">Restaurar atajos</span>
-          <span className="settings__row-hint">Vuelve todos los bindings a sus valores por defecto</span>
+          <span className="settings__row-label">{t('settings.controls.restoreShortcuts')}</span>
+          <span className="settings__row-hint">{t('settings.controls.restoreShortcutsHint')}</span>
         </div>
         <div className="settings__row-control">
           <button type="button" className="settings__reset" onClick={onReset}>
-            Restaurar
+            {t('settings.controls.restore')}
           </button>
         </div>
       </div>
@@ -119,10 +121,10 @@ export default function ControlsSection() {
                 const rebinding = rebindingId === actionId;
                 return (
                   <li key={actionId} className={`ctrl-row${def.debug ? ' ctrl-row--debug' : ''}`}>
-                    <span className="ctrl-row__desc">{def.description}</span>
+                    <span className="ctrl-row__desc">{t(def.description)}</span>
                     <span className="ctrl-row__keys">
                       <span className="ctrl-row__key">
-                        {rebinding ? 'PULSA TECLA…' : formatKey(binding?.key)}
+                        {rebinding ? t('settings.controls.pressKey') : formatKey(binding?.key)}
                       </span>
                       {binding?.alias && !rebinding && (
                         <span className="ctrl-row__key ctrl-row__key--alias">{formatKey(binding.alias)}</span>
@@ -134,7 +136,7 @@ export default function ControlsSection() {
                         className="ctrl-row__btn"
                         onClick={() => setRebindingId(rebinding ? null : actionId)}
                       >
-                        {rebinding ? 'Cancelar' : 'Cambiar'}
+                        {rebinding ? t('settings.controls.cancel') : t('settings.controls.change')}
                       </button>
                       {overridden && !rebinding && (
                         <button

@@ -1,6 +1,8 @@
 import React from "react";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 export default function RaceStatsTopRight({ accuracy }) {
+  const { t } = useTranslation();
   const accClass = accuracy < 85 ? "r-stat__val--crit" : "";
   const accBarPct = Math.min(100, accuracy);
 
@@ -11,7 +13,7 @@ export default function RaceStatsTopRight({ accuracy }) {
           {accuracy}
           <span className="r-stat__sub">%</span>
         </div>
-        <div className="r-stat__lbl">PRECISION</div>
+        <div className="r-stat__lbl">{t("hud.common.precision")}</div>
         <div className="r-stat__bar">
           <i style={{ width: accBarPct + "%" }} />
         </div>

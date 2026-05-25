@@ -5,33 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BABEL: Lexicon War</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
     <link rel="stylesheet" href="/styles/index.css" />
-    <script>
-      window.RACING_MATERIALS = window.RACING_MATERIALS || {
-        PLAYER: {
-          metalness: 0.72,
-          roughness: 0.22,
-          emissiveR: 0.22,
-          emissiveG: 0.12,
-          emissiveB: 0.03,
-          emissiveIntensity: 0.9,
-        },
-        OPPONENT: {
-          metalness: 0.28,
-          roughness: 0.52,
-          emissiveR: 0.3,
-          emissiveG: 0.04,
-          emissiveB: 0.02,
-          emissiveIntensity: 0.28,
-        },
-      };
-      var RACING_MATERIALS = window.RACING_MATERIALS;
-    </script>
   </head>
   <body>
-    <!-- Three.js canvas se monta aqui por el motor -->
     <div id="game-canvas"></div>
-    <!-- React HUD se monta aqui -->
     <div id="hud-root"></div>
     <script type="module" src="/app/main.jsx"></script>
   </body>

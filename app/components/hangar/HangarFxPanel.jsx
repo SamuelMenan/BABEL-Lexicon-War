@@ -2,9 +2,12 @@
 // Reemplaza atajos K/L/J/Delete y Home/End/PgUp/PgDn.
 
 import React, { useState, useCallback } from 'react';
+import Icon from '../common/Icon.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 import '../../../styles/components/hangar-fx-panel.css';
 
 export default function HangarFxPanel({ sceneRef, deployingRef }) {
+  const { t } = useTranslation();
   const [laserOn, setLaserOn] = useState(false);
   const [flowOn,  setFlowOn]  = useState(false);
   const [confirmDetonate, setConfirmDetonate] = useState(false);
@@ -51,50 +54,50 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
   }, [sceneRef, confirmDetonate]);
 
   return (
-    <div className="hangar-fx" role="toolbar" aria-label="Vista previa de FX">
-      <button className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label="Ciclar camara">
-        <span className="hangar-fx__icon">📐</span>
-        <span className="hangar-fx__label">Camara</span>
+    <div className="hangar-fx" role="toolbar" aria-label={t('hangar.fx.toolbarAria')}>
+      <button className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label={t('hangar.fx.cycleCamAria')}>
+        <span className="hangar-fx__icon"><Icon name="videocam" size={20} /></span>
+        <span className="hangar-fx__label">{t('hangar.fx.camera')}</span>
       </button>
-      <button className="hangar-fx__btn" onPointerDown={onResetCam} aria-label="Reset camara">
+      <button className="hangar-fx__btn" onPointerDown={onResetCam} aria-label={t('hangar.fx.resetCamAria')}>
         <span className="hangar-fx__icon">⟲</span>
-        <span className="hangar-fx__label">Reset</span>
+        <span className="hangar-fx__label">{t('keys.reset')}</span>
       </button>
       <button
         className={`hangar-fx__btn${autoFire ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onFireStart}
         onPointerUp={onFireEnd}
         onPointerLeave={onFireEnd}
-        aria-label="Disparar (mantener)"
+        aria-label={t('hangar.fx.fireAria')}
       >
-        <span className="hangar-fx__icon">🔫</span>
-        <span className="hangar-fx__label">Disparar</span>
+        <span className="hangar-fx__icon"><Icon name="rocket_launch" size={20} /></span>
+        <span className="hangar-fx__label">{t('hangar.fx.fire')}</span>
       </button>
       <button
         className={`hangar-fx__btn${laserOn ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onLaser}
         aria-pressed={laserOn}
-        aria-label="Toggle laser"
+        aria-label={t('hangar.fx.laserAria')}
       >
-        <span className="hangar-fx__icon">⚡</span>
-        <span className="hangar-fx__label">Laser</span>
+        <span className="hangar-fx__icon"><Icon name="bolt" size={20} /></span>
+        <span className="hangar-fx__label">{t('hangar.fx.laser')}</span>
       </button>
       <button
         className={`hangar-fx__btn${flowOn ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onFlow}
         aria-pressed={flowOn}
-        aria-label="Toggle boosters flow"
+        aria-label={t('hangar.fx.boostersAria')}
       >
-        <span className="hangar-fx__icon">🔥</span>
-        <span className="hangar-fx__label">Boosters</span>
+        <span className="hangar-fx__icon"><Icon name="local_fire_department" size={20} /></span>
+        <span className="hangar-fx__label">{t('hangar.fx.boosters')}</span>
       </button>
       <button
         className={`hangar-fx__btn hangar-fx__btn--danger${confirmDetonate ? ' hangar-fx__btn--armed' : ''}`}
         onPointerDown={onDetonate}
-        aria-label="Detonar nave (preview)"
+        aria-label={t('hangar.fx.detonateAria')}
       >
-        <span className="hangar-fx__icon">💥</span>
-        <span className="hangar-fx__label">{confirmDetonate ? 'Confirmar' : 'Detonar'}</span>
+        <span className="hangar-fx__icon"><Icon name="dangerous" size={20} /></span>
+        <span className="hangar-fx__label">{confirmDetonate ? t('common.confirm') : t('hangar.fx.detonate')}</span>
       </button>
     </div>
   );

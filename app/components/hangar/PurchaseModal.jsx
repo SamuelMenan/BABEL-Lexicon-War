@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react';
 import { KeybindService } from '../../../shared/keybindService.js';
-
-const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
-function fmt(n) { return NUMBER_FORMATTER.format(n ?? 0); }
+import KeyHint from '../common/KeyHint.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
+import { getNumberFormatter } from '../../../shared/i18n/index.js';
 
 export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
+  const { t } = useTranslation();
+  const formatter = getNumberFormatter();
+
+  const fmt = (n) => formatter.format(n ?? 0);
+
   // Modal scope push/pop + CONFIRM/CANCEL via service.
   useEffect(() => {
     KeybindService.pushScope('modal');
@@ -29,7 +34,7 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="purchase-modal__header">
-          <span className="purchase-modal__label">◈ CONFIRMAR ADQUISICION</span>
+          <span className="purchase-modal__label">{t('hangar.purchase.title')}</span>
         </div>
 
         <h3 id="purchase-modal-title" className="purchase-modal__ship">{ship.name.toUpperCase()}</h3>
@@ -37,29 +42,35 @@ export default function PurchaseModal({ ship, grafemas, onConfirm, onCancel }) {
 
         <div className="purchase-modal__rows">
           <div className="purchase-modal__row">
-            <span>Saldo actual</span>
+            <span>{t('hangar.purchase.currentBalance')}</span>
             <span>₲ {fmt(grafemas)}</span>
           </div>
           <div className="purchase-modal__row purchase-modal__row--cost">
-            <span>Coste</span>
+            <span>{t('hangar.purchase.cost')}</span>
             <span>− ₲ {fmt(ship.price)}</span>
           </div>
           <div className="purchase-modal__row purchase-modal__row--total">
-            <span>Saldo posterior</span>
+            <span>{t('hangar.purchase.remainingBalance')}</span>
             <span>₲ {fmt(after)}</span>
           </div>
         </div>
 
         <div className="purchase-modal__actions">
           <button className="purchase-modal__btn purchase-modal__btn--cancel" onClick={onCancel}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button className="purchase-modal__btn purchase-modal__btn--confirm" onClick={onConfirm} autoFocus>
-            Confirmar Compra
+            {t('hangar.purchase.confirmBtn')}
           </button>
         </div>
 
-        <p className="purchase-modal__hint">↵ Confirmar · ESC Cancelar</p>
+        <KeyHint
+          className="purchase-modal__hint"
+          items={[
+            { key: '↵',   label: t('common.confirm').toLowerCase() },
+            { key: 'ESC', label: t('common.cancel').toLowerCase() },
+          ]}
+        />
       </div>
     </div>
   );

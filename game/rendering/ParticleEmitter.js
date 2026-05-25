@@ -88,7 +88,9 @@ class ShockwaveRing {
   constructor(scene) {
     this._scene    = scene;
     this._duration = 0.85;
-    this._maxScale = 7.0;
+    this._maxScale = 7.0;       // base (combat). activate(pos, color, scale) lo escala.
+    this._curMaxScale = 7.0;
+    this._curStart    = 0.15;
     this._active   = false;
     this._age      = 0;
 
@@ -106,12 +108,14 @@ class ShockwaveRing {
     this._mesh.rotation.x = -Math.PI / 2;
   }
 
-  activate(position, color = 0x00ffcc) {
+  activate(position, color = 0x00ffcc, scale = 1.0) {
     this._active = true;
     this._age    = 0;
+    this._curStart    = 0.15 * scale;
+    this._curMaxScale = this._maxScale * scale;
     this._mesh.material.color.setHex(color);
     this._mesh.material.opacity = 0.9;
-    this._mesh.scale.setScalar(0.15);
+    this._mesh.scale.setScalar(this._curStart);
     this._mesh.position.copy(position);
     this._scene.add(this._mesh);
   }
@@ -126,7 +130,7 @@ class ShockwaveRing {
       return;
     }
     const eased = 1 - (1 - t) * (1 - t);
-    this._mesh.scale.setScalar(0.15 + eased * this._maxScale);
+    this._mesh.scale.setScalar(this._curStart + eased * this._curMaxScale);
     this._mesh.material.opacity = (1 - t) * 0.85;
   }
 
@@ -181,11 +185,13 @@ export class ParticleEmitter {
 
   // Full cinematic death sequence for the player ship.
   // colorRamp: normalRamp from the ship's booster config (array of hex).
-  playerDeathSequence(position, colorRamp = null) {
+  // scale: 1.0 = tamano combat. Reducir para naves mas pequeñas (hangar ~0.45).
+  playerDeathSequence(position, colorRamp = null, scale = 1.0) {
     if (!position) return;
     this._clearDeathTimers();
 
     const pos = position.clone();
+    const s = scale;
 
     // Derive ring colors from ramp: first ring uses brightest (index 0), second uses mid
     const ringColor1 = Array.isArray(colorRamp) && colorRamp.length > 0
@@ -194,18 +200,18 @@ export class ParticleEmitter {
       ? colorRamp[4] : 0x00ffcc;
 
     // T=0 — massive flash burst at center
-    this.burstDestroy(pos.clone(), { colorRamp, word: DEATH_LORE[0], intensity: 2.2 });
+    this.burstDestroy(pos.clone(), { colorRamp, word: DEATH_LORE[0], intensity: 2.2 * s });
     this.burst(pos.clone());
     this.burst(pos.clone());
 
     // T=0 — first shockwave ring (brightest ramp color)
-    if (this._rings[0].done) this._rings[0].activate(pos.clone(), ringColor1);
+    if (this._rings[0].done) this._rings[0].activate(pos.clone(), ringColor1, s);
 
     const offsets = [
-      new THREE.Vector3(-0.7,  0.35,  0.0),
-      new THREE.Vector3( 0.7, -0.25,  0.0),
-      new THREE.Vector3( 0.0,  0.55, -0.1),
-      new THREE.Vector3(-0.3, -0.5,   0.1),
+      new THREE.Vector3(-0.7 * s,  0.35 * s,  0.0),
+      new THREE.Vector3( 0.7 * s, -0.25 * s,  0.0),
+      new THREE.Vector3( 0.0,      0.55 * s, -0.1 * s),
+      new THREE.Vector3(-0.3 * s, -0.5  * s,  0.1 * s),
     ];
 
     // T=120-400ms — scatter bursts with lore words, all using ship color ramp
@@ -215,7 +221,7 @@ export class ParticleEmitter {
         this.burstDestroy(p, {
           colorRamp,
           word:      DEATH_LORE[(i + 1) % DEATH_LORE.length],
-          intensity: 1.1 + (0.3 - i * 0.05),
+          intensity: (1.1 + (0.3 - i * 0.05)) * s,
         });
         this.burst(p);
       });
@@ -224,12 +230,12 @@ export class ParticleEmitter {
 
     // T=280ms — second shockwave ring (mid ramp color)
     this._deathTimers.push(this._later(280, () => {
-      if (this._rings[1].done) this._rings[1].activate(pos.clone(), ringColor2);
+      if (this._rings[1].done) this._rings[1].activate(pos.clone(), ringColor2, s);
     }));
 
     // T=500ms — final ember burst
     this._deathTimers.push(this._later(500, () => {
-      this.burstDestroy(pos.clone(), { colorRamp, word: DEATH_LORE[8], intensity: 0.9 });
+      this.burstDestroy(pos.clone(), { colorRamp, word: DEATH_LORE[8], intensity: 0.9 * s });
       this.burst(pos.clone());
     }));
   }

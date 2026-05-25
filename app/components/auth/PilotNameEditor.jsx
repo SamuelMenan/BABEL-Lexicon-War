@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { updateDisplayName } from '../../services/supabase/auth.js';
+import { updateDisplayName } from '../../../game/services/supabase/auth.js';
 
 export default function PilotNameEditor({ initial = '', onSaved }) {
   const [name, setName] = useState(initial);

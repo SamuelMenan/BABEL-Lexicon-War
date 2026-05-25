@@ -1,8 +1,10 @@
-﻿import React from "react";
+import React from "react";
 import WarningTriangle from "../warnings/WarningTriangle.jsx";
 import { getProximityLevel } from "../../../../game/systems/hudUtils.js";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier, mirror = false }) {
+  const { t } = useTranslation();
   // Dedupe defensivo por id (evita duplicacion si el payload llega con repetidos).
   const seen = new Set();
   const unique = [];
@@ -17,7 +19,7 @@ export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier, m
   return (
     <div className={`lexicon-deck${mirror ? " lexicon-deck--mirror" : ""}`}>
       <div className="lexicon-deck__header">
-        <span className="lexicon-deck__header-label">MAZO · LEXICO</span>
+        <span className="lexicon-deck__header-label">{t("hud.combat.deckHeader")}</span>
         <span className="lexicon-deck__header-count" style={{ color: "var(--col-deck-count, var(--col-active))" }}>{sorted.length}</span>
       </div>
       <div className="lexicon-deck__list">
@@ -39,11 +41,11 @@ export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier, m
             </span>
           </div>
         ))}
-        {sorted.length === 0 && <div className="lexicon-deck__empty">· LIMPIO ·</div>}
+        {sorted.length === 0 && <div className="lexicon-deck__empty">{t("hud.combat.deckEmpty")}</div>}
       </div>
       {flowMultiplier > 1.0 && (
         <div className="lexicon-deck__flow">
-          <span className="lexicon-deck__flow-label">MULTIPLICADOR DE FLUJO</span>
+          <span className="lexicon-deck__flow-label">{t("hud.combat.flowMultiplier")}</span>
           <span className="lexicon-deck__flow-val" style={{ color: flowColor, textShadow: "0 0 14px " + flowColor }}>
             ×{flowMultiplier.toFixed(1)}
           </span>

@@ -3,7 +3,7 @@ import { SHIP_PALETTES } from '../../shared/constants.js';
 import { getShipsForHangar } from '../../shared/shopCatalog.js';
 
 const SHIPS = getShipsForHangar();
-import { ShipDestroyFx } from '../rendering/fx/ShipDestroyFx.js';
+import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
 import { HangarRenderer } from './hangar/HangarRenderer.js';
 import { HangarCameraController } from './hangar/HangarCameraController.js';
 import { HangarLoader } from './hangar/HangarLoader.js';
@@ -24,7 +24,6 @@ export class ShipSelectionScene {
     this._alive      = true;
     this._keys       = new Set();
     this._autoRotate = true;
-    this._destroyFx  = null;
     this._lastTime   = performance.now();
     this._rafId      = null;
 
@@ -34,6 +33,10 @@ export class ShipSelectionScene {
     this._deploy = new DeploymentAnimator(this._env.scene, this._env.camera, this._cam);
     this._projectiles = new HangarProjectiles(this._env.scene);
     this._laser       = new HangarLaser(this._env.scene);
+    // ParticleEmitter — mismo sistema que combat. Habilita playerDeathSequence
+    // (animacion cinematica completa: flash + scatter bursts + 2 shockwaves +
+    // ember). Antes hangar usaba ShipDestroyFx directo (1 burst plano).
+    this._particles   = new ParticleEmitter(this._env.scene);
     this._lastShotAt  = 0;
     this._autoFiring  = false;  // K hold
     this._laserOn     = false;  // L toggle
@@ -148,18 +151,14 @@ export class ShipSelectionScene {
   }
 
   detonateCurrentShip() {
-    if (this._destroyFx && !this._destroyFx.done) {
-      this._destroyFx.cleanup();
-    }
+    // Reusa playerDeathSequence de combate. Scale 0.45 — nave hangar es mas
+    // pequeña que la de combat (target ~2.2 vs ~3.8). Reduce offsets +
+    // intensidades de los bursts para no inundar la pantalla.
     const ship = SHIPS[this._loader.currentShipIndex ?? 0];
-    const word = ship?.name ?? 'BABEL';
-    const pos  = new THREE.Vector3(0, SHIP_SPAWN_OFFSET.y, 0);
-    this._destroyFx = new ShipDestroyFx(this._env.scene, pos, {
-      color: 0x00eeff,
-      word,
-      intensity: 1.2,
-    });
-    this._destroyFx.spawn();
+    const palette = ship ? SHIP_PALETTES[ship.id] : null;
+    const colorRamp = palette?.normalRamp ?? null;
+    const pos = new THREE.Vector3(0, SHIP_SPAWN_OFFSET.y, 0);
+    this._particles.playerDeathSequence(pos, colorRamp, 0.3);
   }
 
   addKey(key)    { this._keys.add(key); }
@@ -209,7 +208,7 @@ export class ShipSelectionScene {
   destroy() {
     this._alive = false;
     if (this._rafId) cancelAnimationFrame(this._rafId);
-    this._destroyFx?.cleanup();
+    this._particles?.dispose();
     this._projectiles.dispose();
     this._laser.dispose();
     this._loader.dispose();
@@ -301,10 +300,7 @@ export class ShipSelectionScene {
       }
 
       this._projectiles.update(dt);
-
-      if (this._destroyFx && !this._destroyFx.done) {
-        this._destroyFx.update(dt);
-      }
+      this._particles.update(dt);
 
       this._env.render();
     };

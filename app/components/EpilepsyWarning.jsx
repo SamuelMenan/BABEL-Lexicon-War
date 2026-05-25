@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import useTranslation from '../../shared/i18n/useTranslation.js';
 
 export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
+  const { t } = useTranslation();
   const [countdown, setCountdown] = useState(autoSkipAfter);
   const [canSkip, setCanSkip] = useState(false);
   const btnRef = useRef(null);
@@ -48,8 +50,8 @@ export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
       </div>
 
       <header className="babel-frame__header">
-        <span>BABEL · PROTOCOLO DE SEGURIDAD</span>
-        <span className="babel-frame__tag--warning">// WARN-001</span>
+        <span>{t('epilepsy.header')}</span>
+        <span className="babel-frame__tag--warning">{t('epilepsy.warnTag')}</span>
       </header>
 
       <main className="babel-intro__main">
@@ -57,29 +59,18 @@ export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
           <div className="babel-divider babel-divider--warning" />
 
           <div className="epilepsy__icon">
-            <span className="epilepsy__icon-glyph" aria-hidden="true">⚠</span>
+            <span className="epilepsy__icon-glyph material-symbols-outlined" aria-hidden="true">warning</span>
           </div>
 
-          <h1 className="epilepsy__title">Advertencia</h1>
-          <p className="epilepsy__subtitle">Fotosensibilidad</p>
+          <h1 className="epilepsy__title">{t('epilepsy.title')}</h1>
+          <p className="epilepsy__subtitle">{t('epilepsy.subtitle')}</p>
 
           <div className="babel-divider babel-divider--warning" style={{ marginTop: '1.5rem' }} />
 
           <div className="epilepsy__body">
-            <p>
-              Este juego contiene efectos visuales que pueden incluir patrones
-              de luz intermitente y destellos que podrian provocar convulsiones
-              en personas con epilepsia fotosensible.
-            </p>
-            <p>
-              Si usted o alguien de su familia tiene antecedentes de epilepsia,
-              consulte a un medico antes de jugar.
-            </p>
-            <p className="epilepsy__fine">
-              Si experimenta mareos, alteracion de la vision, contracciones
-              musculares, desorientacion o cualquier tipo de movimiento
-              involuntario, deje de jugar inmediatamente.
-            </p>
+            <p>{t('epilepsy.body1')}</p>
+            <p>{t('epilepsy.body2')}</p>
+            <p className="epilepsy__fine">{t('epilepsy.body3')}</p>
           </div>
 
           <div className="epilepsy__actions">
@@ -92,25 +83,25 @@ export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
             >
               {canSkip ? (
                 <>
-                  <span>Entiendo y acepto continuar</span>
+                  <span>{t('epilepsy.accept')}</span>
                   <span className="epilepsy__btn-arrow" aria-hidden="true">→</span>
                 </>
               ) : (
                 <>
                   <span className="epilepsy__spinner" aria-hidden="true" />
-                  <span>Leyendo...</span>
+                  <span>{t('epilepsy.loading')}</span>
                 </>
               )}
             </button>
             <p className="epilepsy__countdown">
-              Continua automaticamente en <strong>{countdown}s</strong>
+              {t('epilepsy.autoContinue')} <strong>{countdown}s</strong>
             </p>
           </div>
         </div>
       </main>
 
       <footer className="babel-frame__footer">
-        PROGRAMA TYPO · BABEL: LEXICON WAR · v1.0.0
+        {t('mainMenu.footer')}
       </footer>
     </div>
   );

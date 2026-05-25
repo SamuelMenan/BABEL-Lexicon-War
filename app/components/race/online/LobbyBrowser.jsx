@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Icon from '../../common/Icon.jsx';
 import { loadProfile } from '../../../../shared/playerProfile.js';
 import {
   createRoom, joinRoomById, joinRoomByCode, listPublicRooms, cleanupStaleRooms,
-} from '../../../services/supabase/rooms.js';
-import { getShipsForHangar } from '../../../../shared/shopCatalog.js';
+} from '../../../../game/services/supabase/rooms.js';
+import useTranslation from '../../../../shared/i18n/useTranslation.js';
 
 // Pantalla principal del modo online (fase 1):
 //   - lista salas publicas
@@ -11,6 +12,7 @@ import { getShipsForHangar } from '../../../../shared/shopCatalog.js';
 //   - unirse por codigo
 // Cuando entra/crea sala llama onEnterRoom(roomId, role).
 export default function LobbyBrowser({ onEnterRoom, onClose }) {
+  const { t } = useTranslation();
   const [rooms,   setRooms]   = useState([]);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
@@ -25,7 +27,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
       const list = await listPublicRooms();
       setRooms(list);
     } catch (e) {
-      setError(e?.message || 'Error cargando salas');
+      setError(e?.message || t('race.lobby.errors.load'));
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
       const { roomId } = await createRoom({ playerId: profile.playerId, displayName: profile.displayName, isPrivate: createPrivate });
       onEnterRoom?.(roomId, 'host');
     } catch (e) {
-      setError(e?.message || 'No se pudo crear sala');
+      setError(e?.message || t('race.lobby.errors.create'));
     } finally {
       setBusy(false);
     }
@@ -59,78 +61,73 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
       await joinRoomById({ roomId, playerId: profile.playerId, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
-      setError(e?.message || 'No se pudo unir');
+      setError(e?.message || t('race.lobby.errors.join'));
     } finally {
       setBusy(false);
     }
   };
 
   const handleJoinByCode = async () => {
-    if (!/^\d{4}$/.test(codeInput)) { setError('Codigo debe ser 4 digitos'); return; }
+    if (!/^\d{4}$/.test(codeInput)) { setError(t('race.lobbyExtra.codeLenError')); return; }
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
       const roomId = await joinRoomByCode({ code: codeInput, playerId: profile.playerId, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
-      setError(e?.message || 'Codigo invalido');
+      setError(e?.message || t('race.lobby.errors.invalidCode'));
     } finally {
       setBusy(false);
     }
-  };
-
-  const findShipName = (id) => {
-    const s = getShipsForHangar().find(x => x.id === id);
-    return s?.name || id || '—';
   };
 
   return (
     <div className="lobby" role="dialog" aria-modal="true">
       <div className="lobby__panel">
         <header className="lobby__header">
-          <span className="lobby__label">◈ LOBBY · CARRERAS EN LINEA</span>
-          <button type="button" className="lobby__close" onClick={onClose} aria-label="Cerrar">✕</button>
+          <span className="lobby__label">◈ {t('race.lobby.label')}</span>
+          <button type="button" className="lobby__close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={16} /></button>
         </header>
 
         <div className="lobby__actions">
           <button type="button" className="lobby__btn lobby__btn--primary" onClick={() => setShowCreate(true)} disabled={busy}>
-            + Crear sala
+            {t('race.lobby.createRoom')}
           </button>
           <div className="lobby__code-input">
             <input
               type="text"
               maxLength={4}
-              placeholder="Codigo 4 digitos"
+              placeholder={t('race.lobby.codePlaceholder')}
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
               disabled={busy}
             />
             <button type="button" className="lobby__btn" onClick={handleJoinByCode} disabled={busy || codeInput.length !== 4}>
-              Unirse
+              {t('race.lobby.joinByCode')}
             </button>
           </div>
           <button type="button" className="lobby__btn lobby__btn--ghost" onClick={refresh} disabled={loading}>
-            ↻ Refrescar
+            {t('race.lobby.refresh')}
           </button>
         </div>
 
         {error && <div className="lobby__error">{error}</div>}
 
         <div className="lobby__list">
-          {loading && <div className="lobby__state">Cargando salas...</div>}
+          {loading && <div className="lobby__state">{t('race.lobby.loadingRooms')}</div>}
           {!loading && rooms.length === 0 && (
-            <div className="lobby__state">Sin salas publicas. Crea una.</div>
+            <div className="lobby__state">{t('race.lobby.noRooms')}</div>
           )}
           {!loading && rooms.map((r) => (
             <div key={r.id} className="lobby__row">
               <div className="lobby__row-main">
-                <div className="lobby__row-host">{r.host_name || 'Anonimo'}</div>
+                <div className="lobby__row-host">{r.host_name || t('race.lobbyExtra.anonymous')}</div>
                 <div className="lobby__row-sub">
-                  Nave: {findShipName(r.host_ship)} · creada {timeAgo(r.created_at)}
+                  {t('race.lobbyExtra.createdAt', { when: timeAgo(r.created_at, t) })}
                 </div>
               </div>
               <button type="button" className="lobby__btn lobby__btn--primary" onClick={() => handleJoin(r.id)} disabled={busy}>
-                Unirse
+                {t('race.lobby.joinByCode')}
               </button>
             </div>
           ))}
@@ -139,19 +136,19 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
         {showCreate && (
           <div className="lobby__create-modal" onClick={() => setShowCreate(false)}>
             <div className="lobby__create-panel" onClick={(e) => e.stopPropagation()}>
-              <h3>Crear sala</h3>
+              <h3>{t('race.lobby.createTitle')}</h3>
               <label className="lobby__create-row">
                 <input
                   type="checkbox"
                   checked={createPrivate}
                   onChange={(e) => setCreatePrivate(e.target.checked)}
                 />
-                <span>Privada (genera codigo 4 digitos)</span>
+                <span>{t('race.lobby.privateLabel')}</span>
               </label>
               <div className="lobby__create-actions">
-                <button type="button" className="lobby__btn lobby__btn--ghost" onClick={() => setShowCreate(false)}>Cancelar</button>
+                <button type="button" className="lobby__btn lobby__btn--ghost" onClick={() => setShowCreate(false)}>{t('common.cancel')}</button>
                 <button type="button" className="lobby__btn lobby__btn--primary" onClick={handleCreate} disabled={busy}>
-                  Crear
+                  {t('race.lobbyExtra.create')}
                 </button>
               </div>
             </div>
@@ -162,8 +159,8 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   );
 }
 
-function timeAgo(iso) {
+function timeAgo(iso, t) {
   const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (sec < 60) return `${Math.floor(sec)}s atras`;
-  return `${Math.floor(sec / 60)}m atras`;
+  if (sec < 60) return t('race.lobbyExtra.secondsAgo', { n: Math.floor(sec) });
+  return t('race.lobbyExtra.minutesAgo', { n: Math.floor(sec / 60) });
 }

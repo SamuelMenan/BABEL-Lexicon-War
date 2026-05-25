@@ -1,66 +1,60 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Icon from '../../common/Icon.jsx';
 import { loadProfile } from '../../../../shared/playerProfile.js';
-import { getShipsForHangar } from '../../../../shared/shopCatalog.js';
 import {
-  fetchRoom, subscribeRoom, setRoomShip, setRoomReady, leaveRoom, touchRoom,
-} from '../../../services/supabase/rooms.js';
-import { supabase } from '../../../services/supabase/client.js';
+  fetchRoom, subscribeRoom, leaveRoom, touchRoom,
+} from '../../../../game/services/supabase/rooms.js';
+import { supabase } from '../../../../game/services/supabase/client.js';
+import useTranslation from '../../../../shared/i18n/useTranslation.js';
 
-// Sala pre-carrera. Cada jugador escoge nave (no la misma que el rival)
-// y marca ready. Cuando ambos ready + status='starting' → onMatchStart(room).
-// Fase 1: no arranca la carrera todavia. Solo deja la sala lista.
-export default function RoomScreen({ roomId, role, onLeave, onMatchStart }) {
+// Pantalla de matchmaking — muestra sala recien creada/joinada con estado
+// "esperando rival". Cuando ambos jugadores estan presentes, llama
+// onRivalFound(room, role) → MainMenu transiciona a OnlineRoomHangar (3D).
+//
+// Esta es la unica responsabilidad: detectar match. La seleccion de nave +
+// ready toggle vive en OnlineRoomHangar (Fase B).
+export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
+  const { t } = useTranslation();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const profile = loadProfile();
   const myId = profile.playerId;
-  const ships = getShipsForHangar();
 
-  // Load + suscribir + poll fallback + heartbeat anti-fantasma.
+  // Load + suscribir + heartbeat anti-fantasma.
   useEffect(() => {
     let mounted = true;
     setBusy(true);
     const reload = () => fetchRoom(roomId)
       .then((r) => { if (mounted && r) setRoom(r); })
-      .catch((e) => { if (mounted) setError(e?.message || 'No se pudo cargar sala'); });
+      .catch((e) => { if (mounted) setError(e?.message || t('race.lobby.errors.load')); });
 
     reload().finally(() => { if (mounted) setBusy(false); });
 
     const unsub = subscribeRoom(roomId, (next) => {
-      if (!mounted) return;
-      if (next) setRoom(next);
+      if (mounted && next) setRoom(next);
     });
-    // Poll fallback — Realtime puede no estar habilitado o perder eventos.
     const pollId = setInterval(reload, 2000);
-    // Heartbeat 30s — sin esto cleanup_stale_rooms borra la sala a los 3 min.
     touchRoom({ roomId, playerId: myId }).catch(() => {});
     const beatId = setInterval(() => {
       touchRoom({ roomId, playerId: myId }).catch(() => {});
     }, 30000);
 
-    // beforeunload — best-effort leave si jugador cierra tab/refresh.
-    // sendBeacon es sincronico durante unload (fetch async puede no completar).
     const onBeforeUnload = () => {
       try {
         const url = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
         const key = supabase?.supabaseKey;
-        const blob = new Blob(
-          [JSON.stringify({ p_room_id: roomId, p_player_id: myId })],
-          { type: 'application/json' },
-        );
-        if (url && key && 'sendBeacon' in navigator) {
-          // sendBeacon no soporta headers custom → fallback fetch keepalive.
+        if (url && key) {
           fetch(url, {
             method: 'POST',
             keepalive: true,
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type':  'application/json',
               'apikey':        key,
               'Authorization': `Bearer ${key}`,
             },
-            body: blob,
+            body: JSON.stringify({ p_room_id: roomId, p_player_id: myId }),
           }).catch(() => {});
         }
       } catch { /* ignore */ }
@@ -78,148 +72,85 @@ export default function RoomScreen({ roomId, role, onLeave, onMatchStart }) {
     };
   }, [roomId, myId]);
 
-  // Disparar onMatchStart cuando ambos listos + status starting (fase 2).
+  // Auto-transicion a OnlineRoomHangar cuando ambos jugadores estan en sala.
+  // Fire-once: triggeredRef bloquea re-runs. Antes el poll (2s) + subscribe
+  // (realtime) generaban nuevos refs de `room` que cancelaban el setTimeout
+  // antes de los 600ms → host quedaba pegado en "Cargando hangar...".
+  const triggeredRef = useRef(false);
+  const roomRef = useRef(null); roomRef.current = room;
+  const onRivalFoundRef = useRef(onRivalFound); onRivalFoundRef.current = onRivalFound;
   useEffect(() => {
-    if (room?.status === 'starting') onMatchStart?.(room);
-  }, [room?.status, onMatchStart, room]);
+    if (triggeredRef.current) return;
+    if (!room) return;
+    if (room.status !== 'lobby') return;
+    if (!room.host_id || !room.guest_id) return;
+    triggeredRef.current = true;
+    const t = setTimeout(() => {
+      onRivalFoundRef.current?.(roomRef.current, role);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [room?.host_id, room?.guest_id, room?.status, role]);
 
   const handleLeave = useCallback(async () => {
     setBusy(true);
-    try {
-      await leaveRoom({ roomId, playerId: myId });
-    } catch { /* ignore */ }
+    try { await leaveRoom({ roomId, playerId: myId }); } catch { /* ignore */ }
     onLeave?.();
   }, [roomId, myId, onLeave]);
-
-  const handlePickShip = async (shipId) => {
-    setError('');
-    try {
-      await setRoomShip({ roomId, playerId: myId, shipId });
-    } catch (e) {
-      setError(e?.message || 'Nave no disponible');
-    }
-  };
-
-  const handleToggleReady = async () => {
-    if (!room) return;
-    const currentReady = role === 'host' ? room.host_ready : room.guest_ready;
-    setError('');
-    try {
-      await setRoomReady({ roomId, playerId: myId, ready: !currentReady });
-    } catch (e) {
-      setError(e?.message || 'No se pudo marcar ready');
-    }
-  };
 
   if (!room) {
     return (
       <div className="room" role="dialog" aria-modal="true">
         <div className="room__panel">
-          <div className="room__state">{error || (busy ? 'Cargando sala...' : 'Sin datos')}</div>
-          <button className="room__btn" onClick={onLeave}>Volver al lobby</button>
+          <div className="room__state">{error || (busy ? t('race.lobbyExtra.loadRoom') : t('race.lobbyExtra.noData'))}</div>
+          <button className="room__btn" onClick={onLeave}>{t('race.lobbyExtra.backToLobby')}</button>
         </div>
       </div>
     );
   }
 
-  const myShip       = role === 'host' ? room.host_ship   : room.guest_ship;
-  const otherShip    = role === 'host' ? room.guest_ship  : room.host_ship;
-  const myReady      = role === 'host' ? room.host_ready  : room.guest_ready;
-  const otherReady   = role === 'host' ? room.guest_ready : room.host_ready;
-  const myPilot      = role === 'host' ? room.host_pilot  : room.guest_pilot;
-  const otherPilot   = role === 'host' ? room.guest_pilot : room.host_pilot;
-  const otherJoined  = role === 'host' ? !!room.guest_id  : !!room.host_id;
+  const bothJoined = !!(room.host_id && room.guest_id);
 
   return (
     <div className="room" role="dialog" aria-modal="true">
-      <div className="room__panel">
+      <div className="room__panel room__panel--matchmaking">
         <header className="room__header">
           <span className="room__label">
-            ◈ SALA · {room.is_private ? `PRIVADA #${room.code}` : 'PUBLICA'}
+            ◈ {t('race.hangar.salaLabel')} · {room.is_private ? `${t('race.room.private')} #${room.code}` : t('race.room.public')}
           </span>
-          <button type="button" className="room__close" onClick={handleLeave} aria-label="Salir">✕</button>
+          <button type="button" className="room__close" onClick={handleLeave} aria-label={t('keys.exit')}><Icon name="close" size={16} /></button>
         </header>
 
-        <div className="room__slots">
-          <SlotCard
-            title={role === 'host' ? 'TU' : 'HOST'}
-            pilot={role === 'host' ? myPilot : otherPilot}
-            ship={role === 'host' ? myShip : otherShip}
-            ready={role === 'host' ? myReady : otherReady}
-            joined
-            ships={ships}
-          />
-          <SlotCard
-            title={role === 'host' ? 'INVITADO' : 'TU'}
-            pilot={role === 'host' ? otherPilot : myPilot}
-            ship={role === 'host' ? otherShip : myShip}
-            ready={role === 'host' ? otherReady : myReady}
-            joined={role === 'host' ? otherJoined : true}
-            ships={ships}
-          />
-        </div>
+        <div className="room__matchmaking-body">
+          <div className="room__matchmaking-spinner">
+            <div className="room__matchmaking-ring" />
+          </div>
 
-        <h3 className="room__section-title">ELIGE TU NAVE</h3>
-        <div className="room__ship-grid">
-          {ships.map((s) => {
-            const taken    = otherShip === s.id;
-            const selected = myShip === s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                className={
-                  `room__ship${selected ? ' room__ship--selected' : ''}${taken ? ' room__ship--taken' : ''}`
-                }
-                onClick={() => !taken && handlePickShip(s.id)}
-                disabled={taken || myReady}
-                title={taken ? 'Tomada por el rival' : s.name}
-              >
-                <span className="room__ship-name">{s.name}</span>
-                <span className="room__ship-code">{s.code}</span>
-                {taken && <span className="room__ship-badge">RIVAL</span>}
-                {selected && <span className="room__ship-badge room__ship-badge--ok">TU</span>}
-              </button>
-            );
-          })}
+          {!bothJoined && (
+            <>
+              <h2 className="room__matchmaking-title">{t('race.room.waiting')}</h2>
+              <p className="room__matchmaking-sub">
+                {room.is_private
+                  ? t('race.room.privateHint', { code: room.code })
+                  : t('race.room.publicHint')}
+              </p>
+            </>
+          )}
+
+          {bothJoined && (
+            <>
+              <h2 className="room__matchmaking-title room__matchmaking-title--ok">{t('race.room.found')}</h2>
+              <p className="room__matchmaking-sub">{t('race.room.loadingHangar')}</p>
+            </>
+          )}
         </div>
 
         {error && <div className="room__error">{error}</div>}
 
         <div className="room__actions">
-          <button
-            type="button"
-            className={`room__btn room__btn--primary${myReady ? ' room__btn--active' : ''}`}
-            onClick={handleToggleReady}
-            disabled={!myShip}
-          >
-            {myReady ? '✔ LISTO' : 'MARCAR LISTO'}
-          </button>
           <button type="button" className="room__btn room__btn--ghost" onClick={handleLeave}>
-            Salir de sala
+            {t('race.room.leave')}
           </button>
         </div>
-
-        <p className="room__hint">
-          {!otherJoined && 'Esperando rival...'}
-          {otherJoined && (!myShip || !otherShip) && 'Esperando seleccion de naves...'}
-          {otherJoined && myShip && otherShip && (!myReady || !otherReady) && 'Marquen LISTO para iniciar.'}
-          {myReady && otherReady && 'Iniciando carrera...'}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function SlotCard({ title, pilot, ship, ready, joined, ships }) {
-  const shipInfo = ships.find(s => s.id === ship);
-  return (
-    <div className={`room__slot${joined ? '' : ' room__slot--empty'}`}>
-      <div className="room__slot-title">{title}</div>
-      <div className="room__slot-pilot">{(pilot || '—').toUpperCase()}</div>
-      <div className="room__slot-ship">{shipInfo?.name || (joined ? 'eligiendo...' : 'esperando rival')}</div>
-      <div className={`room__slot-ready${ready ? ' room__slot-ready--ok' : ''}`}>
-        {ready ? '● LISTO' : '○ no listo'}
       </div>
     </div>
   );

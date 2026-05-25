@@ -1,0 +1,33 @@
+/* ─────────────────────────────────────────────────────────────
+   KeyHint — patron unificado tecla cyan + texto gris en toda la UI
+   ───────────────────────────────────────────────────────────── */
+
+.key-hint {
+  display: inline-flex; align-items: center; flex-wrap: wrap;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.key-hint__pair {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.key-hint__key {
+  color: var(--col-active, #00ffcc);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.key-hint__label {
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.14em;
+}
+
+.key-hint__sep {
+  color: rgba(255, 255, 255, 0.22);
+  margin: 0 0.1rem;
+}

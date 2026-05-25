@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 // Aviso de FLUJO DESBLOQUEADO — hereda paleta de la nave activa via CSS vars
 // (--ship-flame, --ship-flame-rgb, --ship-ring-rgb). Sin colores hardcoded.
 export default function FlowModeOverlay({ flowActive }) {
+  const { t } = useTranslation();
   const [showPopup, setShowPopup] = useState(false);
   const prevActive = useRef(false);
 
@@ -39,13 +41,13 @@ export default function FlowModeOverlay({ flowActive }) {
         }}
       >
         <span className="precombat-phase" style={{ color: "rgba(255,255,255,0.85)", textShadow: `0 0 10px rgba(${ringRgb},0.6)` }}>
-          FLUJO DESBLOQUEADO
+          {t("hud.overlays.flowUnlocked")}
         </span>
         <span className="precombat-value" style={{ color: flameHex, textShadow: `0 0 30px rgba(${flameRgb},0.9), 0 0 90px rgba(${flameRgb},0.6)` }}>
           100%
         </span>
         <span className="precombat-message" style={{ color: "#fff", textShadow: `0 0 10px rgba(${ringRgb},0.6)` }}>
-          SINCRONIZACION LEXICA ACTIVA
+          {t("hud.overlays.flowSync")}
         </span>
       </div>
       <div

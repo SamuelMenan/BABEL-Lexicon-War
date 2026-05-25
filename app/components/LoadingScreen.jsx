@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { GAME_MODES } from '../../shared/constants.js';
-
-const MODE_LABELS = {
-  [GAME_MODES.COMBAT]: 'MODO · COMBATE',
-  [GAME_MODES.RACING]: 'MODO · CARRERA',
-};
+import useTranslation from '../../shared/i18n/useTranslation.js';
 
 export default function LoadingScreen({ progress = 0, mode = null, message = '' }) {
+  const { t } = useTranslation();
   const [cursorOn, setCursorOn] = useState(true);
+
+  const MODE_LABELS = {
+    [GAME_MODES.COMBAT]: t('loadingScreen.modeCombat'),
+    [GAME_MODES.RACING]: t('loadingScreen.modeRacing'),
+  };
 
   useEffect(() => {
     const id = setInterval(() => setCursorOn(v => !v), 480);
@@ -15,7 +17,7 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
   }, []);
 
   const pct       = Math.round(Math.max(0, Math.min(100, progress)));
-  const modeLabel = mode ? (MODE_LABELS[mode] ?? mode.toUpperCase()) : 'BABEL · LEXICON WAR';
+  const modeLabel = mode ? (MODE_LABELS[mode] ?? mode.toUpperCase()) : t('loadingScreen.default');
   const isDone    = pct >= 100;
 
   return (
@@ -42,7 +44,7 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
         {/* ── Stage message ── */}
         <div style={S.messageRow}>
           <span style={S.messageDiamond}>◊</span>
-          <span style={S.messageText}>{message || 'INICIALIZANDO'}</span>
+          <span style={S.messageText}>{message || t('loadingScreen.initializing')}</span>
           <span style={{ ...S.messageCursor, opacity: cursorOn ? 1 : 0 }}>█</span>
         </div>
 
@@ -74,17 +76,17 @@ export default function LoadingScreen({ progress = 0, mode = null, message = '' 
 
         {/* ── Quote ── */}
         <div style={S.quoteBlock}>
-          <p style={S.quoteLine}>"Error de sintaxis.</p>
-          <p style={S.quoteLine}>&nbsp;Coincidencia fallida."</p>
-          <p style={S.quoteAttr}>- SISTEMA BABEL · ALERTA DE CARGA</p>
+          <p style={S.quoteLine}>{t('loadingScreen.quoteLine1')}</p>
+          <p style={S.quoteLine}>{t('loadingScreen.quoteLine2')}</p>
+          <p style={S.quoteAttr}>{t('loadingScreen.quoteAttr')}</p>
         </div>
       </div>
 
       {/* ── Bottom status ── */}
       <div style={S.footer}>
-        <span style={S.footerText}>PROGRAMA · TYPO · ACTIVO</span>
+        <span style={S.footerText}>{t('loadingScreen.footerProgram')}</span>
         <span style={S.footerSep}>|</span>
-        <span style={S.footerText}>PROTOCOLO DE CARGA · EN CURSO</span>
+        <span style={S.footerText}>{t('loadingScreen.footerProtocol')}</span>
         <span style={S.footerSep}>|</span>
         <span style={S.footerText}>KAEL · VOSS</span>
       </div>

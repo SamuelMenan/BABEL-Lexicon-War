@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState, useCallback } from 'react';
 import { ShipSelectionScene } from '../../../game/scenes/ShipSelectionScene.js';
 import { Bridge } from '../../../shared/bridge.js';
+import { EventBus } from '../../../shared/events.js';
 import { EventTypes } from '../../../shared/eventTypes.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { getShipsForHangar } from '../../../shared/shopCatalog.js';
@@ -76,6 +77,17 @@ export default function HangarScreen() {
     scene.loadShip(0);
     Bridge.emit(EventTypes.SHIP_SELECTION_OPENED, {});
 
+    // Al cerrar el tutorial de hangar (primera entrada), abrir seleccion de
+    // piloto automaticamente. tutorialController emite TUTORIAL_COMPLETED tras
+    // SHIP_SELECTION_OPENED si no fue visto antes. Se ejecuta una sola vez por
+    // mount; si el jugador ya vio el tutorial este listener no dispara nada.
+    const offTutorial = EventBus.on(EventTypes.TUTORIAL_COMPLETED, (p) => {
+      if (p?.id === 'hangar') setShowCharSelect(true);
+    });
+    const offTutorialSkip = EventBus.on(EventTypes.TUTORIAL_SKIPPED, (p) => {
+      if (p?.id === 'hangar') setShowCharSelect(true);
+    });
+
     // PRELOAD COMBAT + RACING ASSETS WHILE IN HANGAR. Both manifests include
     // cb1 — preloading here means hangar's own `getGLTF` cache hit on next
     // ship-switch instead of re-downloading 34MB.
@@ -87,6 +99,8 @@ export default function HangarScreen() {
     return () => {
       clearInterval(tickId);
       clearTimeout(minTimer);
+      offTutorial();
+      offTutorialSkip();
       scene.destroy();
       sceneRef.current = null;
     };
@@ -112,6 +126,9 @@ export default function HangarScreen() {
       KeybindService.register('hangar', 'NAV_NEXT', () => navigateTo(shipIdxRef.current + 1)),
       KeybindService.register('hangar', 'HANGAR_CAM_RESET', () => sceneRef.current?.resetOrbit()),
       KeybindService.register('hangar', 'HANGAR_CAM_CYCLE', () => sceneRef.current?.cycleCameraView()),
+      KeybindService.register('hangar', 'HANGAR_LASER',     () => sceneRef.current?.toggleLaser?.()),
+      KeybindService.register('hangar', 'HANGAR_BOOSTERS',  () => sceneRef.current?.toggleFlowSim?.()),
+      KeybindService.register('hangar', 'HANGAR_DETONATE',  () => sceneRef.current?.detonateCurrentShip?.()),
       KeybindService.register('hangar', 'CONFIRM', () => {
         const sid = SHIPS[shipIdxRef.current].id;
         if (!EconomySystem.ownsShip(sid)) {
@@ -126,6 +143,23 @@ export default function HangarScreen() {
     ];
     return () => offs.forEach(fn => fn());
   }, [navigateTo]);
+
+  // HANGAR_FIRE = K hold (auto-fire mientras presionado). KeybindService es
+  // discreto → manejamos hold con keydown/keyup directos.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire?.();
+    };
+    const onKeyUp = (e) => {
+      if (e.key === 'k' || e.key === 'K') sceneRef.current?.stopAutoFire?.();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup',   onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup',   onKeyUp);
+    };
+  }, []);
 
   // WASD hold para mover camara orbital. Listener separado del service
   // porque son teclas continuas (hold), no acciones discretas.

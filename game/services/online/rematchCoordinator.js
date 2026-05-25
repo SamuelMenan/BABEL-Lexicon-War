@@ -99,7 +99,12 @@ export function declineRematch() {
   Bridge.commands.exitToMenu();
 }
 
-export function detachRematchSync() {
+// Detach con check de identidad — solo limpia si el sync pasado es el activo.
+// Sin este check, el timer 60s del match N borraba el sync del match N+1 si
+// el jugador encadenaba partidas rapido. Resultado: revancha en match N+1
+// caia en silent return porque _sync=null.
+export function detachRematchSync(sync) {
+  if (sync && sync !== _sync) return;
   _sync = null; _room = null; _role = null; _profile = null; _myPilot = null;
   _proposedRoomId = null;
 }

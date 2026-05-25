@@ -3,16 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { ACTIONS, actionsForScope } from '../../../shared/keybindings.js';
 import { KeybindService } from '../../../shared/keybindService.js';
+import Icon from './Icon.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 import '../../../styles/components/shortcuts-overlay.css';
-
-const SCOPE_LABELS = {
-  global:   'Globales',
-  menu:     'Menu',
-  hangar:   'Hangar',
-  gameplay: 'Juego',
-  tutorial: 'Tutorial',
-  modal:    'Modal',
-};
 
 function KeyChip({ value }) {
   return <span className="shortcuts__key">{formatKey(value)}</span>;
@@ -29,6 +22,7 @@ function formatKey(k) {
 }
 
 export default function ShortcutsOverlay({ open, onClose }) {
+  const { t } = useTranslation();
   const [scopes, setScopes] = useState(() => KeybindService.getScopes());
   const debugOn = KeybindService.isDebugEnabled();
 
@@ -57,21 +51,21 @@ export default function ShortcutsOverlay({ open, onClose }) {
     <div className="shortcuts" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="shortcuts__panel" onClick={(e) => e.stopPropagation()}>
         <header className="shortcuts__header">
-          <span className="shortcuts__chip">ATAJOS</span>
-          <button className="shortcuts__close" onClick={onClose} aria-label="Cerrar">✕</button>
+          <span className="shortcuts__chip">{t('shortcuts.title')}</span>
+          <button className="shortcuts__close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={16} /></button>
         </header>
 
         <div className="shortcuts__body">
           {sections.map(({ scope, ids }) => (
             <section key={scope} className="shortcuts__section">
-              <h3 className="shortcuts__section-title">{SCOPE_LABELS[scope] || scope}</h3>
+              <h3 className="shortcuts__section-title">{t(`shortcuts.scopes.${scope}`)}</h3>
               <ul className="shortcuts__list">
                 {ids.map((id) => {
                   const def = ACTIONS[id];
                   const binding = KeybindService.getBinding(id);
                   return (
                     <li key={id} className={`shortcuts__row${def.debug ? ' shortcuts__row--debug' : ''}`}>
-                      <span className="shortcuts__desc">{def.description}</span>
+                      <span className="shortcuts__desc">{t(def.description)}</span>
                       <span className="shortcuts__keys">
                         <KeyChip value={binding?.key} />
                         {binding?.alias && <KeyChip value={binding.alias} />}
@@ -85,7 +79,7 @@ export default function ShortcutsOverlay({ open, onClose }) {
         </div>
 
         <footer className="shortcuts__footer">
-          <span>Pulsa <KeyChip value="?" /> u <KeyChip value="Escape" /> para cerrar</span>
+          <span><KeyChip value="?" /> / <KeyChip value="Escape" /> · {t('shortcuts.closeHint')}</span>
         </footer>
       </div>
     </div>

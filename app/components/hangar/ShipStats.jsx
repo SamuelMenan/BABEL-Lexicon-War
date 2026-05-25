@@ -1,11 +1,5 @@
 import React from 'react';
-
-const STAT_LABELS = {
-  velocidad: 'VELOCIDAD',
-  escudo:    'ESCUDO·LEXICO',
-  precision: 'PRECISION',
-  capacidad: 'LEX·CAPACIDAD',
-};
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 
 function StatRow({ label, value, max = 10 }) {
   const pct = (value / max) * 100;
@@ -23,10 +17,19 @@ function StatRow({ label, value, max = 10 }) {
 }
 
 export default function ShipStats({ coreId, stats }) {
+  const { t } = useTranslation();
+
+  const STAT_LABELS = {
+    velocidad: t('hangar.stats.speed'),
+    escudo:    t('hangar.stats.shield'),
+    precision: t('hangar.stats.accuracy'),
+    capacidad: t('hangar.stats.capacity'),
+  };
+
   return (
     <div className="hangar-stats">
       <div className="hangar-stats__header">
-        <span className="hangar-stats__title">ESPECIFICACIONES</span>
+        <span className="hangar-stats__title">{t('hangar.stats.title')}</span>
         <span className="hangar-stats__core">{coreId}</span>
       </div>
       <div className="hangar-stats__divider" />

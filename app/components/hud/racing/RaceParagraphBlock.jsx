@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 const LINE_HEIGHT_PX = 44; // debe coincidir con font-size * line-height en CSS
 
@@ -9,6 +10,7 @@ export default function RaceParagraphBlock({
   animState,
   wordsCompleted,
 }) {
+  const { t } = useTranslation();
   const activeRef   = useRef(null);
   const [offsetY, setOffsetY] = useState(0);
   const lastLineRef = useRef(0);
@@ -35,10 +37,10 @@ export default function RaceParagraphBlock({
   return (
     <div className="r-paragraph-block">
       <div className="r-paragraph-head">
-        <span className="r-paragraph-head__tag">◊ TRANSMISION · ACTIVA</span>
+        <span className="r-paragraph-head__tag">{t("hud.racing.transmissionActive")}</span>
         <span className="r-paragraph-head__progress">
           <span className="r-ph-num">{wordsCompleted || 0}</span>
-          <span className="r-ph-sep"> palabras</span>
+          <span className="r-ph-sep"> {t("hud.common.words")}</span>
         </span>
       </div>
 

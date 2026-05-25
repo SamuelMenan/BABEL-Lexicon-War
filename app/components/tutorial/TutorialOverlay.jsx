@@ -3,11 +3,14 @@ import { Bridge } from '../../../shared/bridge.js';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { getTutorial } from '../../../shared/tutorialContent.js';
 import { EventBus } from '../../../shared/events.js';
+import Icon from '../common/Icon.jsx';
 import { EventTypes } from '../../../shared/eventTypes.js';
 import TutorialDiagram from './TutorialDiagram.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 import '../../../styles/components/tutorial.css';
 
 export default function TutorialOverlay({ tutorialActive }) {
+  const { t } = useTranslation();
   const { id, stepIndex } = tutorialActive || {};
   const tut = id ? getTutorial(id) : null;
   const step = tut?.steps?.[stepIndex] || null;
@@ -112,7 +115,7 @@ export default function TutorialOverlay({ tutorialActive }) {
                   spellCheck={false}
                 />
                 <div className={`tut-practice-status ${practiceOk ? 'ok' : ''}`}>
-                  {practiceOk ? '✓ LISTO' : 'Escribe la linea exacta'}
+                  {practiceOk ? (<><Icon name="check" size={14} /> {t('tutorial.ready')}</>) : t('tutorial.typeExactLine')}
                 </div>
               </div>
             )}
@@ -136,11 +139,11 @@ export default function TutorialOverlay({ tutorialActive }) {
 
         <div className="tut-footer">
           <button className="tut-btn tut-btn-skip" onClick={skip}>
-            {confirmSkip ? '¿SEGURO? PULSA OTRA VEZ' : 'SALTAR TUTORIAL'}
+            {confirmSkip ? t('tutorial.skipConfirm') : t('tutorial.skip')}
           </button>
           <div className="tut-nav">
             {stepIndex > 0 && (
-              <button className="tut-btn" onClick={back}>← ATRAS</button>
+              <button className="tut-btn" onClick={back}>{t('tutorial.back')}</button>
             )}
             {!step.branch && (
               <button
@@ -148,7 +151,7 @@ export default function TutorialOverlay({ tutorialActive }) {
                 onClick={advance}
                 disabled={step.practice && !practiceOk}
               >
-                {step.ctaContinue || (isLast ? 'TERMINAR' : 'SIGUIENTE →')}
+                {step.ctaContinue || (isLast ? t('tutorial.finish') : t('tutorial.next'))}
               </button>
             )}
           </div>

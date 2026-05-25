@@ -39,6 +39,9 @@
 
 @import './components/race-hud.css';
 @import './components/online-race.css';
+@import './components/key-hint.css';
+@import './components/credits.css';
+@import './components/icons.css';
 @import './components/grafema-toasts.css';
 @import './components/telemetry.css';
 @import './components/bot-fab.css';

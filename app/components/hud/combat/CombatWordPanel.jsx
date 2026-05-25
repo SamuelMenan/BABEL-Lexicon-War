@@ -1,7 +1,9 @@
-﻿import React from "react";
+import React from "react";
 import { wordHexCore, WORD_TYPE_MAP } from "../../../../game/systems/hudUtils.js";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 export default function CombatWordPanel({ activeWord, animState }) {
+  const { t } = useTranslation();
   const word = activeWord?.word || "";
   const typed = activeWord?.typed || "";
   const wordType = WORD_TYPE_MAP[word.toLowerCase()] || "LEXEMA";
@@ -9,11 +11,19 @@ export default function CombatWordPanel({ activeWord, animState }) {
   const freq = word ? 300 + ((word.charCodeAt(0) * 7 + word.length * 43) % 400) : 0;
   const boxBorderColor = animState === "wrong" ? "#ff2244" : "var(--flow-border, rgba(0,255,204,0.35))";
 
+  let typeKey = "lexeme";
+  if (wordType.includes("NOMBRE")) {
+    typeKey = "noun";
+  } else if (wordType.includes("PROPIO")) {
+    typeKey = "proper";
+  }
+  const translatedWordType = t(`hud.combat.types.${typeKey}`);
+
   return (
     <div className="combat__word-panel">
       <div className="combat__word-header">
-        <span className="combat__word-header-tag">◊ ENLACE · LEXICO</span>
-        <span className="combat__transmitting" style={{ color: "var(--col-transmitting, var(--col-active))" }}>● TRANSMITIENDO</span>
+        <span className="combat__word-header-tag">{t("hud.combat.wordHeader")}</span>
+        <span className="combat__transmitting" style={{ color: "var(--col-transmitting, var(--col-active))" }}>{t("hud.combat.transmitting")}</span>
       </div>
       <div className="combat__word-box" style={{ borderColor: boxBorderColor }}>
         <span className="combat__word-prompt">&gt;</span>
@@ -42,13 +52,13 @@ export default function CombatWordPanel({ activeWord, animState }) {
         </div>
       </div>
       <div className="combat__word-meta">
-        <span className="combat__meta-tag">{wordType}</span>
+        <span className="combat__meta-tag">{translatedWordType}</span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">NUCLEO · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{hexCore}</span></span>
+        <span className="combat__meta-item">{t("hud.combat.nucleus")} · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{hexCore}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">LONG · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word.length || "-"}</span></span>
+        <span className="combat__meta-item">{t("hud.combat.length")} · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word.length || "-"}</span></span>
         <span className="combat__meta-divider">|</span>
-        <span className="combat__meta-item">FREC · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word ? freq + "HZ" : "-"}</span></span>
+        <span className="combat__meta-item">{t("hud.combat.freq")} · <span style={{ color: "var(--col-meta-val, var(--col-active))" }}>{word ? freq + "HZ" : "-"}</span></span>
       </div>
     </div>
   );

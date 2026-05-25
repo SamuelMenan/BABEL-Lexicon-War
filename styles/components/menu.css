@@ -224,109 +224,106 @@
   color: transparent;
 }
 
+/* Glitch usa clip-path: inset() con porcentajes — escala a cualquier tamaño
+   sin cortar letras. Animacion mas espaciada (frames en burst + reposo) →
+   texto base completamente legible mayor parte del tiempo, glitch solo en
+   pulses cortos. Antes con clip:rect en px fijos, las letras quedaban
+   cortadas en pantallas chicas. */
+
 .main-menu__subtitle::before {
   left: 1px;
   text-shadow: -1px 0 var(--col-danger);
-  clip: rect(22px, 450px, 28px, 0);
-  animation: glitch-1 5s infinite linear alternate-reverse;
+  clip-path: inset(100% 0 0 0);
+  animation: glitch-1 6s infinite steps(1) both;
+  mix-blend-mode: screen;
+  opacity: 0.85;
 }
 .main-menu__subtitle::after {
   left: -1px;
   text-shadow: -1px 0 var(--col-primary);
-  clip: rect(22px, 450px, 28px, 0);
-  animation: glitch-2 5s infinite linear alternate-reverse;
+  clip-path: inset(100% 0 0 0);
+  animation: glitch-2 6s infinite steps(1) both;
+  mix-blend-mode: screen;
+  opacity: 0.85;
 }
 .main-menu__title::before {
-  left: 4px;
-  text-shadow: -4px 0 var(--col-danger);
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-1 5s infinite linear alternate-reverse;
+  left: 3px;
+  text-shadow: -3px 0 var(--col-danger);
+  clip-path: inset(100% 0 0 0);
+  animation: glitch-1 6s infinite steps(1) both;
+  mix-blend-mode: screen;
+  opacity: 0.7;
 }
 .main-menu__title::after {
-  left: -4px;
-  text-shadow: -4px 0 var(--col-primary);
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-2 5s infinite linear alternate-reverse;
+  left: -3px;
+  text-shadow: -3px 0 var(--col-primary);
+  clip-path: inset(100% 0 0 0);
+  animation: glitch-2 6s infinite steps(1) both;
+  mix-blend-mode: screen;
+  opacity: 0.7;
 }
 
+/* Glitch en burst — ocultos 90% del tiempo (inset hide). Solo aparecen en
+   pulses cortos de 80-200ms con clip variable. Texto base nitido. */
 @keyframes glitch-1 {
-  0%   { clip: rect(31px, 9999px, 94px, 0); }
-  5%   { clip: rect(70px, 9999px, 71px, 0); }
-  10%  { clip: rect(28px, 9999px, 78px, 0); }
-  15%  { clip: rect(77px, 9999px, 16px, 0); }
-  20%  { clip: rect(14px, 9999px, 64px, 0); }
-  25%  { clip: rect(12px, 9999px, 85px, 0); }
-  30%  { clip: rect(62px, 9999px, 94px, 0); }
-  35%  { clip: rect(31px, 9999px, 49px, 0); }
-  40%  { clip: rect(94px, 9999px, 53px, 0); }
-  45%  { clip: rect(64px, 9999px, 28px, 0); }
-  50%  { clip: rect(24px, 9999px, 75px, 0); }
-  55%  { clip: rect(13px, 9999px, 35px, 0); }
-  60%  { clip: rect(72px, 9999px, 14px, 0); }
-  65%  { clip: rect(41px, 9999px, 89px, 0); }
-  70%  { clip: rect(28px, 9999px, 19px, 0); }
-  75%  { clip: rect(35px, 9999px, 97px, 0); }
-  80%  { clip: rect(67px, 9999px, 41px, 0); }
-  85%  { clip: rect(89px, 9999px, 26px, 0); }
-  90%  { clip: rect(17px, 9999px, 68px, 0); }
-  95%  { clip: rect(46px, 9999px, 82px, 0); }
-  100% { clip: rect(54px, 9999px, 37px, 0); }
+  0%, 100% { clip-path: inset(100% 0 0 0); }
+  /* Burst 1 — 1.0s a 1.16s */
+  16.5%    { clip-path: inset(100% 0 0 0); }
+  17%      { clip-path: inset(18% 0 62% 0); }
+  18.5%    { clip-path: inset(55% 0 25% 0); }
+  19%      { clip-path: inset(100% 0 0 0); }
+  /* Burst 2 — 3.2s a 3.4s */
+  53%      { clip-path: inset(100% 0 0 0); }
+  53.5%    { clip-path: inset(8% 0 78% 0); }
+  55%      { clip-path: inset(70% 0 12% 0); }
+  56%      { clip-path: inset(35% 0 48% 0); }
+  56.5%    { clip-path: inset(100% 0 0 0); }
 }
-
 @keyframes glitch-2 {
-  0%   { clip: rect(65px, 9999px, 42px, 0); }
-  5%   { clip: rect(12px, 9999px, 83px, 0); }
-  10%  { clip: rect(58px, 9999px, 31px, 0); }
-  15%  { clip: rect(29px, 9999px, 76px, 0); }
-  20%  { clip: rect(84px, 9999px, 18px, 0); }
-  25%  { clip: rect(36px, 9999px, 92px, 0); }
-  30%  { clip: rect(51px, 9999px, 25px, 0); }
-  35%  { clip: rect(73px, 9999px, 64px, 0); }
-  40%  { clip: rect(19px, 9999px, 87px, 0); }
-  45%  { clip: rect(42px, 9999px, 53px, 0); }
-  50%  { clip: rect(68px, 9999px, 11px, 0); }
-  55%  { clip: rect(95px, 9999px, 39px, 0); }
-  60%  { clip: rect(27px, 9999px, 71px, 0); }
-  65%  { clip: rect(54px, 9999px, 44px, 0); }
-  70%  { clip: rect(81px, 9999px, 22px, 0); }
-  75%  { clip: rect(16px, 9999px, 96px, 0); }
-  80%  { clip: rect(48px, 9999px, 58px, 0); }
-  85%  { clip: rect(33px, 9999px, 79px, 0); }
-  90%  { clip: rect(72px, 9999px, 35px, 0); }
-  95%  { clip: rect(21px, 9999px, 67px, 0); }
-  100% { clip: rect(59px, 9999px, 48px, 0); }
+  0%, 100% { clip-path: inset(100% 0 0 0); }
+  16.5%    { clip-path: inset(100% 0 0 0); }
+  17.5%    { clip-path: inset(60% 0 18% 0); }
+  18%      { clip-path: inset(25% 0 55% 0); }
+  19%      { clip-path: inset(100% 0 0 0); }
+  53%      { clip-path: inset(100% 0 0 0); }
+  54%      { clip-path: inset(45% 0 35% 0); }
+  55.5%    { clip-path: inset(12% 0 72% 0); }
+  56.5%    { clip-path: inset(100% 0 0 0); }
 }
 
 .main-menu__subtitle {
   position: relative;
   display: block;
   width: fit-content;
-  margin: 0 auto 1.4rem;
+  margin: 0.4rem auto 1.4rem;
   font-family: var(--font-hud);
-  font-size: clamp(1.5rem, 4.2vw, 2.8rem);
+  /* Mas grande para legibilidad — antes 1.5-2.8rem quedaba opaco por chrome. */
+  font-size: clamp(2.2rem, 6vw, 4rem);
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   line-height: 1;
   text-transform: none;
 
+  /* Gradient con MAS proporcion clara — texto legible en todo el rango.
+     Antes los stops oscuros 44%-64% hacian que centro del texto desapareciera. */
   background-image: linear-gradient(
     180deg,
     #ffffff 0%,
-    #d6dde3 20%,
-    #6b7682 44%,
-    #1d242a 54%,
-    #4a5763 64%,
-    #adb9c3 84%,
-    #f3f7fc 100%
+    #e8eef4 35%,
+    #9ba6b2 55%,
+    #c8d2dc 75%,
+    #ffffff 100%
   );
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
           color: transparent;
 
+  /* Sombra roja CERCA del texto — antes 3-4px offset creaba "doble texto"
+     ilegible. Ahora 1px desplazamiento + glow suave: efecto de borde sutil. */
   text-shadow:
-    4px 4px 0 rgba(196, 32, 52, 0.92),
-    5px 5px 12px rgba(160, 20, 36, 0.5);
+    1px 1px 0 rgba(196, 32, 52, 0.7),
+    0 0 6px rgba(160, 20, 36, 0.35);
 }
 
 .main-menu__quote {
@@ -382,6 +379,7 @@
 .main-menu__btn:nth-child(2) { animation-delay: 0.60s; }
 .main-menu__btn:nth-child(3) { animation-delay: 0.70s; }
 .main-menu__btn:nth-child(4) { animation-delay: 0.80s; }
+.main-menu__btn:nth-child(5) { animation-delay: 0.90s; }
 
 @keyframes babel-slide-in {
   from { opacity: 0; transform: translateX(-12px); }
@@ -480,4 +478,65 @@
   color: var(--text-faint);
   text-align: center;
   margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — solo afecta MainMenu + modales del UI shell.
+   No toca hangar/online/combat/race (esos son interfaces de gameplay).
+   Estrategia: compactar titulo, padding y botones segun altura/ancho
+   viewport para que el menu con 5 items quepa sin scroll en pantallas
+   pequeñas o ventanas chicas.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Pantallas bajas (laptops, ventanas reducidas) */
+@media (max-height: 820px) {
+  .main-menu__main { gap: 1.2rem; padding: 0.6rem 1.5rem; }
+  .main-menu__title-block { gap: 0; }
+  .main-menu__title { font-size: clamp(3rem, 8vw, 5.5rem); }
+  .main-menu__subtitle { font-size: clamp(0.65rem, 1vw, 0.95rem); }
+  .main-menu__quote { font-size: 0.78rem; margin: 0.2rem 0; }
+  .kbnav { gap: 0.4rem; }
+  .main-menu__btn { padding: 0.65rem 0.9rem; }
+  .main-menu__btn-icon { width: 2.2rem; height: 2.2rem; font-size: 0.95rem; }
+  .main-menu__btn-label { font-size: 0.78rem; }
+  .main-menu__btn-desc { font-size: 0.65rem; }
+}
+
+@media (max-height: 680px) {
+  .main-menu__main { gap: 0.8rem; padding: 0.4rem 1rem; }
+  .main-menu__title { font-size: clamp(2.4rem, 6vw, 4rem); }
+  .main-menu__subtitle { font-size: 0.65rem; }
+  .main-menu__quote { display: none; }
+  .babel-divider { margin: 0.2rem auto; }
+  .kbnav { gap: 0.3rem; }
+  .main-menu__btn { padding: 0.5rem 0.8rem; gap: 0.7rem; }
+  .main-menu__btn-icon { width: 1.9rem; height: 1.9rem; font-size: 0.85rem; }
+  .main-menu__btn-label { font-size: 0.72rem; letter-spacing: 0.14em; }
+  .main-menu__btn-desc { font-size: 0.6rem; }
+  .main-menu__hint { display: none; }
+}
+
+@media (max-height: 560px) {
+  .main-menu__main { gap: 0.4rem; }
+  .main-menu__title-block { display: flex; flex-direction: column; }
+  .main-menu__title { font-size: 1.8rem; margin: 0; }
+  .babel-divider { display: none; }
+  .main-menu__btn-desc { display: none; }
+  .main-menu__btn { padding: 0.4rem 0.7rem; }
+}
+
+/* Pantallas estrechas */
+@media (max-width: 640px) {
+  .main-menu__main { padding: 0.6rem 0.8rem; }
+  .kbnav { max-width: 22rem; }
+  .auth-pill { flex-wrap: wrap; gap: 0.4rem; right: 0.8rem; }
+}
+
+@media (max-width: 420px) {
+  .main-menu__title { font-size: clamp(2rem, 12vw, 3.2rem); }
+  .kbnav { max-width: 100%; }
+  .main-menu__btn { padding: 0.55rem 0.75rem; gap: 0.7rem; }
+  .main-menu__btn-icon { display: none; }
+  .babel-frame__header,
+  .babel-frame__footer { font-size: 0.55rem; }
 }

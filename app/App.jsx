@@ -14,12 +14,24 @@ import RematchInviteModal from "./components/race/online/RematchInviteModal.jsx"
 import OnlineNoticeBanner from "./components/OnlineNoticeBanner.jsx";
 import { Bridge } from "../shared/bridge.js";
 import { KeybindService } from "../shared/keybindService.js";
+import { getSession } from "../game/services/supabase/auth.js";
 
 export default function App() {
   const [state, setState] = useState(() => Bridge.getState());
   const [showHelp, setShowHelp] = useState(false);
-  // Epilepsia + presentacion SIEMPRE salen al cargar — no se persisten.
-  const [introStage, setIntroStage] = useState('warning');
+  // Usuarios autenticados saltan warning + prologo. Invitados los ven cada carga.
+  const [introStage, setIntroStage] = useState('checking');
+
+  useEffect(() => {
+    let mounted = true;
+    getSession().then((session) => {
+      if (!mounted) return;
+      setIntroStage(session ? 'done' : 'warning');
+    }).catch(() => {
+      if (mounted) setIntroStage('warning');
+    });
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     const off = KeybindService.register('global', 'SHOW_HELP', () => setShowHelp((s) => !s));
@@ -32,6 +44,7 @@ export default function App() {
       let base = 'menu';
       if (s.isRunning) base = 'gameplay';
       else if (s.showShipSelection) base = 'hangar';
+      else if (s.onlineHangarActive) base = 'hangar';
       else if (s.isPaused) base = 'menu';
       KeybindService.setScope(base);
     });
@@ -83,6 +96,10 @@ export default function App() {
     onlineEnabled, onlineOpponentStats, onlineRole,
     onlinePendingInvite, onlineNotice,
   } = state;
+
+  if (introStage === 'checking') {
+    return null;
+  }
 
   if (introStage === 'warning') {
     return (

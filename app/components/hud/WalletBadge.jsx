@@ -1,8 +1,9 @@
 import React, { useEffect, useReducer, useRef } from 'react';
 import { Bridge } from '../../../shared/bridge.js';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
+import { getNumberFormatter } from '../../../shared/i18n/index.js';
 
-const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
-function fmt(n) { return NUMBER_FORMATTER.format(n ?? 0); }
+function fmt(n) { return getNumberFormatter().format(n ?? 0); }
 
 const initialState = () => ({ grafemas: Bridge.peekState().grafemas ?? 0, pulse: null });
 
@@ -17,6 +18,7 @@ function reducer(state, action) {
 // Insignia de saldo de grafemas. Coherente en hangar / combate / carrera.
 // Prop `placement`: 'hangar' | 'combat' | 'race'. Ajusta posicionamiento.
 export default function WalletBadge({ placement = 'hangar' }) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const prevRef  = useRef(state.grafemas);
   const timerRef = useRef(null);
@@ -41,7 +43,7 @@ export default function WalletBadge({ placement = 'hangar' }) {
   return (
     <div
       className={`wallet-badge wallet-badge--${placement}${pulse ? ` wallet-badge--${pulse}` : ''}`}
-      title="Grafemas: moneda del Programa TYPO"
+      title={t("hud.common.walletTitle")}
     >
       <span className="wallet-badge__value">₲ {fmt(grafemas)}</span>
     </div>

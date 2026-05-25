@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-
-const MESSAGES = [
-  'ACCEDIENDO A HANGAR · TYPO',
-  'ESCANEANDO UNIDADES DISPONIBLES',
-  'VERIFICANDO FIRMA LEXICA',
-  'CALIBRANDO SINCRONIZACION DE PILOTO',
-  'PREPARANDO DESPLIEGUE · EN ESPERA',
-];
+import useTranslation from '../../shared/i18n/useTranslation.js';
 
 export default function ShipSelectLoadingScreen({ progress = 0 }) {
+  const { t } = useTranslation();
   const [cursorOn, setCursorOn]   = useState(true);
   const [msgIdx,   setMsgIdx]     = useState(0);
+
+  const MESSAGES = [
+    t('shipSelectLoading.messages.0'),
+    t('shipSelectLoading.messages.1'),
+    t('shipSelectLoading.messages.2'),
+    t('shipSelectLoading.messages.3'),
+    t('shipSelectLoading.messages.4'),
+  ];
 
   useEffect(() => {
     const id = setInterval(() => setCursorOn(v => !v), 480);
@@ -20,7 +22,7 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
   useEffect(() => {
     const id = setInterval(() => setMsgIdx(v => (v + 1) % MESSAGES.length), 900);
     return () => clearInterval(id);
-  }, []);
+  }, [MESSAGES.length]);
 
   const pct    = Math.round(Math.max(0, Math.min(100, progress)));
   const isDone = pct >= 100;
@@ -44,7 +46,7 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
         <div className="loading-hairline" />
 
         <div className="loading-mode-badge">
-          <span className="loading-mode-badge__text">SELECCION · DE · NAVE</span>
+          <span className="loading-mode-badge__text">{t('shipSelectLoading.modeBadge')}</span>
         </div>
 
         <div className="loading-hairline" />
@@ -73,16 +75,16 @@ export default function ShipSelectLoadingScreen({ progress = 0 }) {
         <div className="loading-hairline" />
 
         <div className="loading-quote">
-          <p className="loading-quote__line">"Error de sintaxis.</p>
-          <p className="loading-quote__line">&nbsp;Coincidencia fallida."</p>
-          <p className="loading-quote__attr">- LYRA VOSS · ULTIMA TRANSMISION</p>
+          <p className="loading-quote__line">{t('loadingScreen.quoteLine1')}</p>
+          <p className="loading-quote__line">{t('loadingScreen.quoteLine2')}</p>
+          <p className="loading-quote__attr">{t('shipSelectLoading.quoteAttr')}</p>
         </div>
       </div>
 
       <div className="loading-footer">
-        <span className="loading-footer__text">PROGRAMA · TYPO · ACTIVO</span>
+        <span className="loading-footer__text">{t('shipSelectLoading.footerProgram')}</span>
         <span className="loading-footer__sep">|</span>
-        <span className="loading-footer__text">ELIGE TU NAVE · ANTES DEL DESPLIEGUE</span>
+        <span className="loading-footer__text">{t('shipSelectLoading.footerChoose')}</span>
         <span className="loading-footer__sep">|</span>
         <span className="loading-footer__text">KAEL · VOSS</span>
       </div>

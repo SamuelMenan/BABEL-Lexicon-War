@@ -1,4 +1,4 @@
-﻿import { EventBus } from '../../shared/events.js';
+import { EventBus } from '../../shared/events.js';
 import { EventTypes } from '../../shared/eventTypes.js';
 import { Bridge } from '../../shared/bridge.js';
 
@@ -12,13 +12,13 @@ const STEPS = {
 };
 
 const MESSAGES = {
-  [STEPS.PREPARE]: 'PROTOCOLO PRE-COMBATE INICIALIZADO',
-  [STEPS.FIVE]:    'ALINEANDO NODO DE INTERCEPCION',
-  [STEPS.FOUR]:    'ESTABILIZANDO RUTA DE IMPACTO',
-  [STEPS.THREE]:   'SINCRONIZANDO CANAL LEXICO',
-  [STEPS.TWO]:     'FIJANDO FRECUENCIA DE OBJETIVO',
-  [STEPS.ONE]:     'ENTRADA AL ENJAMBRE INMINENTE',
-  [STEPS.ENGAGE]:  'ERROR DE SINTAXIS. COINCIDENCIA FALLIDA.',
+  [STEPS.PREPARE]: 'preCombat.prepare',
+  [STEPS.FIVE]:    'preCombat.align',
+  [STEPS.FOUR]:    'preCombat.stabilize',
+  [STEPS.THREE]:   'preCombat.sync',
+  [STEPS.TWO]:     'preCombat.lock',
+  [STEPS.ONE]:     'preCombat.imminent',
+  [STEPS.ENGAGE]:  'preCombat.syntaxError',
 };
 
 export class PreCombatController {
@@ -47,7 +47,7 @@ export class PreCombatController {
     this._schedule(PREPARE_MS + STEP_MS * 2,              () => this._tick(STEPS.THREE,  '3',      'yellow'));
     this._schedule(PREPARE_MS + STEP_MS * 3,              () => this._tick(STEPS.TWO,    '2',      'yellow'));
     this._schedule(PREPARE_MS + STEP_MS * 4,              () => this._tick(STEPS.ONE,    '1',      'red'));
-    this._schedule(PREPARE_MS + STEP_MS * 5,              () => this._tick(STEPS.ENGAGE, 'ENGAGE', 'red'));
+    this._schedule(PREPARE_MS + STEP_MS * 5,              () => this._tick(STEPS.ENGAGE, 'preCombat.engage', 'red'));
     this._schedule(PREPARE_MS + STEP_MS * 5 + ENGAGE_MS, () => {
       this._active = false;
       this._clearTimers();

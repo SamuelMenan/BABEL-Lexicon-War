@@ -15,34 +15,38 @@ export const SCOPES = Object.freeze({
 // 'default' / 'alias' = KeyboardEvent.key normalizado (case-insensitive)
 export const ACTIONS = Object.freeze({
   // ── Universal ─────────────────────────────────────────────────────
-  CONFIRM:        { default: 'Enter',     alias: ' ',         scopes: ['menu','hangar','tutorial','modal'], description: 'Confirmar / accion primaria' },
-  CANCEL:         { default: 'Escape',                        scopes: ['menu','hangar','tutorial','modal','gameplay'], description: 'Cancelar / atras / pausa' },
-  NAV_UP:         { default: 'ArrowUp',                       scopes: ['menu','modal'],   description: 'Navegar arriba' },
-  NAV_DOWN:       { default: 'ArrowDown',                     scopes: ['menu','modal'],   description: 'Navegar abajo' },
-  NAV_PREV:       { default: 'ArrowLeft',                     scopes: ['menu','hangar','tutorial'], description: 'Anterior / izquierda' },
-  NAV_NEXT:       { default: 'ArrowRight',                    scopes: ['menu','hangar','tutorial'], description: 'Siguiente / derecha' },
-  SHOW_HELP:      { default: '?',                             scopes: ['*'],              description: 'Mostrar atajos' },
+  CONFIRM:        { default: 'Enter',     alias: ' ',         scopes: ['menu','hangar','tutorial','modal'], description: 'keybindings.confirm.desc' },
+  CANCEL:         { default: 'Escape',                        scopes: ['menu','hangar','tutorial','modal','gameplay'], description: 'keybindings.cancel.desc' },
+  NAV_UP:         { default: 'ArrowUp',                       scopes: ['menu','modal'],   description: 'keybindings.navUp.desc' },
+  NAV_DOWN:       { default: 'ArrowDown',                     scopes: ['menu','modal'],   description: 'keybindings.navDown.desc' },
+  NAV_PREV:       { default: 'ArrowLeft',                     scopes: ['menu','hangar','tutorial'], description: 'keybindings.navPrev.desc' },
+  NAV_NEXT:       { default: 'ArrowRight',                    scopes: ['menu','hangar','tutorial'], description: 'keybindings.navNext.desc' },
+  SHOW_HELP:      { default: '?',                             scopes: ['*'],              description: 'keybindings.showHelp.desc' },
 
   // ── Hangar ────────────────────────────────────────────────────────
-  HANGAR_CAM_CYCLE: { default: 'c',                           scopes: ['hangar'], description: 'Ciclar vistas de camara' },
-  HANGAR_CAM_RESET: { default: 'r',                           scopes: ['hangar'], description: 'Reset camara' },
+  HANGAR_CAM_CYCLE: { default: 'c',                           scopes: ['hangar'], description: 'keybindings.hangarCamCycle.desc' },
+  HANGAR_CAM_RESET: { default: 'r',                           scopes: ['hangar'], description: 'keybindings.hangarCamReset.desc' },
+  HANGAR_FIRE:      { default: 'k',                           scopes: ['hangar'], description: 'keybindings.hangarFire.desc' },
+  HANGAR_LASER:     { default: 'l',                           scopes: ['hangar'], description: 'keybindings.hangarLaser.desc' },
+  HANGAR_BOOSTERS:  { default: 'j',                           scopes: ['hangar'], description: 'keybindings.hangarBoosters.desc' },
+  HANGAR_DETONATE:  { default: 'x',                           scopes: ['hangar'], description: 'keybindings.hangarDetonate.desc' },
 
   // ── Gameplay ──────────────────────────────────────────────────────
   // Typing es manejado aparte (cualquier caracter imprimible) — no registrado como action discreta.
 
   // ── Debug (solo si profile.debugEnabled) ──────────────────────────
-  DEBUG_PERF:        { default: 'F9',          debug: true, scopes: ['*'], description: 'Toggle modo rendimiento' },
-  DEBUG_TELEMETRY:   { default: 'F10',         debug: true, scopes: ['*'], description: 'Toggle panel telemetria (FPS)' },
-  DEBUG_BOT:         { default: 'F11',         debug: true, scopes: ['*'], description: 'Toggle AutoTyper bot' },
-  DEBUG_MARKERS:     { default: 'F12',         debug: true, scopes: ['*'], description: 'Toggle markers debug (hangar)' },
-  DEBUG_RESET_TUT:   { default: 'Insert',      debug: true, scopes: ['*'], description: 'Reset flags de tutoriales (sin reload)' },
-  DEBUG_DEATH:       { default: 'Home',        debug: true, scopes: ['gameplay'], description: 'Forzar muerte del jugador' },
-  DEBUG_SKIP_WAVE:   { default: 'End',         debug: true, scopes: ['gameplay'], description: 'Saltar a proxima oleada' },
-  DEBUG_GRAF_PLUS:   { default: 'PageUp',      debug: true, scopes: ['*'], description: '+50 grafemas' },
-  DEBUG_GRAF_MINUS:  { default: 'PageDown',    debug: true, scopes: ['*'], description: '-50 grafemas' },
-  DEBUG_FREEZE:      { default: 'Pause',       debug: true, scopes: ['*'], description: 'Freeze hard del loop' },
-  DEBUG_WAVETRACE:   { default: 'ScrollLock',  debug: true, scopes: ['gameplay'], description: 'Toggle wave-trace logger' },
-  DEBUG_SNAPSHOT:    { default: 'PrintScreen', debug: true, scopes: ['*'], description: 'Volcar estado a consola' },
+  DEBUG_PERF:        { default: 'F9',          debug: true, scopes: ['*'], description: 'keybindings.debugPerf.desc' },
+  DEBUG_TELEMETRY:   { default: 'F10',         debug: true, scopes: ['*'], description: 'keybindings.debugTelemetry.desc' },
+  DEBUG_BOT:         { default: 'F11',         debug: true, scopes: ['*'], description: 'keybindings.debugBot.desc' },
+  DEBUG_MARKERS:     { default: 'F12',         debug: true, scopes: ['*'], description: 'keybindings.debugMarkers.desc' },
+  DEBUG_RESET_TUT:   { default: 'Insert',      debug: true, scopes: ['*'], description: 'keybindings.debugResetTut.desc' },
+  DEBUG_DEATH:       { default: 'Home',        debug: true, scopes: ['gameplay'], description: 'keybindings.debugDeath.desc' },
+  DEBUG_SKIP_WAVE:   { default: 'End',         debug: true, scopes: ['gameplay'], description: 'keybindings.debugSkipWave.desc' },
+  DEBUG_GRAF_PLUS:   { default: 'PageUp',      debug: true, scopes: ['*'], description: 'keybindings.debugGrafPlus.desc' },
+  DEBUG_GRAF_MINUS:  { default: 'PageDown',    debug: true, scopes: ['*'], description: 'keybindings.debugGrafMinus.desc' },
+  DEBUG_FREEZE:      { default: 'Pause',       debug: true, scopes: ['*'], description: 'keybindings.debugFreeze.desc' },
+  DEBUG_WAVETRACE:   { default: 'ScrollLock',  debug: true, scopes: ['gameplay'], description: 'keybindings.debugWavetrace.desc' },
+  DEBUG_SNAPSHOT:    { default: 'PrintScreen', debug: true, scopes: ['*'], description: 'keybindings.debugSnapshot.desc' },
 });
 
 // Normaliza una tecla para comparacion case-insensitive (letras unicas).

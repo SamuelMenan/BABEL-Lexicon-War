@@ -4,6 +4,7 @@ import { EventBus } from "../../shared/events.js";
 import { EventTypes } from "../../shared/eventTypes.js";
 import { GAME_MODES, SHIP_PALETTES, SHIPS } from "../../shared/constants.js";
 import { getCharacter } from "../../shared/characterData.js";
+import useTranslation from "../../shared/i18n/useTranslation.js";
 
 import CombatTicker from "./hud/combat/CombatTicker.jsx";
 import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
@@ -49,7 +50,8 @@ function wordFxReducer(state, action) {
 }
 
 export default function HUD() {
-  const [state, setState] = useState(() => Bridge.getState());
+  const { t } = useTranslation();
+  const [state, setState] = useState(() => Bridge.peekState());
   const [wordFx, dispatchWordFx] = useReducer(wordFxReducer, { animState: 'idle', showFlash: false });
   const { animState, showFlash } = wordFx;
   const [waveNotice, setWaveNotice] = useState(null);
@@ -97,8 +99,8 @@ export default function HUD() {
   const character = getCharacter(selectedCharacter);
   const shipEntry = SHIPS.find(s => s.id === selectedShip);
   const shipName  = shipEntry?.name || '—';
-  const pilotName = (character?.name || 'PILOTO').toUpperCase();
-  const pilotSub  = `${character?.codename || '—'} / ${(character?.role || 'PILOT').toUpperCase()}`;
+  const pilotName = (character?.name || t('hud.common.pilot')).toUpperCase();
+  const pilotSub  = `${character?.codename || '—'} / ${(character?.role || t('hud.common.pilot')).toUpperCase()}`;
 
   const isRacing = gameMode === GAME_MODES.RACING;
   const lowHpLevel = warnings?.lowHpLevel ?? "none";
@@ -221,8 +223,8 @@ export default function HUD() {
           <div className="combat__top-left">
             <span className="hud__pilot-name">{pilotName}</span>
             <span className="hud__pilot-sub" style={{ color: "var(--col-pilot-sub, var(--col-active))" }}>{pilotSub}</span>
-            <span className="hud__pilot-ship">NAVE · {shipName.toUpperCase()}</span>
-            <span className="hud__pilot-scene">ESCENA · COMBATE</span>
+            <span className="hud__pilot-ship">{t('hud.common.ship')} · {shipName.toUpperCase()}</span>
+            <span className="hud__pilot-scene">{t('hud.common.sceneCombat')}</span>
           </div>
           <CombatTicker />
           <CombatTopRight wpm={wpm} accuracy={accuracy} />

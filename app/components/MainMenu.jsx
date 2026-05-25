@@ -6,25 +6,32 @@ import KeyboardNavigable from './common/KeyboardNavigable.jsx';
 import AuthModal from './auth/AuthModal.jsx';
 import LeaderboardModal from './leaderboard/LeaderboardModal.jsx';
 import GuestPromptModal from './auth/GuestPromptModal.jsx';
+import KeyHint from './common/KeyHint.jsx';
+import Icon from './common/Icon.jsx';
+import CreditsModal from './credits/CreditsModal.jsx';
 import RaceModeSelectModal from './race/RaceModeSelectModal.jsx';
 import LobbyBrowser from './race/online/LobbyBrowser.jsx';
 import RoomScreen from './race/online/RoomScreen.jsx';
-import { createOnlineRaceSync } from '../services/supabase/onlineRaceSync.js';
-import { recordOnlineMatch } from '../services/supabase/rooms.js';
+import OnlineRoomHangar from './race/online/OnlineRoomHangar.jsx';
+import { createOnlineRaceSync } from '../../game/services/supabase/onlineRaceSync.js';
+import { recordOnlineMatch } from '../../game/services/supabase/rooms.js';
 import { EventBus } from '../../shared/events.js';
 import {
   attachRematchSync, detachRematchSync, clearPendingRoom,
-} from '../services/online/rematchCoordinator.js';
-import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '../services/supabase/auth.js';
+} from '../../game/services/online/rematchCoordinator.js';
+import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '../../game/services/supabase/auth.js';
 import { loadProfile } from '../../shared/playerProfile.js';
 import { getCharacter } from '../../shared/characterData.js';
+import useTranslation from '../../shared/i18n/useTranslation.js';
 
 export default function MainMenu() {
+  const { t } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState('visuals');
   const [authUser, setAuthUser] = useState(null);
   const [authModal, setAuthModal] = useState(null); // 'signin' | 'signup' | null
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showCredits,     setShowCredits]     = useState(false);
   const [guestPrompt, setGuestPrompt] = useState(null); // { feature, onProceed } | null
   const [raceModePick, setRaceModePick] = useState(false);
   const [onlineLobby,   setOnlineLobby] = useState(() => {
@@ -37,22 +44,25 @@ export default function MainMenu() {
     } catch { /* ignore */ }
     return false;
   });
-  const [onlineRoom,    setOnlineRoom]  = useState(null); // { roomId, role } | null
+  const [onlineRoom,    setOnlineRoom]  = useState(null); // { roomId, role, phase: 'lobby' | 'hangar' } | null
 
   // Auto-open RoomScreen si Bridge tiene onlinePendingRoom (revancha aceptada
   // o propuesta enviada mientras MatchResult estaba visible).
   // Tambien cierra RoomScreen si Bridge.onlineRoom se limpia (rival rechazo
   // revancha → coordinator pone onlinePendingRoom=null + onlineRoom=null).
   useEffect(() => {
+    // Rematch nuevas salas siempre arrancan en phase='lobby' — RoomScreen
+    // detecta ambos jugadores y transiciona a 'hangar' automaticamente.
+    const withPhase = (r) => r ? { ...r, phase: 'lobby' } : null;
     const pending = Bridge.peekState().onlinePendingRoom;
     if (pending) {
-      setOnlineRoom(pending);
+      setOnlineRoom(withPhase(pending));
       setOnlineLobby(true);
       clearPendingRoom();
     }
     return Bridge.onStateChange((s) => {
       if (s.onlinePendingRoom && !onlineRoom) {
-        setOnlineRoom(s.onlinePendingRoom);
+        setOnlineRoom(withPhase(s.onlinePendingRoom));
         setOnlineLobby(true);
         clearPendingRoom();
       }
@@ -105,35 +115,43 @@ export default function MainMenu() {
   const items = [
     {
       id: 'combat',
-      label: 'Modo Combate',
-      desc: 'Enfrenta al Enjambre. Escribe para destruir.',
-      glyph: '◢',
+      label: t('mainMenu.combat.label'),
+      desc: t('mainMenu.combat.desc'),
+      glyph: 'swords',
       accent: 'var(--col-danger)',
       action: gatedByGuest('combat', deferred(() => Bridge.commands.openShipSelection(GAME_MODES.COMBAT))),
     },
     {
       id: 'racing',
-      label: 'Modo Carrera',
-      desc: 'Velocidad pura. Tu WPM determina la nave.',
-      glyph: '▶',
+      label: t('mainMenu.racing.label'),
+      desc: t('mainMenu.racing.desc'),
+      glyph: 'rocket_launch',
       accent: 'var(--col-primary)',
       action: gatedByGuest('racing', deferred(() => setRaceModePick(true))),
     },
     {
       id: 'settings',
-      label: 'Configuracion',
-      desc: 'Controles, audio, visuales y atajos.',
-      glyph: '⚙',
+      label: t('mainMenu.settings.label'),
+      desc: t('mainMenu.settings.desc'),
+      glyph: 'settings',
       accent: 'var(--text-dim)',
       action: () => { setSettingsTab('visuals'); setShowSettings(true); },
     },
     {
       id: 'ranking',
-      label: 'Clasificacion',
-      desc: 'Diario, semanal y mensual por modo.',
-      glyph: '⌘',
+      label: t('mainMenu.ranking.label'),
+      desc: t('mainMenu.ranking.desc'),
+      glyph: 'leaderboard',
       accent: 'var(--col-primary)',
       action: gatedByGuest('leaderboard', () => setShowLeaderboard(true)),
+    },
+    {
+      id: 'credits',
+      label: t('mainMenu.credits.label'),
+      desc: t('mainMenu.credits.desc'),
+      glyph: 'group',
+      accent: 'var(--text-dim)',
+      action: () => setShowCredits(true),
     },
   ];
 
@@ -149,7 +167,7 @@ export default function MainMenu() {
 
       {/* Header */}
       <header className="babel-frame__header">
-        <span>BABEL · LEXICON WAR</span>
+        <span>{t('mainMenu.header')}</span>
       </header>
 
       {/* Auth pill — siempre visible; modal avisa si Supabase no esta configurado */}
@@ -157,26 +175,28 @@ export default function MainMenu() {
         {authUser ? (
           <>
             <span className="auth-pill__user">
-              <span className="auth-pill__user-tag">USUARIO ·</span>{displayName}
+              <span className="auth-pill__user-tag">{t('mainMenu.userTag')}</span>{displayName}
             </span>
             <button
               type="button"
               className="auth-pill__btn auth-pill__btn--ghost"
               onClick={async () => { await signOut(); setAuthUser(null); }}
-            >Cerrar sesion</button>
+            >{t('mainMenu.signOut')}</button>
           </>
         ) : (
           <>
             <button type="button" className="auth-pill__btn" onClick={() => setAuthModal('signin')}>
-              Iniciar sesion
+              {t('mainMenu.signIn')}
             </button>
             <button type="button" className="auth-pill__btn auth-pill__btn--ghost" onClick={() => setAuthModal('signup')}>
-              Registrarse
+              {t('mainMenu.signUp')}
             </button>
           </>
         )}
         {!isAuthAvailable() && (
-          <span className="auth-pill__user-tag" title="Falta VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY">⚠ offline</span>
+          <span className="auth-pill__user-tag" title="Falta VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY">
+            <Icon name="warning" size={12} /> {t('mainMenu.offline')}
+          </span>
         )}
       </div>
 
@@ -190,6 +210,10 @@ export default function MainMenu() {
 
       {showLeaderboard && (
         <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+      )}
+
+      {showCredits && (
+        <CreditsModal onClose={() => setShowCredits(false)} />
       )}
 
       {raceModePick && (
@@ -210,13 +234,27 @@ export default function MainMenu() {
         <LobbyBrowser
           onClose={() => setOnlineLobby(false)}
           onEnterRoom={(roomId, role) => {
-            setOnlineRoom({ roomId, role });
+            setOnlineRoom({ roomId, role, phase: 'lobby' });
           }}
         />
       )}
 
-      {onlineRoom && (
+      {/* Phase 'lobby' = RoomScreen (matchmaking, espera rival).
+          Phase 'hangar' = OnlineRoomHangar (3D, ship pick, ready, deploy).
+          Auto-transicion: RoomScreen detecta ambos en sala → onRivalFound → phase='hangar'. */}
+      {onlineRoom && onlineRoom.phase === 'lobby' && (
         <RoomScreen
+          roomId={onlineRoom.roomId}
+          role={onlineRoom.role}
+          onLeave={() => { setOnlineRoom(null); }}
+          onRivalFound={() => {
+            setOnlineRoom((prev) => prev ? { ...prev, phase: 'hangar' } : null);
+          }}
+        />
+      )}
+
+      {onlineRoom && onlineRoom.phase === 'hangar' && (
+        <OnlineRoomHangar
           roomId={onlineRoom.roomId}
           role={onlineRoom.role}
           onLeave={() => { setOnlineRoom(null); }}
@@ -281,7 +319,7 @@ export default function MainMenu() {
             const offGameOver = EventBus.on('game:over', () => {
               setTimeout(() => {
                 sync.dispose();
-                detachRematchSync();
+                detachRematchSync(sync);
                 offLocalFinish();
                 offGameOver();
               }, 60000);
@@ -321,12 +359,10 @@ export default function MainMenu() {
       <main className="main-menu__main">
         <div className="main-menu__title-block">
           <div className="babel-divider" />
-          <h1 className="main-menu__title" data-text="BABEL">BABEL</h1>
-          <p className="main-menu__subtitle" data-text="The Lexicon War">The Lexicon War</p>
+          <h1 className="main-menu__title" data-text="BABEL">BABEL:</h1>
+          <p className="main-menu__subtitle" data-text="BABEL: Lexicon War">{t('mainMenu.subtitle')}</p>
           <div className="babel-divider" />
-          <p className="main-menu__quote">
-            &quot;Error de sintaxis. Coincidencia fallida.&quot;
-          </p>
+
         </div>
 
         <KeyboardNavigable
@@ -343,7 +379,7 @@ export default function MainMenu() {
               onClick={activate}
               onMouseEnter={(e) => e.currentTarget.focus()}
             >
-              <span className="main-menu__btn-icon" aria-hidden="true">{it.glyph}</span>
+              <span className="main-menu__btn-icon" aria-hidden="true"><Icon name={it.glyph} size={22} /></span>
               <span className="main-menu__btn-body">
                 <span className="main-menu__btn-label">{it.label}</span>
                 <span className="main-menu__btn-desc">{it.desc}</span>
@@ -353,12 +389,20 @@ export default function MainMenu() {
           )}
         </KeyboardNavigable>
 
-        <p className="main-menu__hint">↑↓ navegar · Enter elegir · 1–3 atajo · ? atajos</p>
+        <KeyHint
+          className="main-menu__hint"
+          items={[
+            { key: '↑↓',    label: t('keys.navigate') },
+            { key: 'Enter', label: t('keys.select') },
+            { key: '1-5',   label: t('keys.shortcut') },
+            { key: '?',     label: t('keys.shortcuts') },
+          ]}
+        />
       </main>
 
       {/* Footer */}
       <footer className="babel-frame__footer">
-        PROGRAMA TYPO · BABEL: LEXICON WAR · v1.0.0
+        {t('mainMenu.footer')}
       </footer>
     </div>
   );

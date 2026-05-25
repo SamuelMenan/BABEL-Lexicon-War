@@ -1,25 +1,28 @@
 import React from 'react';
 import KeyboardNavigable from '../common/KeyboardNavigable.jsx';
-import { isSupabaseConfigured } from '../../services/supabase/client.js';
+import Icon from '../common/Icon.jsx';
+import { isSupabaseConfigured } from '../../../game/services/supabase/client.js';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 
 // Modal mostrado al presionar "Carrera" en MainMenu: Single vs Online.
 export default function RaceModeSelectModal({ onSelectSingle, onSelectOnline, onClose }) {
+  const { t } = useTranslation();
   const onlineAvailable = isSupabaseConfigured;
 
   const items = [
-    { id: 'single', label: 'Un jugador',        desc: 'Carrera contra IA — 60s.',                 action: onSelectSingle, accent: 'var(--col-primary)' },
-    { id: 'online', label: 'En linea',          desc: onlineAvailable ? 'Compite 1v1 en tiempo real.' : 'Supabase no configurado.', action: onlineAvailable ? onSelectOnline : null, accent: 'var(--col-active)', disabled: !onlineAvailable },
-    { id: 'back',   label: 'Volver',            desc: 'Regresar al menu principal.',              action: onClose,        accent: 'var(--text-dim)' },
+    { id: 'single', label: t('race.modeSelect.single'),  desc: t('race.modeSelect.singleDesc'), action: onSelectSingle, accent: 'var(--col-primary)' },
+    { id: 'online', label: t('race.modeSelect.online'),  desc: onlineAvailable ? t('race.modeSelect.onlineDesc') : t('race.modeSelect.onlineUnavailable'), action: onlineAvailable ? onSelectOnline : null, accent: 'var(--col-active)', disabled: !onlineAvailable },
+    { id: 'back',   label: t('common.back'),             desc: t('race.modeSelectExtra.backDesc'), action: onClose, accent: 'var(--text-dim)' },
   ];
 
   return (
     <div className="race-mode-modal" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="race-mode-modal__panel" onClick={(e) => e.stopPropagation()}>
         <header className="race-mode-modal__header">
-          <span className="race-mode-modal__label">◈ MODO CARRERA</span>
-          <button type="button" className="race-mode-modal__close" onClick={onClose} aria-label="Cerrar">✕</button>
+          <span className="race-mode-modal__label">◈ {t('race.modeSelect.label')}</span>
+          <button type="button" className="race-mode-modal__close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={16} /></button>
         </header>
-        <h2 className="race-mode-modal__title">Selecciona modo</h2>
+        <h2 className="race-mode-modal__title">{t('race.modeSelect.title')}</h2>
         <KeyboardNavigable
           items={items.filter(it => !it.disabled || it.id === 'back')}
           orientation="vertical"
@@ -43,7 +46,7 @@ export default function RaceModeSelectModal({ onSelectSingle, onSelectOnline, on
           )}
         </KeyboardNavigable>
         {!onlineAvailable && (
-          <p className="race-mode-modal__hint">⚠ Modo en linea requiere Supabase configurado.</p>
+          <p className="race-mode-modal__hint"><Icon name="warning" size={14} /> {t('race.modeSelect.supabaseWarn')}</p>
         )}
       </div>
     </div>

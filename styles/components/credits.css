@@ -1,0 +1,242 @@
+/* ─────────────────────────────────────────────────────────────
+   BABEL: Lexicon War — Escena de creditos
+   Estilo cinematografico, scroll vertical, paleta cyan.
+   ───────────────────────────────────────────────────────────── */
+
+.credits {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(6px);
+}
+
+.credits__panel {
+  width: 760px; max-width: 96vw;
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+  background: rgba(8, 12, 18, 0.98);
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 32px rgba(0, 255, 204, 0.08);
+}
+
+.credits__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.9rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+}
+
+.credits__close {
+  background: none; border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer; font-size: 1rem;
+}
+.credits__close:hover { color: rgba(255, 255, 255, 0.9); }
+
+/* ── Scroll body ─────────────────────────────────────────── */
+
+.credits__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.8rem 2rem 1.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 204, 0.35) transparent;
+}
+.credits__scroll::-webkit-scrollbar { width: 6px; }
+.credits__scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 204, 0.35);
+}
+
+/* ── Intro ───────────────────────────────────────────────── */
+
+.credits__intro {
+  text-align: center;
+  padding: 0.4rem 0 0.8rem;
+}
+
+/* Override solo tamaño/margen del titulo dentro del modal de creditos.
+   El estilo chrome metalico + glitch viene del .main-menu__title base. */
+.credits__title.main-menu__title {
+  font-size: clamp(2.8rem, 8vw, 4.5rem);
+  margin: 0.2rem auto 0.1rem;
+  text-shadow:
+    4px 4px 0 rgba(196, 32, 52, 0.95),
+    6px 6px 14px rgba(160, 20, 36, 0.55);
+}
+/* Subtitulo plano y legible — sin chrome metalico ni glitch (que rompen
+   a tamaños chicos del modal). Estilo coherente con el resto de creditos. */
+.credits__subtitle {
+  display: block;
+  width: fit-content;
+  margin: 0.4rem auto 0;
+  font-family: var(--font-hud);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 0 14px rgba(0, 255, 204, 0.18);
+}
+
+.credits__divider {
+  width: 60%;
+  margin: 0.7rem auto;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(0, 255, 204, 0.4),
+    transparent
+  );
+}
+
+.credits__tagline {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* ── Section ─────────────────────────────────────────────── */
+
+.credits__section {
+  margin: 1rem 0;
+}
+.credits__section + .credits__section { margin-top: 0.7rem; }
+
+.credits__section-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem; letter-spacing: 0.42em;
+  color: rgba(0, 255, 204, 0.85);
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(0, 255, 204, 0.18);
+  text-align: center;
+}
+
+/* Body de seccion — todos los Role / NameList apilados centrados. */
+.credits__section-body {
+  display: flex; flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+/* ── Role: label arriba (pequeño cyan), nombres abajo (grandes). ─ */
+/* Estilo classic film credits — sin gutter centrado, todo block alineado.   */
+
+.credits__role {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 460px;
+  text-align: center;
+}
+
+.credits__role-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem; letter-spacing: 0.32em;
+  color: rgba(0, 255, 204, 0.55);
+  text-transform: uppercase;
+}
+
+.credits__role-names {
+  display: flex; flex-direction: column;
+  gap: 0.1rem;
+  align-items: center;
+}
+
+.credits__role-name {
+  font-family: var(--font-hud);
+  font-size: 1rem; letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.3;
+}
+
+/* NameList — para secciones tipo agradecimientos sin label de rol. */
+.credits__name-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  gap: 0.15rem;
+  text-align: center;
+}
+.credits__name-list-item {
+  font-family: var(--font-hud);
+  font-size: 1rem; letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.3;
+}
+
+/* ── Outro ──────────────────────────────────────────────── */
+
+.credits__outro {
+  text-align: center;
+  padding: 0.3rem 0 0.2rem;
+  margin-top: 0;
+}
+
+.credits__quote {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: rgba(0, 255, 204, 0.7);
+  font-style: italic;
+  letter-spacing: 0.04em;
+  margin: 0.5rem 0 0.9rem;
+}
+
+.credits__copy {
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.credits__build {
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0.3rem 0 0;
+  text-transform: uppercase;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+.credits__footer {
+  display: flex; justify-content: center;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.credits__hint { /* hereda key-hint, OK */ }
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+/* Responsive — viewport pequeño / móvil */
+@media (max-height: 720px) {
+  .credits__panel { max-height: 96vh; }
+  .credits__scroll { padding: 1rem 1.4rem 0.8rem; }
+  .credits__intro { padding: 0.2rem 0 0.4rem; }
+  .credits__title.main-menu__title { font-size: clamp(2.2rem, 7vw, 3.6rem); }
+  .credits__section { margin: 0.7rem 0; }
+  .credits__role-name,
+  .credits__name-list-item { font-size: 0.88rem; }
+}
+
+@media (max-width: 540px) {
+  .credits__panel { width: 96vw; }
+  .credits__title.main-menu__title { font-size: clamp(1.8rem, 9vw, 2.6rem); }
+  .credits__subtitle.main-menu__subtitle { font-size: 0.65rem; }
+  .credits__scroll { padding: 0.9rem 1rem 0.6rem; }
+  .credits__role { max-width: 100%; }
+  .credits__role-name,
+  .credits__name-list-item { font-size: 0.85rem; }
+  .credits__section-title { font-size: 0.62rem; letter-spacing: 0.32em; }
+}

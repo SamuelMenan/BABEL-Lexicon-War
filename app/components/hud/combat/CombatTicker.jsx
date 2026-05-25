@@ -1,12 +1,14 @@
 import React from "react";
-
-const TICKER_MSG = "◂  FIRMA DEL ENJAMBRE · DETECTADA  ▸  LEXICO · HOSTIL  ▸  PROTOCOLO LEXICO · EN CURSO  ▸  PROGRAMA TYPO · ACTIVO  ▸  ";
+import useTranslation from "../../../../shared/i18n/useTranslation.js";
 
 export default function CombatTicker() {
+  const { t } = useTranslation();
+  const tickerMsg = t("hud.combat.ticker");
+
   return (
     <div className="hud__ticker">
       <div className="hud__ticker-inner">
-        <span className="hud__ticker-text">{TICKER_MSG}{TICKER_MSG}</span>
+        <span className="hud__ticker-text">{tickerMsg}{tickerMsg}</span>
       </div>
     </div>
   );

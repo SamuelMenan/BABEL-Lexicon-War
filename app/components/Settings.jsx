@@ -3,48 +3,50 @@ import { EXECUTION_MODE } from "../../shared/constants.js";
 import { workerBridge } from "../../game/workers/workerBridge.js";
 import { EconomySystem } from "../../game/systems/EconomySystem.js";
 import { Bridge } from "../../shared/bridge.js";
-import { resetTutorialFlags, getAllSeen } from "../../shared/tutorialFlags.js";
+import { resetTutorialFlags } from "../../shared/tutorialFlags.js";
 import { KeybindService } from "../../shared/keybindService.js";
+import { QUALITY, setQualityTier, getQualityTier } from "../../shared/qualitySettings.js";
+import useTranslation from "../../shared/i18n/useTranslation.js";
+import { getNumberFormatter } from "../../shared/i18n/index.js";
 import ControlsSection from "./settings/ControlsSection.jsx";
+import Icon from "./common/Icon.jsx";
 import "../../styles/components/controls-section.css";
 
-const NUMBER_FORMATTER = new Intl.NumberFormat('es-ES');
-
+// Settings v2 — solo los que SI funcionan en el juego. Auditoria previa
+// eliminó shadows/postProcessing/particleDensity/screenFlash/cameraShake,
+// audio.*, lexicalDifficulty/wordSpeed/autoRepeat/showPhonetics — ninguno
+// estaba conectado a sistema alguno. Mantenidos: quality + executionMode.
 const DEFAULT_SETTINGS = {
-  visuals: {
-    quality:          'high',
-    shadows:          true,
-    postProcessing:   true,
-    particleDensity:  75,
-    screenFlash:      true,
-    cameraShake:      true,
-  },
-  audio: {
-    sfx:    80,
-    music:  60,
-    voices: 100,
-  },
-  protocol: {
-    lexicalDifficulty: 'normal',
-    wordSpeed:         50,
-    autoRepeat:        false,
-    showPhonetics:     false,
-    executionMode:     EXECUTION_MODE.NORMAL,
-  },
+  quality:       QUALITY.MID,
+  executionMode: EXECUTION_MODE.NORMAL,
 };
 
-const SETTINGS_STORAGE_KEY = 'babel-settings:v1';
+const SETTINGS_STORAGE_KEY    = 'babel-settings:v2';
+const LEGACY_STORAGE_KEY_V1   = 'babel-settings:v1';
 
 function loadSettings() {
+  // v2 actual
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return {
-        visuals:  { ...DEFAULT_SETTINGS.visuals,  ...parsed.visuals },
-        audio:    { ...DEFAULT_SETTINGS.audio,    ...parsed.audio },
-        protocol: { ...DEFAULT_SETTINGS.protocol, ...parsed.protocol },
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
+  } catch { /* ignore */ }
+  // Migración suave desde v1 — extrae solo lo que aun importa.
+  try {
+    const rawV1 = localStorage.getItem(LEGACY_STORAGE_KEY_V1);
+    if (rawV1) {
+      const v1 = JSON.parse(rawV1);
+      const migrated = {
+        quality:       v1?.visuals?.quality        ?? DEFAULT_SETTINGS.quality,
+        executionMode: v1?.protocol?.executionMode ?? DEFAULT_SETTINGS.executionMode,
       };
+      // Normaliza 'medium' (v1) → 'mid' (v2 mapping qualitySettings)
+      if (migrated.quality === 'medium') migrated.quality = QUALITY.MID;
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(migrated));
+      localStorage.removeItem(LEGACY_STORAGE_KEY_V1);
+      return migrated;
     }
   } catch { /* ignore */ }
   return DEFAULT_SETTINGS;
@@ -54,39 +56,13 @@ function saveSettings(s) {
   try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
 }
 
+// Aplica settings al runtime — se llama al cargar Settings + en cada cambio.
+function applySettings(s) {
+  if (s.quality)       setQualityTier(s.quality);
+  if (s.executionMode) workerBridge.setMode(s.executionMode);
+}
+
 /* ── Primitives ──────────────────────────────────────────────── */
-
-function SciToggle({ value, onChange }) {
-  return (
-    <button
-      type="button"
-      className={`settings__toggle${value ? ' settings__toggle--on' : ''}`}
-      onClick={() => onChange(!value)}
-      aria-pressed={value}
-    >
-      <span className="settings__toggle-track">
-        <span className="settings__toggle-thumb" />
-      </span>
-      <span className="settings__toggle-label">{value ? 'ON' : 'OFF'}</span>
-    </button>
-  );
-}
-
-function SciSlider({ value, min = 0, max = 100, onChange, unit = '' }) {
-  return (
-    <div className="settings__slider">
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="settings__slider-input"
-      />
-      <span className="settings__slider-val">{value}{unit}</span>
-    </div>
-  );
-}
 
 function SciSelect({ options, value, onChange }) {
   return (
@@ -117,30 +93,10 @@ function Row({ label, hint, children }) {
   );
 }
 
-/* ── Main component ──────────────────────────────────────────── */
-
-const TABS = [
-  { id: 'visuals',  label: 'Visuales' },
-  { id: 'audio',    label: 'Audio' },
-  { id: 'protocol', label: 'Protocolo' },
-  { id: 'controls', label: 'Controles' },
-  { id: 'profile',  label: 'Perfil' },
-];
-
-const QUALITY_OPTS = [
-  { value: 'low',    label: 'Baja' },
-  { value: 'medium', label: 'Media' },
-  { value: 'high',   label: 'Alta' },
-];
-
-const DIFFICULTY_OPTS = [
-  { value: 'easy',   label: 'Basico' },
-  { value: 'normal', label: 'Estandar' },
-  { value: 'hard',   label: 'Avanzado' },
-  { value: 'elite',  label: 'Elite' },
-];
+/* ── Profile section ──────────────────────────────────────── */
 
 function ProfileSection() {
+  const { t } = useTranslation();
   const [confirmStep, setConfirmStep] = useState(0);
   const [profile, setProfile] = useState(() => EconomySystem.getProfile());
 
@@ -154,54 +110,59 @@ function ProfileSection() {
     refresh();
   };
 
-  const fmt = n => NUMBER_FORMATTER.format(n ?? 0);
-  const labels = ['Reiniciar Perfil', 'Confirmar (1/2)', 'Confirmar definitivamente (2/2)'];
+  const formatter = getNumberFormatter();
+  const fmt = n => formatter.format(n ?? 0);
+  const labels = [
+    t('settings.profile.resetProfile'),
+    t('settings.profile.confirmStep1'),
+    t('settings.profile.confirmStep2')
+  ];
 
   return (
     <div className="settings__section" key="profile">
-      <Row label="Grafemas" hint="Saldo actual del piloto">
+      <Row label={t('settings.profile.grafemas')} hint={t('settings.profile.grafemasHint')}>
         <span className="settings__readout">₲ {fmt(profile.grafemas)}</span>
       </Row>
-      <Row label="Naves en Hangar" hint="Inventario de naves desbloqueadas">
+      <Row label={t('settings.profile.ownedShips')} hint={t('settings.profile.ownedShipsHint')}>
         <span className="settings__readout">{profile.ownedShips.length}</span>
       </Row>
-      <Row label="Nave Equipada">
+      <Row label={t('settings.profile.equippedShip')}>
         <span className="settings__readout">{profile.equippedShip}</span>
       </Row>
-      <Row label="Kills Totales" hint="Enemigos colapsados acumulados">
+      <Row label={t('settings.profile.totalKills')} hint={t('settings.profile.totalKillsHint')}>
         <span className="settings__readout">{fmt(profile.stats.kills)}</span>
       </Row>
-      <Row label="Carreras Ganadas">
+      <Row label={t('settings.profile.racesWon')}>
         <span className="settings__readout">{fmt(profile.stats.racesWon)}</span>
       </Row>
-      <Row label="Grafemas Ganados (total)">
+      <Row label={t('settings.profile.totalEarned')}>
         <span className="settings__readout">₲ {fmt(profile.stats.totalGrafemasEarned)}</span>
       </Row>
-      <Row label="Grafemas Gastados (total)">
+      <Row label={t('settings.profile.totalSpent')}>
         <span className="settings__readout">₲ {fmt(profile.stats.totalGrafemasSpent)}</span>
       </Row>
-      <Row label="Tutoriales" hint="Vuelve a mostrar los tutoriales de Combate, Carrera y Hangar">
+      <Row label={t('settings.profile.tutorials')} hint={t('settings.profile.tutorialsHint')}>
         <button
           type="button"
           className="settings__reset"
           onClick={() => { resetTutorialFlags(); Bridge.commands.resetTutorials(); }}
         >
-          Repetir tutoriales
+          {t('settings.profile.repeatTutorials')}
         </button>
       </Row>
-      <Row label="Mecanografia" hint="Repaso de postura y dedos">
+      <Row label={t('settings.profile.typingTutorial')} hint={t('settings.profile.typingTutorialHint')}>
         <button
           type="button"
           className="settings__reset"
           onClick={() => Bridge.commands.startTutorial('typing')}
         >
-          Ver tutorial de mecanografia
+          {t('settings.profile.viewTypingTutorial')}
         </button>
       </Row>
 
       <div className="settings__danger-zone">
         <p className="settings__danger-note">
-          ◈ Reiniciar el perfil borra grafemas, inventario y estadisticas. Accion irreversible.
+          {t('settings.profile.dangerNote')}
         </p>
         <button
           type="button"
@@ -216,7 +177,7 @@ function ProfileSection() {
             className="settings__danger-cancel"
             onClick={() => setConfirmStep(0)}
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
         )}
       </div>
@@ -224,14 +185,43 @@ function ProfileSection() {
   );
 }
 
+/* ── Main component ──────────────────────────────────────────── */
 
-export default function Settings({ onClose, initialTab = 'visuals' }) {
-  const [tab, setTab] = useState(initialTab);
-  const [s, setS] = useState(loadSettings);
+export default function Settings({ onClose, initialTab = 'rendimiento' }) {
+  // Re-mapeo de tabs legacy ('visuals'/'audio'/'protocol' → 'rendimiento').
+  const normalizedInitial = ['visuals', 'audio', 'protocol'].includes(initialTab)
+    ? 'rendimiento'
+    : initialTab;
+  const [tab, setTab] = useState(normalizedInitial);
+  const [s, setS]     = useState(loadSettings);
+  const { t, locale, setLocale, locales } = useTranslation();
+
+  const TABS = [
+    { id: 'rendimiento', label: t('settings.tabs.performance') },
+    { id: 'controls',    label: t('settings.tabs.controls') },
+    { id: 'profile',     label: t('settings.tabs.profile') },
+  ];
+
+  const QUALITY_OPTS = [
+    { value: QUALITY.LOW,  label: t('settings.qualityOpts.low') },
+    { value: QUALITY.MID,  label: t('settings.qualityOpts.mid') },
+    { value: QUALITY.HIGH, label: t('settings.qualityOpts.high') },
+  ];
+
+  const EXEC_MODE_OPTS = [
+    { value: EXECUTION_MODE.NORMAL,   label: t('settings.execModeOpts.normal') },
+    { value: EXECUTION_MODE.PARALLEL, label: t('settings.execModeOpts.parallel') },
+  ];
+
+  // Aplicar settings al montar (sincroniza runtime con localStorage).
+  useEffect(() => {
+    applySettings(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    setTab(initialTab);
-  }, [initialTab]);
+    setTab(normalizedInitial);
+  }, [normalizedInitial]);
 
   // Push 'modal' scope mientras Settings esta montado.
   useEffect(() => {
@@ -246,11 +236,13 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
     return () => { offCancel(); offPrev(); offNext(); KeybindService.popScope('modal'); };
   }, [onClose]);
 
-  const set = useCallback((section, key, val) => {
+  const set = useCallback((key, val) => {
     setS(prev => {
-      const next = { ...prev, [section]: { ...prev[section], [key]: val } };
+      const next = { ...prev, [key]: val };
       saveSettings(next);
-      if (section === 'protocol' && key === 'executionMode') {
+      // Wire al runtime: setQualityTier para quality, workerBridge.setMode para exec.
+      if (key === 'quality')       setQualityTier(val);
+      if (key === 'executionMode') {
         workerBridge.setMode(val);
         window.dispatchEvent(new CustomEvent('babel:executionMode', { detail: val }));
       }
@@ -261,6 +253,7 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
   const handleReset = () => {
     saveSettings(DEFAULT_SETTINGS);
     setS(DEFAULT_SETTINGS);
+    applySettings(DEFAULT_SETTINGS);
   };
 
   return (
@@ -271,11 +264,11 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
         {/* Header */}
         <div className="settings__header">
           <div className="settings__header-left">
-            <span className="settings__header-label">◈ CONFIGURACION DE SISTEMA · BABEL NRX</span>
-            <h2 className="settings__title">Ajustes</h2>
+            <span className="settings__header-label">{t('settings.header')}</span>
+            <h2 className="settings__title">{t('settings.title')}</h2>
           </div>
-          <button type="button" className="settings__close" onClick={onClose} aria-label="Cerrar">
-            ✕
+          <button type="button" className="settings__close" onClick={onClose} aria-label={t('settings.closeAria')}>
+            <Icon name="close" size={18} />
           </button>
         </div>
 
@@ -298,110 +291,54 @@ export default function Settings({ onClose, initialTab = 'visuals' }) {
         {/* Content */}
         <div className="settings__content">
 
-          {tab === 'visuals' && (
-            <div className="settings__section" key="visuals">
-              <Row label="Calidad de Renderizado" hint="Nivel de detalle visual global">
+          {tab === 'rendimiento' && (
+            <div className="settings__section" key="rendimiento">
+              <Row
+                label={t('settings.quality.label')}
+                hint={t('settings.quality.hint')}
+              >
                 <SciSelect
                   options={QUALITY_OPTS}
-                  value={s.visuals.quality}
-                  onChange={v => set('visuals', 'quality', v)}
+                  value={s.quality}
+                  onChange={v => set('quality', v)}
                 />
               </Row>
-              <Row label="Sombras Dinamicas" hint="Impacto en rendimiento: moderado">
-                <SciToggle value={s.visuals.shadows} onChange={v => set('visuals', 'shadows', v)} />
-              </Row>
-              <Row label="Post-Procesado" hint="Bloom, aberracion cromatica, viñeta">
-                <SciToggle value={s.visuals.postProcessing} onChange={v => set('visuals', 'postProcessing', v)} />
-              </Row>
-              <Row label="Densidad de Particulas" hint="Efectos de propulsion y explosiones">
-                <SciSlider
-                  value={s.visuals.particleDensity}
-                  onChange={v => set('visuals', 'particleDensity', v)}
-                  unit="%"
+              <Row
+                label={t('settings.execMode.label')}
+                hint={t('settings.execMode.hint')}
+              >
+                <SciSelect
+                  options={EXEC_MODE_OPTS}
+                  value={s.executionMode}
+                  onChange={v => set('executionMode', v)}
                 />
               </Row>
-              <Row label="Destellos de Pantalla" hint="Flashes al recibir daño o eventos criticos">
-                <SciToggle value={s.visuals.screenFlash} onChange={v => set('visuals', 'screenFlash', v)} />
-              </Row>
-              <Row label="Vibracion de Camara" hint="Sacudida al impacto o muerte de nave">
-                <SciToggle value={s.visuals.cameraShake} onChange={v => set('visuals', 'cameraShake', v)} />
-              </Row>
-            </div>
-          )}
-
-          {tab === 'audio' && (
-            <div className="settings__section" key="audio">
-              <Row label="Efectos de Sonido" hint="Disparos, explosiones, impactos lexicales">
-                <SciSlider
-                  value={s.audio.sfx}
-                  onChange={v => set('audio', 'sfx', v)}
-                  unit="%"
-                />
-              </Row>
-              <Row label="Musica" hint="Banda sonora ambiental del combate">
-                <SciSlider
-                  value={s.audio.music}
-                  onChange={v => set('audio', 'music', v)}
-                  unit="%"
-                />
-              </Row>
-              <Row label="Comunicaciones" hint="Narraciones y transmisiones de voz">
-                <SciSlider
-                  value={s.audio.voices}
-                  onChange={v => set('audio', 'voices', v)}
-                  unit="%"
+              <Row
+                label={t('settings.language.label')}
+                hint={t('settings.language.hint')}
+              >
+                <SciSelect
+                  options={locales.map(l => ({
+                    value: l,
+                    label: l === 'es' ? 'Español' : 'English',
+                  }))}
+                  value={locale}
+                  onChange={(v) => setLocale(v)}
                 />
               </Row>
             </div>
           )}
 
-          {tab === 'profile'  && <ProfileSection />}
           {tab === 'controls' && <ControlsSection />}
-
-          {tab === 'protocol' && (
-            <div className="settings__section" key="protocol">
-              <Row label="Dificultad Lexica" hint="Complejidad y longitud del vocabulario enemigo">
-                <SciSelect
-                  options={DIFFICULTY_OPTS}
-                  value={s.protocol.lexicalDifficulty}
-                  onChange={v => set('protocol', 'lexicalDifficulty', v)}
-                />
-              </Row>
-              <Row label="Velocidad de Palabras" hint="Tiempo de exposicion por objetivo activo">
-                <SciSlider
-                  value={s.protocol.wordSpeed}
-                  min={10}
-                  max={100}
-                  onChange={v => set('protocol', 'wordSpeed', v)}
-                  unit="%"
-                />
-              </Row>
-              <Row label="Repeticion Automatica" hint="Repite palabras fallidas al final de oleada">
-                <SciToggle value={s.protocol.autoRepeat} onChange={v => set('protocol', 'autoRepeat', v)} />
-              </Row>
-              <Row label="Mostrar Fonetica" hint="Transcripcion fonetica bajo cada palabra">
-                <SciToggle value={s.protocol.showPhonetics} onChange={v => set('protocol', 'showPhonetics', v)} />
-              </Row>
-              <Row label="Modo de Procesamiento Lexico" hint="Normal: main thread · Paralelo: Web Worker (descarga el frame)">
-                <SciSelect
-                  options={[
-                    { value: EXECUTION_MODE.NORMAL,   label: 'Normal' },
-                    { value: EXECUTION_MODE.PARALLEL, label: 'Paralelo (WW)' },
-                  ]}
-                  value={s.protocol.executionMode}
-                  onChange={v => set('protocol', 'executionMode', v)}
-                />
-              </Row>
-            </div>
-          )}
+          {tab === 'profile'  && <ProfileSection />}
 
         </div>
 
         {/* Footer */}
         <div className="settings__footer">
-          <span className="settings__footer-note">◈ Los cambios se aplican y guardan automaticamente</span>
+          <span className="settings__footer-note">{t('settings.footerNote')}</span>
           <button type="button" className="settings__reset" onClick={handleReset}>
-            Restaurar Valores
+            {t('settings.restore')}
           </button>
         </div>
 

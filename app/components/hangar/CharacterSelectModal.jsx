@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { KeybindService } from '../../../shared/keybindService.js';
 import { listCharacters } from '../../../shared/characterData.js';
-
-const CHARACTERS = listCharacters();
+import KeyHint from '../common/KeyHint.jsx';
+import useTranslation from '../../../shared/i18n/useTranslation.js';
 
 export default function CharacterSelectModal({ currentId, onConfirm, onCancel }) {
+  const { t } = useTranslation();
+  const CHARACTERS = listCharacters();
   // Sin foco al abrir. Visual temporal solo tras click. Badge ACTIVO persiste por currentId.
   const [focusIdx, setFocusIdx] = useState(-1);
 
@@ -16,7 +18,7 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
       onConfirm(CHARACTERS[focusIdx].id);
     });
     return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
-  }, [focusIdx, onConfirm, onCancel]);
+  }, [focusIdx, onConfirm, onCancel, CHARACTERS]);
 
   useEffect(() => {
     function onKey(e) {
@@ -31,7 +33,7 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [CHARACTERS.length]);
 
   const hasFocus    = focusIdx >= 0;
   const focusedChar = hasFocus ? CHARACTERS[focusIdx] : null;
@@ -46,10 +48,10 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
     >
       <div className="char-modal__panel" role="document" onClick={(e) => e.stopPropagation()}>
         <div className="char-modal__header">
-          <span className="char-modal__label">◈ SELECCION · PILOTO</span>
+          <span className="char-modal__label">{t('hangar.characterSelect.label')}</span>
         </div>
 
-        <h3 id="char-modal-title" className="char-modal__title">ELIGE TU PILOTO</h3>
+        <h3 id="char-modal-title" className="char-modal__title">{t('hangar.characterSelect.title')}</h3>
 
         <div className="char-modal__grid">
           {CHARACTERS.map((c, i) => {
@@ -81,7 +83,7 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
                     <span className="char-card__bracket char-card__bracket--bl" />
                     <span className="char-card__bracket char-card__bracket--br" />
                   </div>
-                  {isActive && <span className="char-card__badge">ACTIVO</span>}
+                  {isActive && <span className="char-card__badge">{t('hangar.characterSelect.active')}</span>}
                 </div>
                 <div className="char-card__meta">
                   <span className="char-card__name">{c.name.toUpperCase()}</span>
@@ -95,7 +97,7 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
 
         <div className="char-modal__actions">
           <button className="char-modal__btn char-modal__btn--cancel" onClick={onCancel}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             className="char-modal__btn char-modal__btn--confirm"
@@ -103,11 +105,18 @@ export default function CharacterSelectModal({ currentId, onConfirm, onCancel })
             disabled={!hasFocus}
             autoFocus
           >
-            {hasFocus ? `Confirmar · ${focusedChar.name}` : 'Selecciona un piloto'}
+            {hasFocus ? t('hangar.characterSelect.confirmName', { name: focusedChar.name }) : t('hangar.characterSelect.selectPrompt')}
           </button>
         </div>
 
-        <p className="char-modal__hint">CLICK / ←→ NAVEGAR · ↵ CONFIRMAR · ESC CANCELAR</p>
+        <KeyHint
+          className="char-modal__hint"
+          items={[
+            { key: 'Click / ←→', label: t('keys.navigate') },
+            { key: '↵',          label: t('common.confirm').toLowerCase() },
+            { key: 'ESC',        label: t('common.cancel').toLowerCase() },
+          ]}
+        />
       </div>
     </div>
   );

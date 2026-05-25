@@ -1,5 +1,16 @@
 ﻿import * as THREE from 'three';
-import { WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG } from '../../shared/constants.js';
+import {
+  WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG,
+  WORD_POOL_EN, WORD_POOL_SHORT_EN, WORD_POOL_MEDIUM_EN, WORD_POOL_LONG_EN,
+} from '../../shared/constants.js';
+import { getLocale } from '../../shared/i18n/index.js';
+
+function pools() {
+  if (getLocale() === 'en') {
+    return { all: WORD_POOL_EN, short: WORD_POOL_SHORT_EN, medium: WORD_POOL_MEDIUM_EN, long: WORD_POOL_LONG_EN };
+  }
+  return { all: WORD_POOL_ES, short: WORD_POOL_SHORT, medium: WORD_POOL_MEDIUM, long: WORD_POOL_LONG };
+}
 
 // Moon vive en (0, 0, -78) con radio aproximado de ~18u. Buffer extra 4u.
 const MOON_CENTER  = new THREE.Vector3(0, 0, -78);
@@ -47,22 +58,22 @@ export function randomSpawnPosition(recent = []) {
 // Selects word from tier pool based on wave; exclude = currently active + recent words.
 // tierHint: 'short' | 'medium' | 'long' fuerza tier (override de pesos por oleada).
 export function randomWord(wave, exclude = [], tierHint = null) {
+  const P = pools();
   let base;
-  if (tierHint === 'short')       base = WORD_POOL_SHORT;
-  else if (tierHint === 'medium') base = WORD_POOL_MEDIUM;
-  else if (tierHint === 'long')   base = WORD_POOL_LONG;
+  if (tierHint === 'short')       base = P.short;
+  else if (tierHint === 'medium') base = P.medium;
+  else if (tierHint === 'long')   base = P.long;
   else {
-    // Curva mas amable: long capped a 0.25 (antes 0.50).
     const shortW  = wave <= 3 ? 0.65 : wave <= 7 ? 0.35 : 0.20;
     const mediumW = wave <= 3 ? 0.35 : wave <= 7 ? 0.50 : 0.55;
     const longW   = wave <= 3 ? 0.00 : wave <= 7 ? 0.15 : 0.25;
     const r = Math.random() * (shortW + mediumW + longW);
-    base = r < shortW ? WORD_POOL_SHORT
-      : r < shortW + mediumW ? WORD_POOL_MEDIUM
-      : WORD_POOL_LONG;
+    base = r < shortW ? P.short
+      : r < shortW + mediumW ? P.medium
+      : P.long;
   }
   const avail = base.filter(w => !exclude.includes(w));
-  const pool  = avail.length > 0 ? avail : WORD_POOL_ES.filter(w => !exclude.includes(w));
-  return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : WORD_POOL_ES[0];
+  const pool  = avail.length > 0 ? avail : P.all.filter(w => !exclude.includes(w));
+  return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : P.all[0];
 }
 

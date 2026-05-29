@@ -39,3 +39,6 @@ escenarios.md
 niveles.md
 flow.md
 eleccion.md
+
+# Pristine model backups (created by scripts/compress-models.mjs)
+.model-originals/

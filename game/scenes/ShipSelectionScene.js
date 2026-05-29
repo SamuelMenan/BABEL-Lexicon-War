@@ -1,17 +1,17 @@
-import * as THREE from 'three';
-import { SHIP_PALETTES } from '../../shared/constants.js';
-import { getShipsForHangar } from '../../shared/shopCatalog.js';
+﻿import * as THREE from 'three';
+import { SHIP_PALETTES } from '@shared/config/constants.js';
+import { getShipsForHangar } from '@shared/data/shopCatalog.js';
 
 const SHIPS = getShipsForHangar();
-import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
+import { ParticleEmitter } from '../rendering/particles/ParticleEmitter.js';
 import { HangarRenderer } from './hangar/HangarRenderer.js';
 import { HangarCameraController } from './hangar/HangarCameraController.js';
 import { HangarLoader } from './hangar/HangarLoader.js';
 import { DeploymentAnimator } from './hangar/DeploymentAnimator.js';
 import { HangarProjectiles } from './hangar/HangarProjectiles.js';
 import { HangarLaser } from './hangar/HangarLaser.js';
-import { Bridge } from '../../shared/bridge.js';
-import { playSfx } from '../../shared/audioManager.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { playSfx } from '@shared/services/audioManager.js';
 
 const FIRE_COOLDOWN_MS      = 150;
 const AUTO_FIRE_INTERVAL_MS = 110; // cadencia rafaga K (corto, continuo)

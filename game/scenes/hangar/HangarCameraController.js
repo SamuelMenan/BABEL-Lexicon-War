@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { playSfx } from '../../../shared/audioManager.js';
+﻿import * as THREE from 'three';
+import { playSfx } from '@shared/services/audioManager.js';
 
 export class HangarCameraController {
   constructor(camera) {

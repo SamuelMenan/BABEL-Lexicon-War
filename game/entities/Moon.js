@@ -1,7 +1,7 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+﻿import * as THREE from 'three';
+import { createGLTFLoader } from '../core/gltfLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
-import { getSoftGlowTexture } from '../../shared/softVisuals.js';
+import { getSoftGlowTexture } from '@shared/visuals/softVisuals.js';
 
 export class Moon {
   constructor(scene) {
@@ -19,7 +19,7 @@ export class Moon {
     const url = '/models/truth_about_the_dark_side_of_the_moon.glb';
     const cached = AssetLoader.getGLTF(url);
     if (cached) { this._applyMoonGLTF(cached); return; }
-    const loader = new GLTFLoader();
+    const loader = createGLTFLoader();
     loader.load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyMoonGLTF(gltf); },
       undefined, (err) => console.warn('Moon model could not be loaded.', err));
   }

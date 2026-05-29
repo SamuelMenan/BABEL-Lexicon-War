@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { getSoftGlowTexture } from '../../shared/softVisuals.js';
+﻿import * as THREE from 'three';
+import { getSoftGlowTexture } from '@shared/visuals/softVisuals.js';
 
 export class Starfield {
   constructor(scene) {

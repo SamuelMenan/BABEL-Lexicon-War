@@ -1,7 +1,7 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { Entity } from './Entity.js';
 import { createBolt } from '../rendering/fx/BoltVisual.js';
-import { PROJECTILE_DEFAULTS } from '../rendering/booster/MuzzleConfig.js';
+import { PROJECTILE_DEFAULTS } from '../rendering/muzzle/MuzzleConfig.js';
 
 // Bolt homing — sistema unificado con el hangar. Tamaño/color desde
 // muzzleConfig (scaleMul) + palette. Velocidad/vida desde PROJECTILE_DEFAULTS.

@@ -1,11 +1,11 @@
-// Object Pool de CombatEnemy — evita lag spikes por GC al cambiar de oleada.
+﻿// Object Pool de CombatEnemy — evita lag spikes por GC al cambiar de oleada.
 // - prewarm(n): pre-instancia n enemigos inactivos (opcionalmente progresivo).
 // - acquire(word, position, type, speed): saca uno listo del free list.
 // - release(enemy): lo devuelve, oculta el mesh, no lo remueve del scene.
 // - expand dinamico si free list se vacia (con warning).
 
 import * as THREE from 'three';
-import { CombatEnemy, ENEMY_TYPES } from '../entities/CombatEnemy.js';
+import { CombatEnemy, ENEMY_TYPES } from '../domains/combat/entities/CombatEnemy.js';
 
 const DEFAULT_POOL_SIZE = 500;
 const NEUTRAL_POS       = new THREE.Vector3(0, -9999, 0); // off-screen para warmup

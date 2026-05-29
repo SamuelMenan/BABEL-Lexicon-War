@@ -1,5 +1,6 @@
-import * as THREE from 'three';
-import { PROJECTILE_DEFAULTS } from '../../rendering/booster/MuzzleConfig.js';
+﻿import * as THREE from 'three';
+import { PROJECTILE_DEFAULTS } from '@game/rendering/muzzle/MuzzleConfig.js';
+import { additiveMat } from '@game/rendering/fx/additiveMaterial.js';
 
 // Continuous beam per muzzle. Mimics bolt look (core/glow/halo additive cylinders)
 // but stretched to a long sustained ray. Refreshed each frame from getMuzzleShots().
@@ -49,53 +50,23 @@ export class HangarLaser {
 
   _coreMat(color) {
     let m = this._coreMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color, transparent: true, opacity: 1.0,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false, depthTest: true, toneMapped: false,
-      });
-      this._coreMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 1.0);            this._coreMats.set(color, m); }
     return m;
   }
   _glowMat(color) {
     let m = this._glowMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color, transparent: true, opacity: 0.6,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false, depthTest: true, toneMapped: false,
-        side: THREE.DoubleSide,
-      });
-      this._glowMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 0.6, true);      this._glowMats.set(color, m); }
     return m;
   }
   _haloMat(color) {
     let m = this._haloMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color, transparent: true, opacity: 0.38,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false, depthTest: true, toneMapped: false,
-      });
-      this._haloMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 0.38);           this._haloMats.set(color, m); }
     return m;
   }
 
   _ringMat(color) {
     let m = this._ringMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color, transparent: true, opacity: 0.9,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false, depthTest: true, toneMapped: false,
-        side: THREE.DoubleSide,
-      });
-      this._ringMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 0.9, true);      this._ringMats.set(color, m); }
     return m;
   }
 

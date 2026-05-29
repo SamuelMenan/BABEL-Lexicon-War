@@ -1,16 +1,16 @@
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+﻿import * as THREE from "three";
+import { createGLTFLoader } from "./gltfLoader.js";
 import { AssetLoader } from "../core/AssetLoader.js";
-import { ParticleEmitter } from "../rendering/ParticleEmitter.js";
-import { RacingPlayerShip } from "../entities/RacingPlayerShip.js";
-import { RacingOpponentShip } from "../entities/RacingOpponentShip.js";
-import { EventBus } from "../../shared/events.js";
-import { EventTypes } from "../../shared/eventTypes.js";
-import { Bridge } from "../../shared/bridge.js";
-import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "../../shared/constants.js";
-import { RacingLightingRig } from "../rendering/RacingLightingRig.js";
-import { getSoftGlowTexture } from "../../shared/softVisuals.js";
-import { playSfx, playLoopSfx, stopLoopSfx } from "../../shared/audioManager.js";
+import { ParticleEmitter } from "../rendering/particles/ParticleEmitter.js";
+import { RacingPlayerShip } from "../domains/racing/entities/RacingPlayerShip.js";
+import { RacingOpponentShip } from "../domains/racing/entities/RacingOpponentShip.js";
+import { EventBus } from "@shared/state/events.js";
+import { EventTypes } from "@shared/state/eventTypes.js";
+import { Bridge } from "@shared/state/bridge.js";
+import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "@shared/config/constants.js";
+import { RacingLightingRig } from "../rendering/lighting/RacingLightingRig.js";
+import { getSoftGlowTexture } from "@shared/visuals/softVisuals.js";
+import { playSfx, playLoopSfx, stopLoopSfx } from "@shared/services/audioManager.js";
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage","nave","propulsor"];
 const HOLE_NODE_NAME  = "Vortex_1";   // ancla del agujero negro dentro del GLB
@@ -333,7 +333,7 @@ export class RacingSceneManager {
     const url="/models/24_dizzying_space_travel_-_inktober2019.glb";
     const cached=AssetLoader.getGLTF(url);
     if(cached){ this._applyTunnel(cached); return; }
-    new GLTFLoader().load(url,(gltf)=>{ AssetLoader.setGLTF(url,gltf); this._applyTunnel(gltf); },
+    createGLTFLoader().load(url,(gltf)=>{ AssetLoader.setGLTF(url,gltf); this._applyTunnel(gltf); },
       (xhr)=>{},(err)=>console.warn('tunnel load err',err));
   }
 

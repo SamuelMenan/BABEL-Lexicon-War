@@ -1,9 +1,9 @@
-import * as THREE from 'three';
-import { DeploymentTrail } from '../../rendering/fx/DeploymentTrail.js';
-import { Shockwave } from '../../rendering/fx/Shockwave.js';
-import { WarpFlash } from '../../rendering/fx/WarpFlash.js';
-import { DustPuff } from '../../rendering/fx/DustPuff.js';
-import { playSfx } from '../../../shared/audioManager.js';
+﻿import * as THREE from 'three';
+import { DeploymentTrail } from '@game/rendering/fx/DeploymentTrail.js';
+import { Shockwave } from '@game/rendering/fx/Shockwave.js';
+import { WarpFlash } from '@game/rendering/fx/WarpFlash.js';
+import { DustPuff } from '@game/rendering/fx/DustPuff.js';
+import { playSfx } from '@shared/services/audioManager.js';
 
 // Pose final por modo — debe coincidir con Camera.js (_updateCombat/_updateRacing).
 const END_POSES = {

@@ -1,5 +1,6 @@
-import * as THREE from 'three';
-import { PROJECTILE_DEFAULTS } from '../../rendering/booster/MuzzleConfig.js';
+﻿import * as THREE from 'three';
+import { PROJECTILE_DEFAULTS } from '@game/rendering/muzzle/MuzzleConfig.js';
+import { additiveMat } from '@game/rendering/fx/additiveMaterial.js';
 
 const POOL_MAX = 64;
 
@@ -34,53 +35,20 @@ export class HangarProjectiles {
 
   _coreMat(color) {
     let m = this._coreMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color,                          // ship-palette tint (additive saturates to white at center)
-        transparent:  true,
-        opacity:      1.0,
-        blending:     THREE.AdditiveBlending,
-        depthWrite:   false,
-        depthTest:    true,
-        toneMapped:   false,
-      });
-      this._coreMats.set(color, m);
-    }
+    // ship-palette tint (additive saturates to white at center)
+    if (!m) { m = additiveMat(color, 1.0);        this._coreMats.set(color, m); }
     return m;
   }
 
   _glowMat(color) {
     let m = this._glowMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color,
-        transparent:  true,
-        opacity:      0.55,
-        blending:     THREE.AdditiveBlending,
-        depthWrite:   false,
-        depthTest:    true,
-        toneMapped:   false,
-        side:         THREE.DoubleSide,
-      });
-      this._glowMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 0.55, true); this._glowMats.set(color, m); }
     return m;
   }
 
   _haloMat(color) {
     let m = this._haloMats.get(color);
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({
-        color,
-        transparent:  true,
-        opacity:      0.35,
-        blending:     THREE.AdditiveBlending,
-        depthWrite:   false,
-        depthTest:    true,
-        toneMapped:   false,
-      });
-      this._haloMats.set(color, m);
-    }
+    if (!m) { m = additiveMat(color, 0.35);       this._haloMats.set(color, m); }
     return m;
   }
 

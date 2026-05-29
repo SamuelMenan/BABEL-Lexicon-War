@@ -1,9 +1,9 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Bridge } from '../../shared/bridge.js';
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { LOADING_STAGES, ASSET_MANIFESTS, GAME_MODES } from '../../shared/constants.js';
+﻿import * as THREE from 'three';
+import { createGLTFLoader } from './gltfLoader.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { LOADING_STAGES, ASSET_MANIFESTS, GAME_MODES } from '@shared/config/constants.js';
 
 // ── Caches ────────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ function _jitter(base, spread = 80) {
 function _loadGLTFAsync(url) {
   if (_gltfCache.has(url)) return Promise.resolve(_gltfCache.get(url));
   return new Promise((resolve, reject) => {
-    new GLTFLoader().load(url, gltf => { _gltfCache.set(url, gltf); resolve(gltf); }, undefined, reject);
+    createGLTFLoader().load(url, gltf => { _gltfCache.set(url, gltf); resolve(gltf); }, undefined, reject);
   });
 }
 

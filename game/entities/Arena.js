@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createGLTFLoader } from '../core/gltfLoader.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { Moon } from './Moon.js';
 import { Starfield } from './Starfield.js';
@@ -102,7 +102,7 @@ export class Arena {
     const url = '/models/radiation_of_space.glb';
     const cached = AssetLoader.getGLTF(url);
     if (cached) { this._applyBackdropScenario1(cached); return; }
-    new GLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario1(gltf); },
+    createGLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario1(gltf); },
       undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
   }
 
@@ -147,7 +147,7 @@ export class Arena {
     const url = '/models/radiation_of_space.glb';
     const cached = AssetLoader.getGLTF(url);
     if (cached) { this._applyBackdropScenario2(cached); return; }
-    new GLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario2(gltf); },
+    createGLTFLoader().load(url, (gltf) => { AssetLoader.setGLTF(url, gltf); this._applyBackdropScenario2(gltf); },
       undefined, (err) => console.warn('Combat backdrop model could not be loaded.', err));
   }
 

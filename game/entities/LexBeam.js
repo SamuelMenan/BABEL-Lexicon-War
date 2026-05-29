@@ -1,6 +1,6 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { Entity } from './Entity.js';
-import { COLORS_FLOW } from '../../shared/constants.js';
+import { COLORS_FLOW } from '@shared/config/constants.js';
 import { createBeam } from '../rendering/fx/BeamVisual.js';
 
 const BEAM_LIFE = 0.10;

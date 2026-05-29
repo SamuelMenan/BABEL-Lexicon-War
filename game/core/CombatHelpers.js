@@ -2,8 +2,8 @@
 import {
   WORD_POOL_ES, WORD_POOL_SHORT, WORD_POOL_MEDIUM, WORD_POOL_LONG,
   WORD_POOL_EN, WORD_POOL_SHORT_EN, WORD_POOL_MEDIUM_EN, WORD_POOL_LONG_EN,
-} from '../../shared/constants.js';
-import { getLocale } from '../../shared/i18n/index.js';
+} from '@shared/config/constants.js';
+import { getLocale } from '@shared/i18n/index.js';
 
 function pools() {
   if (getLocale() === 'en') {

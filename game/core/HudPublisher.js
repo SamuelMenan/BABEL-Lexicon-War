@@ -1,7 +1,7 @@
-import { Bridge } from '../../shared/bridge.js';
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M } from '../../shared/constants.js';
+﻿import { Bridge } from '@shared/state/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M } from '@shared/config/constants.js';
 
 // Throttle: HUD lateral solo necesita ~15Hz (66ms). El canvas 3D sigue a 60+ FPS.
 const PUBLISH_INTERVAL_MS = 66;

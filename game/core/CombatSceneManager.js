@@ -1,29 +1,29 @@
-import * as THREE from 'three';
-import { CombatEnemy, ENEMY_TYPES } from '../entities/CombatEnemy.js';
+﻿import * as THREE from 'three';
+import { CombatEnemy, ENEMY_TYPES } from '../domains/combat/entities/CombatEnemy.js';
 import { EnemyPool } from './EnemyPool.js';
-import { CombatPlayerShip } from '../entities/CombatPlayerShip.js';
+import { CombatPlayerShip } from '../domains/combat/entities/CombatPlayerShip.js';
 import { Projectile } from '../entities/Projectile.js';
 import { LexBeam } from '../entities/LexBeam.js';
 import { WordToken } from '../entities/WordToken.js';
-import { ParticleEmitter } from '../rendering/ParticleEmitter.js';
+import { ParticleEmitter } from '../rendering/particles/ParticleEmitter.js';
 import { Arena, ARENA_SCENARIO_2 } from '../entities/Arena.js';
-import { ProgressionSystem } from '../systems/ProgressionSystem.js';
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
+import { ProgressionSystem } from '../domains/progression/ProgressionSystem.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
 import { HudPublisher } from './HudPublisher.js';
-import { EconomySystem } from '../systems/EconomySystem.js';
-import { computeKillReward } from '../systems/GrafemaRewards.js';
-import { SpawnDirector } from '../systems/SpawnDirector.js';
-import { PreCombatController } from '../systems/PreCombatController.js';
-import { PlayerDeathHandler } from '../systems/PlayerDeathHandler.js';
+import { EconomySystem } from '../domains/economy/EconomySystem.js';
+import { computeKillReward } from '../domains/economy/GrafemaRewards.js';
+import { SpawnDirector } from '../domains/combat/systems/SpawnDirector.js';
+import { PreCombatController } from '../domains/combat/systems/PreCombatController.js';
+import { PlayerDeathHandler } from '../domains/combat/systems/PlayerDeathHandler.js';
 import { waveTrace } from '../debug/WaveTrace.js';
 import {
   ENEMY_BASE_SPEED, ENEMY_SPEED_SCALE, MAX_ACTIVE_ENEMIES,
   WAVE_INTERVAL_MS, HIT_DAMAGE, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
-} from '../../shared/constants.js';
+} from '@shared/config/constants.js';
 
-import { playRandomSfx, playSfx, playLoopSfx, stopLoopSfx } from '../../shared/audioManager.js';
+import { playRandomSfx, playSfx, playLoopSfx, stopLoopSfx } from '@shared/services/audioManager.js';
 
 const ACTIVE_ARENA_SCENARIO = ARENA_SCENARIO_2;
 

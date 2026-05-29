@@ -1,11 +1,11 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { GameLoop } from './GameLoop.js';
-import { Camera } from '../rendering/Camera.js';
-import { PostProcessing } from '../rendering/PostProcessing.js';
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { COLORS } from '../../shared/constants.js';
-import { detectQualityTier, setQualityTier, getQualityTier } from '../../shared/qualitySettings.js';
+import { Camera } from '../rendering/camera/Camera.js';
+import { PostProcessing } from '../rendering/post/PostProcessing.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { COLORS } from '@shared/config/constants.js';
+import { detectQualityTier, setQualityTier, getQualityTier } from '@shared/config/qualitySettings.js';
 
 export class Engine {
   constructor(mountEl) {

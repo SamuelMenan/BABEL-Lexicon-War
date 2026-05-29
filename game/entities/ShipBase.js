@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createGLTFLoader } from '../core/gltfLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { AssetLoader } from '../core/AssetLoader.js';
 import { Entity } from './Entity.js';
@@ -13,7 +13,7 @@ export class ShipBase extends Entity {
     this._modelUrl = modelUrl;
     this._targetLength = targetLength;
     this._yaw = yaw;
-    this._loader = new GLTFLoader();
+    this._loader = createGLTFLoader();
     this._mixer = null;
     this._actions = [];
     this._t = 0;

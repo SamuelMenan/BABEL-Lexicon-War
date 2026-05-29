@@ -1,12 +1,12 @@
 // Registra todas las DEBUG_* actions en KeybindService.
 // Solo activas si profile.debugEnabled (gateado por el propio service).
 
-import { KeybindService } from '../../shared/keybindService.js';
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
-import { toggleBot, toggleTelemetry } from '../systems/AutoTyper.js';
-import { resetTutorialFlags } from '../../shared/tutorialFlags.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { toggleBot, toggleTelemetry } from '../domains/lexicon/AutoTyper.js';
+import { resetTutorialFlags } from '@shared/tutorial/tutorialFlags.js';
 
 let _installed = false;
 const _unsubs = [];
@@ -28,6 +28,11 @@ export function initDebugBindings() {
   // F11 — toggle AutoTyper bot
   _unsubs.push(KeybindService.register('global', 'DEBUG_BOT', () => {
     toggleBot();
+  }));
+
+  // F8 — toggle debug scope overlay
+  _unsubs.push(KeybindService.register('global', 'DEBUG_SCOPE_OVERLAY', () => {
+    Bridge.setState({ debugScopeOverlayVisible: !Bridge.peekState().debugScopeOverlayVisible });
   }));
 
   // F12 — toggle debug markers (hangar)

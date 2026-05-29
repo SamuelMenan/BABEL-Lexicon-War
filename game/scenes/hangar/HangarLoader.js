@@ -1,12 +1,12 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+﻿import * as THREE from 'three';
+import { createGLTFLoader } from '@game/core/gltfLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { getShipsForHangar } from '../../../shared/shopCatalog.js';
-import { AssetLoader } from '../../core/AssetLoader.js';
+import { getShipsForHangar } from '@shared/data/shopCatalog.js';
+import { AssetLoader } from '@game/core/AssetLoader.js';
 
 const SHIPS = getShipsForHangar();
-import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../../rendering/BoosterEffect.js';
-import { SHIP_MUZZLE_CONFIGS } from '../../rendering/booster/MuzzleConfig.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '@game/rendering/booster/BoosterEffect.js';
+import { SHIP_MUZZLE_CONFIGS } from '@game/rendering/muzzle/MuzzleConfig.js';
 
 // Adjusts vertical position of all ships. Negative = lower, positive = higher.
 const SHIP_SPAWN_OFFSET = { x: 0, y: -0.1, z: 0 };
@@ -41,7 +41,7 @@ export class HangarLoader {
     this._onLoadStart = onLoadStart || (() => {});
     this._onLoadEnd   = onLoadEnd   || (() => {});
 
-    this._loader          = new GLTFLoader();
+    this._loader          = createGLTFLoader();
     this._modelsOriginals = new Map();
 
     this.shipGroup    = new THREE.Group();

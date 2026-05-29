@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { additiveMat } from './additiveMaterial.js';
 
 // Bolt aditivo reutilizable (exportado desde hangar a combate).
 // Cilindros aditivos: core/glow/halo. depthTest:true → casco/enemigos
@@ -27,19 +28,6 @@ function _ensureGeo() {
   _haloGeo = new THREE.CylinderGeometry(GLOW_RADIUS, GLOW_RADIUS, BOLT_LENGTH * 1.15, 12, 1, false);
 }
 
-function _makeMat(color, opacity, doubleSide = false) {
-  return new THREE.MeshBasicMaterial({
-    color,
-    transparent:  true,
-    opacity,
-    blending:     THREE.AdditiveBlending,
-    depthWrite:   false,
-    depthTest:    true,
-    toneMapped:   false,
-    side:         doubleSide ? THREE.DoubleSide : THREE.FrontSide,
-  });
-}
-
 // Crea un bolt instanciado (mats propias para poder modular opacidad/disposear).
 // Geometrias compartidas via cache de modulo.
 export function createBolt({ color = 0xff2222, scale = 1.0, flowBoost = false } = {}) {
@@ -49,9 +37,9 @@ export function createBolt({ color = 0xff2222, scale = 1.0, flowBoost = false } 
   const glowOp = flowBoost ? 0.85 : 0.55;
   const haloOp = flowBoost ? 0.55 : 0.35;
 
-  const coreMat = _makeMat(color, coreOp);
-  const glowMat = _makeMat(color, glowOp, true);
-  const haloMat = _makeMat(color, haloOp);
+  const coreMat = additiveMat(color, coreOp);
+  const glowMat = additiveMat(color, glowOp, true);
+  const haloMat = additiveMat(color, haloOp);
 
   const root = new THREE.Group();
   const core = new THREE.Mesh(_coreGeo, coreMat);

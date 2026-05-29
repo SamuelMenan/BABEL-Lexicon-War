@@ -1,11 +1,11 @@
-import * as THREE from 'three';
-import { getQualityProfile } from '../../shared/qualitySettings.js';
-import { getFlameTexture, getInnerTexture, getStarTexture } from './booster/BoosterTextures.js';
-import { getConeGeometry, getRingGeometry } from './booster/BoosterGeometry.js';
-import { BOOST_PALETTE, FLOW_PALETTE } from './booster/BoosterConfig.js';
-import { computeFlicker, computeColors, createLateralState, updateLateral } from './booster/BoosterAnimation.js';
+﻿import * as THREE from 'three';
+import { getQualityProfile } from '@shared/config/qualitySettings.js';
+import { getFlameTexture, getInnerTexture, getStarTexture } from './BoosterTextures.js';
+import { getConeGeometry, getRingGeometry } from './BoosterGeometry.js';
+import { BOOST_PALETTE, FLOW_PALETTE } from './BoosterConfig.js';
+import { computeFlicker, computeColors, createLateralState, updateLateral } from './BoosterAnimation.js';
 
-export { SHIP_BOOSTER_CONFIGS } from './booster/BoosterConfig.js';
+export { SHIP_BOOSTER_CONFIGS } from './BoosterConfig.js';
 
 /** Interpolate a numeric ramp of any length at t∈[0,1]. */
 function sampleScalarRamp(ramp, t) {

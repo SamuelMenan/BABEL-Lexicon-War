@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { SHIP_PALETTES } from '../../../shared/constants.js';
+﻿import * as THREE from 'three';
+import { SHIP_PALETTES } from '@shared/config/constants.js';
 
 // Campos por cañon:
 //   localPosition: fraccion de half-bbox (igual convencion que SHIP_BOOSTER_CONFIGS).
@@ -131,6 +131,37 @@ export const SHIP_MUZZLE_CONFIGS = {
     color:         SHIP_PALETTES.waldeinsamkeit.hangarColor,
     emissive:      SHIP_PALETTES.waldeinsamkeit.flameColor,
     scale:         0.8,
+  },
+
+  // xwing (Juanito01) — 4 cañones (estilo wingtip). Nariz = +Z (noseAxis '+z').
+  // ⚠️ POSICIONES PLACEHOLDER (4 esquinas frontales) — ajustar tras ver el modelo.
+  hangar_xwing_0: {
+    localPosition: new THREE.Vector3(-0.88,  0.85, 0.0175),
+    forwardLocal:  new THREE.Vector3(0, 0, 1),
+    color:         SHIP_PALETTES.xwing.hangarColor,
+    emissive:      SHIP_PALETTES.xwing.flameColor,
+    scale:         0.7,
+  },
+  hangar_xwing_1: {
+    localPosition: new THREE.Vector3( 0.88,  0.85, 0.0175),
+    forwardLocal:  new THREE.Vector3(0, 0, 1),
+    color:         SHIP_PALETTES.xwing.hangarColor,
+    emissive:      SHIP_PALETTES.xwing.flameColor,
+    scale:         0.7,
+  },
+  hangar_xwing_2: {
+    localPosition: new THREE.Vector3(-0.88, -0.85, 0.0175),
+    forwardLocal:  new THREE.Vector3(0, 0, 1),
+    color:         SHIP_PALETTES.xwing.hangarColor,
+    emissive:      SHIP_PALETTES.xwing.flameColor,
+    scale:         0.7,
+  },
+  hangar_xwing_3: {
+    localPosition: new THREE.Vector3( 0.88, -0.85, 0.0175),
+    forwardLocal:  new THREE.Vector3(0, 0, 1),
+    color:         SHIP_PALETTES.xwing.hangarColor,
+    emissive:      SHIP_PALETTES.xwing.flameColor,
+    scale:         0.7,
   },
 };
 

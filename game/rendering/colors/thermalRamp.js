@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { COLORS_FLOW } from '../../../shared/constants.js';
+﻿import * as THREE from 'three';
+import { COLORS_FLOW } from '@shared/config/constants.js';
 
 let _rampColors = null;
 const _cache = new THREE.Color();

@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from '../../shared/constants.js';
+﻿import * as THREE from 'three';
+import { CAMERA_FOV, CAMERA_NEAR, CAMERA_FAR } from '@shared/config/constants.js';
 
 export class Camera {
   constructor() {

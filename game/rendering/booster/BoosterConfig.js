@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { SHIP_PALETTES } from '../../../shared/constants.js';
+﻿import * as THREE from 'three';
+import { SHIP_PALETTES } from '@shared/config/constants.js';
 
 // 10-level opacity ramp: flowRatio 0→1 maps across estos valores.
 // Ascendente real: idle (fr=0) muy tenue (0.05) → FLOW final (fr=1) maxima
@@ -293,5 +293,41 @@ export const SHIP_BOOSTER_CONFIGS = {
     lightOffset:   new THREE.Vector3(0, 0, 0.55),
     sizeMin:       0.5,
     sizeMax:       0.6,
+  },
+
+  // rebels_x-wing.glb (Juanito01, nave secreta) — 4 boosters (1 por ala).
+  // ⚠️ POSICIONES PLACEHOLDER (4 esquinas traseras) — sin verificar contra el
+  // modelo. Ajustar localPosition de cada uno tras confirmar el eje/bbox real.
+  hangar_xwing_0: {
+    ...pal('xwing'),
+    localPosition: new THREE.Vector3(-0.25,  0.6, -0.95),
+    bodyRadius:    0.07, bodyLength: 0.5, ringRadius: 0.16,
+    flameSize:     0.7,  innerSize:  0.3, starSize:   1.1,
+    lightIntens:   0.4,  lightDist:  0.7, lightOffset: new THREE.Vector3(0, 0, 0.4),
+    sizeMin:       0.4,  sizeMax:    0.5, flipZ: true,
+  },
+  hangar_xwing_1: {
+    ...pal('xwing'),
+    localPosition: new THREE.Vector3( 0.25,  0.6, -0.95),
+    bodyRadius:    0.07, bodyLength: 0.5, ringRadius: 0.16,
+    flameSize:     0.7,  innerSize:  0.3, starSize:   1.1,
+    lightIntens:   0.4,  lightDist:  0.7, lightOffset: new THREE.Vector3(0, 0, 0.4),
+    sizeMin:       0.4,  sizeMax:    0.5, flipZ: true,
+  },
+  hangar_xwing_2: {
+    ...pal('xwing'),
+    localPosition: new THREE.Vector3(-0.25, -0.6, -0.95),
+    bodyRadius:    0.07, bodyLength: 0.5, ringRadius: 0.16,
+    flameSize:     0.7,  innerSize:  0.3, starSize:   1.1,
+    lightIntens:   0.4,  lightDist:  0.7, lightOffset: new THREE.Vector3(0, 0, 0.4),
+    sizeMin:       0.4,  sizeMax:    0.5, flipZ: true,
+  },
+  hangar_xwing_3: {
+    ...pal('xwing'),
+    localPosition: new THREE.Vector3( 0.25, -0.6, -0.95),
+    bodyRadius:    0.07, bodyLength: 0.5, ringRadius: 0.16,
+    flameSize:     0.7,  innerSize:  0.3, starSize:   1.1,
+    lightIntens:   0.4,  lightDist:  0.7, lightOffset: new THREE.Vector3(0, 0, 0.4),
+    sizeMin:       0.4,  sizeMax:    0.5, flipZ: true,
   },
 };

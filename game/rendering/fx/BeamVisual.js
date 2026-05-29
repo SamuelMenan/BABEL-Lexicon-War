@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { additiveMat } from './additiveMaterial.js';
 
 // NOTE: NO usa BLOOM_LAYER por la misma razon que BoltVisual: bloom selectivo
 // en combate dejaria que el glow se viera a traves del casco.
@@ -26,19 +27,6 @@ function _ensureGeo() {
   _haloGeo.translate(0, 0.5, 0);
 }
 
-function _makeMat(color, opacity, doubleSide = false) {
-  return new THREE.MeshBasicMaterial({
-    color,
-    transparent:  true,
-    opacity,
-    blending:     THREE.AdditiveBlending,
-    depthWrite:   false,
-    depthTest:    true,
-    toneMapped:   false,
-    side:         doubleSide ? THREE.DoubleSide : THREE.FrontSide,
-  });
-}
-
 const ALIGN_AXIS = new THREE.Vector3(0, 1, 0);
 const _tmpDir    = new THREE.Vector3();
 
@@ -49,9 +37,9 @@ export function createBeam({ color = 0xffffff, scale = 1.0 } = {}) {
   const glowOp0 = 0.60;
   const haloOp0 = 0.38;
 
-  const coreMat = _makeMat(color, coreOp0);
-  const glowMat = _makeMat(color, glowOp0, true);
-  const haloMat = _makeMat(color, haloOp0);
+  const coreMat = additiveMat(color, coreOp0);
+  const glowMat = additiveMat(color, glowOp0, true);
+  const haloMat = additiveMat(color, haloOp0);
 
   const root = new THREE.Group();
   const core = new THREE.Mesh(_coreGeo, coreMat);

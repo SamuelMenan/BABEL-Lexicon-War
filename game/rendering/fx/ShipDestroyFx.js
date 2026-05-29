@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { BLOOM_LAYER } from '../../../shared/constants.js';
-import { getSoftGlowTexture } from '../../../shared/softVisuals.js';
+﻿import * as THREE from 'three';
+import { BLOOM_LAYER } from '@shared/config/constants.js';
+import { getSoftGlowTexture } from '@shared/visuals/softVisuals.js';
 
 const TOTAL_DURATION  = 2.5;
 const FLASH_DURATION  = 0.15;

@@ -1,9 +1,9 @@
-// Colapso lexico — particulas que se disuelven al destruir un enemigo
+﻿// Colapso lexico — particulas que se disuelven al destruir un enemigo
 
 import * as THREE from 'three';
-import { COLORS, BLOOM_LAYER } from '../../shared/constants.js';
-import { getQualityProfile } from '../../shared/qualitySettings.js';
-import { ShipDestroyFx } from './fx/ShipDestroyFx.js';
+import { COLORS, BLOOM_LAYER } from '@shared/config/constants.js';
+import { getQualityProfile } from '@shared/config/qualitySettings.js';
+import { ShipDestroyFx } from '../fx/ShipDestroyFx.js';
 
 const LIFETIME = 0.9;
 

@@ -70,6 +70,18 @@ const SHIP_DATA = {
       { name: 'Echo·Field II',  slot: 'D·II',  locked: false },
     ],
   },
+  // Nave secreta (Juanito01) — regalo privado. Stats balanceados (6-7), especial
+  // pero no roto.
+  xwing: {
+    coreId: '0XRG·001',
+    stats: { velocidad: 7, escudo: 6, precision: 7, capacidad: 6 },
+    arsenal: [
+      { name: 'Proton·Torpedo', slot: 'A·I',  locked: false },
+      { name: 'Quad·Laser',     slot: 'B·II', locked: false },
+      { name: 'Astromech·Aid',  slot: 'C·I',  locked: false },
+      { name: 'S·Foil·Lock',    slot: 'D·I',  locked: false },
+    ],
+  },
 };
 
 export function getShipData(shipId) {

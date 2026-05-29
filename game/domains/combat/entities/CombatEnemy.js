@@ -1,24 +1,24 @@
-import * as THREE from 'three';
-import { Entity } from './Entity.js';
-import { COLORS, ENEMY_BASE_SPEED } from '../../shared/constants.js';
-import { getSoftGlowTexture } from '../../shared/softVisuals.js';
+﻿import * as THREE from 'three';
+import { Entity } from '@game/entities/Entity.js';
+import { COLORS, ENEMY_BASE_SPEED } from '@shared/config/constants.js';
+import { getSoftGlowTexture } from '@shared/visuals/softVisuals.js';
 import {
   CFGS,
   ENEMY_TYPES,
   SPEED_MULT_MIN,
   SPEED_MULT_RANGE,
-} from '../data/enemyConfigs.js';
+} from '@game/data/enemyConfigs.js';
 import {
   getSharedEdges,
   getSharedRing,
   sharedCore,
-} from '../rendering/EnemyGeometryCache.js';
-import { createBehavior } from './enemyBehaviors/behaviorRegistry.js';
-import { QUALITY, getQualityTier } from '../../shared/qualitySettings.js';
-import { waveTrace } from '../debug/WaveTrace.js';
+} from '@game/rendering/geometry/EnemyGeometryCache.js';
+import { createBehavior } from '../behaviors/behaviorRegistry.js';
+import { QUALITY, getQualityTier } from '@shared/config/qualitySettings.js';
+import { waveTrace } from '@game/debug/WaveTrace.js';
 
 // Re-exports: preserve external import surface (SpawnDirector, CombatSceneManager).
-export { ENEMY_TYPES, TYPE_META } from '../data/enemyConfigs.js';
+export { ENEMY_TYPES, TYPE_META } from '@game/data/enemyConfigs.js';
 
 export class CombatEnemy extends Entity {
   constructor(word, position, speed = ENEMY_BASE_SPEED, type = ENEMY_TYPES.SCOUT) {

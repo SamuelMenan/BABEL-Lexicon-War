@@ -1,5 +1,5 @@
-import { getCharacter } from '../../../shared/characterData.js';
-import { loadProfile } from '../../../shared/playerProfile.js';
+﻿import { getCharacter } from '@shared/data/characterData.js';
+import { loadProfile } from '@shared/services/playerProfile.js';
 import { supabase } from './client.js';
 import { getUser, resolveDisplayName } from './auth.js';
 

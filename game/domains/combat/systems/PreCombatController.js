@@ -1,7 +1,7 @@
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
-import { playSfx } from '../../shared/audioManager.js';
+﻿import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { playSfx } from '@shared/services/audioManager.js';
 
 const COUNT_STEPS = new Set(['5', '4', '3', '2', '1']);
 

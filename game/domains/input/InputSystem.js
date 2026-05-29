@@ -1,9 +1,9 @@
-// Captura typing en gameplay. NO maneja teclas de accion (Escape, F-keys, debug).
-// Service global (shared/keybindService.js) maneja todo lo demas.
+﻿// Captura typing en gameplay. NO maneja teclas de accion (Escape, F-keys, debug).
+// Service global (shared/services/keybindService.js) maneja todo lo demas.
 
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
 
 // Teclas que NUNCA emiten KEY_TYPED (modificadores, funcion, navegacion, debug).
 // El service ya consume las que tienen action binding. Esta lista es defensa extra

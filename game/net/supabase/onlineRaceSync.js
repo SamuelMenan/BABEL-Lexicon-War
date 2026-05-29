@@ -1,4 +1,4 @@
-// Capa de sincronizacion para carrera online (fase 2).
+﻿// Capa de sincronizacion para carrera online (fase 2).
 // Maneja el canal de broadcast Supabase Realtime + bridge.
 //
 // Uso desde MainMenu cuando RoomScreen detecta status='starting':
@@ -13,10 +13,10 @@
 //   sync.onRemoteFinish(cb)
 //   sync.dispose()
 
-import { Bridge } from '../../../shared/bridge.js';
-import { EventBus } from '../../../shared/events.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { EventBus } from '@shared/state/events.js';
 import { openRoomChannel, touchRoom } from './rooms.js';
-import { loadProfile } from '../../../shared/playerProfile.js';
+import { loadProfile } from '@shared/services/playerProfile.js';
 
 const TICK_HZ = 10;          // 10 broadcast/sec por jugador
 const TICK_MIN_INTERVAL_MS = 1000 / TICK_HZ;

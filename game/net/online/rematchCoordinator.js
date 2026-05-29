@@ -1,11 +1,11 @@
-// Coordinador de revancha — vive fuera del ciclo de React para sobrevivir
+﻿// Coordinador de revancha — vive fuera del ciclo de React para sobrevivir
 // al unmount de MainMenu cuando MatchResult muestra resultado del match.
 //
 // Antes la logica vivia en closures dentro de MainMenu.onMatchStart, que
 // quedaban con setters muertos al desmontarse → modal nunca aparecia y
 // nueva sala nunca se mostraba.
 
-import { Bridge } from '../../../shared/bridge.js';
+import { Bridge } from '@shared/state/bridge.js';
 import { createRoom, joinRoomById, leaveRoom } from '../supabase/rooms.js';
 
 let _sync    = null;

@@ -1,4 +1,4 @@
-// Data estatica de enemigos — separada de la logica de la entidad.
+﻿// Data estatica de enemigos — separada de la logica de la entidad.
 // CFGS define geometria, colores, anillos, multiplicadores y habilidad especial por tipo.
 
 import * as THREE from 'three';
@@ -9,7 +9,7 @@ import {
   buildTruncatedOctaGeometry,
   buildSmallStellatedDodecaGeometry,
   buildGreatDodecaGeometry,
-} from '../rendering/EnemyGeometryCache.js';
+} from '../rendering/geometry/EnemyGeometryCache.js';
 
 export const ENEMY_TYPES = {
   SCOUT:       'scout',       // icosaedro pequeño, cyan, rapido

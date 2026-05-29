@@ -1,13 +1,13 @@
 ﻿import { ENEMY_TYPES, TYPE_META } from '../entities/CombatEnemy.js';
-import { Bridge } from '../../shared/bridge.js';
-import { randomWord, randomSpawnPosition } from '../core/CombatHelpers.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { randomWord, randomSpawnPosition } from '@game/core/CombatHelpers.js';
 import {
   PLAYER_MAX_HP, LEX_HEAT_MAX, MAX_ACTIVE_ENEMIES,
   SPAWN_BUDGET_BASE, SPAWN_BUDGET_WAVE_FACTOR, SPAWN_BUDGET_SKILL_FACTOR, SPAWN_BUDGET_DANGER_FACTOR,
   SPAWN_MIN_BUDGET, SPAWN_MAX_BUDGET, SPAWN_COMPOSITION_JITTER, SPAWN_REPEAT_PENALTY,
   SPAWN_RARE_PITY_STEP, SPAWN_RARE_PITY_MAX, SPAWN_MIN_WEIGHT_SCOUT, SPAWN_MIN_WEIGHT_SENTINEL,
   SPAWN_MIN_WEIGHT_GUARDIAN, SPAWN_MIN_WEIGHT_PHANTOM, SPAWN_MIN_WEIGHT_APEX, SPAWN_MAX_WEIGHT_APEX,
-} from '../../shared/constants.js';
+} from '@shared/config/constants.js';
 
 export class SpawnDirector {
   // spawnOne: (type, speed, word) => void

@@ -1,7 +1,7 @@
-// TelemetrySystem — unica fuente de FPS / frame ms / heap JS.
+﻿// TelemetrySystem — unica fuente de FPS / frame ms / heap JS.
 // Publica `telemetry` en Bridge a 4 Hz. Lectura por TelemetryPanel.jsx.
 
-import { Bridge } from '../../shared/bridge.js';
+import { Bridge } from '@shared/state/bridge.js';
 
 const SAMPLE_MS = 250;
 const BYTES_PER_MB = 1024 * 1024;

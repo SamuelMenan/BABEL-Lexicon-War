@@ -1,8 +1,8 @@
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
-import { SHIP_PALETTES } from '../../shared/constants.js';
-import { playSfx, stopLoopSfx, playBgm } from '../../shared/audioManager.js';
+﻿import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { SHIP_PALETTES } from '@shared/config/constants.js';
+import { playSfx, stopLoopSfx, playBgm } from '@shared/services/audioManager.js';
 
 const CINEMATIC_DELAY_MS = 1800; // breathing room after destruction before Game Over
 

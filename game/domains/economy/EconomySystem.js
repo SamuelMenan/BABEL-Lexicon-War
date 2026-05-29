@@ -1,11 +1,20 @@
-// EconomySystem — unico mutador del perfil del jugador.
+﻿// EconomySystem — unico mutador del perfil del jugador.
 // Resto del juego solo emite eventos; EconomySystem los escucha,
 // muta el perfil, persiste y reemite PROFILE_UPDATED.
 
-import { Bridge } from '../../shared/bridge.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { loadProfile, saveProfile, resetProfile, makeDefaultProfile } from '../../shared/playerProfile.js';
-import { getShipCatalogEntry } from '../../shared/shopCatalog.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { loadProfile, saveProfile, resetProfile, makeDefaultProfile } from '@shared/services/playerProfile.js';
+import { getShipCatalogEntry } from '@shared/data/shopCatalog.js';
+
+// Codigos secretos → id de nave que desbloquean. Regalo/easter-egg privado:
+// no es compra ni unlock publico. Cliente-only (el codigo vive en el bundle),
+// suficiente para un regalo entre amigos — no es un sistema de recompensas.
+// La clave se compara en MAYUSCULAS (redeemCode hace toUpperCase). El jugador
+// escribe "quierokeke" (cualquier caja) → coincide con 'QUIEROKEKE'.
+const SECRET_SHIP_CODES = {
+  'QUIEROKEKE': 'xwing',
+};
 
 class EconomySystemImpl {
   constructor() {
@@ -80,6 +89,21 @@ class EconomySystemImpl {
     this._commit();
     Bridge.emit(EventTypes.SHIP_EQUIPPED, { shipId });
     return { ok: true };
+  }
+
+  // Canjea un codigo secreto → desbloquea su nave (persistente). No es compra:
+  // no cuesta grafemas, no requiere estar logueado. La nave se revela en el
+  // hangar tras recargar (getShipsForHangar se evalua al cargar el modulo).
+  // Devuelve { ok, reason?, shipId? }.
+  redeemCode(rawCode) {
+    const code = String(rawCode || '').trim().toUpperCase();
+    if (!code) return { ok: false, reason: 'empty' };
+    const shipId = SECRET_SHIP_CODES[code];
+    if (!shipId) return { ok: false, reason: 'invalid_code' };
+    if (this.ownsShip(shipId)) return { ok: false, reason: 'already_owned', shipId };
+    this._profile.ownedShips.push(shipId);
+    this._commit();
+    return { ok: true, shipId };
   }
 
   reset() {

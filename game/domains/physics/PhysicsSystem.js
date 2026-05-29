@@ -1,7 +1,7 @@
-// Mueve entidades y detecta si alcanzaron al jugador
+﻿// Mueve entidades y detecta si alcanzaron al jugador
 
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
 
 const PLAYER_RADIUS = 2.5;
 

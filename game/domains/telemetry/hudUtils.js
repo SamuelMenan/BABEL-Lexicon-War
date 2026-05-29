@@ -1,4 +1,4 @@
-﻿import { WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M } from "../../shared/constants.js";
+﻿import { WARN_PROXIMITY_YELLOW_M, WARN_PROXIMITY_RED_M } from "@shared/config/constants.js";
 
 export function getProximityLevel(distance) {
   if (!Number.isFinite(distance)) return "none";

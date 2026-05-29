@@ -1,9 +1,9 @@
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
-import { playSfx, playLoopSfx, stopLoopSfx, playBgm } from '../../shared/audioManager.js';
-import { EconomySystem } from './EconomySystem.js';
-import { computeRaceReward } from './GrafemaRewards.js';
+﻿import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { playSfx, playLoopSfx, stopLoopSfx, playBgm } from '@shared/services/audioManager.js';
+import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
+import { computeRaceReward } from '@game/domains/economy/GrafemaRewards.js';
 import {
   PHRASE_POOL_ES,
   PHRASE_POOL_EN,
@@ -12,8 +12,8 @@ import {
   RACE_TARGET_DISTANCE,
   RACE_OPPONENT_WPM,
   FLOW_STEPS,
-} from '../../shared/constants.js';
-import { getLocale } from '../../shared/i18n/index.js';
+} from '@shared/config/constants.js';
+import { getLocale } from '@shared/i18n/index.js';
 
 const BUFFER_SIZE    = 300; // visible word pool (90s × 120 WPM = 180 words max)
 const REFILL_AT      = 60;  // refill when fewer than this many words remain ahead

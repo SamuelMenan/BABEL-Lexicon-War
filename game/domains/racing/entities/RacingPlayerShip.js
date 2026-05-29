@@ -1,17 +1,11 @@
 import * as THREE from 'three';
-import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, SHIPS } from '../../shared/constants.js';
-import { Bridge } from '../../shared/bridge.js';
-import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
+import { BLOOM_LAYER, COLORS, SHIPS } from '@shared/config/constants.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { RacingShipBase, racingYaw } from './RacingShipBase.js';
 
 const TARGET_MODEL_LENGTH = 5.0;
 
-// Mismo patron que CombatPlayerShip y RacingOpponentShip.
-function getRacingYaw(ship) {
-  return (ship?.rotationY ?? 0) + Math.PI;
-}
-
-export class RacingPlayerShip extends ShipBase {
+export class RacingPlayerShip extends RacingShipBase {
   constructor(basePosition = new THREE.Vector3(-5.2, -1.35, 2.2)) {
     const { selectedShip } = Bridge.peekState();
     const ship = SHIPS.find(s => s.id === selectedShip) ?? SHIPS[0];
@@ -19,7 +13,7 @@ export class RacingPlayerShip extends ShipBase {
     super({
       modelUrl:     ship.url,
       targetLength: TARGET_MODEL_LENGTH,
-      yaw:          getRacingYaw(ship),
+      yaw:          racingYaw(ship),
     });
 
     this._ship        = ship;
@@ -49,10 +43,6 @@ export class RacingPlayerShip extends ShipBase {
     this._group.rotation.set(0, Math.PI, 0);
     // Oculta hasta que el modelo cargue → no se ve el fallback ni el modelo a medias.
     this._group.visible = false;
-  }
-
-  _buildFxNodes() {
-    // Glow sphere removida.
   }
 
   _buildFallbackShip() {
@@ -91,132 +81,15 @@ export class RacingPlayerShip extends ShipBase {
     this._shipRoot.add(wingMesh);
   }
 
-  _configureLoadedMesh(node) {
-    node.layers.set(0);
-    // Bloom layer en la nave → durante bloom pass se renderiza y escribe depth,
-    // ocluyendo el tunel y evitando que su halo se "sume" encima de la nave.
-    node.layers.enable(BLOOM_LAYER);
-  }
-
-  _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
-
   _afterLoadedModel(modelRoot) {
-    // ── Booster setup ─────────────────────────────────────────────────────────
-    //
-    // Same bounding-box math as CombatPlayerShip, adapted for racing:
-    //   rawPos = fraction × rawHalfSize (raw model space, pre-rotation, pre-scale)
-    //   →  applyEuler(racingYaw)  →  ×modelScale  →  group-space position
-    //
-    // The flame is auto-oriented to point away from the ship center via
-    // setFromUnitVectors(+Z, rawPos.normalize()). This avoids manually translating
-    // rootRotY/flipZ (which were calibrated for hangar wrapper space).
-    //
-    // ShipBase._applyLoadedModel already handles cb1-style GLB animations
-    // (creates this._mixer, plays all clips). No duplication needed here.
-
-    const modelScale = modelRoot.scale.x;
-    const modelRotY  = modelRoot.rotation.y;
-
-    // Temporarily reset to read pre-rotation, pre-scale bbox
-    modelRoot.rotation.y = 0;
-    modelRoot.scale.setScalar(1);
-    const rawBox      = new THREE.Box3().setFromObject(modelRoot);
-    const rawHalfSize = rawBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-    modelRoot.rotation.y = modelRotY;
-    modelRoot.scale.setScalar(modelScale);
-
-    this._boosters.forEach(b => b.dispose());
-    this._boosters = [];
-
-    const prefix   = `hangar_${this._ship.id}_`;
-    const racingSF = TARGET_MODEL_LENGTH / 2.2;
-
-    for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
-      if (!key.startsWith(prefix)) continue;
-      {
-        const rawPos = new THREE.Vector3(
-          config.localPosition.x * rawHalfSize.x,
-          config.localPosition.y * rawHalfSize.y,
-          config.localPosition.z * rawHalfSize.z,
-        );
-        rawPos.applyEuler(new THREE.Euler(0, modelRotY, 0));
-        rawPos.multiplyScalar(modelScale);
-
-        const racingConfig = {
-          ...config,
-          localPosition: rawPos,
-          bodyRadius:  config.bodyRadius  * racingSF,
-          bodyLength:  config.bodyLength  * racingSF,
-          ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * racingSF,
-          flameSize:   config.flameSize   * racingSF,
-          innerSize:   config.innerSize   * racingSF,
-          starSize:    config.starSize    * racingSF,
-          lightDist:   config.lightDist   * racingSF,
-          lightOffset: config.lightOffset.clone().multiplyScalar(racingSF),
-        };
-
-        const booster = new BoosterEffect(racingConfig);
-        booster.attachToShip(this._group);
-
-        // Auto-orient flame to point away from ship center (general, no rootRotY needed)
-        if (rawPos.lengthSq() > 0) {
-          const flameDir = rawPos.clone().normalize();
-          booster._root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), flameDir);
-        }
-
-        this._boosters.push(booster);
-      }
-    }
-
-    if (this._boosters.length === 0) {
-      console.warn(`[RacingPlayerShip] No hangar booster config for "${this._ship.id}". Add hangar_${this._ship.id}_0 to SHIP_BOOSTER_CONFIGS.`);
-    }
-
-    this._modelLoaded = true;
-  }
-
-  setRaceState(state) { this._raceState = state; }
-
-  setBasePosition(position) {
-    this._basePosition.copy(position);
-    this._group.position.copy(position);
+    this._placeRacingBoosters(modelRoot, TARGET_MODEL_LENGTH);
   }
 
   update(delta) {
     super.update(delta);
 
     // Entry animation (sync hangar exit). Gate hasta modelo cargado.
-    // Entry: lerp ease-out + slerp quaternion a identidad (replica CombatPlayerShip).
-    if (this._entryActive) {
-      if (!this._modelLoaded) {
-        this._group.position.copy(this._entryStartPos);
-        this._group.visible = false;
-        return;
-      }
-      this._group.visible = true;
-      // Suspend baked skeletal clip while entry lerp owns the transform —
-      // cb1's clip animates root bones and otherwise distorts the entry.
-      this._suspendAnimations = true;
-      this._entryTime += delta;
-      const k  = Math.min(this._entryTime / this._entryDuration, 1);
-      // Ease-out (pow configurable: 5 = quintic estandar, 3 = cubic opponent-style para cb1).
-      const ek = 1 - Math.pow(1 - k, this._entryEasePow);
-      this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
-      // Slerp a identidad — rate configurable segun nave.
-      this._group.quaternion.slerp(new THREE.Quaternion(), delta * this._entrySlerpRate);
-      // Fade-in escala: emerge desde 0 → 1 en primer 35% de la entrada.
-      // Sumado a niebla, hace que la nave "salga del hiperespacio" en vez de aparecer.
-      const fadeK = Math.min(1, k / 0.35);
-      const fadeScale = 0.001 + fadeK * 0.999;
-      this._group.scale.setScalar(fadeScale);
-      this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
-      if (k >= 1) {
-        this._entryActive = false;
-        this._suspendAnimations = false;
-        this._group.scale.setScalar(1);
-      }
-      return;
-    }
+    if (this._entryActive) { this._updateEntry(delta); return; }
 
     if (!this._raceState) return;
 
@@ -237,11 +110,5 @@ export class RacingPlayerShip extends ShipBase {
     const isThrusting = smoothBurst > 0.05;
     // flowRatio=1.0: rampa ascendente → opacidad plena, look saturado.
     this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
-  }
-
-  dispose() {
-    this._boosters.forEach(b => b.dispose());
-    this._boosters = [];
-    super.dispose();
   }
 }

@@ -1,4 +1,4 @@
-// Calculo de recompensas en Grafemas — combate y carrera.
+﻿// Calculo de recompensas en Grafemas — combate y carrera.
 // Funciones puras. No mutan estado. CombatSceneManager las llama y
 // pasa el resultado a EconomySystem.award.
 
@@ -9,7 +9,7 @@ import {
   GRAFEMAS_PRECISION_MULT_CLEAN, GRAFEMAS_PRECISION_MULT_DIRTY,
   GRAFEMAS_STREAK_STEP, GRAFEMAS_STREAK_MAX_MULT,
   GRAFEMAS_RACE_BASE, GRAFEMAS_WPM_TIERS, GRAFEMAS_ACC_TIERS,
-} from '../../shared/constants.js';
+} from '@shared/config/constants.js';
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 

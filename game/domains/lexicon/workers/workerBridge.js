@@ -1,8 +1,8 @@
-// Facade async para lexicon matching. Conmuta NORMAL <-> PARALLEL en runtime.
+﻿// Facade async para lexicon matching. Conmuta NORMAL <-> PARALLEL en runtime.
 // NORMAL: ejecuta sync en main thread y envuelve en Promesa resuelta.
 // PARALLEL: delega a lexiconWorker (instancia unica, reutilizada).
 
-import { EXECUTION_MODE } from '../../shared/constants.js';
+import { EXECUTION_MODE } from '@shared/config/constants.js';
 
 const MSG = { PROCESS_INPUT: 'PROCESS_INPUT', RESULT: 'PROCESS_RESULT' };
 

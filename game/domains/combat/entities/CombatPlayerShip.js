@@ -1,11 +1,11 @@
-import * as THREE from 'three';
-import { ShipBase } from './ShipBase.js';
-import { COLORS, SHIPS, SHIP_PALETTES } from '../../shared/constants.js';
-import { Bridge } from '../../shared/bridge.js';
-import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
-import { SHIP_MUZZLE_CONFIGS } from '../rendering/booster/MuzzleConfig.js';
-import { tuneLoadedMesh, afterLoadedModel } from '../rendering/modelTuning/combatShipModelTuning.js';
-import { getThermalColor } from '../rendering/colors/thermalRamp.js';
+﻿import * as THREE from 'three';
+import { ShipBase } from '@game/entities/ShipBase.js';
+import { COLORS, SHIPS, SHIP_PALETTES } from '@shared/config/constants.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '@game/rendering/booster/BoosterEffect.js';
+import { SHIP_MUZZLE_CONFIGS } from '@game/rendering/muzzle/MuzzleConfig.js';
+import { tuneLoadedMesh, afterLoadedModel } from '@game/rendering/tuning/combatShipModelTuning.js';
+import { getThermalColor } from '@game/rendering/colors/thermalRamp.js';
 
 const TARGET_MODEL_LENGTH = 3.8;
 

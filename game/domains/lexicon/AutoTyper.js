@@ -1,10 +1,10 @@
-// AutoTyper — bot de mecanografia para testing
+﻿// AutoTyper — bot de mecanografia para testing
 // INSERT  → toggle bot on/off
 // Ctrl+F  → toggle panel de telemetria (FPS / heap)
 
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
 
 // 200 WPM ≈ 1000 chars/min ≈ 16.67 chars/sec ≈ 60ms per char
 const TARGET_WPM = 200;

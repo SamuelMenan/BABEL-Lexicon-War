@@ -1,7 +1,7 @@
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
-import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
+﻿import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '@shared/services/audioManager.js';
 import {
   PLAYER_MAX_HP,
   LEX_HEAT_MAX, LEX_HEAT_ON_MISTAKE, LEX_HEAT_ON_HIT,
@@ -11,7 +11,7 @@ import {
   WARN_HP_RED_PCT,
   WARN_HP_HYSTERESIS,
   WARN_DEBUG,
-} from '../../shared/constants.js';
+} from '@shared/config/constants.js';
 
 // Cooldown after overheat ends before it can re-trigger
 const OVERHEAT_COOLDOWN_SEC = 2.0;

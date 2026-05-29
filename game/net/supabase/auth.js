@@ -1,9 +1,9 @@
-// Capa fina sobre supabase.auth. Devuelve { ok, error } siempre.
+﻿// Capa fina sobre supabase.auth. Devuelve { ok, error } siempre.
 // Sin Supabase configurado: todas las funciones devuelven { ok:false, skipped:true }.
 
 import { supabase } from './client.js';
-import { loadProfile, saveProfile } from '../../../shared/playerProfile.js';
-import { EconomySystem } from '../../../game/systems/EconomySystem.js';
+import { loadProfile, saveProfile } from '@shared/services/playerProfile.js';
+import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
 
 function notReady() {
   return { ok: false, skipped: true, reason: 'supabase-not-configured' };

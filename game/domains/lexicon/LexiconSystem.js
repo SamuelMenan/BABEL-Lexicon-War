@@ -1,14 +1,14 @@
-import { EventBus } from '../../shared/events.js';
-import { EventTypes } from '../../shared/eventTypes.js';
-import { Bridge } from '../../shared/bridge.js';
+﻿import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
 import {
   WPM_WINDOW_MS, WPM_MIN_CHARS, WORD_ERROR_PENALTY, PLAYER_MAX_HP,
   FLOW_MAX, FLOW_GAIN_PER_LETTER, FLOW_DECAY_IDLE, FLOW_DECAY_ACTIVE,
   FLOW_PENALTY_HIT, FLOW_PENALTY_MISS, FLOW_HEAL_RATE, FLOW_COOLDOWN_MS,
   DEFAULT_EXECUTION_MODE,
-} from '../../shared/constants.js';
-import { workerBridge } from '../workers/workerBridge.js';
-import { playSfx } from '../../shared/audioManager.js';
+} from '@shared/config/constants.js';
+import { workerBridge } from './workers/workerBridge.js';
+import { playSfx } from '@shared/services/audioManager.js';
 
 const FLOW_IDLE_THRESHOLD_MS = 1500;
 const FLOW_PUBLISH_HZ        = 10;

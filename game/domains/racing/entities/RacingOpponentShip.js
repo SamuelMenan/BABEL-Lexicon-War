@@ -1,30 +1,26 @@
 import * as THREE from 'three';
-import { ShipBase } from './ShipBase.js';
-import { BLOOM_LAYER, COLORS, SHIPS } from '../../shared/constants.js';
-import { BoosterEffect, SHIP_BOOSTER_CONFIGS } from '../rendering/BoosterEffect.js';
+import { BLOOM_LAYER, COLORS } from '@shared/config/constants.js';
+import { RacingShipBase, racingYaw, findRacingShip } from './RacingShipBase.js';
 
 const TARGET_MODEL_LENGTH = 3.2;
 
-// Yaw racing igual a player: ship.rotationY + π (modelRoot apunta a -Z).
-function getOpponentYaw(ship) {
-  return (ship?.rotationY ?? 0) + Math.PI;
-}
-
-export class RacingOpponentShip extends ShipBase {
+export class RacingOpponentShip extends RacingShipBase {
   constructor(basePosition = new THREE.Vector3(5.0, -0.15, 0.8), shipModel = 'cb1') {
     // Lookup ship metadata; default a cb1 si no se encuentra (offline race).
-    const ship = SHIPS.find(s => s.id === shipModel) ?? SHIPS.find(s => s.id === 'cb1') ?? SHIPS[0];
-    super({ modelUrl: ship.url, targetLength: TARGET_MODEL_LENGTH, yaw: getOpponentYaw(ship) });
+    const ship = findRacingShip(shipModel, 'cb1');
+    super({ modelUrl: ship.url, targetLength: TARGET_MODEL_LENGTH, yaw: racingYaw(ship) });
     this._ship         = ship;
     this._shipModel    = ship.id;
     this._basePosition = basePosition.clone();
     this._raceState    = null;
     this._boosters     = [];
 
-    // Entry animation espejo de combate.
-    this._entryActive   = true;
-    this._entryTime     = 0;
-    this._entryDuration = 3.5;
+    // Entry animation espejo de combate (cubic ease, slerp rapido).
+    this._entryActive    = true;
+    this._entryTime      = 0;
+    this._entryDuration  = 3.5;
+    this._entryEasePow   = 3;
+    this._entrySlerpRate = 4;
     this._entryStartPos = new THREE.Vector3(
       this._basePosition.x,
       this._basePosition.y,
@@ -38,10 +34,6 @@ export class RacingOpponentShip extends ShipBase {
     this._group.position.copy(this._entryStartPos);
     // Oculta hasta que el modelo cargue — evita ver el fallback cone antes de tiempo.
     this._group.visible = false;
-  }
-
-  _buildFxNodes() {
-    // Glow sphere removida.
   }
 
   _buildFallbackShip() {
@@ -80,110 +72,14 @@ export class RacingOpponentShip extends ShipBase {
     this._shipRoot.add(wingMesh);
   }
 
-  _configureLoadedMesh(node) {
-    node.layers.set(0);
-    node.layers.enable(BLOOM_LAYER);   // bloquea halo del tunel durante bloom pass
-  }
-
-  _tuneLoadedMesh(_node) { /* no overrides — use raw GLTF materials */ }
-
   _afterLoadedModel(modelRoot) {
-    const modelScale = modelRoot.scale.x;
-    const modelRotY  = modelRoot.rotation.y;
-
-    modelRoot.rotation.y = 0;
-    modelRoot.scale.setScalar(1);
-    const rawBox      = new THREE.Box3().setFromObject(modelRoot);
-    const rawHalfSize = rawBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-    modelRoot.rotation.y = modelRotY;
-    modelRoot.scale.setScalar(modelScale);
-
-    this._boosters.forEach(b => b.dispose());
-    this._boosters = [];
-
-    const racingSF = TARGET_MODEL_LENGTH / 2.2;
-    const prefix   = `hangar_${this._shipModel}_`;
-
-    for (const [key, config] of Object.entries(SHIP_BOOSTER_CONFIGS)) {
-      if (!key.startsWith(prefix)) continue;
-      {
-        const rawPos = new THREE.Vector3(
-          config.localPosition.x * rawHalfSize.x,
-          config.localPosition.y * rawHalfSize.y,
-          config.localPosition.z * rawHalfSize.z,
-        );
-        rawPos.applyEuler(new THREE.Euler(0, modelRotY, 0));
-        rawPos.multiplyScalar(modelScale);
-
-        const racingConfig = {
-          ...config,
-          localPosition: rawPos,
-          bodyRadius:  config.bodyRadius  * racingSF,
-          bodyLength:  config.bodyLength  * racingSF,
-          ringRadius:  (config.ringRadius ?? config.bodyRadius * 1.8) * racingSF,
-          flameSize:   config.flameSize   * racingSF,
-          innerSize:   config.innerSize   * racingSF,
-          starSize:    config.starSize    * racingSF,
-          lightDist:   config.lightDist   * racingSF,
-          normalRamp: config.normalRamp,  // Preserve gradient ramps
-          flowRamp:   config.flowRamp,
-          lightOffset: config.lightOffset.clone().multiplyScalar(racingSF),
-        };
-
-        const booster = new BoosterEffect(racingConfig);
-        booster.attachToShip(this._group);
-
-        if (rawPos.lengthSq() > 0) {
-          const flameDir = rawPos.clone().normalize();
-          booster._root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), flameDir);
-        }
-
-        this._boosters.push(booster);
-      }
-    }
-    if (this._boosters.length === 0) {
-      console.warn('[RacingOpponentShip] No hangar_cb1_* booster configs found.');
-    }
-
-    this._modelLoaded = true;
-  }
-
-  setRaceState(state) { this._raceState = state; }
-
-  setBasePosition(position) {
-    this._basePosition.copy(position);
-    this._group.position.copy(position);
+    this._placeRacingBoosters(modelRoot, TARGET_MODEL_LENGTH);
   }
 
   update(delta) {
     super.update(delta);
 
-    if (this._entryActive) {
-      if (!this._modelLoaded) {
-        this._group.position.copy(this._entryStartPos);
-        this._group.visible = false;
-        return;
-      }
-      this._group.visible = true;
-      // Pause baked clip during entry — cb1's skeletal clip fights the lerp.
-      this._suspendAnimations = true;
-      this._entryTime += delta;
-      const k  = Math.min(this._entryTime / this._entryDuration, 1);
-      const ek = 1 - Math.pow(1 - k, 3);
-      this._group.position.lerpVectors(this._entryStartPos, this._basePosition, ek);
-      this._group.quaternion.slerp(new THREE.Quaternion(), delta * 4);
-      // Fade-in escala: nave emerge de "salto hiperespacial" en lugar de pop visible.
-      const fadeK = Math.min(1, k / 0.35);
-      const fadeScale = 0.001 + fadeK * 0.999;
-      this._group.scale.setScalar(fadeScale);
-      this._boosters.forEach(b => b.update(delta, true, 1.4, 1.18, 1.0));
-      if (k >= 1) {
-        this._entryActive = false;
-        this._suspendAnimations = false;
-        this._group.scale.setScalar(1);
-      }
-      return;
-    }
+    if (this._entryActive) { this._updateEntry(delta); return; }
 
     if (!this._raceState) return;
 
@@ -203,11 +99,5 @@ export class RacingOpponentShip extends ShipBase {
     const isThrusting = smoothLead > -0.5;
     // flowRatio=1.0: rampa ascendente → opacidad plena.
     this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
-  }
-
-  dispose() {
-    this._boosters.forEach(b => b.dispose());
-    this._boosters = [];
-    super.dispose();
   }
 }

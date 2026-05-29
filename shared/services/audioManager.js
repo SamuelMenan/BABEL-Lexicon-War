@@ -1,4 +1,4 @@
-import manifest from './audioManifest.json';
+import manifest from '../data/audioManifest.json';
 import { Howl, Howler } from 'howler';
 
 let settings = { sfxVolume: 0.6, bgmVolume: 0.4, muted: false };

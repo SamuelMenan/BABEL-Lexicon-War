@@ -17,7 +17,7 @@
 
 import es from './locales/es.json';
 import en from './locales/en.json';
-import { Bridge } from '../bridge.js';
+import { Bridge } from '../state/bridge.js';
 
 const STORAGE_KEY = 'babel-locale:v1';
 const SUPPORTED   = ['es', 'en'];

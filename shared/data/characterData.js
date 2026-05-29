@@ -1,6 +1,6 @@
 // Catalogo de personajes/pilotos seleccionables en hangar.
 
-import { getLocale } from './i18n/index.js';
+import { getLocale } from '../i18n/index.js';
 
 const CHARACTERS_ES = {
   kael: {

@@ -1,6 +1,6 @@
 // Flags one-shot por tutorial. Versionado para forzar re-mostrar tras cambios mayores.
 
-import { loadProfile, saveProfile } from './playerProfile.js';
+import { loadProfile, saveProfile } from '../services/playerProfile.js';
 
 export const TUTORIAL_VERSIONS = {
   combat: 'v1',

@@ -1,4 +1,4 @@
-import { getLocale } from './i18n/index.js';
+import { getLocale } from '../i18n/index.js';
 
 // Constantes globales del juego — ajustar aqui afecta todo el balance
 
@@ -81,27 +81,9 @@ export const LOADING_STAGES = {
   get READY() { return getLocale() === 'en' ? LOADING_STAGES_EN.READY : LOADING_STAGES_ES.READY; },
 };
 
-export const ASSET_MANIFESTS = {
-  shared: [
-    { type: 'gltf', url: '/models/truth_about_the_dark_side_of_the_moon.glb', optional: true },
-  ],
-  combat: [
-    { type: 'gltf', url: '/models/spaceshipnew.glb',              optional: true },
-    { type: 'gltf', url: '/models/spaceship_-_cb1.glb',            optional: true }, // selectable player
-    { type: 'gltf', url: '/models/spaceship__low_poly.glb',        optional: true },
-    { type: 'gltf', url: '/models/ig_127-730-00.glb',              optional: true },
-    { type: 'gltf', url: '/models/spaceship.glb',                  optional: true },
-    { type: 'gltf', url: '/models/radiation_of_space.glb',        optional: true },
-  ],
-  racing: [
-    { type: 'gltf', url: '/models/spaceship.glb',                              optional: true },
-    { type: 'gltf', url: '/models/spaceship__low_poly.glb',                    optional: true },
-    { type: 'gltf', url: '/models/spaceship_-_cb1.glb',                        optional: true }, // default opponent + selectable player
-    { type: 'gltf', url: '/models/spaceshipnew.glb',                           optional: true },
-    { type: 'gltf', url: '/models/ig_127-730-00.glb',                          optional: true },
-    { type: 'gltf', url: '/models/24_dizzying_space_travel_-_inktober2019.glb', optional: true },
-  ],
-};
+// ASSET_MANIFESTS se define DESPUES de SHIPS — deriva la lista de naves de SHIPS
+// (single source) para que ninguna nave seleccionable se quede sin precargar.
+// Ver mas abajo, tras la declaracion de SHIPS.
 
 // --- WPM y timing ---
 export const WPM_WINDOW_MS = 5000;
@@ -532,8 +514,46 @@ export const SHIPS = [
     rotationY: Math.PI,           // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
     noseAxis: '-z',
   },
+  {
+    // Nave secreta — solo desbloqueable con codigo (ver EconomySystem.redeemCode).
+    // `secret: true` la oculta del hangar salvo que sea propiedad del jugador y la
+    // excluye de la precarga automatica (no filtra en network tab de no-poseedores).
+    // ⚠️ ORIENTACION sin verificar — ajustar rotationY/noseAxis tras probar en hangar.
+    id: 'xwing',
+    url: '/models/rebels_x-wing_starfighter.glb',
+    name: 'Juanito01',
+    code: 'RGE-001',
+    rotationY: 0,                 // ajustar: 0 | Math.PI | Math.PI/2 | -Math.PI/2
+    noseAxis: '+z',
+    secret: true,
+  },
 ];
 const DEFAULT_SHIP = 'spaceship';
+
+// Todos los modelos de naves seleccionables, derivados de SHIPS. Asi cualquier
+// nave nueva (p.ej. colaid1, waldeinsamkeit) entra automaticamente en la
+// precarga de combat + racing — no hay que mantener una lista paralela a mano.
+// Naves secretas (secret:true) se excluyen — cargan on-demand al equiparlas, no
+// se precargan para todos (evita filtrar su existencia y ahorra descarga).
+const SHIP_GLTFS = SHIPS
+  .filter((s) => !s.secret)
+  .map((s) => ({ type: 'gltf', url: s.url, optional: true }));
+
+export const ASSET_MANIFESTS = {
+  shared: [
+    { type: 'gltf', url: '/models/truth_about_the_dark_side_of_the_moon.glb', optional: true },
+  ],
+  // Todas las naves + fondo de arena de combate.
+  combat: [
+    ...SHIP_GLTFS,
+    { type: 'gltf', url: '/models/radiation_of_space.glb', optional: true },
+  ],
+  // Todas las naves (player + oponente) + fondo de tunel de carrera.
+  racing: [
+    ...SHIP_GLTFS,
+    { type: 'gltf', url: '/models/24_dizzying_space_travel_-_inktober2019.glb', optional: true },
+  ],
+};
 
 // ─── Paletas de color por nave ──────────────────────────────────────────────
 //
@@ -733,5 +753,31 @@ export const SHIP_PALETTES = {
     hudColor:   '#ff8844',
     laserColor: 0xff6622,
     shotColor:  0xdd4411,
+  },
+
+  // ── rebels_x-wing.glb (nave secreta) — propulsor rojo/blanco rebelde ──────
+  xwing: {
+    lightColor:  0xff3322,
+    bodyColor:   0xcc2211,
+    flameColor:  0xff4433,
+    innerColor:  0xffeedd,
+    starColor:   0xff2200,
+    ringColor:   0xff5544,
+    hangarColor: 0xff4433,
+    normalRamp: [
+      0xfff0ee, // 1. Blanco rosado
+      0xffd6cc, // 2. Rosa palido
+      0xffb3a3, // 3. Salmon claro
+      0xff8877, // 4. Rojo coral
+      0xff6655, // 5. Rojo brillante
+      0xff4433, // 6. Rojo medio
+      0xdd2211, // 7. Rojo oscuro
+      0xaa1100, // 8. Rojo muy oscuro
+      0x660800, // 9. Rojo casi negro
+    ],
+    flowRamp:   0x440800,
+    hudColor:   '#ff5544',
+    laserColor: 0xff4433,
+    shotColor:  0xdd2211,
   },
 };

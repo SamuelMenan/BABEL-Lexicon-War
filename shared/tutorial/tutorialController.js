@@ -1,9 +1,9 @@
 // Decide que tutorial mostrar y orquesta gate landing→tutorial→countdown.
 // Inicializa una vez desde app/main.jsx.
 
-import { Bridge } from './bridge.js';
-import { EventBus } from './events.js';
-import { EventTypes } from './eventTypes.js';
+import { Bridge } from '../state/bridge.js';
+import { EventBus } from '../state/events.js';
+import { EventTypes } from '../state/eventTypes.js';
 import { hasSeenTutorial, markTutorialSeen, getAllSeen } from './tutorialFlags.js';
 
 let _initialized = false;

@@ -17,10 +17,10 @@ export const ACTIONS = Object.freeze({
   // ── Universal ─────────────────────────────────────────────────────
   CONFIRM:        { default: 'Enter',     alias: ' ',         scopes: ['menu','hangar','tutorial','modal'], description: 'keybindings.confirm.desc' },
   CANCEL:         { default: 'Escape',                        scopes: ['menu','hangar','tutorial','modal','gameplay'], description: 'keybindings.cancel.desc' },
-  NAV_UP:         { default: 'ArrowUp',                       scopes: ['menu','modal'],   description: 'keybindings.navUp.desc' },
-  NAV_DOWN:       { default: 'ArrowDown',                     scopes: ['menu','modal'],   description: 'keybindings.navDown.desc' },
-  NAV_PREV:       { default: 'ArrowLeft',                     scopes: ['menu','hangar','tutorial'], description: 'keybindings.navPrev.desc' },
-  NAV_NEXT:       { default: 'ArrowRight',                    scopes: ['menu','hangar','tutorial'], description: 'keybindings.navNext.desc' },
+  NAV_UP:         { default: 'ArrowUp',                       scopes: ['menu','modal','tutorial'],   description: 'keybindings.navUp.desc' },
+  NAV_DOWN:       { default: 'ArrowDown',                     scopes: ['menu','modal','tutorial'],   description: 'keybindings.navDown.desc' },
+  NAV_PREV:       { default: 'ArrowLeft',                     scopes: ['menu','hangar','tutorial','modal'], description: 'keybindings.navPrev.desc' },
+  NAV_NEXT:       { default: 'ArrowRight',                    scopes: ['menu','hangar','tutorial','modal'], description: 'keybindings.navNext.desc' },
   SHOW_HELP:      { default: '?',                             scopes: ['*'],              description: 'keybindings.showHelp.desc' },
 
   // ── Hangar ────────────────────────────────────────────────────────
@@ -30,11 +30,13 @@ export const ACTIONS = Object.freeze({
   HANGAR_LASER:     { default: 'l',                           scopes: ['hangar'], description: 'keybindings.hangarLaser.desc' },
   HANGAR_BOOSTERS:  { default: 'j',                           scopes: ['hangar'], description: 'keybindings.hangarBoosters.desc' },
   HANGAR_DETONATE:  { default: 'x',                           scopes: ['hangar'], description: 'keybindings.hangarDetonate.desc' },
+  SELECT_PILOT:     { default: 'p',                           scopes: ['hangar'], description: 'keybindings.selectPilot.desc' },
 
   // ── Gameplay ──────────────────────────────────────────────────────
   // Typing es manejado aparte (cualquier caracter imprimible) — no registrado como action discreta.
 
   // ── Debug (solo si profile.debugEnabled) ──────────────────────────
+  DEBUG_SCOPE_OVERLAY: { default: 'F8',         debug: true, scopes: ['*'], description: 'keybindings.debugScopeOverlay.desc' },
   DEBUG_PERF:        { default: 'F9',          debug: true, scopes: ['*'], description: 'keybindings.debugPerf.desc' },
   DEBUG_TELEMETRY:   { default: 'F10',         debug: true, scopes: ['*'], description: 'keybindings.debugTelemetry.desc' },
   DEBUG_BOT:         { default: 'F11',         debug: true, scopes: ['*'], description: 'keybindings.debugBot.desc' },

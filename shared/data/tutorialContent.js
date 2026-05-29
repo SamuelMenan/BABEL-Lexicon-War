@@ -6,7 +6,7 @@
 //                  |'phrase'|'opponent'|'wpm-acc'|'hangar-overview'|'hangar-slots'
 //                  |'hangar-nav'|'posture'|'no-look'|'accuracy', ...props }
 
-import { getLocale } from './i18n/index.js';
+import { getLocale } from '../i18n/index.js';
 
 const TUTORIAL_CONTENT_ES = {
   combat: {

@@ -1,8 +1,8 @@
 // Perfil persistente del jugador. Wallet + inventario.
 // Persistencia: localStorage. Migraciones por version.
 
-import { SHIP_CATALOG } from './shopCatalog.js';
-import { DEFAULT_CHARACTER_ID, CHARACTERS } from './characterData.js';
+import { SHIP_CATALOG } from '../data/shopCatalog.js';
+import { DEFAULT_CHARACTER_ID, CHARACTERS } from '../data/characterData.js';
 
 const STORAGE_KEY = 'babel.profile.v1';
 const DEFAULT_SHIP_ID = 'spaceship';

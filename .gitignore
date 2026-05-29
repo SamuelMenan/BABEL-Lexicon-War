@@ -27,6 +27,8 @@ commit-msg-mcp.txt
 # MCP server - local dev tooling, not part of the game source
 mcp-server/
 .mcp.json
+.agents/
+.trae/
 
 # Prompt & performance docs (dev reference)
 prompt_*.md

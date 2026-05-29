@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import useTranslation from '../../shared/i18n/useTranslation.js';
-import { playBgm } from '../../shared/audioManager.js';
+﻿import React, { useEffect, useRef, useState } from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playBgm } from '@shared/services/audioManager.js';
 
 export default function EpilepsyWarning({ onAccept, autoSkipAfter = 20 }) {
   const { t } = useTranslation();

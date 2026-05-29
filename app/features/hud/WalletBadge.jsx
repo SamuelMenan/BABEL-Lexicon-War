@@ -1,7 +1,7 @@
-import React, { useEffect, useReducer, useRef } from 'react';
-import { Bridge } from '../../../shared/bridge.js';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { getNumberFormatter } from '../../../shared/i18n/index.js';
+﻿import React, { useEffect, useReducer, useRef } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { getNumberFormatter } from '@shared/i18n/index.js';
 
 function fmt(n) { return getNumberFormatter().format(n ?? 0); }
 

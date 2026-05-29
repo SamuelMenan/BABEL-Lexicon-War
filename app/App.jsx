@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { initGame, destroyGame } from "../game/main.js";
-import MainMenu from "./components/MainMenu.jsx";
-import HUD from "./components/HUD.jsx";
-import PauseMenu from "./components/PauseMenu.jsx";
-import MatchResult from "./components/MatchResult.jsx";
-import LoadingScreen from "./components/LoadingScreen.jsx";
-import HangarScreen from "./components/hangar/HangarScreen.jsx";
-import TutorialOverlay from "./components/tutorial/TutorialOverlay.jsx";
-import ShortcutsOverlay from "./components/common/ShortcutsOverlay.jsx";
-import EpilepsyWarning from "./components/EpilepsyWarning.jsx";
-import PresentationMenu from "./components/PresentationMenu.jsx";
-import RematchInviteModal from "./components/race/online/RematchInviteModal.jsx";
-import OnlineNoticeBanner from "./components/OnlineNoticeBanner.jsx";
-import { Bridge } from "../shared/bridge.js";
-import { KeybindService } from "../shared/keybindService.js";
-import { getSession } from "../game/services/supabase/auth.js";
-import { playSfx } from "../shared/audioManager.js";
+import { initGame, destroyGame } from "@game/main.js";
+import MainMenu from "./screens/MainMenu.jsx";
+import HUD from "./features/hud/HUD.jsx";
+import PauseMenu from "./screens/PauseMenu.jsx";
+import MatchResult from "./screens/MatchResult.jsx";
+import LoadingScreen from "./screens/LoadingScreen.jsx";
+import HangarScreen from "./features/hangar/HangarScreen.jsx";
+import TutorialOverlay from "./features/tutorial/TutorialOverlay.jsx";
+import ShortcutsOverlay from "./ui/ShortcutsOverlay.jsx";
+import ScopeDebugOverlay from "./ui/ScopeDebugOverlay.jsx";
+import EpilepsyWarning from "./screens/EpilepsyWarning.jsx";
+import PresentationMenu from "./screens/PresentationMenu.jsx";
+import RematchInviteModal from "./features/race-online/RematchInviteModal.jsx";
+import OnlineNoticeBanner from "./features/hud/toasts/OnlineNoticeBanner.jsx";
+import { Bridge } from "@shared/state/bridge.js";
+import { KeybindService } from "@shared/services/keybindService.js";
+import { getSession } from "@game/net/supabase/auth.js";
+import { playSfx } from "@shared/services/audioManager.js";
 
 export default function App() {
   const [state, setState] = useState(() => Bridge.getState());
@@ -134,6 +135,7 @@ export default function App() {
     showShipSelection, tutorialActive,
     onlineEnabled, onlineOpponentStats, onlineRole,
     onlinePendingInvite, onlineNotice,
+    debugScopeOverlayVisible,
   } = state;
 
   if (introStage === 'checking') {
@@ -196,6 +198,7 @@ export default function App() {
       <ShortcutsOverlay open={showHelp} onClose={() => setShowHelp(false)} />
       <RematchInviteModal invite={onlinePendingInvite} />
       <OnlineNoticeBanner notice={onlineNotice} />
+      {debugScopeOverlayVisible && <ScopeDebugOverlay />}
     </>
   );
 }

@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ACTIONS, SCOPES } from '../../../shared/keybindings.js';
-import { KeybindService } from '../../../shared/keybindService.js';
-import { EconomySystem } from '../../../game/systems/EconomySystem.js';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import KeyboardNavigable from '../common/KeyboardNavigable.jsx';
+﻿import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { ACTIONS, SCOPES } from '@shared/config/keybindings.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import KeyboardNavigable from '@app/ui/KeyboardNavigable.jsx';
 
 function formatKey(k) {
   if (!k) return '—';

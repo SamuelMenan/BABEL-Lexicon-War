@@ -1,6 +1,6 @@
-import React from "react";
-import { wordHexCore, WORD_TYPE_MAP } from "../../../../game/systems/hudUtils.js";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React from "react";
+import { wordHexCore, WORD_TYPE_MAP } from "@game/domains/telemetry/hudUtils.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 export default function CombatWordPanel({ activeWord, animState }) {
   const { t } = useTranslation();

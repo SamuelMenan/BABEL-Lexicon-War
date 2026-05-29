@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { signIn, signUp, signInWithGoogle, isAuthAvailable } from '../../../game/services/supabase/auth.js';
-import { KeybindService } from '../../../shared/keybindService.js';
-import KeyHint from '../common/KeyHint.jsx';
-import Icon from '../common/Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+﻿import React, { useState } from 'react';
+import { signIn, signUp, signInWithGoogle, isAuthAvailable } from '@game/net/supabase/auth.js';
+import Modal from '@app/ui/Modal.jsx';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 function passwordStrength(p, t) {
   if (!p) return { score: 0, label: '', cls: '' };
@@ -44,12 +44,6 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
   const available = isAuthAvailable();
   const strength  = mode === 'signup' ? passwordStrength(password, t) : null;
   const emailLooksValid = !email || validEmail(email);
-
-  useEffect(() => {
-    KeybindService.pushScope('modal');
-    const offCancel = KeybindService.register('modal', 'CANCEL', () => onClose());
-    return () => { offCancel(); KeybindService.popScope('modal'); };
-  }, [onClose]);
 
   async function handleSubmit(e) {
     e?.preventDefault();
@@ -103,9 +97,10 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
   const stopKeys = (e) => { e.stopPropagation(); };
 
   return (
-    <div className="auth-modal" role="dialog" aria-modal="true" onClick={onClose}>
+    <Modal className="auth-modal" onClose={onClose}>
       <form
         className="auth-modal__panel"
+        role="document"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={stopKeys}
         onKeyUp={stopKeys}
@@ -271,6 +266,6 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
           items={[{ key: 'ESC', label: t('auth.cancelKey') }]}
         />
       </form>
-    </div>
+    </Modal>
   );
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import useTranslation from '../../../../shared/i18n/useTranslation.js';
+﻿import React from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 // HUD flotante mostrando stats live del rival online (fase 2 simple, sin
 // flecha 3D todavia). Renderiza arriba-derecha bajo r-topright.

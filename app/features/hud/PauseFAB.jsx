@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Bridge } from '../../../shared/bridge.js';
-import Icon from '../common/Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+﻿import React, { useEffect, useState } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 function isTouchDevice() {
   if (typeof window === 'undefined') return false;

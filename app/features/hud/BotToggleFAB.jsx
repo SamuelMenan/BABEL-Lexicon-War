@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Bridge } from '../../../shared/bridge.js';
-import { toggleBot } from '../../../game/systems/AutoTyper.js';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+﻿import React, { useEffect, useState } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import { toggleBot } from '@game/domains/lexicon/AutoTyper.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 function isTouchDevice() {
   if (typeof window === 'undefined') return false;

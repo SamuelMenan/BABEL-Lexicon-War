@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import WarningTriangle from "../warnings/WarningTriangle.jsx";
-import { getProximityLevel } from "../../../../game/systems/hudUtils.js";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+import { getProximityLevel } from "@game/domains/telemetry/hudUtils.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 export default function LexiconDeck({ combatEnemies, targetId, flowMultiplier, mirror = false }) {
   const { t } = useTranslation();

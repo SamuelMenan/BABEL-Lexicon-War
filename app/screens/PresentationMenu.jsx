@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import useTranslation from '../../shared/i18n/useTranslation.js';
-import { playBgm } from '../../shared/audioManager.js';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playBgm } from '@shared/services/audioManager.js';
 
 const STORY_ES = [
   { text: 'Hace mas de setenta años, la Corporacion Nexolang inicio el proyecto BABEL.' },
@@ -282,7 +282,7 @@ export default function PresentationMenu({ onComplete, skipEnabled = true }) {
 
       <header className="babel-frame__header">
         <span>BABEL · LEXICON WAR</span>
-        <span className="babel-frame__tag--accent">// {t('presentation.tag')}</span>
+        <span className="babel-frame__tag--accent">{'//'} {t('presentation.tag')}</span>
       </header>
 
       <main className="babel-intro__main">

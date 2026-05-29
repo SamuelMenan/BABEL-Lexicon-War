@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { updateDisplayName } from '../../../game/services/supabase/auth.js';
-import { KeybindService } from '../../../shared/keybindService.js';
+﻿import React, { useEffect, useState } from 'react';
+import { updateDisplayName } from '@game/net/supabase/auth.js';
+import { KeybindService } from '@shared/services/keybindService.js';
 
 export default function PilotNameEditor({ initial = '', onSaved, onClose }) {
   const [name, setName] = useState(initial);

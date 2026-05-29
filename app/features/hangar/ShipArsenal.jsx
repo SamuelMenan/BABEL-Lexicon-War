@@ -1,5 +1,5 @@
-import React from 'react';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+﻿import React from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 function WeaponSlot({ name, slot, locked, t }) {
   return (

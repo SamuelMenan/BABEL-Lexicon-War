@@ -1,11 +1,10 @@
-// Modal de atajos. Trigger: tecla '?'. Lista acciones aplicables al scope activo.
-
 import React, { useEffect, useState } from 'react';
-import { ACTIONS, actionsForScope } from '../../../shared/keybindings.js';
-import { KeybindService } from '../../../shared/keybindService.js';
+import { ACTIONS, actionsForScope } from '@shared/config/keybindings.js';
+import { KeybindService } from '@shared/services/keybindService.js';
 import Icon from './Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import '../../../styles/components/shortcuts-overlay.css';
+import Modal from '@app/ui/Modal.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import '../../styles/ui/shortcuts-overlay.css';
 
 function KeyChip({ value }) {
   return <span className="shortcuts__key">{formatKey(value)}</span>;
@@ -29,11 +28,8 @@ export default function ShortcutsOverlay({ open, onClose }) {
   useEffect(() => {
     if (!open) return;
     setScopes(KeybindService.getScopes());
-    function onKey(e) {
-      if (e.key === 'Escape' || e.key === '?') { e.preventDefault(); onClose?.(); }
-    }
-    window.addEventListener('keydown', onKey, { capture: true });
-    return () => window.removeEventListener('keydown', onKey, { capture: true });
+    const offShowHelp = KeybindService.register('modal', 'SHOW_HELP', () => { onClose?.(); return true; });
+    return () => { offShowHelp(); };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -48,40 +44,42 @@ export default function ShortcutsOverlay({ open, onClose }) {
   }).filter((s) => s.ids.length > 0);
 
   return (
-    <div className="shortcuts" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="shortcuts__panel" onClick={(e) => e.stopPropagation()}>
-        <header className="shortcuts__header">
-          <span className="shortcuts__chip">{t('shortcuts.title')}</span>
-          <button className="shortcuts__close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={16} /></button>
-        </header>
+    <Modal
+      className="shortcuts"
+      panelClassName="shortcuts__panel"
+      onClose={onClose}
+    >
+      <header className="shortcuts__header">
+        <span className="shortcuts__chip">{t('shortcuts.title')}</span>
+        <button type="button" className="shortcuts__close" onClick={onClose} aria-label={t('common.close')}><Icon name="close" size={16} /></button>
+      </header>
 
-        <div className="shortcuts__body">
-          {sections.map(({ scope, ids }) => (
-            <section key={scope} className="shortcuts__section">
-              <h3 className="shortcuts__section-title">{t(`shortcuts.scopes.${scope}`)}</h3>
-              <ul className="shortcuts__list">
-                {ids.map((id) => {
-                  const def = ACTIONS[id];
-                  const binding = KeybindService.getBinding(id);
-                  return (
-                    <li key={id} className={`shortcuts__row${def.debug ? ' shortcuts__row--debug' : ''}`}>
-                      <span className="shortcuts__desc">{t(def.description)}</span>
-                      <span className="shortcuts__keys">
-                        <KeyChip value={binding?.key} />
-                        {binding?.alias && <KeyChip value={binding.alias} />}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-
-        <footer className="shortcuts__footer">
-          <span><KeyChip value="?" /> / <KeyChip value="Escape" /> · {t('shortcuts.closeHint')}</span>
-        </footer>
+      <div className="shortcuts__body">
+        {sections.map(({ scope, ids }) => (
+          <section key={scope} className="shortcuts__section">
+            <h3 className="shortcuts__section-title">{t(`shortcuts.scopes.${scope}`)}</h3>
+            <ul className="shortcuts__list">
+              {ids.map((id) => {
+                const def = ACTIONS[id];
+                const binding = KeybindService.getBinding(id);
+                return (
+                  <li key={id} className={`shortcuts__row${def.debug ? ' shortcuts__row--debug' : ''}`}>
+                    <span className="shortcuts__desc">{t(def.description)}</span>
+                    <span className="shortcuts__keys">
+                      <KeyChip value={binding?.key} />
+                      {binding?.alias && <KeyChip value={binding.alias} />}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
       </div>
-    </div>
+
+      <footer className="shortcuts__footer">
+        <span><KeyChip value="?" /> / <KeyChip value="Escape" /> · {t('shortcuts.closeHint')}</span>
+      </footer>
+    </Modal>
   );
 }

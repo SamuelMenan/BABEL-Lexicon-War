@@ -1,10 +1,10 @@
-// Diagramas compartidos entre multiples tutoriales.
+﻿// Diagramas compartidos entre multiples tutoriales.
 // DiagBranch — seleccion de rama (combat / racing).
 // DiagFlow   — multiplicador Flow (combat & racing).
 // DiagCountdown — preparacion inicio (combat & racing).
 
 import React from 'react';
-import { Defs, Frame, Label, VB } from '../../common/svg/HudPrimitives.jsx';
+import { Defs, Frame, Label, VB } from '@app/ui/svg/HudPrimitives.jsx';
 
 export function DiagBranch() {
   return (

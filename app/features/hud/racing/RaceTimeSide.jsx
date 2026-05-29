@@ -1,5 +1,5 @@
-import React from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 // Panel lateral derecho con tiempo restante. Mismo tamaño que RaceWPMSide.
 export default function RaceTimeSide({ timeRemaining = 60 }) {

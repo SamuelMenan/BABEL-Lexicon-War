@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { getCharacter } from '../../../../shared/characterData.js';
-import { KeybindService } from '../../../../shared/keybindService.js';
-import KeyHint from '../../common/KeyHint.jsx';
-import Icon from '../../common/Icon.jsx';
-import useTranslation from '../../../../shared/i18n/useTranslation.js';
+import { getCharacter } from '@shared/data/characterData.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import Icon from '@app/ui/Icon.jsx';
+import Modal from '@app/ui/Modal.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 // Modal welcome al entrar al OnlineRoomHangar — muestra piloto asignado al
 // jugador + rival, con portraits y estilo coherente con CharacterSelectModal
@@ -20,50 +21,50 @@ export default function OnlinePilotBadge({ myPilot, rivalPilot, onDismiss, showW
 
   useEffect(() => {
     if (!showWelcome) return;
-    KeybindService.pushScope('modal');
-    const offCancel  = KeybindService.register('modal', 'CANCEL',  () => onDismiss?.());
     const offConfirm = KeybindService.register('modal', 'CONFIRM', () => onDismiss?.());
-    return () => { offCancel(); offConfirm(); KeybindService.popScope('modal'); };
+    return () => { offConfirm(); };
   }, [showWelcome, onDismiss]);
 
   if (!showWelcome) return null;
   const me    = getCharacter(myPilot)    || {};
   const rival = getCharacter(rivalPilot) || {};
   return (
-    <div className="char-modal char-modal--online" role="dialog" aria-modal="true">
-      <div className="char-modal__panel" role="document" onClick={(e) => e.stopPropagation()}>
-        <div className="char-modal__header">
-          <span className="char-modal__label">{t('race.pilotBadge.label')}</span>
-        </div>
+    <Modal
+      className="char-modal char-modal--online"
+      panelClassName="char-modal__panel"
+      onClose={onDismiss}
+    >
+      <div className="char-modal__header">
+        <span className="char-modal__label">{t('race.pilotBadge.label')}</span>
+      </div>
 
-        <h3 className="char-modal__title">{t('race.pilotBadge.title')}</h3>
+      <h3 className="char-modal__title">{t('race.pilotBadge.title')}</h3>
 
-        <div className="char-modal__notice" role="note">
-          <Icon name="info" size={16} />
-          <div className="char-modal__notice-text">
-            <strong>{t('race.pilotBadge.autoTag')}</strong>
-            <span>{t('race.pilotBadge.autoDesc')}</span>
-          </div>
-        </div>
-
-        <div className="char-modal__grid">
-          <PilotCard char={me}    label={t('race.pilotBadge.you')} highlight="me"    chosen />
-          <PilotCard char={rival} label={t('race.pilotBadge.rival')} highlight="rival" chosen={false} />
-        </div>
-
-        <div className="char-modal__actions">
-          <KeyHint
-            className="char-modal__hint"
-            items={[{ key: '↵', label: t('race.hangarExtra.continueHint') }]}
-          />
-          <button
-            className="char-modal__btn char-modal__btn--confirm"
-            onClick={onDismiss}
-            autoFocus
-          >{t('race.pilotBadge.continue')}</button>
+      <div className="char-modal__notice" role="note">
+        <Icon name="info" size={16} />
+        <div className="char-modal__notice-text">
+          <strong>{t('race.pilotBadge.autoTag')}</strong>
+          <span>{t('race.pilotBadge.autoDesc')}</span>
         </div>
       </div>
-    </div>
+
+      <div className="char-modal__grid">
+        <PilotCard char={me}    label={t('race.pilotBadge.you')} highlight="me"    chosen />
+        <PilotCard char={rival} label={t('race.pilotBadge.rival')} highlight="rival" chosen={false} />
+      </div>
+
+      <div className="char-modal__actions">
+        <KeyHint
+          className="char-modal__hint"
+          items={[{ key: '↵', label: t('race.hangarExtra.continueHint') }]}
+        />
+        <button type="button"
+          className="char-modal__btn char-modal__btn--confirm"
+          onClick={onDismiss}
+          autoFocus
+        >{t('race.pilotBadge.continue')}</button>
+      </div>
+    </Modal>
   );
 }
 

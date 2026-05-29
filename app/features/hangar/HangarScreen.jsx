@@ -1,19 +1,17 @@
-import React, { useEffect, useReducer, useRef, useState, useCallback } from 'react';
-import { ShipSelectionScene } from '../../../game/scenes/ShipSelectionScene.js';
-import { Bridge } from '../../../shared/bridge.js';
-import { EventBus } from '../../../shared/events.js';
-import { EventTypes } from '../../../shared/eventTypes.js';
-import { KeybindService } from '../../../shared/keybindService.js';
-import { getShipsForHangar } from '../../../shared/shopCatalog.js';
-import { EconomySystem } from '../../../game/systems/EconomySystem.js';
-import { playSfx, playBgm } from '../../../shared/audioManager.js';
-
-const SHIPS = getShipsForHangar();
-import { getShipData } from '../../../game/data/shipData.js';
-import ShipSelectLoadingScreen from '../ShipSelectLoadingScreen.jsx';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { getShipsForHangar } from '@shared/data/shopCatalog.js';
+import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
+import { playSfx } from '@shared/services/audioManager.js';
+import { getShipData } from '@game/data/shipData.js';
+import { getCharacter } from '@shared/data/characterData.js';
+import { useHangarScene } from './useHangarScene.js';
+import HangarShell from './HangarShell.jsx';
 import HangarHeader from './HangarHeader.jsx';
 import ShipInfo from './ShipInfo.jsx';
-import HangarFrame from './HangarFrame.jsx';
 import ShipStats from './ShipStats.jsx';
 import ShipArsenal from './ShipArsenal.jsx';
 import ShipNav from './ShipNav.jsx';
@@ -21,106 +19,40 @@ import HangarControls from './HangarControls.jsx';
 import PurchaseModal from './PurchaseModal.jsx';
 import CharacterSelectModal from './CharacterSelectModal.jsx';
 import GuestPromptModal from '../auth/GuestPromptModal.jsx';
-import { getCharacter } from '../../../shared/characterData.js';
 
-const MIN_LOADING_MS = 1800;
-const PROGRESS_TICK  = 80;
-const PROGRESS_STEP  = 3.5;
+const SHIPS = getShipsForHangar();
 
 export default function HangarScreen() {
-  const mountRef   = useRef(null);
-  const sceneRef   = useRef(null);
-  const shipIdxRef = useRef(0);
-
-  const [shipIdx,       setShipIdx]      = useState(0);
-  const [, forceUpdate]                   = useReducer(x => x + 1, 0);
-  const [pendingBuy,    setPendingBuy]   = useState(false);
-  const [showCharSelect, setShowCharSelect] = useState(false);
+  const [pendingBuy,      setPendingBuy]      = useState(false);
+  const [showCharSelect,  setShowCharSelect]  = useState(false);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
-  const [canvasAlpha,  setCanvasAlpha]  = useState(1);
-  const [phase,        setPhase]        = useState('loading');
-  const [loadProgress, setLoadProgress] = useState(0);
 
-  const sceneReadyRef  = useRef(false);
-  const minTimeRef     = useRef(false);
-  const progressRef    = useRef(0);
-  const deployingRef   = useRef(false);
+  const deployingRef = useRef(false);
 
-  const tryReady = useCallback(() => {
-    if (sceneReadyRef.current && minTimeRef.current) {
-      setLoadProgress(100);
-      setTimeout(() => setPhase('ready'), 300);
-    }
-  }, []);
-
-  useEffect(() => { playBgm('bgm.hangar'); }, []);
-
-  useEffect(() => {
-    const tickId = setInterval(() => {
-      progressRef.current = Math.min(90, progressRef.current + PROGRESS_STEP);
-      setLoadProgress(progressRef.current);
-    }, PROGRESS_TICK);
-
-    const minTimer = setTimeout(() => {
-      minTimeRef.current = true;
-      tryReady();
-    }, MIN_LOADING_MS);
-
-    const scene = new ShipSelectionScene(mountRef.current, {
-      onLoadStart: () => {},
-      onLoadEnd: () => {
-        clearInterval(tickId);
-        progressRef.current = 90;
-        setLoadProgress(90);
-        sceneReadyRef.current = true;
-        tryReady();
-      },
-    });
-    sceneRef.current = scene;
-    scene.loadShip(0);
-    Bridge.emit(EventTypes.SHIP_SELECTION_OPENED, {});
-
+  const {
+    mountRef, sceneRef, shipIdx, shipIdxRef, canvasAlpha, phase, loadProgress,
+    navigateTo, forceUpdate,
+  } = useHangarScene({
+    bgm: 'bgm.hangar',
+    minLoadingMs: 1800,
     // Al cerrar el tutorial de hangar (primera entrada), abrir seleccion de
     // piloto automaticamente. tutorialController emite TUTORIAL_COMPLETED tras
-    // SHIP_SELECTION_OPENED si no fue visto antes. Se ejecuta una sola vez por
-    // mount; si el jugador ya vio el tutorial este listener no dispara nada.
-    const offTutorial = EventBus.on(EventTypes.TUTORIAL_COMPLETED, (p) => {
-      if (p?.id === 'hangar') setShowCharSelect(true);
-    });
-    const offTutorialSkip = EventBus.on(EventTypes.TUTORIAL_SKIPPED, (p) => {
-      if (p?.id === 'hangar') setShowCharSelect(true);
-    });
-
-    // PRELOAD COMBAT + RACING ASSETS WHILE IN HANGAR. Both manifests include
-    // cb1 — preloading here means hangar's own `getGLTF` cache hit on next
-    // ship-switch instead of re-downloading 34MB.
-    import('../../../game/core/AssetLoader.js').then(({ AssetLoader }) => {
-      AssetLoader.preload('combat').catch(err => console.error('Preload combat error:', err));
-      AssetLoader.preload('racing').catch(err => console.error('Preload racing error:', err));
-    });
-
-    return () => {
-      clearInterval(tickId);
-      clearTimeout(minTimer);
-      offTutorial();
-      offTutorialSkip();
-      scene.destroy();
-      sceneRef.current = null;
-    };
-  }, [tryReady]);
-
-  const navigateTo = useCallback((newIdx) => {
-    const clamped = ((newIdx % SHIPS.length) + SHIPS.length) % SHIPS.length;
-    setCanvasAlpha(0);
-    setTimeout(() => {
-      if (!sceneRef.current) return;
-      shipIdxRef.current = clamped;
-      setShipIdx(clamped);
-      sceneRef.current.loadShip(clamped);
-      Bridge.emit(EventTypes.SHIP_FOCUS_CHANGED, { shipId: SHIPS[clamped].id });
-      setCanvasAlpha(1);
-    }, 180);
-  }, []);
+    // SHIP_SELECTION_OPENED si no fue visto antes. Ademas precargar assets de
+    // combat + racing mientras el jugador esta en hangar (cache hit luego).
+    onSceneMount: () => {
+      const offTutorial = EventBus.on(EventTypes.TUTORIAL_COMPLETED, (p) => {
+        if (p?.id === 'hangar') setShowCharSelect(true);
+      });
+      const offTutorialSkip = EventBus.on(EventTypes.TUTORIAL_SKIPPED, (p) => {
+        if (p?.id === 'hangar') setShowCharSelect(true);
+      });
+      import('@game/core/AssetLoader.js').then(({ AssetLoader }) => {
+        AssetLoader.preload('combat').catch(err => console.error('Preload combat error:', err));
+        AssetLoader.preload('racing').catch(err => console.error('Preload racing error:', err));
+      });
+      return () => { offTutorial(); offTutorialSkip(); };
+    },
+  });
 
   // Acciones de hangar registradas en KeybindService (scope 'hangar').
   useEffect(() => {
@@ -132,6 +64,7 @@ export default function HangarScreen() {
       KeybindService.register('hangar', 'HANGAR_LASER',     () => sceneRef.current?.toggleLaser?.()),
       KeybindService.register('hangar', 'HANGAR_BOOSTERS',  () => sceneRef.current?.toggleFlowSim?.()),
       KeybindService.register('hangar', 'HANGAR_DETONATE',  () => sceneRef.current?.detonateCurrentShip?.()),
+      KeybindService.register('hangar', 'SELECT_PILOT',     () => openCharSelect()),
       KeybindService.register('hangar', 'CONFIRM', () => {
         const sid = SHIPS[shipIdxRef.current].id;
         if (!EconomySystem.ownsShip(sid)) {
@@ -146,64 +79,6 @@ export default function HangarScreen() {
     ];
     return () => offs.forEach(fn => fn());
   }, [navigateTo]);
-
-  // HANGAR_FIRE = K hold (auto-fire mientras presionado). KeybindService es
-  // discreto → manejamos hold con keydown/keyup directos.
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if ((e.key === 'k' || e.key === 'K') && !e.repeat) sceneRef.current?.startAutoFire?.();
-    };
-    const onKeyUp = (e) => {
-      if (e.key === 'k' || e.key === 'K') sceneRef.current?.stopAutoFire?.();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup',   onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup',   onKeyUp);
-    };
-  }, []);
-
-  // WASD hold para mover camara orbital. Listener separado del service
-  // porque son teclas continuas (hold), no acciones discretas.
-  useEffect(() => {
-    const HOLD_KEYS = new Set(['a','A','w','W','s','S','d','D']);
-    function onKeyDown(e) {
-      if (HOLD_KEYS.has(e.key)) {
-        if (!e.repeat) playSfx('hangarcamera.orbit');
-        sceneRef.current?.addKey(e.key);
-      }
-    }
-    function onKeyUp(e) {
-      if (HOLD_KEYS.has(e.key)) sceneRef.current?.removeKey(e.key);
-    }
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup',   onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup',   onKeyUp);
-    };
-  }, []);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-    function onMouseDown(e) { sceneRef.current?.startDrag(e.clientX, e.clientY); }
-    function onMouseMove(e) { sceneRef.current?.drag(e.clientX, e.clientY); }
-    function onMouseUp()    { sceneRef.current?.endDrag(); }
-    function onWheel(e)     { e.preventDefault(); sceneRef.current?.zoom(e.deltaY); }
-
-    mount.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup',   onMouseUp);
-    mount.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      mount.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup',   onMouseUp);
-      mount.removeEventListener('wheel', onWheel);
-    };
-  }, []);
 
   async function handleConfirm() {
     if (deployingRef.current) return;
@@ -249,10 +124,6 @@ export default function HangarScreen() {
     if (res.ok) forceUpdate();
   }
 
-  useEffect(() => {
-    return Bridge.onStateChange(() => forceUpdate());
-  }, []);
-
   const ship     = SHIPS[shipIdx];
   const shipData = getShipData(ship.id);
   const owned    = EconomySystem.ownsShip(ship.id);
@@ -263,13 +134,7 @@ export default function HangarScreen() {
 
   return (
     <>
-      <div style={{ visibility: phase === 'loading' ? 'hidden' : 'visible', position: 'absolute', inset: 0 }}>
-        <div className="hangar">
-          <div ref={mountRef} className="hangar__canvas" style={{ opacity: canvasAlpha }} />
-
-          <HangarFrame />
-
-          <div className="hud-safe-zone">
+      <HangarShell phase={phase} loadProgress={loadProgress} canvasAlpha={canvasAlpha} mountRef={mountRef}>
           <HangarHeader ship={ship} character={getCharacter(EconomySystem.getSelectedCharacter())} />
 
           <ShipInfo ship={ship} coreId={shipData.coreId} owned={owned} equipped={equipped} price={ship.price} />
@@ -301,12 +166,8 @@ export default function HangarScreen() {
             missing={missing}
             isGuest={EconomySystem.isGuest()}
           />
-          </div>
+      </HangarShell>
 
-        </div>
-      </div>
-
-      {phase === 'loading' && <ShipSelectLoadingScreen progress={loadProgress} />}
       {pendingBuy && (
         <PurchaseModal
           ship={ship}

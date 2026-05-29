@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Icon from '../../common/Icon.jsx';
-import { KeybindService } from '../../../../shared/keybindService.js';
-import { loadProfile } from '../../../../shared/playerProfile.js';
+import Icon from '@app/ui/Icon.jsx';
+import Modal from '@app/ui/Modal.jsx';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { loadProfile } from '@shared/services/playerProfile.js';
 import {
   fetchRoom, subscribeRoom, leaveRoom, touchRoom,
-} from '../../../../game/services/supabase/rooms.js';
-import { supabase } from '../../../../game/services/supabase/client.js';
-import useTranslation from '../../../../shared/i18n/useTranslation.js';
-import { playLoopSfx, stopLoopSfx, playSfx } from '../../../../shared/audioManager.js';
+} from '@game/net/supabase/rooms.js';
+import { supabase } from '@game/net/supabase/client.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '@shared/services/audioManager.js';
 
 // Pantalla de matchmaking — muestra sala recien creada/joinada con estado
 // "esperando rival". Cuando ambos jugadores estan presentes, llama
@@ -102,7 +103,6 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
       stopLoopSfx('waitingrival.loop');
       playSfx('rival.joined');
     } else {
-      // transicion true→false = rival se fue.
       if (prevBothJoinedRef.current) playSfx('rival.left');
       playLoopSfx('waitingrival.loop', 0.5);
     }
@@ -133,59 +133,60 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
 
   if (!room) {
     return (
-      <div className="room" role="dialog" aria-modal="true">
-        <div className="room__panel">
-          <div className="room__state">{error || (busy ? t('race.lobbyExtra.loadRoom') : t('race.lobbyExtra.noData'))}</div>
-          <button className="room__btn" onClick={onLeave}>{t('race.lobbyExtra.backToLobby')}</button>
-        </div>
-      </div>
+      <Modal className="room" panelClassName="room__panel" onClose={handleLeave}>
+        <div className="room__state">{error || (busy ? t('race.lobbyExtra.loadRoom') : t('race.lobbyExtra.noData'))}</div>
+        <button type="button" className="room__btn" onClick={onLeave}>{t('race.lobbyExtra.backToLobby')}</button>
+      </Modal>
     );
   }
 
   const bothJoined = !!(room.host_id && room.guest_id);
 
   return (
-    <div className="room" role="dialog" aria-modal="true">
-      <div className="room__panel room__panel--matchmaking">
-        <header className="room__header">
-          <span className="room__label">
-            ◈ {t('race.hangar.salaLabel')} · {room.is_private ? `${t('race.room.private')} #${room.code}` : t('race.room.public')}
-          </span>
-          <button type="button" className="room__close" onClick={handleLeave} aria-label={t('keys.exit')}><Icon name="close" size={16} /></button>
-        </header>
+    <Modal
+      className="room"
+      panelClassName="room__panel room__panel--matchmaking"
+      onClose={handleLeave}
+      initialFocusRef={leaveBtnRef}
+    >
+      <header className="room__header">
+        <span className="room__label">
+          ◈ {t('race.hangar.salaLabel')} · {room.is_private ? `${t('race.room.private')} #${room.code}` : t('race.room.public')}
+        </span>
+        <button type="button" className="room__close" onClick={handleLeave} aria-label={t('keys.exit')}><Icon name="close" size={16} /></button>
+      </header>
 
-        <div className="room__matchmaking-body">
-          <div className="room__matchmaking-spinner">
-            <div className="room__matchmaking-ring" />
-          </div>
-
-          {!bothJoined && (
-            <>
-              <h2 className="room__matchmaking-title">{t('race.room.waiting')}</h2>
-              <p className="room__matchmaking-sub">
-                {room.is_private
-                  ? t('race.room.privateHint', { code: room.code })
-                  : t('race.room.publicHint')}
-              </p>
-            </>
-          )}
-
-          {bothJoined && (
-            <>
-              <h2 className="room__matchmaking-title room__matchmaking-title--ok">{t('race.room.found')}</h2>
-              <p className="room__matchmaking-sub">{t('race.room.loadingHangar')}</p>
-            </>
-          )}
+      <div className="room__matchmaking-body">
+        <div className="room__matchmaking-spinner">
+          <div className="room__matchmaking-ring" />
         </div>
 
-        {error && <div className="room__error">{error}</div>}
+        {!bothJoined && (
+          <>
+            <h2 className="room__matchmaking-title">{t('race.room.waiting')}</h2>
+            <p className="room__matchmaking-sub">
+              {room.is_private
+                ? t('race.room.privateHint', { code: room.code })
+                : t('race.room.publicHint')}
+            </p>
+          </>
+        )}
 
-        <div className="room__actions">
-          <button ref={leaveBtnRef} type="button" className="room__btn room__btn--ghost" onClick={handleLeave}>
-            {t('race.room.leave')}
-          </button>
-        </div>
+        {bothJoined && (
+          <>
+            <h2 className="room__matchmaking-title room__matchmaking-title--ok">{t('race.room.found')}</h2>
+            <p className="room__matchmaking-sub">{t('race.room.loadingHangar')}</p>
+          </>
+        )}
       </div>
-    </div>
+
+      {error && <div className="room__error">{error}</div>}
+
+      <div className="room__actions">
+        <button ref={leaveBtnRef} type="button" className="room__btn room__btn--ghost" onClick={handleLeave}>
+          {t('race.room.leave')}
+        </button>
+      </div>
+    </Modal>
   );
 }

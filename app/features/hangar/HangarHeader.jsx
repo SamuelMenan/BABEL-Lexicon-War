@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import WalletBadge from '../hud/WalletBadge.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 // `rivalCharacter`: en modo online muestra info del rival debajo del propio.
 // En modo single (default) no se renderiza la segunda linea.

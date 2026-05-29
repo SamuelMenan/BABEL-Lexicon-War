@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { GAME_MODES } from '../../shared/constants.js';
-import useTranslation from '../../shared/i18n/useTranslation.js';
-import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
+﻿import React, { useEffect, useState } from 'react';
+import { GAME_MODES } from '@shared/config/constants.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '@shared/services/audioManager.js';
 
 export default function LoadingScreen({ progress = 0, mode = null, message = '' }) {
   const { t } = useTranslation();

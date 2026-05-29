@@ -1,20 +1,19 @@
-import React, { useState } from "react";
-import { Bridge } from "../../shared/bridge.js";
-import Settings from "./Settings.jsx";
-import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
-import KeyHint from "./common/KeyHint.jsx";
-import useTranslation from "../../shared/i18n/useTranslation.js";
+﻿import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Bridge } from "@shared/state/bridge.js";
+import Settings from "../features/settings/Settings.jsx";
+import KeyHint from "../ui/KeyHint.jsx";
+import useTranslation from "@shared/i18n/useTranslation.js";
+import { KeybindService } from "@shared/services/keybindService.js";
 
 export default function PauseMenu() {
   const { t } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
-
-  if (showSettings) return <Settings onClose={() => setShowSettings(false)} />;
+  const [focusIdx, setFocusIdx] = useState(0);
 
   const { gameMode } = Bridge.peekState();
   const isGameplay = gameMode === 'combat' || gameMode === 'racing';
 
-  const items = [
+  const items = useMemo(() => [
     { id: 'resume',   label: t('pauseMenu.resume'),              icon: '▶', variant: 'primary',
       action: () => Bridge.commands.resumeGame() },
     { id: 'settings', label: t('pauseMenu.settings'),         variant: 'secondary',
@@ -27,7 +26,34 @@ export default function PauseMenu() {
     }] : []),
     { id: 'menu',     label: t('pauseMenu.toMenu'), variant: 'ghost',
       action: () => Bridge.commands.exitToMenu() },
-  ];
+  ], [isGameplay, t]);
+
+  const focusIdxRef = useRef(focusIdx);
+  useEffect(() => {
+    focusIdxRef.current = focusIdx;
+  }, [focusIdx]);
+
+  useEffect(() => {
+    if (showSettings) return;
+
+    const offs = [
+      KeybindService.register('menu', 'NAV_UP', () => {
+        setFocusIdx(curr => (curr - 1 + items.length) % items.length);
+      }),
+      KeybindService.register('menu', 'NAV_DOWN', () => {
+        setFocusIdx(curr => (curr + 1) % items.length);
+      }),
+      KeybindService.register('menu', 'CONFIRM', () => {
+        items[focusIdxRef.current]?.action();
+      }),
+      KeybindService.register('menu', 'CANCEL', () => {
+        Bridge.commands.resumeGame();
+      })
+    ];
+    return () => offs.forEach(fn => fn());
+  }, [items, showSettings]);
+
+  if (showSettings) return <Settings onClose={() => setShowSettings(false)} />;
 
   return (
     <div className="pause-menu">
@@ -38,28 +64,26 @@ export default function PauseMenu() {
         </div>
         <h2 className="pause-menu__title">{t('pauseMenu.title')}</h2>
 
-        <KeyboardNavigable
-          items={items}
-          orientation="vertical"
-          onActivate={(it) => it.action()}
-          initialIndex={0}
-          className="pause-menu__actions"
-        >
-          {(it, { focused, activate }) => (
-            <button
-              key={it.id}
-              className={
-                `pause-menu__btn pause-menu__btn--${it.variant}` +
-                (focused ? ' pause-menu__btn--focused' : '')
-              }
-              onClick={activate}
-              onMouseEnter={(e) => e.currentTarget.focus()}
-            >
-              {it.icon && <span className="pause-menu__btn-icon">{it.icon}</span>}
-              {it.label}
-            </button>
-          )}
-        </KeyboardNavigable>
+        <div className="pause-menu__actions">
+          {items.map((it, idx) => {
+            const focused = idx === focusIdx;
+            return (
+              <button
+                key={it.id}
+                type="button"
+                className={
+                  `pause-menu__btn pause-menu__btn--${it.variant}` +
+                  (focused ? ' pause-menu__btn--focused' : '')
+                }
+                onClick={it.action}
+                onMouseEnter={() => setFocusIdx(idx)}
+              >
+                {it.icon && <span className="pause-menu__btn-icon">{it.icon}</span>}
+                {it.label}
+              </button>
+            );
+          })}
+        </div>
 
         <KeyHint
           className="pause-menu__hint"

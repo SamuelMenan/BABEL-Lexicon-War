@@ -1,10 +1,10 @@
-// Panel de FX preview en hangar. Botones DOM siempre visibles.
+﻿// Panel de FX preview en hangar. Botones DOM siempre visibles.
 // Reemplaza atajos K/L/J/Delete y Home/End/PgUp/PgDn.
 
 import React, { useState, useCallback } from 'react';
-import Icon from '../common/Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import '../../../styles/components/hangar-fx-panel.css';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import '../../../styles/features/hangar/hangar-fx-panel.css';
 
 export default function HangarFxPanel({ sceneRef, deployingRef }) {
   const { t } = useTranslation();
@@ -55,15 +55,15 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
 
   return (
     <div className="hangar-fx" role="toolbar" aria-label={t('hangar.fx.toolbarAria')}>
-      <button className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label={t('hangar.fx.cycleCamAria')}>
+      <button type="button" className="hangar-fx__btn" onPointerDown={onCycleCam} aria-label={t('hangar.fx.cycleCamAria')}>
         <span className="hangar-fx__icon"><Icon name="videocam" size={20} /></span>
         <span className="hangar-fx__label">{t('hangar.fx.camera')}</span>
       </button>
-      <button className="hangar-fx__btn" onPointerDown={onResetCam} aria-label={t('hangar.fx.resetCamAria')}>
+      <button type="button" className="hangar-fx__btn" onPointerDown={onResetCam} aria-label={t('hangar.fx.resetCamAria')}>
         <span className="hangar-fx__icon">⟲</span>
         <span className="hangar-fx__label">{t('keys.reset')}</span>
       </button>
-      <button
+      <button type="button"
         className={`hangar-fx__btn${autoFire ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onFireStart}
         onPointerUp={onFireEnd}
@@ -73,7 +73,7 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
         <span className="hangar-fx__icon"><Icon name="rocket_launch" size={20} /></span>
         <span className="hangar-fx__label">{t('hangar.fx.fire')}</span>
       </button>
-      <button
+      <button type="button"
         className={`hangar-fx__btn${laserOn ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onLaser}
         aria-pressed={laserOn}
@@ -82,7 +82,7 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
         <span className="hangar-fx__icon"><Icon name="bolt" size={20} /></span>
         <span className="hangar-fx__label">{t('hangar.fx.laser')}</span>
       </button>
-      <button
+      <button type="button"
         className={`hangar-fx__btn${flowOn ? ' hangar-fx__btn--on' : ''}`}
         onPointerDown={onFlow}
         aria-pressed={flowOn}
@@ -91,7 +91,7 @@ export default function HangarFxPanel({ sceneRef, deployingRef }) {
         <span className="hangar-fx__icon"><Icon name="local_fire_department" size={20} /></span>
         <span className="hangar-fx__label">{t('hangar.fx.boosters')}</span>
       </button>
-      <button
+      <button type="button"
         className={`hangar-fx__btn hangar-fx__btn--danger${confirmDetonate ? ' hangar-fx__btn--armed' : ''}`}
         onPointerDown={onDetonate}
         aria-label={t('hangar.fx.detonateAria')}

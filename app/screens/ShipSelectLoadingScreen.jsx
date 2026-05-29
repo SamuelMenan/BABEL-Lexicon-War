@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import useTranslation from '../../shared/i18n/useTranslation.js';
-import { playLoopSfx, stopLoopSfx, playSfx } from '../../shared/audioManager.js';
+﻿import React, { useEffect, useState } from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playLoopSfx, stopLoopSfx, playSfx } from '@shared/services/audioManager.js';
 
 export default function ShipSelectLoadingScreen({ progress = 0 }) {
   const { t } = useTranslation();

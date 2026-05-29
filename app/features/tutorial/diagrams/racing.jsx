@@ -1,7 +1,7 @@
-// Diagramas exclusivos del tutorial de Carrera.
+﻿// Diagramas exclusivos del tutorial de Carrera.
 
 import React from 'react';
-import { Defs, Frame, Label, Ship, VB } from '../../common/svg/HudPrimitives.jsx';
+import { Defs, Frame, Label, Ship, VB } from '@app/ui/svg/HudPrimitives.jsx';
 
 export function DiagRacingType() {
   return (

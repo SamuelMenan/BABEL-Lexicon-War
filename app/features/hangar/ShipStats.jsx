@@ -1,5 +1,5 @@
-import React from 'react';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
+﻿import React from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 function StatRow({ label, value, max = 10 }) {
   const pct = (value / max) * 100;

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { Bridge } from '../../shared/bridge.js';
-import Icon from './common/Icon.jsx';
+﻿import React, { useEffect } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import Icon from '@app/ui/Icon.jsx';
 
 // Banner toast global para avisos online (rechazo revancha, etc.).
 // Auto-dismiss en 4s.

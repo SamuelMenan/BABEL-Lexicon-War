@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Bridge } from '../../../shared/bridge.js';
-import { KeybindService } from '../../../shared/keybindService.js';
-import { getTutorial } from '../../../shared/tutorialContent.js';
-import { EventBus } from '../../../shared/events.js';
-import Icon from '../common/Icon.jsx';
-import { EventTypes } from '../../../shared/eventTypes.js';
+import { Bridge } from '@shared/state/bridge.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { getTutorial } from '@shared/data/tutorialContent.js';
+import { EventBus } from '@shared/state/events.js';
+import Icon from '@app/ui/Icon.jsx';
+import { EventTypes } from '@shared/state/eventTypes.js';
 import TutorialDiagram from './TutorialDiagram.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { playBgm, getCurrentBgmKey } from '../../../shared/audioManager.js';
-import '../../../styles/components/tutorial.css';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playBgm, getCurrentBgmKey } from '@shared/services/audioManager.js';
+import '../../../styles/features/tutorial/tutorial.css';
 
 export default function TutorialOverlay({ tutorialActive }) {
   const { t } = useTranslation();
@@ -19,11 +20,21 @@ export default function TutorialOverlay({ tutorialActive }) {
   const isLast = stepIndex >= total - 1;
   const [confirmSkip, setConfirmSkip] = useState(false);
   const [practiceValue, setPracticeValue] = useState('');
+  const [branchIdx, setBranchIdx] = useState(0); // 0 = typing, 1 = skip
   const rootRef = useRef(null);
   const branchSkipRef = useRef(null);
   const didFocusBranchRef = useRef(false);
 
-  useEffect(() => { setPracticeValue(''); setConfirmSkip(false); didFocusBranchRef.current = false; }, [stepIndex, id]);
+  const practiceOk = step?.practice
+    ? practiceValue.replace(/\s+/g, ' ').trim() === step.practice.replace(/\s+/g, ' ').trim()
+    : true;
+
+  useEffect(() => {
+    setPracticeValue('');
+    setConfirmSkip(false);
+    setBranchIdx(0);
+    didFocusBranchRef.current = false;
+  }, [stepIndex, id]);
 
   useEffect(() => {
     if (step?.branch && !didFocusBranchRef.current && branchSkipRef.current) {
@@ -51,22 +62,73 @@ export default function TutorialOverlay({ tutorialActive }) {
   }, [confirmSkip]);
 
   // Tutorial scope ya pusheado por App.jsx cuando tutorialActive cambia.
-  // Registrar handlers en scope 'tutorial'. Si el foco esta en <input> (practica),
-  // dejamos pasar para no romper typing local — el handler check e.target.
+  // Registrar handlers en scope 'tutorial'.
   useEffect(() => {
-    const guard = (fn) => (e) => {
-      if (e?.target?.tagName === 'INPUT') return false; // no consumir
-      fn();
+    const guardCancel = (e) => {
+      skip();
       return true;
     };
+    const guardConfirm = (e) => {
+      if (e?.target?.tagName === 'INPUT') {
+        if (practiceOk) {
+          advance();
+          return true; // consumido
+        }
+        return false; // dejar pasar para escribir
+      }
+      if (step?.branch) {
+        if (branchIdx === 0) handleBranch('typing');
+        else handleBranch('skip');
+        return true;
+      }
+      if (step?.practice && !practiceOk) {
+        return true; // consumido para evitar avance indebido
+      }
+      advance();
+      return true;
+    };
+    const guardNext = (e) => {
+      if (e?.target?.tagName === 'INPUT') return false; // no consumir en input
+      if (step?.branch || (step?.practice && !practiceOk)) {
+        return true; // consumido para evitar avance indebido
+      }
+      advance();
+      return true;
+    };
+    const guardPrev = (e) => {
+      if (e?.target?.tagName === 'INPUT') return false; // no consumir en input
+      if (step?.branch) {
+        return true; // consumido para evitar retroceso indebido
+      }
+      if (stepIndex <= 0) {
+        return true; // consumido para evitar propagacion al fondo
+      }
+      back();
+      return true;
+    };
+    const guardUp = (e) => {
+      if (step?.branch) {
+        setBranchIdx(0);
+      }
+      return true;
+    };
+    const guardDown = (e) => {
+      if (step?.branch) {
+        setBranchIdx(1);
+      }
+      return true;
+    };
+
     const offs = [
-      KeybindService.register('tutorial', 'CONFIRM',  guard(advance)),
-      KeybindService.register('tutorial', 'NAV_NEXT', guard(advance)),
-      KeybindService.register('tutorial', 'NAV_PREV', guard(back)),
-      KeybindService.register('tutorial', 'CANCEL',   guard(skip)),
+      KeybindService.register('tutorial', 'CONFIRM',  guardConfirm),
+      KeybindService.register('tutorial', 'NAV_NEXT', guardNext),
+      KeybindService.register('tutorial', 'NAV_PREV', guardPrev),
+      KeybindService.register('tutorial', 'NAV_UP',   guardUp),
+      KeybindService.register('tutorial', 'NAV_DOWN', guardDown),
+      KeybindService.register('tutorial', 'CANCEL',   guardCancel),
     ];
     return () => offs.forEach(fn => fn());
-  }, [advance, back, skip]);
+  }, [advance, back, skip, practiceOk, step, stepIndex, branchIdx]);
 
   if (!tut || !step) return null;
 
@@ -102,10 +164,6 @@ export default function TutorialOverlay({ tutorialActive }) {
     }
   };
 
-  const practiceOk = step.practice
-    ? practiceValue.replace(/\s+/g, ' ').trim() === step.practice.replace(/\s+/g, ' ').trim()
-    : true;
-
   return (
     <div className="tut-backdrop" role="dialog" aria-modal="true" ref={rootRef}>
       <div className="tut-frame">
@@ -138,10 +196,19 @@ export default function TutorialOverlay({ tutorialActive }) {
 
             {step.branch && (
               <div className="tut-branch">
-                <button className="tut-btn tut-btn-primary" onClick={() => handleBranch('typing')}>
+                <button type="button"
+                  className={`tut-btn tut-btn-primary ${branchIdx === 0 ? 'tut-btn--focused' : ''}`}
+                  onClick={() => handleBranch('typing')}
+                  style={branchIdx === 0 ? { outline: '2px solid var(--ship-hud, #00ffcc)', outlineOffset: '2px' } : {}}
+                >
                   {step.branch.typing}
                 </button>
-                <button ref={branchSkipRef} className="tut-btn" onClick={() => handleBranch('skip')}>
+                <button type="button"
+                  ref={branchSkipRef}
+                  className={`tut-btn ${branchIdx === 1 ? 'tut-btn--focused' : ''}`}
+                  onClick={() => handleBranch('skip')}
+                  style={branchIdx === 1 ? { outline: '2px solid var(--ship-hud, #00ffcc)', outlineOffset: '2px' } : {}}
+                >
                   {step.branch.skip}
                 </button>
               </div>
@@ -154,15 +221,32 @@ export default function TutorialOverlay({ tutorialActive }) {
         </div>
 
         <div className="tut-footer">
-          <button className="tut-btn tut-btn-skip" onClick={skip}>
+          <button type="button" className="tut-btn tut-btn-skip" onClick={skip}>
             {confirmSkip ? t('tutorial.skipConfirm') : t('tutorial.skip')}
           </button>
+
+          <KeyHint
+            className="tut-hint"
+            items={[
+              ...(step.branch
+                ? [
+                    { key: '↑/↓', label: t('keys.navigate') },
+                    { key: '↵', label: t('common.confirm').toLowerCase() }
+                  ]
+                : [
+                    ...(stepIndex > 0 ? [{ key: '←', label: t('common.back').toLowerCase() }] : []),
+                    { key: '→ / ↵', label: step.practice ? t('keys.ready') : t('presentation.next') }
+                  ]),
+              { key: 'ESC', label: t('presentation.skip') }
+            ]}
+          />
+
           <div className="tut-nav">
             {stepIndex > 0 && (
-              <button className="tut-btn" onClick={back}>{t('tutorial.back')}</button>
+              <button type="button" className="tut-btn" onClick={back}>{t('tutorial.back')}</button>
             )}
             {!step.branch && (
-              <button
+              <button type="button"
                 className="tut-btn tut-btn-primary"
                 onClick={advance}
                 disabled={step.practice && !practiceOk}

@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React, { useRef, useEffect, useState, useCallback } from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 const LINE_HEIGHT_PX = 44; // debe coincidir con font-size * line-height en CSS
 

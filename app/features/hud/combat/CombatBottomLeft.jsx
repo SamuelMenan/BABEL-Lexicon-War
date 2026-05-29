@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import StatusBar from "../shared/StatusBar.jsx";
 import FlowBar from "../shared/FlowBar.jsx";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 export default function CombatBottomLeft({ hp, flow = 0, flowActive = false, flowCooldown = false, wave, swarmRemnants, warnings }) {
   const { t } = useTranslation();

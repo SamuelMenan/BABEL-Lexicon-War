@@ -1,29 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { Bridge } from '../../shared/bridge.js';
-import { GAME_MODES } from '../../shared/constants.js';
-import Settings from './Settings.jsx';
-import KeyboardNavigable from './common/KeyboardNavigable.jsx';
-import AuthModal from './auth/AuthModal.jsx';
-import LeaderboardModal from './leaderboard/LeaderboardModal.jsx';
-import GuestPromptModal from './auth/GuestPromptModal.jsx';
-import KeyHint from './common/KeyHint.jsx';
-import Icon from './common/Icon.jsx';
-import CreditsModal from './credits/CreditsModal.jsx';
-import RaceModeSelectModal from './race/RaceModeSelectModal.jsx';
-import LobbyBrowser from './race/online/LobbyBrowser.jsx';
-import RoomScreen from './race/online/RoomScreen.jsx';
-import OnlineRoomHangar from './race/online/OnlineRoomHangar.jsx';
-import { createOnlineRaceSync } from '../../game/services/supabase/onlineRaceSync.js';
-import { recordOnlineMatch } from '../../game/services/supabase/rooms.js';
-import { EventBus } from '../../shared/events.js';
+﻿import React, { useEffect, useState } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
+import { GAME_MODES } from '@shared/config/constants.js';
+import Settings from '../features/settings/Settings.jsx';
+import KeyboardNavigable from '../ui/KeyboardNavigable.jsx';
+import AuthModal from '../features/auth/AuthModal.jsx';
+import LeaderboardModal from '../features/leaderboard/LeaderboardModal.jsx';
+import GuestPromptModal from '../features/auth/GuestPromptModal.jsx';
+import KeyHint from '../ui/KeyHint.jsx';
+import Icon from '../ui/Icon.jsx';
+import CreditsModal from '../features/credits/CreditsModal.jsx';
+import RaceModeSelectModal from '../features/race-online/RaceModeSelectModal.jsx';
+import LobbyBrowser from '../features/race-online/LobbyBrowser.jsx';
+import RoomScreen from '../features/race-online/RoomScreen.jsx';
+import OnlineRoomHangar from '../features/race-online/OnlineRoomHangar.jsx';
+import { createOnlineRaceSync } from '@game/net/supabase/onlineRaceSync.js';
+import { recordOnlineMatch } from '@game/net/supabase/rooms.js';
+import { EventBus } from '@shared/state/events.js';
 import {
   attachRematchSync, detachRematchSync, clearPendingRoom,
-} from '../../game/services/online/rematchCoordinator.js';
-import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '../../game/services/supabase/auth.js';
-import { loadProfile } from '../../shared/playerProfile.js';
-import { getCharacter } from '../../shared/characterData.js';
-import useTranslation from '../../shared/i18n/useTranslation.js';
-import { playBgm } from '../../shared/audioManager.js';
+} from '@game/net/online/rematchCoordinator.js';
+import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '@game/net/supabase/auth.js';
+import { loadProfile } from '@shared/services/playerProfile.js';
+import { getCharacter } from '@shared/data/characterData.js';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playBgm } from '@shared/services/audioManager.js';
 
 export default function MainMenu() {
   const { t } = useTranslation();
@@ -382,7 +382,7 @@ export default function MainMenu() {
           initialIndex={0}
         >
           {(it, { focused, activate }) => (
-            <button
+            <button type="button"
               key={it.id}
               className={`main-menu__btn${focused ? ' main-menu__btn--focused' : ''}`}
               style={{ '--btn-accent': it.accent }}
@@ -404,7 +404,7 @@ export default function MainMenu() {
           items={[
             { key: '↑↓',    label: t('keys.navigate') },
             { key: 'Enter', label: t('keys.select') },
-            { key: '1-5',   label: t('keys.shortcut') },
+            { key: '1-' + items.length, label: t('keys.shortcut') },
             { key: '?',     label: t('keys.shortcuts') },
           ]}
         />

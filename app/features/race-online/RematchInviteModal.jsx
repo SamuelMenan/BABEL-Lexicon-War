@@ -1,24 +1,22 @@
 import React, { useEffect } from 'react';
-import { acceptRematch, declineRematch } from '../../../../game/services/online/rematchCoordinator.js';
-import { KeybindService } from '../../../../shared/keybindService.js';
-import useTranslation from '../../../../shared/i18n/useTranslation.js';
-import { playSfx } from '../../../../shared/audioManager.js';
+import { acceptRematch, declineRematch } from '@game/net/online/rematchCoordinator.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import Modal from '@app/ui/Modal.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playSfx } from '@shared/services/audioManager.js';
 
 export default function RematchInviteModal({ invite }) {
   const { t } = useTranslation();
-  // SFX: invite + modal.open al montar; modal.close al desmontar.
+
+  // SFX: invite al montar (el Modal base maneja open/close sfx)
   useEffect(() => {
     if (!invite) return;
     playSfx('rival.rematch_invite');
-    playSfx('modal.open');
-    return () => playSfx('modal.close');
-  }, [!!invite]);
+  }, [invite]);
 
-  // Modal scope: CONFIRM=accept, CANCEL=decline. Y/N hotkeys.
+  // Modal scope: CONFIRM=accept (CANCEL=decline is handled by Modal onClose). Y/N hotkeys.
   useEffect(() => {
     if (!invite) return;
-    KeybindService.pushScope('modal');
-    const offCancel  = KeybindService.register('modal', 'CANCEL',  () => declineRematch());
     const offConfirm = KeybindService.register('modal', 'CONFIRM', () => acceptRematch());
     const onKey = (e) => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
@@ -28,34 +26,35 @@ export default function RematchInviteModal({ invite }) {
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      offCancel(); offConfirm();
-      KeybindService.popScope('modal');
+      offConfirm();
       window.removeEventListener('keydown', onKey);
     };
-  }, [!!invite]);
+  }, [invite]);
 
   if (!invite) return null;
   return (
-    <div className="rematch-invite" role="dialog" aria-modal="true">
-      <div className="rematch-invite__panel">
-        <div className="rematch-invite__title">{t('race.rematch.title')}</div>
-        <div className="rematch-invite__msg">
-          {t('race.rematch.from', { pilot: (invite.fromPilot || 'rival').toUpperCase() })}
-        </div>
-        <div className="rematch-invite__actions">
-          <button
-            type="button"
-            className="rematch-invite__btn rematch-invite__btn--accept"
-            onClick={() => acceptRematch()}
-            autoFocus
-          >{t('race.rematch.accept')}</button>
-          <button
-            type="button"
-            className="rematch-invite__btn"
-            onClick={() => declineRematch()}
-          >{t('race.rematch.decline')}</button>
-        </div>
+    <Modal
+      className="rematch-invite"
+      panelClassName="rematch-invite__panel"
+      onClose={declineRematch}
+    >
+      <div className="rematch-invite__title">{t('race.rematch.title')}</div>
+      <div className="rematch-invite__msg">
+        {t('race.rematch.from', { pilot: (invite.fromPilot || 'rival').toUpperCase() })}
       </div>
-    </div>
+      <div className="rematch-invite__actions">
+        <button
+          type="button"
+          className="rematch-invite__btn rematch-invite__btn--accept"
+          onClick={() => acceptRematch()}
+          autoFocus
+        >{t('race.rematch.accept')}</button>
+        <button
+          type="button"
+          className="rematch-invite__btn"
+          onClick={() => declineRematch()}
+        >{t('race.rematch.decline')}</button>
+      </div>
+    </Modal>
   );
 }

@@ -1,8 +1,8 @@
-import React from 'react';
-import KeyHint from '../common/KeyHint.jsx';
-import Icon from '../common/Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { getNumberFormatter } from '../../../shared/i18n/index.js';
+﻿import React from 'react';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { getNumberFormatter } from '@shared/i18n/index.js';
 
 export default function HangarControls({
   onConfirm, onCancel,
@@ -25,7 +25,7 @@ export default function HangarControls({
       : (canBuy ? '' : t('hangar.buyMissing', { amount: formatN(missing) }));
     const enabled = isGuest || canBuy;
     actionBtn = (
-      <button
+      <button type="button"
         className={`hangar-controls__btn hangar-controls__btn--buy${enabled ? '' : ' hangar-controls__btn--disabled'}`}
         onClick={enabled ? onPurchase : undefined}
         disabled={!enabled}
@@ -36,13 +36,13 @@ export default function HangarControls({
     );
   } else if (!equipped) {
     actionBtn = (
-      <button className="hangar-controls__btn hangar-controls__btn--equip" onClick={onEquip}>
+      <button type="button" className="hangar-controls__btn hangar-controls__btn--equip" onClick={onEquip}>
         {t('hangar.equip')}
       </button>
     );
   } else {
     actionBtn = (
-      <button className="hangar-controls__btn hangar-controls__btn--confirm" onClick={onConfirm}>
+      <button type="button" className="hangar-controls__btn hangar-controls__btn--confirm" onClick={onConfirm}>
         {t('hangar.deploy')}
       </button>
     );
@@ -61,7 +61,7 @@ export default function HangarControls({
 
       <div className="hangar-controls__btn-row">
         {onOpenCharSelect && (
-          <button
+          <button type="button"
             className="hangar-controls__btn hangar-controls__btn--secondary"
             onClick={onOpenCharSelect}
             title={t('hangar.pilotSelectTooltip')}
@@ -69,7 +69,7 @@ export default function HangarControls({
             {t('hangar.pilot')} · {(character?.name || '—').toUpperCase()}
           </button>
         )}
-        <button className="hangar-controls__btn hangar-controls__btn--danger" onClick={onCancel}>
+        <button type="button" className="hangar-controls__btn hangar-controls__btn--danger" onClick={onCancel}>
           {t('hangar.back')}
         </button>
         {actionBtn}
@@ -86,6 +86,7 @@ export default function HangarControls({
           { key: 'L',    label: t('keys.laser') },
           { key: 'J',    label: t('keys.boosters') },
           { key: 'X',    label: t('keys.detonate') },
+          { key: 'P',    label: t('hangar.pilot').toLowerCase() },
           { key: 'ESC',  label: t('keys.exit') },
           { key: '↵',    label: owned ? (equipped ? t('hangar.deploy').toLowerCase() : t('hangar.equip').toLowerCase()) : t('hangar.buy').toLowerCase() },
           { key: '?',    label: t('keys.shortcuts') },

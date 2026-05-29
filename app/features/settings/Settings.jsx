@@ -1,18 +1,22 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
-import { EXECUTION_MODE } from "../../shared/constants.js";
-import { workerBridge } from "../../game/workers/workerBridge.js";
-import { EconomySystem } from "../../game/systems/EconomySystem.js";
-import { Bridge } from "../../shared/bridge.js";
-import { resetTutorialFlags } from "../../shared/tutorialFlags.js";
-import { KeybindService } from "../../shared/keybindService.js";
-import { QUALITY, setQualityTier, getQualityTier } from "../../shared/qualitySettings.js";
-import useTranslation from "../../shared/i18n/useTranslation.js";
-import { getNumberFormatter } from "../../shared/i18n/index.js";
-import { getAudioSettings, setSfxVolume, setBgmVolume, mute, playSfx } from "../../shared/audioManager.js";
-import ControlsSection from "./settings/ControlsSection.jsx";
-import Icon from "./common/Icon.jsx";
-import "../../styles/components/controls-section.css";
+import KeyboardNavigable from "@app/ui/KeyboardNavigable.jsx";
+import { EXECUTION_MODE } from "@shared/config/constants.js";
+import { workerBridge } from "@game/domains/lexicon/workers/workerBridge.js";
+import { EconomySystem } from "@game/domains/economy/EconomySystem.js";
+import { Bridge } from "@shared/state/bridge.js";
+import { resetTutorialFlags } from "@shared/tutorial/tutorialFlags.js";
+import { KeybindService } from "@shared/services/keybindService.js";
+import { QUALITY, setQualityTier, getQualityTier } from "@shared/config/qualitySettings.js";
+import Modal from "@app/ui/Modal.jsx";
+import useTranslation from "@shared/i18n/useTranslation.js";
+import { getNumberFormatter } from "@shared/i18n/index.js";
+import { getAudioSettings, setSfxVolume, setBgmVolume, mute, playSfx } from "@shared/services/audioManager.js";
+import ControlsSection from "./ControlsSection.jsx";
+import Icon from "@app/ui/Icon.jsx";
+import KeyHint from "@app/ui/KeyHint.jsx";
+import "../../../styles/features/settings/controls-section.css";
+
+const TAB_IDS = ['rendimiento', 'audio', 'controls', 'profile'];
 
 // Settings v2 — solo los que SI funcionan en el juego. Auditoria previa
 // eliminó shadows/postProcessing/particleDensity/screenFlash/cameraShake,
@@ -67,13 +71,15 @@ function applySettings(s) {
 /* ── Primitives ──────────────────────────────────────────────── */
 
 function SciSelect({ options, value, onChange }) {
+  const containerRef = useRef(null);
+
   const onKeyDown = (e) => {
     const idx = options.findIndex(o => o.value === value);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    if (e.key === 'ArrowLeft') {
       e.preventDefault();
       const i = (idx - 1 + options.length) % options.length;
       onChange(options[i].value);
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       const i = (idx + 1) % options.length;
       onChange(options[i].value);
@@ -83,8 +89,16 @@ function SciSelect({ options, value, onChange }) {
       e.preventDefault(); onChange(options[options.length - 1].value);
     }
   };
+
+  useEffect(() => {
+    if (containerRef.current && containerRef.current.contains(document.activeElement)) {
+      const activeBtn = containerRef.current.querySelector('.settings__select-opt--active');
+      activeBtn?.focus();
+    }
+  }, [value]);
+
   return (
-    <div className="settings__select" role="radiogroup" onKeyDown={onKeyDown}>
+    <div ref={containerRef} className="settings__select" role="radiogroup" onKeyDown={onKeyDown}>
       {options.map(o => {
         const active = value === o.value;
         return (
@@ -123,8 +137,23 @@ function ProfileSection() {
   const { t } = useTranslation();
   const [confirmStep, setConfirmStep] = useState(0);
   const [profile, setProfile] = useState(() => EconomySystem.getProfile());
+  const [code, setCode] = useState('');
+  const [redeemMsg, setRedeemMsg] = useState(null);
 
   const refresh = () => setProfile(EconomySystem.getProfile());
+
+  // Canje de codigo secreto. Recarga tras exito para que el hangar (que evalua
+  // getShipsForHangar al cargar el modulo) revele la nave desbloqueada.
+  const onRedeem = () => {
+    const res = EconomySystem.redeemCode(code);
+    if (res.ok) {
+      setRedeemMsg({ ok: true, text: t('settings.profile.redeemOk') });
+      setTimeout(() => { try { window.location.reload(); } catch { /* ignore */ } }, 1200);
+    } else {
+      const key = res.reason === 'already_owned' ? 'redeemOwned' : 'redeemInvalid';
+      setRedeemMsg({ ok: false, text: t(`settings.profile.${key}`) });
+    }
+  };
 
   const onReset = () => {
     if (confirmStep === 0) { setConfirmStep(1); return; }
@@ -183,6 +212,34 @@ function ProfileSection() {
           {t('settings.profile.viewTypingTutorial')}
         </button>
       </Row>
+
+      <Row label={t('settings.profile.redeemLabel')} hint={t('settings.profile.redeemHint')}>
+        <span style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={t('settings.profile.redeemPlaceholder')}
+            maxLength={24}
+            spellCheck={false}
+            autoComplete="off"
+            style={{
+              width: '8rem', textTransform: 'uppercase', letterSpacing: '0.1em',
+              background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,255,204,0.25)',
+              color: '#cfe', padding: '0.3rem 0.5rem', fontFamily: 'inherit', fontSize: '0.75rem',
+            }}
+          />
+          <button type="button" className="settings__reset" onClick={onRedeem} disabled={!code.trim()}>
+            {t('settings.profile.redeemBtn')}
+          </button>
+        </span>
+      </Row>
+      {redeemMsg && (
+        <p style={{ margin: '0.2rem 0 0', fontSize: '0.7rem', letterSpacing: '0.06em',
+                    color: redeemMsg.ok ? '#00ff88' : '#ff6655' }}>
+          {redeemMsg.text}
+        </p>
+      )}
 
       <div className="settings__danger-zone">
         <p className="settings__danger-note">
@@ -268,6 +325,8 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
   const [tab, setTab] = useState(normalizedInitial);
   const [s, setS]     = useState(loadSettings);
   const { t, locale, setLocale, locales } = useTranslation();
+  const [tabIdx, setTabIdx] = useState(() => Math.max(0, TAB_IDS.indexOf(normalizedInitial)));
+  const [activeArea, setActiveArea] = useState('sidebar'); // 'sidebar' | 'content'
 
   const TABS = [
     { id: 'rendimiento', label: t('settings.tabs.performance') },
@@ -293,28 +352,116 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // SFX modal open/close.
-  useEffect(() => {
-    playSfx('modal.open');
-    return () => playSfx('modal.close');
-  }, []);
-
   useEffect(() => {
     setTab(normalizedInitial);
   }, [normalizedInitial]);
 
-  // Push 'modal' scope mientras Settings esta montado.
   useEffect(() => {
-    KeybindService.pushScope('modal');
-    const offCancel = KeybindService.register('modal', 'CANCEL', () => onClose?.());
-    const offPrev   = KeybindService.register('modal', 'NAV_PREV', () => {
-      setTab(cur => { const i = TABS.findIndex(x => x.id === cur); return TABS[(i - 1 + TABS.length) % TABS.length].id; });
+    if (activeArea !== 'sidebar') return;
+
+    const offUp = KeybindService.register('modal', 'NAV_UP', () => {
+      setTabIdx(cur => {
+        const next = (cur - 1 + TAB_IDS.length) % TAB_IDS.length;
+        setTab(TAB_IDS[next]);
+        setTimeout(() => {
+          const btns = document.querySelectorAll('.settings__tab');
+          btns[next]?.focus();
+        }, 0);
+        return next;
+      });
+      return true;
     });
-    const offNext   = KeybindService.register('modal', 'NAV_NEXT', () => {
-      setTab(cur => { const i = TABS.findIndex(x => x.id === cur); return TABS[(i + 1) % TABS.length].id; });
+
+    const offDown = KeybindService.register('modal', 'NAV_DOWN', () => {
+      setTabIdx(cur => {
+        const next = (cur + 1) % TAB_IDS.length;
+        setTab(TAB_IDS[next]);
+        setTimeout(() => {
+          const btns = document.querySelectorAll('.settings__tab');
+          btns[next]?.focus();
+        }, 0);
+        return next;
+      });
+      return true;
     });
-    return () => { offCancel(); offPrev(); offNext(); KeybindService.popScope('modal'); };
-  }, [onClose]);
+
+    const enterContent = () => {
+      const el = contentRef.current?.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (el) {
+        el.focus();
+        setActiveArea('content');
+      }
+    };
+
+    const offNext = KeybindService.register('modal', 'NAV_NEXT', () => {
+      enterContent();
+      return true;
+    });
+
+    const offConfirm = KeybindService.register('modal', 'CONFIRM', () => {
+      enterContent();
+      return true;
+    });
+
+    return () => {
+      offUp();
+      offDown();
+      offNext();
+      offConfirm();
+    };
+  }, [activeArea]);
+
+  const handleContentKeyDown = (e) => {
+    const focusables = Array.from(contentRef.current?.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    ) || []);
+
+    if (e.key === 'ArrowDown') {
+      const idx = focusables.indexOf(document.activeElement);
+      if (idx >= 0) {
+        e.preventDefault();
+        const next = (idx + 1) % focusables.length;
+        focusables[next]?.focus();
+      }
+    } else if (e.key === 'ArrowUp') {
+      const idx = focusables.indexOf(document.activeElement);
+      if (idx >= 0) {
+        e.preventDefault();
+        const prev = (idx - 1 + focusables.length) % focusables.length;
+        focusables[prev]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft') {
+      const target = e.target;
+      if (!target) return;
+
+      let shouldGoBack = false;
+
+      if (target.tagName === 'INPUT' && target.type === 'range') {
+        if (parseFloat(target.value) === 0) {
+          shouldGoBack = true;
+        }
+      } else if (target.classList.contains('settings__select-opt')) {
+        const parent = target.parentElement;
+        const options = Array.from(parent?.querySelectorAll('.settings__select-opt') || []);
+        if (options.indexOf(target) === 0) {
+          shouldGoBack = true;
+        }
+      } else {
+        shouldGoBack = true;
+      }
+
+      if (shouldGoBack) {
+        e.preventDefault();
+        setActiveArea('sidebar');
+        setTimeout(() => {
+          const btns = document.querySelectorAll('.settings__tab');
+          btns[tabIdx]?.focus();
+        }, 0);
+      }
+    }
+  };
 
   // autoFocus primer interactive del panel cuando tab CAMBIA (no mount inicial).
   const contentRef = useRef(null);
@@ -349,8 +496,7 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
   };
 
   return (
-    <div className="settings">
-      <div className="settings__panel">
+    <Modal className="settings" panelClassName="settings__panel" onClose={onClose}>
         <span className="settings__scan" aria-hidden="true" />
 
         {/* Header */}
@@ -366,33 +512,40 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
 
         {/* Sidebar + content */}
         <div className="settings__body">
-        <KeyboardNavigable
-          items={TABS}
-          orientation="vertical"
-          autoFocus={false}
-          allowNumberJump={false}
-          onActivate={(item) => setTab(item.id)}
-          onCancel={() => onClose?.()}
-          initialIndex={Math.max(0, TABS.findIndex(x => x.id === tab))}
-          className="settings__tabs"
-        >
-          {(item, ctx) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === item.id}
-              tabIndex={ctx.focused ? 0 : -1}
-              className={`settings__tab${tab === item.id ? ' settings__tab--active' : ''}${ctx.focused ? ' settings__tab--focused' : ''}`}
-              onClick={() => { ctx.setFocus(); setTab(item.id); }}
-            >
-              {item.label}
-            </button>
-          )}
-        </KeyboardNavigable>
+          <div className="settings__tabs" role="tablist">
+            {TABS.map((item, i) => {
+              const isActive = tab === item.id;
+              const isFocused = activeArea === 'sidebar' && i === tabIdx;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`settings__tab${isActive ? ' settings__tab--active' : ''}${isFocused ? ' settings__tab--focused' : ''}`}
+                  onClick={() => {
+                    setTabIdx(i);
+                    setTab(item.id);
+                    setActiveArea('sidebar');
+                  }}
+                  onFocus={() => {
+                    setTabIdx(i);
+                    setActiveArea('sidebar');
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
 
         {/* Content */}
-        <div className="settings__content" ref={contentRef}>
+        <div
+          className="settings__content"
+          ref={contentRef}
+          onKeyDown={handleContentKeyDown}
+          onFocus={() => setActiveArea('content')}
+        >
 
           {tab === 'rendimiento' && (
             <div className="settings__section" key="rendimiento">
@@ -442,12 +595,19 @@ export default function Settings({ onClose, initialTab = 'rendimiento' }) {
         {/* Footer */}
         <div className="settings__footer">
           <span className="settings__footer-note">{t('settings.footerNote')}</span>
+          <KeyHint
+            className="settings__hint"
+            items={[
+              { key: '↑/↓', label: t('keys.navigate') },
+              { key: '←/→', label: t('keys.select') },
+              { key: 'ESC', label: t('common.close').toLowerCase() }
+            ]}
+          />
           <button type="button" className="settings__reset" onClick={handleReset}>
             {t('settings.restore')}
           </button>
         </div>
 
-      </div>
-    </div>
+    </Modal>
   );
 }

@@ -113,8 +113,13 @@
 }
 .lobby__btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.35); }
 .lobby__btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.lobby__btn--primary { background: rgba(0,255,204,0.12); border-color: rgba(0,255,204,0.6); color: var(--col-active); }
+.lobby__btn--primary { background: rgba(0,255,204,0.12); border-color: rgba(0,0,0,0.6); color: var(--col-active); }
 .lobby__btn--ghost   { background: transparent; }
+.lobby__btn--focused {
+  outline: 2px solid var(--col-active, #00ffcc);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
+}
 
 .lobby__code-input { display: flex; gap: 0.4rem; align-items: center; }
 .lobby__code-input input {

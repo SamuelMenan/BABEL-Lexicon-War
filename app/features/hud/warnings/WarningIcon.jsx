@@ -1,7 +1,7 @@
-import React from "react";
+﻿import React from "react";
 import WarningBox from "./WarningBox.jsx";
 import InfoBox from "./InfoBox.jsx";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 export default function WarningIcon({ warnings, flow = 0, flowActive = false, flowCooldown = false }) {
   const { t } = useTranslation();

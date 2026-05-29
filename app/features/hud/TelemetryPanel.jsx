@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Bridge } from '../../../shared/bridge.js';
+﻿import React, { useEffect, useState } from 'react';
+import { Bridge } from '@shared/state/bridge.js';
 
 const EMPTY = { fps: 0, frameMsAvg: 0, frameMsMax: 0, heapMB: null, heapTotalMB: null, heapLimitMB: null, memSupported: false };
 

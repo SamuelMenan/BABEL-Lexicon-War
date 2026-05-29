@@ -1,7 +1,7 @@
-import React from 'react';
-import KeyHint from '../../common/KeyHint.jsx';
-import Icon from '../../common/Icon.jsx';
-import useTranslation from '../../../../shared/i18n/useTranslation.js';
+﻿import React from 'react';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
 
 export default function OnlineHangarControls({
   myShip, myReady, otherReady, status, roomCode, connection = 'connected',

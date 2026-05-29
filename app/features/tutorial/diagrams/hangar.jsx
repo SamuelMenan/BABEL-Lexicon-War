@@ -1,7 +1,7 @@
-// Diagramas exclusivos del tutorial de Hangar.
+﻿// Diagramas exclusivos del tutorial de Hangar.
 
 import React from 'react';
-import { Defs, Frame, Label, Ship, VB } from '../../common/svg/HudPrimitives.jsx';
+import { Defs, Frame, Label, Ship, VB } from '@app/ui/svg/HudPrimitives.jsx';
 
 export function DiagHangarOverview() {
   return (

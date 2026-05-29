@@ -1,16 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
-import KeyboardNavigable from "./common/KeyboardNavigable.jsx";
-import { Bridge } from "../../shared/bridge.js";
-import { loadProfile } from "../../shared/playerProfile.js";
-import { saveMatchResult } from "../../game/services/supabase/leaderboard.js";
-import { proposeRematch } from "../../game/services/online/rematchCoordinator.js";
-import useTranslation from "../../shared/i18n/useTranslation.js";
+﻿import React, { useState, useEffect, useRef } from "react";
+import KeyboardNavigable from "../ui/KeyboardNavigable.jsx";
+import { Bridge } from "@shared/state/bridge.js";
+import { loadProfile } from "@shared/services/playerProfile.js";
+import { saveMatchResult } from "@game/net/supabase/leaderboard.js";
+import { proposeRematch } from "@game/net/online/rematchCoordinator.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
-function ResultActions({ onMenu, onRetry }) {
+function ResultActions({ onMenu, onRetry, onlineEnabled }) {
   const { t } = useTranslation();
   const items = [
-    { id: 'menu',  label: t('matchResult.menu'), variant: 'secondary', action: onMenu },
-    { id: 'retry', label: t('matchResult.retry'),     variant: 'primary',   action: onRetry },
+    {
+      id: 'menu',
+      label: onlineEnabled ? t('matchResult.exit') : t('matchResult.menu'),
+      variant: 'secondary',
+      action: onMenu,
+    },
+    {
+      id: 'retry',
+      label: onlineEnabled ? t('matchResult.rematch') : t('matchResult.retry'),
+      variant: 'primary',
+      action: onRetry,
+    },
   ];
   return (
     <KeyboardNavigable
@@ -21,7 +31,7 @@ function ResultActions({ onMenu, onRetry }) {
       className="mr__actions"
     >
       {(it, { focused, activate }) => (
-        <button
+        <button type="button"
           key={it.id}
           className={`mr__btn mr__btn--${it.variant}${focused ? ' mr__btn--focused' : ''}`}
           onClick={activate}
@@ -275,7 +285,7 @@ export default function MatchResult({
             <p className="mr__quote">
               {t('matchResultExtra.quoteLine1')}<br />{t('matchResultExtra.quoteLine2')}
             </p>
-            <ResultActions onMenu={toMenu} onRetry={restart} />
+            <ResultActions onMenu={toMenu} onRetry={restart} onlineEnabled={false} />
           </div>
 
         </div>
@@ -402,14 +412,7 @@ export default function MatchResult({
           <p className="mr__quote">
             {t('matchResultExtra.quoteLine1')}<br />{t('matchResultExtra.quoteLine2')}
           </p>
-          <div className="mr__actions">
-            <button className="mr__btn mr__btn--secondary" onClick={toMenu}>
-              {onlineEnabled ? t('matchResult.exit') : t('matchResult.menu')}
-            </button>
-            <button className="mr__btn mr__btn--primary" onClick={restart}>
-              {onlineEnabled ? t('matchResult.rematch') : t('matchResult.retry')}
-            </button>
-          </div>
+          <ResultActions onMenu={toMenu} onRetry={restart} onlineEnabled={onlineEnabled} />
         </div>
 
       </div>

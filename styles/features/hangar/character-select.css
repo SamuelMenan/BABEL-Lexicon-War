@@ -150,7 +150,11 @@
 }
 
 .char-modal__actions{
-  display:flex; justify-content:flex-end; gap:0.6rem; margin-top:0.8rem;
+  display:flex; justify-content:space-between; align-items:stretch;
+  gap:0.6rem; margin-top:0.8rem;
+}
+.char-modal__actions-buttons{
+  display:flex; align-items:stretch; gap:0.6rem;
 }
 .char-modal__btn{
   font-family:var(--font-hud); font-size:0.74rem; letter-spacing:0.14em;
@@ -182,7 +186,9 @@
 .char-modal__hint{
   font-family:var(--font-mono); font-size:0.5rem; letter-spacing:0.18em;
   color:var(--text-ghost); text-transform:uppercase;
-  margin:0.7rem 0 0; text-align:center;
+  margin:0; text-align:left;
+  min-height:2.3rem;
+  display:inline-flex; align-items:center;
 }
 
 @media (max-width: 640px){

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { EventBus } from '../../../shared/events.js';
-import { EventTypes } from '../../../shared/eventTypes.js';
+﻿import React, { useEffect, useState } from 'react';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
 
 const TOAST_TTL_MS = 1400;
 const MAX_VISIBLE  = 6;

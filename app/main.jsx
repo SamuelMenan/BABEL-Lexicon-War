@@ -1,16 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
-import '../game/systems/EconomySystem.js'; // boot wallet + mirror al bridge
-import { initTutorialController } from '../shared/tutorialController.js';
-import { KeybindService } from '../shared/keybindService.js';
-import { loadProfile } from '../shared/playerProfile.js';
-import { initDebugBindings } from '../game/debug/DebugBindings.js';
-import { setQualityTier, QUALITY } from '../shared/qualitySettings.js';
-import { workerBridge } from '../game/workers/workerBridge.js';
-import { EXECUTION_MODE } from '../shared/constants.js';
-import { initLocale } from '../shared/i18n/index.js';
-import { preloadAll, unlockAudio } from '../shared/audioManager.js';
+import '@game/domains/economy/EconomySystem.js'; // boot wallet + mirror al bridge
+import { initTutorialController } from '@shared/tutorial/tutorialController.js';
+import { KeybindService } from '@shared/services/keybindService.js';
+import { loadProfile } from '@shared/services/playerProfile.js';
+import { initDebugBindings } from '@game/debug/DebugBindings.js';
+import { setQualityTier, QUALITY } from '@shared/config/qualitySettings.js';
+import { workerBridge } from '@game/domains/lexicon/workers/workerBridge.js';
+import { EXECUTION_MODE } from '@shared/config/constants.js';
+import { initLocale } from '@shared/i18n/index.js';
+import { preloadAll, unlockAudio } from '@shared/services/audioManager.js';
 
 // i18n boot ANTES de KeybindService — autodetecta navigator.language o usa
 // localStorage. Bridge.state.locale queda seteado antes del primer render.

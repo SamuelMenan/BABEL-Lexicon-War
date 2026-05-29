@@ -1,7 +1,7 @@
-// Diagramas exclusivos del tutorial de Combate.
+﻿// Diagramas exclusivos del tutorial de Combate.
 
 import React from 'react';
-import { Defs, Frame, Label, Ship, Enemy, HudBar, VB } from '../../common/svg/HudPrimitives.jsx';
+import { Defs, Frame, Label, Ship, Enemy, HudBar, VB } from '@app/ui/svg/HudPrimitives.jsx';
 
 export function DiagCombatIntro() {
   return (

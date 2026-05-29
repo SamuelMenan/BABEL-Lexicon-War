@@ -228,3 +228,14 @@
 @media (prefers-reduced-motion: reduce) {
   .tut-backdrop { animation: none; }
 }
+
+.tut-hint {
+  justify-content: center;
+}
+
+.tut-btn--focused:not(:disabled) {
+  border-color: var(--ship-hud, #00ffcc) !important;
+  color: var(--ship-hud, #00ffcc) !important;
+  background: rgba(0, 255, 204, 0.08) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.35) !important;
+}

@@ -1,45 +1,45 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
-import { Bridge } from "../../shared/bridge.js";
-import { EventBus } from "../../shared/events.js";
-import { EventTypes } from "../../shared/eventTypes.js";
-import { GAME_MODES, SHIP_PALETTES, SHIPS } from "../../shared/constants.js";
-import { getCharacter } from "../../shared/characterData.js";
-import useTranslation from "../../shared/i18n/useTranslation.js";
-import { playSfx } from "../../shared/audioManager.js";
+﻿import React, { useEffect, useReducer, useRef, useState } from "react";
+import { Bridge } from "@shared/state/bridge.js";
+import { EventBus } from "@shared/state/events.js";
+import { EventTypes } from "@shared/state/eventTypes.js";
+import { GAME_MODES, SHIP_PALETTES, SHIPS } from "@shared/config/constants.js";
+import { getCharacter } from "@shared/data/characterData.js";
+import useTranslation from "@shared/i18n/useTranslation.js";
+import { playSfx } from "@shared/services/audioManager.js";
 
-import CombatTicker from "./hud/combat/CombatTicker.jsx";
-import CombatTopRight from "./hud/combat/CombatTopRight.jsx";
-import CombatBottomLeft from "./hud/combat/CombatBottomLeft.jsx";
-import CombatWordPanel from "./hud/combat/CombatWordPanel.jsx";
-import CombatWPMSide from "./hud/combat/CombatWPMSide.jsx";
-import CombatWaveSide from "./hud/combat/CombatWaveSide.jsx";
-import LexiconDeck from "./hud/combat/LexiconDeck.jsx";
+import CombatTicker from "./combat/CombatTicker.jsx";
+import CombatTopRight from "./combat/CombatTopRight.jsx";
+import CombatBottomLeft from "./combat/CombatBottomLeft.jsx";
+import CombatWordPanel from "./combat/CombatWordPanel.jsx";
+import CombatWPMSide from "./combat/CombatWPMSide.jsx";
+import CombatWaveSide from "./combat/CombatWaveSide.jsx";
+import LexiconDeck from "./combat/LexiconDeck.jsx";
 
-import RacePilotTag from "./hud/racing/RacePilotTag.jsx";
-import RaceTopStatus from "./hud/racing/RaceTopStatus.jsx";
-import RaceStatsTopRight from "./hud/racing/RaceStatsTopRight.jsx";
-import RaceDistanceBar from "./hud/racing/RaceDistanceBar.jsx";
-import RaceParagraphBlock from "./hud/racing/RaceParagraphBlock.jsx";
-import RaceFlowBlock from "./hud/racing/RaceFlowBlock.jsx";
-import RaceWPMSide from "./hud/racing/RaceWPMSide.jsx";
-import RaceTimeSide from "./hud/racing/RaceTimeSide.jsx";
-import RaceOpponentDistanceBar from "./hud/racing/RaceOpponentDistanceBar.jsx";
-import RaceRunStats from "./hud/racing/RaceRunStats.jsx";
-import RaceSpeedLines from "./hud/racing/RaceSpeedLines.jsx";
-import OnlineOpponentHud from "./hud/racing/OnlineOpponentHud.jsx";
+import RacePilotTag from "./racing/RacePilotTag.jsx";
+import RaceTopStatus from "./racing/RaceTopStatus.jsx";
+import RaceStatsTopRight from "./racing/RaceStatsTopRight.jsx";
+import RaceDistanceBar from "./racing/RaceDistanceBar.jsx";
+import RaceParagraphBlock from "./racing/RaceParagraphBlock.jsx";
+import RaceFlowBlock from "./racing/RaceFlowBlock.jsx";
+import RaceWPMSide from "./racing/RaceWPMSide.jsx";
+import RaceTimeSide from "./racing/RaceTimeSide.jsx";
+import RaceOpponentDistanceBar from "./racing/RaceOpponentDistanceBar.jsx";
+import RaceRunStats from "./racing/RaceRunStats.jsx";
+import RaceSpeedLines from "./racing/RaceSpeedLines.jsx";
+import OnlineOpponentHud from "./racing/OnlineOpponentHud.jsx";
 
-import Countdown from "./hud/overlays/Countdown.jsx";
-import FlowFrame from "./hud/overlays/FlowFrame.jsx";
-import FlowModeOverlay from "./hud/overlays/FlowModeOverlay.jsx";
-import LowHpFrame from "./hud/overlays/LowHpFrame.jsx";
-import PreCombatOverlay from "./hud/overlays/PreCombatOverlay.jsx";
-import WaveAnnouncement from "./hud/overlays/WaveAnnouncement.jsx";
+import Countdown from "./overlays/Countdown.jsx";
+import FlowFrame from "./overlays/FlowFrame.jsx";
+import FlowModeOverlay from "./overlays/FlowModeOverlay.jsx";
+import LowHpFrame from "./overlays/LowHpFrame.jsx";
+import PreCombatOverlay from "./overlays/PreCombatOverlay.jsx";
+import WaveAnnouncement from "./overlays/WaveAnnouncement.jsx";
 
-import WarningIcon from "./hud/warnings/WarningIcon.jsx";
-import GrafemaToasts from "./hud/GrafemaToasts.jsx";
-import WalletBadge from "./hud/WalletBadge.jsx";
-import TelemetryPanel from "./hud/TelemetryPanel.jsx";
-import PauseFAB from "./hud/PauseFAB.jsx";
+import WarningIcon from "./warnings/WarningIcon.jsx";
+import GrafemaToasts from "./toasts/GrafemaToasts.jsx";
+import WalletBadge from "./WalletBadge.jsx";
+import TelemetryPanel from "./TelemetryPanel.jsx";
+import PauseFAB from "./PauseFAB.jsx";
 
 function wordFxReducer(state, action) {
   switch (action.type) {
@@ -62,7 +62,7 @@ export default function HUD() {
   useEffect(() => Bridge.onStateChange(setState), []);
 
   useEffect(() => {
-    return EventBus.on(EventTypes.WORD_PROGRESS, ({ correct }) => {
+    const unsub = EventBus.on(EventTypes.WORD_PROGRESS, ({ correct }) => {
       clearTimeout(timerRef.current);
       dispatchWordFx({ type: correct ? 'correct' : 'wrong' });
       timerRef.current = setTimeout(() => dispatchWordFx({ type: 'reset' }), correct ? 150 : 340);
@@ -75,6 +75,7 @@ export default function HUD() {
         playSfx('word.error');
       }
     });
+    return () => { unsub(); clearTimeout(timerRef.current); };
   }, []);
 
   useEffect(() => {

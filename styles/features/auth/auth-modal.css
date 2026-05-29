@@ -301,3 +301,8 @@
   color:var(--text-ghost); text-transform:uppercase;
   margin:0.8rem 0 0; text-align:center;
 }
+.guest-prompt__btn--focused {
+  outline: 2px solid var(--col-active, #00ffcc);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
+}

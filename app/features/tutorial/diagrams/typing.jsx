@@ -1,7 +1,7 @@
-// Diagramas exclusivos del tutorial de Mecanografia Tactil.
+﻿// Diagramas exclusivos del tutorial de Mecanografia Tactil.
 
 import React from 'react';
-import { Defs, Frame, Label, VB } from '../../common/svg/HudPrimitives.jsx';
+import { Defs, Frame, Label, VB } from '@app/ui/svg/HudPrimitives.jsx';
 
 export function DiagPosture() {
   const STK = 'var(--col-primary)';

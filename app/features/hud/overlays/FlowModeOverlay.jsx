@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React, { useEffect, useRef, useState } from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 // Aviso de FLUJO DESBLOQUEADO — hereda paleta de la nave activa via CSS vars
 // (--ship-flame, --ship-flame-rgb, --ship-ring-rgb). Sin colores hardcoded.

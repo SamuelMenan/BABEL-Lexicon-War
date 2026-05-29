@@ -1,6 +1,6 @@
-import React from 'react';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { getNumberFormatter } from '../../../shared/i18n/index.js';
+﻿import React from 'react';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { getNumberFormatter } from '@shared/i18n/index.js';
 
 export default function ShipInfo({ ship, coreId, owned, equipped, price }) {
   const { t } = useTranslation();

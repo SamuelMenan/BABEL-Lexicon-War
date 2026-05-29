@@ -1,5 +1,5 @@
-import React from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 // Panel lateral derecho de combate: muestra OLEADA + restos del enjambre.
 // Mismo tamaño/altura que CombatWPMSide para balance simetrico.

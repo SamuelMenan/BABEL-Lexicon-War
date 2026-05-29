@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    BABEL: Lexicon War — Main stylesheet
-   Import order: tokens → reset → animations → layout → components
+   Structure mirrors app/: screens/ + features/ + ui/.
+   Import order: tokens → reset → animations → layout → screens → features → ui
    ───────────────────────────────────────────────────────────── */
 
 /* 1. Design tokens */
@@ -17,34 +18,39 @@
 @import './layout/canvas.css';
 @import './layout/hud.css';
 @import './layout/loading.css';
-@import './components/hangar.css';
+@import './layout/eleccion-nave.css';
 
-/* 5. Components */
-@import './components/word-display.css';
-@import './components/edge-effects.css';
-@import './components/flow-frame.css';
-@import './components/low-hp-frame.css';
-@import './components/warnings.css';
-@import './components/precombat.css';
-@import './components/wave.css';
-@import './components/menu.css';
-@import './components/intro.css';
-@import './components/tutorial-diagrams.css';
-@import './components/match-result.css';
-@import './components/settings.css';
-@import './components/pause-menu.css';
-@import './components/character-select.css';
-@import './components/auth-modal.css';
-@import './components/leaderboard-modal.css';
+/* 5. Screens */
+@import './screens/menu.css';
+@import './screens/pause-menu.css';
+@import './screens/match-result.css';
+@import './screens/intro.css';
 
-@import './components/race-hud.css';
-@import './components/online-race.css';
-@import './components/key-hint.css';
-@import './components/credits.css';
-@import './components/icons.css';
-@import './components/grafema-toasts.css';
-@import './components/telemetry.css';
-@import './components/bot-fab.css';
+/* 6. Features */
+@import './features/auth/auth-modal.css';
+@import './features/credits/credits.css';
+@import './features/hangar/hangar.css';
+@import './features/hangar/hangar-fx-panel.css';
+@import './features/hangar/character-select.css';
+@import './features/hud/race-hud.css';
+@import './features/hud/flow-frame.css';
+@import './features/hud/low-hp-frame.css';
+@import './features/hud/edge-effects.css';
+@import './features/hud/precombat.css';
+@import './features/hud/wave.css';
+@import './features/hud/word-display.css';
+@import './features/hud/grafema-toasts.css';
+@import './features/hud/telemetry.css';
+@import './features/hud/warnings.css';
+@import './features/hud/bot-fab.css';
+@import './features/leaderboard/leaderboard-modal.css';
+@import './features/race-online/online-race.css';
+@import './features/settings/settings.css';
+@import './features/tutorial/tutorial-diagrams.css';
+
+/* 7. UI primitives */
+@import './ui/key-hint.css';
+@import './ui/icons.css';
 
 /* Global keyboard focus indicator (browser-managed via Tab). */
 button:focus-visible,

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
+﻿import React, { useEffect, useState } from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
 
 export default function RaceRunStats({ playerPhrasesCompleted, wpm }) {
   const { t } = useTranslation();

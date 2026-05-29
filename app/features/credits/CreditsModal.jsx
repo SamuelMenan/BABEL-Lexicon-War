@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { KeybindService } from '../../../shared/keybindService.js';
-import KeyHint from '../common/KeyHint.jsx';
-import Icon from '../common/Icon.jsx';
-import useTranslation from '../../../shared/i18n/useTranslation.js';
-import { playSfx, playBgm, getCurrentBgmKey } from '../../../shared/audioManager.js';
+import Modal from '@app/ui/Modal.jsx';
+import KeyHint from '@app/ui/KeyHint.jsx';
+import Icon from '@app/ui/Icon.jsx';
+import useTranslation from '@shared/i18n/useTranslation.js';
+import { playBgm, getCurrentBgmKey } from '@shared/services/audioManager.js';
 
 // Escena de creditos — full-screen modal con secciones por rol del equipo y
 // agradecimientos especiales. Los nombres son placeholders; reemplazar con
@@ -15,29 +15,15 @@ export default function CreditsModal({ onClose }) {
   const { t } = useTranslation();
 
   useEffect(() => {
-    KeybindService.pushScope('modal');
-    const off = KeybindService.register('modal', 'CANCEL', () => onClose?.());
-    return () => { off(); KeybindService.popScope('modal'); };
-  }, [onClose]);
-
-  useEffect(() => { playSfx('modal.open'); return () => playSfx('modal.close'); }, []);
-
-  useEffect(() => {
     const prev = getCurrentBgmKey();
     playBgm('bgm.credits');
     return () => { playBgm(prev || 'bgm.main_menu'); };
   }, []);
 
   const closeBtnRef = useRef(null);
-  const didFocusRef = useRef(false);
-  useEffect(() => {
-    if (didFocusRef.current) return;
-    if (closeBtnRef.current) { closeBtnRef.current.focus(); didFocusRef.current = true; }
-  }, []);
 
   return (
-    <div className="credits" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="credits__panel" onClick={(e) => e.stopPropagation()}>
+    <Modal className="credits" panelClassName="credits__panel" onClose={onClose} initialFocusRef={closeBtnRef}>
         <header className="credits__header">
           <span className="credits__label">{t('credits.label')}</span>
           <button
@@ -106,8 +92,7 @@ export default function CreditsModal({ onClose }) {
             items={[{ key: 'ESC', label: t('auth.closeKey') }]}
           />
         </footer>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

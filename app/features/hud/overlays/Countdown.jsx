@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import useTranslation from "../../../../shared/i18n/useTranslation.js";
-import { Bridge } from "../../../../shared/bridge.js";
-import { playSfx } from "../../../../shared/audioManager.js";
+﻿import React, { useEffect, useRef, useState } from "react";
+import useTranslation from "@shared/i18n/useTranslation.js";
+import { Bridge } from "@shared/state/bridge.js";
+import { playSfx } from "@shared/services/audioManager.js";
 
 export default function Countdown({ countdown, countdownActive }) {
   const { t } = useTranslation();

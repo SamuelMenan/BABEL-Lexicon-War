@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from '@app/ui/Icon.jsx';
 import Modal from '@app/ui/Modal.jsx';
 import { KeybindService } from '@shared/services/keybindService.js';
-import { loadProfile } from '@shared/services/playerProfile.js';
+import { getPlayerId, getAccessToken } from '@game/net/supabase/auth.js';
 import {
   fetchRoom, subscribeRoom, leaveRoom, touchRoom,
 } from '@game/net/supabase/rooms.js';
@@ -22,42 +22,49 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const profile = loadProfile();
-  const myId = profile.playerId;
+  // Id de jugador del servidor (plr_xxx), resuelto desde auth.uid() en
+  // MainMenu. Solo se usa para comparar contra room.host_id / guest_id: las
+  // RPC derivan la identidad del token, no de lo que mandemos.
+  const myId = getPlayerId();
 
   // Load + suscribir + heartbeat anti-fantasma.
   useEffect(() => {
     let mounted = true;
     setBusy(true);
-    const reload = () => fetchRoom(roomId)
+    const reload = () => fetchRoom(roomId, { playerId: myId })
       .then((r) => { if (mounted && r) setRoom(r); })
       .catch((e) => { if (mounted) setError(e?.message || t('race.lobby.errors.load')); });
 
     reload().finally(() => { if (mounted) setBusy(false); });
 
+    // Realtime no emite `code` (revocada a nivel de columna) — preservar el
+    // que trajo fetchRoom para que el host no lo pierda en el primer update.
     const unsub = subscribeRoom(roomId, (next) => {
-      if (mounted && next) setRoom(next);
+      if (mounted && next) setRoom((prev) => ({ ...next, code: next.code ?? prev?.code ?? null }));
     });
     const pollId = setInterval(reload, 2000);
-    touchRoom({ roomId, playerId: myId }).catch(() => {});
+    touchRoom({ roomId }).catch(() => {});
     const beatId = setInterval(() => {
-      touchRoom({ roomId, playerId: myId }).catch(() => {});
+      touchRoom({ roomId }).catch(() => {});
     }, 30000);
 
     const onBeforeUnload = () => {
       try {
-        const url = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
-        const key = supabase?.supabaseKey;
-        if (url && key) {
+        const url   = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
+        const key   = supabase?.supabaseKey;
+        // leave_race_room exige rol authenticated: va el JWT de la sesion, no
+        // la anon key. El servidor identifica al jugador desde el token.
+        const token = getAccessToken();
+        if (url && key && token) {
           fetch(url, {
             method: 'POST',
             keepalive: true,
             headers: {
               'Content-Type':  'application/json',
               'apikey':        key,
-              'Authorization': `Bearer ${key}`,
+              'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ p_room_id: roomId, p_player_id: myId }),
+            body: JSON.stringify({ p_room_id: roomId }),
           }).catch(() => {});
         }
       } catch { /* ignore */ }
@@ -112,7 +119,7 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
 
   const handleLeave = useCallback(async () => {
     setBusy(true);
-    try { await leaveRoom({ roomId, playerId: myId }); } catch { /* ignore */ }
+    try { await leaveRoom({ roomId }); } catch { /* ignore */ }
     onLeave?.();
   }, [roomId, myId, onLeave]);
 

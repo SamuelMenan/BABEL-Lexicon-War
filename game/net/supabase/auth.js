@@ -4,6 +4,7 @@
 import { supabase } from './client.js';
 import { loadProfile, saveProfile } from '@shared/services/playerProfile.js';
 import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
+import { countPwnedOccurrences } from './passwordSafety.js';
 
 function notReady() {
   return { ok: false, skipped: true, reason: 'supabase-not-configured' };
@@ -11,6 +12,56 @@ function notReady() {
 
 export function isAuthAvailable() {
   return Boolean(supabase);
+}
+
+// ── Player id del servidor ───────────────────────────────────────────────────
+// players.id NO es auth.uid(): es un `plr_xxx` historico al que las FK de
+// match_results/race_rooms apuntan. El servidor lo resuelve desde el token, y
+// aqui lo cacheamos para poder comparar contra room.host_id / guest_id de forma
+// sincrona desde los componentes. Sin sesion vale null y el online no arranca.
+let _playerId = null;
+
+export function getPlayerId() {
+  return _playerId;
+}
+
+// JWT de la sesion, cacheado para los `fetch` de beforeunload/pagehide, donde
+// no se puede await getSession(). Sin el, esas llamadas irian con la anon key
+// y el servidor las rechazaria (las RPC ya exigen rol authenticated).
+let _accessToken = null;
+
+export function getAccessToken() {
+  return _accessToken;
+}
+
+if (supabase) {
+  supabase.auth.getSession().then(({ data }) => {
+    _accessToken = data?.session?.access_token || null;
+  }).catch(() => {});
+  supabase.auth.onAuthStateChange((_event, session) => {
+    _accessToken = session?.access_token || null;
+    if (!session) _playerId = null;
+  });
+}
+
+// Aprovisiona la fila de players si hace falta y devuelve su id. Llamar tras
+// resolver la sesion — MainMenu lo hace al montar y en cada cambio de auth.
+export async function resolvePlayerId(displayName) {
+  if (!supabase) { _playerId = null; return null; }
+  const { data, error } = await supabase.rpc('ensure_player', {
+    p_display_name: displayName || 'Pilot',
+  });
+  if (error) {
+    console.warn('[auth] ensure_player falla', error);
+    _playerId = null;
+    return null;
+  }
+  _playerId = data ?? null;
+  return _playerId;
+}
+
+export function clearPlayerId() {
+  _playerId = null;
 }
 
 export async function getSession() {
@@ -33,8 +84,22 @@ export function onAuthChange(cb) {
   return () => data?.subscription?.unsubscribe?.();
 }
 
+export const MIN_SIGNUP_PASSWORD_LENGTH = 10;
+
 export async function signUp({ email, password, displayName }) {
   if (!supabase) return notReady();
+
+  if (!password || password.length < MIN_SIGNUP_PASSWORD_LENGTH) {
+    return { ok: false, error: { message: null, code: 'password_too_short' } };
+  }
+
+  // Compensa que la comprobacion HIBP de Supabase sea de plan Pro. Si no se
+  // puede comprobar (sin red, API caida) devuelve null y dejamos pasar.
+  const pwnedCount = await countPwnedOccurrences(password);
+  if (pwnedCount) {
+    return { ok: false, error: { message: null, code: 'password_pwned' }, pwnedCount };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -88,6 +153,7 @@ export async function signOut() {
   if (!supabase) return notReady();
   const { error } = await supabase.auth.signOut();
   if (error) return { ok: false, error };
+  clearPlayerId();
   // Al cerrar sesion: reset perfil local a Invitado. Borra grafemas, naves
   // compradas y stats — el invitado arranca limpio.
   try { EconomySystem.reset(); } catch (e) { console.warn('[auth] reset failed', e); }

@@ -15,12 +15,36 @@ export function isLeaderboardSyncAvailable() {
   return Boolean(supabase);
 }
 
+// ── Sesion de partida emitida por el servidor ───────────────────────────────
+// El servidor fija started_at y mode al abrirla, y despues comprueba que el
+// tiempo de juego declarado quepa en el tiempo real transcurrido. Sin sesion
+// no hay registro: es deliberado (modo estricto). Una partida sin red al
+// arrancar se juega igual, simplemente no cuenta para el leaderboard.
+let _serverSessionId = null;
+
+export function getServerSessionId() {
+  return _serverSessionId;
+}
+
+// Llamar al empezar la partida (game/main.js, en GAME_START).
+export async function startSession(mode) {
+  _serverSessionId = null;               // nunca reutilizar la sesion anterior
+  if (!supabase) return null;
+
+  const user = await getUser();
+  if (!user) return null;                // invitado: no sube al leaderboard igualmente
+
+  const { data, error } = await supabase.rpc('start_session', { p_mode: mode });
+  if (error) {
+    console.warn('[Supabase] start_session falla — la partida no se registrara', error);
+    return null;
+  }
+  _serverSessionId = data ?? null;
+  return _serverSessionId;
+}
+
 export async function saveMatchResult({
   profile = loadProfile(),
-  sessionId,
-  mode,
-  startedAt,
-  finishedAt,
   score,
   wpm,
   accuracy,
@@ -42,6 +66,13 @@ export async function saveMatchResult({
     return { ok: false, skipped: true, reason: 'guest' };
   }
 
+  // Sin sesion de servidor el RPC rechazaria de todos modos; cortamos antes
+  // para no gastar una llamada ni consumir rate limit.
+  const sessionId = _serverSessionId;
+  if (!sessionId) {
+    return { ok: false, skipped: true, reason: 'no-server-session' };
+  }
+
   const character = getCharacter(profile?.selectedCharacter);
   const displayName = resolveDisplayName({
     user,
@@ -49,14 +80,11 @@ export async function saveMatchResult({
     characterName: character?.name,
   });
 
+  // Ni mode ni las marcas de tiempo viajan: los pone el servidor desde la
+  // sesion. Mandarlos seria darle al cliente voz sobre cuando y a que jugo.
   const payload = {
-    p_player_id:       profile.playerId,
-    p_auth_user_id:    user?.id ?? null,
-    p_display_name:    displayName,
     p_session_id:      sessionId,
-    p_mode:            mode || 'combat',
-    p_started_at:      startedAt || null,
-    p_finished_at:     finishedAt || new Date().toISOString(),
+    p_display_name:    displayName,
     p_score:           toInteger(score),
     p_wpm:             toInteger(wpm),
     p_accuracy:        toNumber(accuracy),
@@ -71,6 +99,7 @@ export async function saveMatchResult({
 
   const { data, error } = await supabase.rpc('record_match_result', payload);
   if (error) throw error;
+  _serverSessionId = null;   // una sesion, un resultado
   return { ok: true, data };
 }
 

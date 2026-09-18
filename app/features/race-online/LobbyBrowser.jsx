@@ -4,13 +4,14 @@ import KeyboardNavigable from '@app/ui/KeyboardNavigable.jsx';
 import Modal from '@app/ui/Modal.jsx';
 import { loadProfile } from '@shared/services/playerProfile.js';
 import {
-  createRoom, joinRoomById, joinRoomByCode, listPublicRooms, cleanupStaleRooms,
+  createRoom, joinRoomById, joinRoomByCode, listPublicRooms,
+  normalizeRoomCode, isValidRoomCode, ROOM_CODE_LENGTH,
 } from '@game/net/supabase/rooms.js';
 import useTranslation from '@shared/i18n/useTranslation.js';
 
 // Pantalla principal del modo online (fase 1):
 //   - lista salas publicas
-//   - crear sala (publica o privada con codigo 4 digitos)
+//   - crear sala (publica o privada con codigo de 6 caracteres del servidor)
 //   - unirse por codigo
 // Cuando entra/crea sala llama onEnterRoom(roomId, role).
 export default function LobbyBrowser({ onEnterRoom, onClose }) {
@@ -36,8 +37,8 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   }, []);
 
   useEffect(() => {
-    // Cleanup explicito al abrir lobby + refresh + poll cada 5s.
-    cleanupStaleRooms().catch(() => {});
+    // Refresh + poll cada 5s. El cleanup ya lo dispara list_public_rooms()
+    // en servidor; la RPC directa esta revocada a anon/authenticated.
     refresh();
     const id = setInterval(refresh, 5000);
     return () => clearInterval(id);
@@ -49,7 +50,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      const { roomId } = await createRoom({ playerId: profile.playerId, displayName: profile.displayName, isPrivate: createPrivate });
+      const { roomId } = await createRoom({ displayName: profile.displayName, isPrivate: createPrivate });
       onEnterRoom?.(roomId, 'host');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.create'));
@@ -62,7 +63,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      await joinRoomById({ roomId, playerId: profile.playerId, displayName: profile.displayName });
+      await joinRoomById({ roomId, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.join'));
@@ -72,11 +73,11 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   };
 
   const handleJoinByCode = async () => {
-    if (!/^\d{4}$/.test(codeInput)) { setError(t('race.lobbyExtra.codeLenError')); return; }
+    if (!isValidRoomCode(codeInput)) { setError(t('race.lobbyExtra.codeLenError')); return; }
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      const roomId = await joinRoomByCode({ code: codeInput, playerId: profile.playerId, displayName: profile.displayName });
+      const roomId = await joinRoomByCode({ code: codeInput, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.invalidCode'));
@@ -112,14 +113,14 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
         <div className="lobby__code-input">
           <input
             type="text"
-            maxLength={4}
+            maxLength={ROOM_CODE_LENGTH}
             placeholder={t('race.lobby.codePlaceholder')}
             value={codeInput}
-            onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            onKeyDown={(e) => { if (e.key === 'Enter' && codeInput.length === 4 && !busy) { e.preventDefault(); handleJoinByCode(); } }}
+            onChange={(e) => setCodeInput(normalizeRoomCode(e.target.value))}
+            onKeyDown={(e) => { if (e.key === 'Enter' && isValidRoomCode(codeInput) && !busy) { e.preventDefault(); handleJoinByCode(); } }}
             disabled={busy}
           />
-          <button type="button" className="lobby__btn" onClick={handleJoinByCode} disabled={busy || codeInput.length !== 4}>
+          <button type="button" className="lobby__btn" onClick={handleJoinByCode} disabled={busy || !isValidRoomCode(codeInput)}>
             {t('race.lobby.joinByCode')}
           </button>
         </div>

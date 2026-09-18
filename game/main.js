@@ -14,6 +14,7 @@ import { Bridge } from '@shared/state/bridge.js';
 import { GAME_MODES } from '@shared/config/constants.js';
 import { initAutoTyper, destroyAutoTyper } from './domains/lexicon/AutoTyper.js';
 import { playSfx } from '@shared/services/audioManager.js';
+import { startSession } from './net/supabase/leaderboard.js';
 
 let engine       = null;
 let _lexicon     = null;
@@ -55,6 +56,12 @@ export async function initGame(mountEl) {
     _activeScene?.destroy();
     _activeScene = null;
     _pendingCountdownStart = null;
+
+    // Abre la sesion de partida en servidor: es quien fija started_at y mode,
+    // y despues valida que el tiempo declarado quepa en el real. Sin await
+    // para no retrasar el arranque; resuelve de sobra antes de que la partida
+    // acabe. Si falla, la partida se juega pero no se registra.
+    startSession(mode).catch(() => {});
 
     // Show loading for this mode (cache makes re-entry fast)
     await AssetLoader.preload(mode, engine.renderer);

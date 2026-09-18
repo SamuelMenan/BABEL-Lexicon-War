@@ -9,104 +9,137 @@ function ensure() {
   return supabase;
 }
 
-// Codigo aleatorio 4 digitos para salas privadas.
-export function generateRoomCode() {
-  return String(Math.floor(1000 + Math.random() * 9000));
+// Alfabeto de los codigos de sala: 31 chars sin I/L/O/0/1, para que se puedan
+// dictar en voz alta sin confusiones. Lo genera el servidor (gen_room_code);
+// aqui solo sirve para validar y normalizar lo que teclea el jugador.
+export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export const ROOM_CODE_LENGTH   = 6;
+
+const CODE_STRIP_RE = new RegExp(`[^${ROOM_CODE_ALPHABET}]`, 'g');
+
+export function normalizeRoomCode(raw) {
+  return String(raw || '').toUpperCase().replace(CODE_STRIP_RE, '').slice(0, ROOM_CODE_LENGTH);
 }
 
-export async function createRoom({ playerId, displayName, isPrivate = false }) {
+export function isValidRoomCode(raw) {
+  return normalizeRoomCode(raw).length === ROOM_CODE_LENGTH;
+}
+
+// El codigo ya no lo elige el cliente: lo genera el servidor y solo el host
+// puede leerlo despues, via fetchRoomCode().
+export async function createRoom({ displayName, isPrivate = false }) {
   const sb = ensure();
-  const code = isPrivate ? generateRoomCode() : null;
   const { data, error } = await sb.rpc('create_race_room', {
-    p_host_id:    playerId,
-    p_host_name:  displayName || 'Pilot',
-    p_is_private: isPrivate,
-    p_code:       code,
+    p_display_name: displayName || 'Pilot',
+    p_is_private:   isPrivate,
   });
   if (error) throw error;
-  return { roomId: data, code };
+  return { roomId: data };
 }
 
-export async function joinRoomById({ roomId, playerId, displayName }) {
+export async function joinRoomById({ roomId, displayName }) {
   const sb = ensure();
   const { data, error } = await sb.rpc('join_race_room', {
-    p_room_id:    roomId,
-    p_guest_id:   playerId,
-    p_guest_name: displayName || 'Pilot',
+    p_room_id:      roomId,
+    p_display_name: displayName || 'Pilot',
   });
   if (error) throw error;
   if (!data) throw new Error('No se pudo unir a la sala (llena o cerrada)');
   return roomId;
 }
 
-export async function joinRoomByCode({ code, playerId, displayName }) {
+export async function joinRoomByCode({ code, displayName }) {
   const sb = ensure();
   const { data, error } = await sb.rpc('join_race_room_by_code', {
-    p_code:       code,
-    p_guest_id:   playerId,
-    p_guest_name: displayName || 'Pilot',
+    p_code:         code,
+    p_display_name: displayName || 'Pilot',
   });
   if (error) throw error;
   if (!data) throw new Error('Codigo invalido o sala llena');
   return data;
 }
 
-export async function setRoomShip({ roomId, playerId, shipId }) {
+export async function setRoomShip({ roomId, shipId }) {
   const sb = ensure();
   const { data, error } = await sb.rpc('set_room_ship', {
-    p_room_id:   roomId,
-    p_player_id: playerId,
-    p_ship_id:   shipId,
+    p_room_id: roomId,
+    p_ship_id: shipId,
   });
   if (error) throw error;
   if (!data) throw new Error('Nave no disponible (la escogio el rival)');
   return true;
 }
 
-export async function setRoomReady({ roomId, playerId, ready }) {
+export async function setRoomReady({ roomId, ready }) {
   const sb = ensure();
   const { data, error } = await sb.rpc('set_room_ready', {
-    p_room_id:   roomId,
-    p_player_id: playerId,
-    p_ready:     ready,
+    p_room_id: roomId,
+    p_ready:   ready,
   });
   if (error) throw error;
   return !!data;
 }
 
-export async function leaveRoom({ roomId, playerId }) {
+export async function leaveRoom({ roomId }) {
   const sb = ensure();
+  forgetRoomCode(roomId);
   const { error } = await sb.rpc('leave_race_room', {
-    p_room_id:   roomId,
-    p_player_id: playerId,
+    p_room_id: roomId,
   });
   if (error) throw error;
 }
 
 // Heartbeat — clientes en RoomScreen/race lo llaman cada 30s. Bumps
 // last_activity_at; sin pings la sala se considera fantasma y cleanup la borra.
-export async function touchRoom({ roomId, playerId }) {
+export async function touchRoom({ roomId }) {
   const sb = ensure();
   const { error } = await sb.rpc('touch_room', {
-    p_room_id:   roomId,
-    p_player_id: playerId,
+    p_room_id: roomId,
   });
   if (error) throw error;
 }
 
-// Dispara cleanup manual de salas fantasmas. list_public_rooms() ya lo invoca,
-// pero util para llamar al crear sala (purga antes de listar).
-export async function cleanupStaleRooms() {
+// `code` esta revocada a nivel de columna para anon/authenticated: un select('*')
+// devolveria permission denied. Se pide aparte via get_room_code(), que solo
+// responde al host de la sala.
+const ROOM_COLUMNS = [
+  'id', 'is_private', 'host_id', 'guest_id',
+  'host_ship', 'guest_ship', 'host_pilot', 'guest_pilot',
+  'host_ready', 'guest_ready', 'status',
+  'created_at', 'started_at', 'finished_at', 'last_activity_at',
+].join(',');
+
+// El codigo de una sala no cambia nunca, y fetchRoom se sondea cada 2s: sin
+// cache serian ~30 RPC/min por un valor fijo. Las salas son efimeras, asi que
+// el Map no crece de forma apreciable.
+const codeCache = new Map();
+
+export async function fetchRoomCode({ roomId }) {
+  if (codeCache.has(roomId)) return codeCache.get(roomId);
   const sb = ensure();
-  const { data, error } = await sb.rpc('cleanup_stale_rooms');
+  const { data, error } = await sb.rpc('get_room_code', {
+    p_room_id: roomId,
+  });
   if (error) throw error;
-  return data ?? 0;
+  const code = data ?? null;
+  if (code) codeCache.set(roomId, code);
+  return code;
 }
 
-export async function fetchRoom(roomId) {
+export function forgetRoomCode(roomId) {
+  codeCache.delete(roomId);
+}
+
+// playerId opcional: evita una RPC de mas cuando ya sabemos que no somos el
+// host. El servidor revalida contra auth.uid() de todos modos.
+export async function fetchRoom(roomId, { playerId } = {}) {
   const sb = ensure();
-  const { data, error } = await sb.from('race_rooms').select('*').eq('id', roomId).single();
+  const { data, error } = await sb.from('race_rooms').select(ROOM_COLUMNS).eq('id', roomId).single();
   if (error) throw error;
+  if (!data) return data;
+  if (data.is_private && playerId && data.host_id === playerId) {
+    data.code = await fetchRoomCode({ roomId }).catch(() => null);
+  }
   return data;
 }
 

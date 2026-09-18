@@ -19,7 +19,7 @@ import { EventBus } from '@shared/state/events.js';
 import {
   attachRematchSync, detachRematchSync, clearPendingRoom,
 } from '@game/net/online/rematchCoordinator.js';
-import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile } from '@game/net/supabase/auth.js';
+import { getSession, onAuthChange, signOut, isAuthAvailable, resolveDisplayName, applyAuthenticatedProfile, resolvePlayerId, clearPlayerId } from '@game/net/supabase/auth.js';
 import { loadProfile } from '@shared/services/playerProfile.js';
 import { getCharacter } from '@shared/data/characterData.js';
 import useTranslation from '@shared/i18n/useTranslation.js';
@@ -85,15 +85,22 @@ export default function MainMenu() {
 
   useEffect(() => {
     let mounted = true;
+    // El player id del servidor (plr_xxx) se resuelve aqui una sola vez: las
+    // pantallas de online lo leen sincronamente con getPlayerId().
+    const syncPlayer = (user) => {
+      if (!user) { clearPlayerId(); return; }
+      applyAuthenticatedProfile({ user });
+      resolvePlayerId(resolveDisplayName({ user, profile: loadProfile() })).catch(() => {});
+    };
     getSession().then((s) => {
       if (!mounted) return;
       setAuthUser(s?.user || null);
-      if (s?.user) applyAuthenticatedProfile({ user: s.user });
+      syncPlayer(s?.user || null);
     });
     const off = onAuthChange((user) => {
       if (!mounted) return;
       setAuthUser(user);
-      if (user) applyAuthenticatedProfile({ user });
+      syncPlayer(user);
     });
     return () => { mounted = false; off(); };
   }, []);
@@ -235,6 +242,9 @@ export default function MainMenu() {
           }}
           onSelectOnline={() => {
             setRaceModePick(false);
+            // Online = solo registrados: las RPC de salas exigen rol
+            // authenticated y derivan el jugador de auth.uid().
+            if (!authUser) { setAuthModal('signin'); return; }
             setOnlineLobby(true);
           }}
         />

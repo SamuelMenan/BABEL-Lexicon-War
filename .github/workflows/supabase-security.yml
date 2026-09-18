@@ -1,0 +1,45 @@
+name: Supabase security invariants
+
+# Comprueba que el esquema sigue cumpliendo lo que establecieron las fases de
+# endurecimiento (docs/security/supabase-hardening-plan.md). Se dispara solo
+# cuando cambia algo de Supabase, para no gastar minutos de Actions en balde.
+on:
+  push:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-security.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-security.yml'
+  workflow_dispatch:
+
+jobs:
+  invariants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin el secreto el job pasa con un aviso en vez de fallar: así añadir
+      # el workflow no deja la rama en rojo hasta que se configure.
+      - name: Comprobar que el secreto existe
+        id: guard
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL no esta configurado — se omiten las comprobaciones."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar psql
+        if: steps.guard.outputs.run == 'true'
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Ejecutar invariantes de seguridad
+        if: steps.guard.outputs.run == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_invariants.sql

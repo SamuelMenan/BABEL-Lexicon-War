@@ -104,7 +104,7 @@ export class LexiconSystem {
     if (correct) {
       this._correctKeys++; this._typed += key;
       const wpmMod = this._wpmModifier(); const comboMod = 1 + Math.min(this._combo * 0.05, 0.5);
-      this._addFlow(FLOW_GAIN_PER_LETTER * wpmMod * comboMod);
+      this._addFlow(FLOW_GAIN_PER_LETTER * wpmMod * comboMod * this._flowGainMult());
       Bridge.setState({ activeWord: { word: this._targetWord, typed: this._typed } });
       EventBus.emit(EventTypes.WORD_PROGRESS, { word: this._targetWord, typed: this._typed, correct: true });
       if (this._typed.length === this._targetWord.length) this._onWordCompleted();
@@ -124,7 +124,7 @@ export class LexiconSystem {
     if (!this._wordHadError) {
       const wordLen = this._targetWord ? this._targetWord.length : 0;
       const wpmMod = this._wpmModifier(); const comboMod = 1 + Math.min(this._combo * 0.05, 0.5);
-      this._addFlow(wordLen * 0.8 * wpmMod * comboMod); this._combo++;
+      this._addFlow(wordLen * 0.8 * wpmMod * comboMod * this._flowGainMult()); this._combo++;
       if (this._combo > this._bestCombo) this._bestCombo = this._combo;
     } else { this._combo = 0; }
     this._wordsCompleted++;
@@ -186,6 +186,11 @@ export class LexiconSystem {
       this._flowCooldown = false; this._flowCooldownTimer = null;
       Bridge.setState({ flowCooldown: false });
     }, FLOW_COOLDOWN_MS);
+  }
+  // En carrera el flow se llena mas rapido → modo Flow mas facil de entrar.
+  // No afecta combate (gain x1).
+  _flowGainMult() {
+    return Bridge.peekState?.()?.gameMode === 'racing' ? 1.5 : 1.0;
   }
   _wpmModifier() {
     const wpm = this._calcWPM();

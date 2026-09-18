@@ -10,7 +10,7 @@ import { Bridge } from "@shared/state/bridge.js";
 import { BLOOM_LAYER, WORDS_PER_MINUTE_SCALE, RACE_OPPONENT_WPM } from "@shared/config/constants.js";
 import { RacingLightingRig } from "../rendering/lighting/RacingLightingRig.js";
 import { getSoftGlowTexture } from "@shared/visuals/softVisuals.js";
-import { playSfx, playLoopSfx, stopLoopSfx } from "@shared/services/audioManager.js";
+import { playSfx, playLoopSfx, stopLoopSfx, setLoopGain, setLoopRate } from "@shared/services/audioManager.js";
 
 const SHIP_HINTS = ["ship","craft","vehicle","spacecraft","rocket","fuselage","nave","propulsor"];
 const HOLE_NODE_NAME  = "Vortex_1";   // ancla del agujero negro dentro del GLB
@@ -110,6 +110,13 @@ export class RacingSceneManager {
     this._smoothProgress+=(progressRatio-this._smoothProgress)*Math.min(lf*0.55,1);
     this._smoothLead    +=(rawLead-this._smoothLead)*Math.min(lf*0.6,1);
     this._smoothBurst   +=(this._playerWordBurst-this._smoothBurst)*Math.min(lf*0.85,1);
+
+    // El motor "sigue" la actividad de tecleo: volumen + pitch suben con el flow
+    // y el burst, de modo que sonido y propulsores crecen juntos.
+    const flowR    = flowActive ? 1 : (state.flow||0)/100;
+    const activity = THREE.MathUtils.clamp(flowR*0.7 + Math.min(this._smoothBurst,1)*0.3, 0, 1);
+    setLoopGain('raceengine.engine_loop', 0.7 + activity*0.8);   // ~0.7 → 1.5
+    setLoopRate('raceengine.engine_loop', 0.92 + activity*0.20); // leve pitch-up
 
     // Tunel se desplaza hacia camara segun progreso → da sensacion clara de avance,
     // como en racing games clasicos. Range 90u (tunnel completo "pasa" durante carrera).

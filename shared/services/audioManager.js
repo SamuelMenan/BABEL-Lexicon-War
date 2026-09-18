@@ -29,6 +29,7 @@ let currentBgmKey = null;
 let pendingFadeOuts = [];
 const loopCache = {};
 const loopBaseVol = {}; // name → volume base pasada por caller
+const loopDynGain = {}; // name → multiplicador dinamico de gameplay (default 1)
 
 function getSoundPaths(name) {
   const parts = name.split('.');
@@ -194,6 +195,21 @@ export function stopLoopSfx(name) {
   } catch (e) {}
   delete loopCache[name];
   delete loopBaseVol[name];
+  delete loopDynGain[name];
+}
+
+// Modula en vivo el volumen de un loop activo (multiplicador sobre su base).
+// Usado por gameplay para que el sonido "crezca" con la actividad del jugador.
+export function setLoopGain(name, mult) {
+  loopDynGain[name] = Math.max(0, Number(mult) || 0);
+  _applyLoopVolumes();
+}
+
+// Modula el pitch/velocidad de reproduccion de un loop activo (Howler .rate()).
+export function setLoopRate(name, rate) {
+  const h = loopCache[name];
+  if (!h) return;
+  try { if (typeof h.rate === 'function') h.rate(Math.max(0.5, Number(rate) || 1)); } catch (e) {}
 }
 
 export function stopBgm() {
@@ -219,7 +235,8 @@ function _applyLoopVolumes() {
     try {
       const h = loopCache[name];
       const base = loopBaseVol[name] ?? 0.6;
-      const v = settings.sfxVolume * base;
+      const dyn = loopDynGain[name] ?? 1;
+      const v = settings.sfxVolume * base * dyn;
       if (typeof h.volume === 'function') h.volume(v);
       else h.volume = v;
     } catch (e) {}

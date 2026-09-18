@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { BLOOM_LAYER, COLORS, SHIPS } from '@shared/config/constants.js';
 import { Bridge } from '@shared/state/bridge.js';
+import { EventBus } from '@shared/state/events.js';
+import { EventTypes } from '@shared/state/eventTypes.js';
 import { RacingShipBase, racingYaw } from './RacingShipBase.js';
 
 const TARGET_MODEL_LENGTH = 5.0;
@@ -35,6 +37,16 @@ export class RacingPlayerShip extends RacingShipBase {
       this._basePosition.z - 140,  // spawn DEEP (mas alla del vortice)
     );
     this._modelLoaded = false;
+
+    // Pop de propulsor por cada letra correcta → al escribir constante los
+    // boosters "disparan" continuamente (sensacion de actividad).
+    this._unsubs = [
+      EventBus.on(EventTypes.WORD_PROGRESS, (p) => {
+        if (p?.correct && !this._entryActive) {
+          this._boosters.forEach(b => b.triggerLetterHit(0.5));
+        }
+      }),
+    ];
 
     this._buildFxNodes();
     this._buildFallbackShip();
@@ -107,8 +119,19 @@ export class RacingPlayerShip extends RacingShipBase {
     this._group.rotation.y = Math.sin(t * 0.92) * 0.08;
     this._group.rotation.z = smoothLead * 0.09 + Math.sin(t * 1.45) * 0.07;
 
-    const isThrusting = smoothBurst > 0.05;
-    // flowRatio=1.0: rampa ascendente → opacidad plena, look saturado.
-    this._boosters.forEach(b => b.update(delta, isThrusting, 1, 1, 1.0));
+    // Boosters reactivos al tecleo (mismo patron que CombatPlayerShip): el
+    // flowRatio = barra de flow → crecen al escribir, se encogen al parar.
+    const { flow, flowActive } = Bridge.peekState();
+    const flowRatio = flowActive ? 1.0 : (flow || 0) / 100; // FLOW_MAX=100
+    const vScale    = flowActive ? 1.4  : 1.0;
+    const rScale    = flowActive ? 1.18 : 1.0;
+    const isThrusting = flowActive || smoothBurst > 0.05;
+    this._boosters.forEach(b => b.update(delta, isThrusting, vScale, rScale, flowRatio));
+  }
+
+  dispose() {
+    this._unsubs?.forEach(fn => fn());
+    this._unsubs = [];
+    super.dispose();
   }
 }

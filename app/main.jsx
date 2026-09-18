@@ -1,4 +1,9 @@
-﻿import React from 'react';
+﻿// PRIMER import a proposito: el modulo instala los manejadores globales al
+// ser importado, asi que cualquier fallo en los imports de abajo ya queda
+// capturado. No moverlo de sitio.
+import '@shared/services/errorReporter.js';
+
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import '@game/domains/economy/EconomySystem.js'; // boot wallet + mirror al bridge

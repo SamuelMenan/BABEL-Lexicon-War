@@ -1,111 +1,111 @@
 {
   "ui": {
-    "click": ["/audio/sfx/UI_Buttons/sfx_025.wav"],
-    "select": ["/audio/sfx/UI_Buttons/sfx_025.wav"],
-    "confirm": ["/audio/sfx/UI_Buttons/sfx_025.wav"]
+    "click": ["/audio/sfx/UI_Buttons/sfx_025.ogg"],
+    "select": ["/audio/sfx/UI_Buttons/sfx_025.ogg"],
+    "confirm": ["/audio/sfx/UI_Buttons/sfx_025.ogg"]
   },
   "weapons": {
-    "laser": ["/audio/sfx/Weapons/sfx_075.wav"],
-    "shoot": ["/audio/sfx/Weapons/sfx_074.wav"]
+    "laser": ["/audio/sfx/Weapons/sfx_075.ogg"],
+    "shoot": ["/audio/sfx/Weapons/sfx_074.ogg"]
   },
   "explosion": {
-    "detonate": ["/audio/sfx/Explosion/sfx_02.wav"]
+    "detonate": ["/audio/sfx/Explosion/sfx_02.ogg"]
   },
   "propulsion": {
-    "boost":  ["/audio/sfx/Propulsion/sfx_01.wav"],
-    "ignite": ["/audio/sfx/Propulsion/sfx_04.wav"],
-    "warp":   ["/audio/sfx/Propulsion/sfx_04.wav"]
+    "boost":  ["/audio/sfx/Propulsion/sfx_01.ogg"],
+    "ignite": ["/audio/sfx/Propulsion/sfx_04.ogg"],
+    "warp":   ["/audio/sfx/Propulsion/sfx_04.ogg"]
   },
   "countdown": {
-    "tick": ["/audio/sfx/Countdown/Countdowntick.wav"],
-    "go":   ["/audio/sfx/Countdown/Countdowngo.wav"]
+    "tick": ["/audio/sfx/Countdown/Countdowntick.ogg"],
+    "go":   ["/audio/sfx/Countdown/Countdowngo.ogg"]
   },
   "enemydeath": {
-    "collapse": ["/audio/sfx/EnemyDeath/EnemyDeathcollapse.wav"]
+    "collapse": ["/audio/sfx/EnemyDeath/EnemyDeathcollapse.ogg"]
   },
   "flow": {
-    "unlocked": ["/audio/sfx/Flow/Flow_unlocked.wav"],
-    "break":    ["/audio/sfx/Flow/Flow_break.wav"]
+    "unlocked": ["/audio/sfx/Flow/Flow_unlocked.ogg"],
+    "break":    ["/audio/sfx/Flow/Flow_break.ogg"]
   },
   "hangar": {
-    "ship_change": ["/audio/sfx/Hangar/Hangar_ship_change.wav"]
+    "ship_change": ["/audio/sfx/Hangar/Hangar_ship_change.ogg"]
   },
   "health": {
-    "high_loop":     ["/audio/sfx/Health/high_loop.wav"],
-    "medium_loop":   ["/audio/sfx/Health/sfx_03.wav"],
-    "critical_loop": ["/audio/sfx/Health/Critical_low_health.wav"]
+    "high_loop":     ["/audio/sfx/Health/high_loop.ogg"],
+    "medium_loop":   ["/audio/sfx/Health/sfx_03.ogg"],
+    "critical_loop": ["/audio/sfx/Health/Critical_low_health.ogg"]
   },
   "loading": {
-    "ambient_loop": ["/audio/sfx/Loading/Loading_ambient_loop.wav"],
-    "complete":     ["/audio/sfx/Loading/Loading_complete.wav"]
+    "ambient_loop": ["/audio/sfx/Loading/Loading_ambient_loop.ogg"],
+    "complete":     ["/audio/sfx/Loading/Loading_complete.ogg"]
   },
   "menu": {
-    "hover":  ["/audio/sfx/Menu/Menu_hover.wav"],
-    "select": ["/audio/sfx/Menu/Menu_select.wav"]
+    "hover":  ["/audio/sfx/Menu/Menu_hover.ogg"],
+    "select": ["/audio/sfx/Menu/Menu_select.ogg"]
   },
   "modal": {
-    "open":  ["/audio/sfx/Modal/Modal_open.wav"],
-    "close": ["/audio/sfx/Modal/Modal_close.wav"]
+    "open":  ["/audio/sfx/Modal/Modal_open.ogg"],
+    "close": ["/audio/sfx/Modal/Modal_close.ogg"]
   },
   "purchase": {
-    "success": ["/audio/sfx/Purchase/Purchase_success.wav"],
-    "fail":    ["/audio/sfx/Purchase/Purchase_fail.wav"]
+    "success": ["/audio/sfx/Purchase/Purchase_success.ogg"],
+    "fail":    ["/audio/sfx/Purchase/Purchase_fail.ogg"]
   },
   "raceend": {
-    "victory": ["/audio/sfx/RaceEnd/RaceEnd_victory.wav"],
-    "defeat":  ["/audio/sfx/RaceEnd/RaceEnd_defeat.wav"]
+    "victory": ["/audio/sfx/RaceEnd/RaceEnd_victory.ogg"],
+    "defeat":  ["/audio/sfx/RaceEnd/RaceEnd_defeat.ogg"]
   },
   "racestart": {
-    "start": ["/audio/sfx/RaceStart/RaceStart_start.wav"]
+    "start": ["/audio/sfx/RaceStart/RaceStart_start.ogg"]
   },
   "rival": {
-    "joined":         ["/audio/sfx/Rival/Rivaljoined.wav"],
-    "left":           ["/audio/sfx/Rival/Rival_left.wav"],
-    "rematch_invite": ["/audio/sfx/Rival/Rival_rematch_invite.wav"]
+    "joined":         ["/audio/sfx/Rival/Rivaljoined.ogg"],
+    "left":           ["/audio/sfx/Rival/Rival_left.ogg"],
+    "rematch_invite": ["/audio/sfx/Rival/Rival_rematch_invite.ogg"]
   },
   "waitingrival": {
-    "loop": ["/audio/sfx/WaitingRival/WaitingRival_loop.wav"]
+    "loop": ["/audio/sfx/WaitingRival/WaitingRival_loop.ogg"]
   },
   "wave": {
-    "alert": ["/audio/sfx/Wave/Wavealert.wav"]
+    "alert": ["/audio/sfx/Wave/Wavealert.ogg"]
   },
   "word": {
-    "completed": ["/audio/sfx/Word/Word_completed.wav"],
-    "error":     ["/audio/sfx/Word/Word_error.wav"]
+    "completed": ["/audio/sfx/Word/Word_completed.ogg"],
+    "error":     ["/audio/sfx/Word/Word_error.ogg"]
   },
   "blackhole": {
-    "pulse_loop": ["/audio/sfx/BlackHole/pulse_loop.wav"]
+    "pulse_loop": ["/audio/sfx/BlackHole/pulse_loop.ogg"]
   },
   "hangarboost": {
-    "toggle": ["/audio/sfx/HangarBoost/toggle.wav"]
+    "toggle": ["/audio/sfx/HangarBoost/toggle.ogg"]
   },
   "hangarcamera": {
-    "orbit": ["/audio/sfx/HangarCamera/orbit.wav"]
+    "orbit": ["/audio/sfx/HangarCamera/orbit.ogg"]
   },
   "hangarlaser": {
-    "toggle": ["/audio/sfx/HangarLaser/toggle.wav"]
+    "toggle": ["/audio/sfx/HangarLaser/toggle.ogg"]
   },
   "menuback": {
-    "press": ["/audio/sfx/MenuBack/press.wav"]
+    "press": ["/audio/sfx/MenuBack/press.ogg"]
   },
   "playerhit": {
-    "hit": ["/audio/sfx/PlayerHit/hit.wav"]
+    "hit": ["/audio/sfx/PlayerHit/hit.ogg"]
   },
   "race": {
-    "boost_streak":  ["/audio/sfx/Race/boost_streak.wav"],
-    "flow_burst":    ["/audio/sfx/Race/flow_burst.wav"],
-    "milestone":     ["/audio/sfx/Race/milestone.wav"],
-    "opponent_pass": ["/audio/sfx/Race/opponent_pass.wav"],
-    "photo_finish":  ["/audio/sfx/Race/photo_finish.wav"],
-    "phrase_done":   ["/audio/sfx/Race/phrase_done.wav"],
-    "time_warning":  ["/audio/sfx/Race/time_warning.wav"]
+    "boost_streak":  ["/audio/sfx/Race/boost_streak.ogg"],
+    "flow_burst":    ["/audio/sfx/Race/flow_burst.ogg"],
+    "milestone":     ["/audio/sfx/Race/milestone.ogg"],
+    "opponent_pass": ["/audio/sfx/Race/opponent_pass.ogg"],
+    "photo_finish":  ["/audio/sfx/Race/photo_finish.ogg"],
+    "phrase_done":   ["/audio/sfx/Race/phrase_done.ogg"],
+    "time_warning":  ["/audio/sfx/Race/time_warning.ogg"]
   },
   "raceengine": {
-    "engine_loop": ["/audio/sfx/RaceEngine/engine_loop.wav"],
-    "surge":       ["/audio/sfx/RaceEngine/surge.wav"]
+    "engine_loop": ["/audio/sfx/RaceEngine/engine_loop.ogg"],
+    "surge":       ["/audio/sfx/RaceEngine/surge.ogg"]
   },
   "shiparrival": {
-    "land": ["/audio/sfx/ShipArrival/land.wav"]
+    "land": ["/audio/sfx/ShipArrival/land.ogg"]
   },
   "bgm": {
     "warning":       ["/audio/bgm/warning_loop.mp3"],

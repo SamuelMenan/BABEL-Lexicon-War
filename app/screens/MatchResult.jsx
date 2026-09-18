@@ -176,15 +176,12 @@ export default function MatchResult({
     syncOnce.current = true;
 
     const elapsedSeconds = Number.isFinite(timeElapsed) ? Math.max(0, Math.round(timeElapsed)) : null;
-    const finishedAt = new Date().toISOString();
-    const startedAt = elapsedSeconds == null ? null : new Date(Date.now() - elapsedSeconds * 1000).toISOString();
 
+    // Ni sessionId ni mode ni marcas de tiempo: los pone el servidor desde la
+    // sesion que abrio en GAME_START. `sessionId` de aqui es solo el rotulo
+    // decorativo del HUD.
     void saveMatchResult({
       profile: loadProfile(),
-      sessionId,
-      mode: gameMode || (isRacing ? 'racing' : 'combat'),
-      startedAt,
-      finishedAt,
       score: Number.isFinite(score) ? score : null,
       wpm: Number.isFinite(wpm) ? wpm : null,
       accuracy: Number.isFinite(accuracy) ? accuracy : null,
@@ -198,7 +195,7 @@ export default function MatchResult({
     }).catch((error) => {
       console.warn('[Supabase] No se pudo guardar el resultado', error);
     });
-  }, [accuracy, bestCombo, gameMode, grafemasReward, isRacing, peakWPM, raceVictory, score, sessionId, timeElapsed, wave, wordsDestroyed, wpm]);
+  }, [accuracy, bestCombo, grafemasReward, peakWPM, raceVictory, score, timeElapsed, wave, wordsDestroyed, wpm]);
 
   /* ── Combat ──────────────────────────────────────────────── */
   if (!isRacing) {

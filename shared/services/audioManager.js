@@ -27,6 +27,15 @@ const bgmCache = {};
 let currentBgm = null;
 let currentBgmKey = null;
 let pendingFadeOuts = [];
+// Howler elige la primera fuente que el navegador sepa reproducir. Los SFX se
+// sirven en OGG Vorbis porque comprime mucho mejor (18 MB de WAV -> 1,3 MB),
+// pero Safari no lo reproduce de forma fiable via <audio>, asi que cada OGG
+// viaja acompanado de un MP3 equivalente. El navegador descarga solo uno.
+const srcWithFallback = (path) =>
+  (typeof path === 'string' && path.endsWith('.ogg'))
+    ? [path, path.slice(0, -4) + '.mp3']
+    : [path];
+
 const loopCache = {};
 const loopBaseVol = {}; // name → volume base pasada por caller
 const loopDynGain = {}; // name → multiplicador dinamico de gameplay (default 1)
@@ -71,7 +80,7 @@ function _playSound(path, gap = 60, volume = 1) {
   const finalVol = settings.sfxVolume * volume;
   try {
     if (typeof Howl !== 'undefined') {
-      if (!sfxCache[path]) sfxCache[path] = new Howl({ src: [path], volume: 1 });
+      if (!sfxCache[path]) sfxCache[path] = new Howl({ src: srcWithFallback(path), volume: 1 });
       const id = sfxCache[path].play();
       sfxCache[path].volume(finalVol, id);
     } else {
@@ -135,7 +144,7 @@ export function playBgm(key, optsOrLoop) {
     if (typeof Howl !== 'undefined') {
       let h = bgmCache[key];
       if (!h) {
-        h = new Howl({ src: [path], loop, volume: 0, html5: true });
+        h = new Howl({ src: srcWithFallback(path), loop, volume: 0, html5: true });
         bgmCache[key] = h;
       } else {
         try { h.loop(loop); } catch (e) {}
@@ -174,7 +183,7 @@ export function playLoopSfx(name, volume = 0.6) {
   const finalVol = settings.sfxVolume * volume;
   try {
     if (typeof Howl !== 'undefined') {
-      const h = new Howl({ src: [paths[0]], loop: true, volume: finalVol, html5: true });
+      const h = new Howl({ src: srcWithFallback(paths[0]), loop: true, volume: finalVol, html5: true });
       h.play();
       loopCache[name] = h;
     } else {
@@ -303,7 +312,7 @@ export function preloadAll() {
       for (const k in obj) {
         if (Array.isArray(obj[k])) {
           obj[k].forEach(path => {
-            if (!sfxCache[path]) sfxCache[path] = new Howl({ src: [path], volume: 1, preload: true });
+            if (!sfxCache[path]) sfxCache[path] = new Howl({ src: srcWithFallback(path), volume: 1, preload: true });
           });
         } else if (typeof obj[k] === 'object') {
           loadCategory(obj[k]);

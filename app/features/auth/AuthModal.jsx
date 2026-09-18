@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { signIn, signUp, signInWithGoogle, isAuthAvailable } from '@game/net/supabase/auth.js';
+import { signIn, signUp, signInWithGoogle, isAuthAvailable, MIN_SIGNUP_PASSWORD_LENGTH } from '@game/net/supabase/auth.js';
 import Modal from '@app/ui/Modal.jsx';
 import KeyHint from '@app/ui/KeyHint.jsx';
 import Icon from '@app/ui/Icon.jsx';
@@ -52,14 +52,26 @@ export default function AuthModal({ initialMode = 'signin', onClose, onSuccess }
     if (!available) { setError(t('auth.supabaseMissing')); return; }
     if (!email || !password) { setError(t('auth.passwordRequired')); return; }
     if (!validEmail(email))  { setError(t('auth.emailInvalid')); return; }
-    if (password.length < 6) { setError(t('auth.passwordMin')); return; }
+    // El minimo endurecido aplica SOLO al registro: subirlo en el inicio de
+    // sesion dejaria fuera a las cuentas que ya existen.
+    if (mode === 'signup' && password.length < MIN_SIGNUP_PASSWORD_LENGTH) {
+      setError(t('auth.passwordMin', { n: MIN_SIGNUP_PASSWORD_LENGTH })); return;
+    }
+    if (password.length < 6) { setError(t('auth.passwordMinShort')); return; }
     setBusy(true);
     try {
       const res = mode === 'signup'
         ? await signUp({ email, password, displayName: displayName || null })
         : await signIn({ email, password });
       if (!res.ok) {
-        setError(res.error?.message || t('auth.couldNotComplete'));
+        const code = res.error?.code;
+        if (code === 'password_pwned') {
+          setError(t('auth.passwordPwned'));
+        } else if (code === 'password_too_short') {
+          setError(t('auth.passwordMin', { n: MIN_SIGNUP_PASSWORD_LENGTH }));
+        } else {
+          setError(res.error?.message || t('auth.couldNotComplete'));
+        }
         return;
       }
       if (mode === 'signup' && !res.session) {

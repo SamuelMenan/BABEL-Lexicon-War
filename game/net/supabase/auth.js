@@ -4,6 +4,7 @@
 import { supabase } from './client.js';
 import { loadProfile, saveProfile } from '@shared/services/playerProfile.js';
 import { EconomySystem } from '@game/domains/economy/EconomySystem.js';
+import { countPwnedOccurrences } from './passwordSafety.js';
 
 function notReady() {
   return { ok: false, skipped: true, reason: 'supabase-not-configured' };
@@ -83,8 +84,22 @@ export function onAuthChange(cb) {
   return () => data?.subscription?.unsubscribe?.();
 }
 
+export const MIN_SIGNUP_PASSWORD_LENGTH = 10;
+
 export async function signUp({ email, password, displayName }) {
   if (!supabase) return notReady();
+
+  if (!password || password.length < MIN_SIGNUP_PASSWORD_LENGTH) {
+    return { ok: false, error: { message: null, code: 'password_too_short' } };
+  }
+
+  // Compensa que la comprobacion HIBP de Supabase sea de plan Pro. Si no se
+  // puede comprobar (sin red, API caida) devuelve null y dejamos pasar.
+  const pwnedCount = await countPwnedOccurrences(password);
+  if (pwnedCount) {
+    return { ok: false, error: { message: null, code: 'password_pwned' }, pwnedCount };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,

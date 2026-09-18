@@ -21,10 +21,16 @@ export const SHIP_CATALOG = {
   // Para reactivar: quitar `hidden: true` y re-exportar GLB con clips.
   colaid1:         { price: 22000, displayOrder: 5, unlockedByDefault: false, hidden: true },
   waldeinsamkeit:  { price: 35000, displayOrder: 6, unlockedByDefault: false },
-  // Nave secreta: precio Infinity → purchaseShip la rechaza (not_for_sale).
-  // `secret` vive en SHIPS (constants). Solo se desbloquea con codigo y solo
-  // aparece en el hangar si el jugador ya la posee. displayOrder al final.
-  xwing:           { price: Infinity, displayOrder: 99, unlockedByDefault: false },
+  // xwing deshabilitada — el modelo es una nave de Star Wars (IP de Disney) y
+  // el juego va a publicarse. Ademas era el mayor consumidor de VRAM del
+  // proyecto: 170,7 MB de los 530,7 MB totales (audit-models.mjs).
+  //
+  // `hidden: true` hace que playerProfile la retire del inventario de quien la
+  // hubiera desbloqueado y le devuelva la nave por defecto, sin romper nada.
+  // Mismo patron que colaid1. El GLB se ha borrado; la configuracion tecnica
+  // (SHIPS, shipData, boosters, muzzles) se conserva por si se sustituye por
+  // un modelo con licencia propia.
+  xwing:           { price: Infinity, displayOrder: 99, unlockedByDefault: false, hidden: true },
 };
 
 // Naves sin entrada en SHIP_CATALOG: precio infinito, orden al final (no rompen).

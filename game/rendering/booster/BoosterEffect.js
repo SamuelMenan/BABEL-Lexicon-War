@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { getQualityProfile } from '@shared/config/qualitySettings.js';
+import { getQualityProfile, onQualityChange } from '@shared/config/qualitySettings.js';
 import { getFlameTexture, getInnerTexture, getStarTexture } from './BoosterTextures.js';
 import { getConeGeometry, getRingGeometry } from './BoosterGeometry.js';
 import { BOOST_PALETTE, FLOW_PALETTE } from './BoosterConfig.js';
@@ -88,6 +88,14 @@ export class BoosterEffect {
     this._lightMult      = profile.boosterLightMult;
     this._showStarSprite = profile.boosterStarSprite;
     if (!this._showStarSprite) this._star.visible = false;
+
+    // Degradacion adaptativa: estos dos valores se pueden aplicar en caliente
+    // sin reconstruir nada.
+    this._offQuality = onQualityChange((_tier, prof) => {
+      this._lightMult      = prof.boosterLightMult;
+      this._showStarSprite = prof.boosterStarSprite;
+      if (!this._showStarSprite && this._star) this._star.visible = false;
+    });
 
     if (config) this.setConfig(config);
   }
@@ -257,6 +265,7 @@ export class BoosterEffect {
   }
 
   dispose() {
+    this._offQuality?.();
     if (this._root.parent) this._root.parent.remove(this._root);
     this._bodyMat.dispose();
     this._ringMat.dispose();

@@ -147,6 +147,24 @@ export class PostProcessing {
     this._finalComposer.addPass(new OutputPass());
   }
 
+  /**
+   * Apaga el bloom en caliente (degradacion adaptativa). Solo hacia abajo:
+   * volver a encenderlo exigiria reconstruir los dos composers del camino bloom.
+   */
+  setBloomEnabled(enabled) {
+    if (enabled || !this._bloomEnabled) return;
+    this._bloomEnabled = false;
+
+    // El camino simple no existe si arrancamos con bloom. Sin construirlo aqui,
+    // render() caeria al renderer crudo y perderiamos la viñeta de daño.
+    // _buildVignettePass reasigna this._damageVignettePass, que es la que
+    // update() anima, asi que el indicador sigue funcionando.
+    if (!this._simpleComposer) {
+      this._initSimplePath(this._buildVignettePass());
+      this._simpleComposer.setSize(window.innerWidth, window.innerHeight);
+    }
+  }
+
   _initSimplePath(vignettePass) {
     // No bloom: single scene render + vignette + output. ~50% GPU savings on mid/low hardware.
     this._simpleComposer = new EffectComposer(this._renderer);

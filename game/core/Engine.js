@@ -5,7 +5,8 @@ import { PostProcessing } from '../rendering/post/PostProcessing.js';
 import { EventBus } from '@shared/state/events.js';
 import { EventTypes } from '@shared/state/eventTypes.js';
 import { COLORS } from '@shared/config/constants.js';
-import { detectQualityTier, setQualityTier, getQualityTier } from '@shared/config/qualitySettings.js';
+import { detectQualityTier, setQualityTier, getQualityTier, getQualityProfile } from '@shared/config/qualitySettings.js';
+import { AdaptiveQuality } from './AdaptiveQuality.js';
 
 export class Engine {
   constructor(mountEl) {
@@ -36,6 +37,19 @@ export class Engine {
     this._initLights();
     this._initPost();
     this._bindResize();
+
+    // Degradacion adaptativa: detectQualityTier solo adivina (maxTextureSize y
+    // numero de hilos no miden potencia de GPU). Esto corrige la estimacion
+    // midiendo el rendimiento real y bajando el tier si hace falta.
+    this._adaptive = new AdaptiveQuality({
+      onDowngrade: (tier) => {
+        this.qualityTier = tier;
+        // El resto de consumidores se enteran por onQualityChange; el bloom no,
+        // porque decide su camino de render en init() y hay que rehacerlo.
+        if (!getQualityProfile().bloomEnabled) this._post?.setBloomEnabled(false);
+      },
+    });
+    this.loop.addSystem(this._adaptive);
 
     // Render al final de cada frame via composer (bloom)
     this.loop.addSystem({

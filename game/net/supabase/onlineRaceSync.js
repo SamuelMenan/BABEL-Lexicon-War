@@ -53,8 +53,8 @@ export function createOnlineRaceSync(roomId) {
   });
 
   // Heartbeat anti-fantasma — bumps last_activity_at en DB cada 30s.
-  const profile = loadProfile();
-  const beat = () => touchRoom({ roomId, playerId: profile.playerId }).catch(() => {});
+  // El servidor identifica al jugador por auth.uid().
+  const beat = () => touchRoom({ roomId }).catch(() => {});
   beat();
   const heartbeatId = setInterval(beat, 30000);
 

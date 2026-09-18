@@ -4,7 +4,7 @@ import KeyboardNavigable from '@app/ui/KeyboardNavigable.jsx';
 import Modal from '@app/ui/Modal.jsx';
 import { loadProfile } from '@shared/services/playerProfile.js';
 import {
-  createRoom, joinRoomById, joinRoomByCode, listPublicRooms, cleanupStaleRooms,
+  createRoom, joinRoomById, joinRoomByCode, listPublicRooms,
 } from '@game/net/supabase/rooms.js';
 import useTranslation from '@shared/i18n/useTranslation.js';
 
@@ -36,8 +36,8 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   }, []);
 
   useEffect(() => {
-    // Cleanup explicito al abrir lobby + refresh + poll cada 5s.
-    cleanupStaleRooms().catch(() => {});
+    // Refresh + poll cada 5s. El cleanup ya lo dispara list_public_rooms()
+    // en servidor; la RPC directa esta revocada a anon/authenticated.
     refresh();
     const id = setInterval(refresh, 5000);
     return () => clearInterval(id);
@@ -49,7 +49,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      const { roomId } = await createRoom({ playerId: profile.playerId, displayName: profile.displayName, isPrivate: createPrivate });
+      const { roomId } = await createRoom({ displayName: profile.displayName, isPrivate: createPrivate });
       onEnterRoom?.(roomId, 'host');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.create'));
@@ -62,7 +62,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      await joinRoomById({ roomId, playerId: profile.playerId, displayName: profile.displayName });
+      await joinRoomById({ roomId, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.join'));
@@ -76,7 +76,7 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
     setBusy(true); setError('');
     try {
       const profile = loadProfile();
-      const roomId = await joinRoomByCode({ code: codeInput, playerId: profile.playerId, displayName: profile.displayName });
+      const roomId = await joinRoomByCode({ code: codeInput, displayName: profile.displayName });
       onEnterRoom?.(roomId, 'guest');
     } catch (e) {
       setError(e?.message || t('race.lobby.errors.invalidCode'));

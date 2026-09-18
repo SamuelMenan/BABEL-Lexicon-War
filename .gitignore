@@ -17,7 +17,6 @@ coverage/
 # NO ignora app/services/supabase/ (código cliente).
 /supabase/.branches/
 /supabase/.temp/
-/supabase/migrations/
 /supabase/functions/
 /supabase/seed.sql
 /supabase/config.toml

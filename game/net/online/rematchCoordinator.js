@@ -40,7 +40,7 @@ export function attachRematchSync({ sync, room, role, profile, myPilot }) {
     // (MainMenu llama clearPendingRoom al abrir RoomScreen).
     if (_proposedRoomId && _profile) {
       try {
-        await leaveRoom({ roomId: _proposedRoomId, playerId: _profile.playerId });
+        await leaveRoom({ roomId: _proposedRoomId });
       } catch (e) { console.warn('[rematch] leave on decline falla', e); }
       _proposedRoomId = null;
     }
@@ -56,7 +56,6 @@ export async function proposeRematch() {
   if (!_sync || !_profile) return;
   try {
     const { roomId: newRoomId } = await createRoom({
-      playerId: _profile.playerId,
       displayName: _profile.displayName,
       isPrivate: false,
     });
@@ -74,7 +73,6 @@ export async function acceptRematch() {
   try {
     await joinRoomById({
       roomId: invite.newRoomId,
-      playerId: _profile.playerId,
       displayName: _profile.displayName,
     });
     _sync.broadcastRematchAccept({ newRoomId: invite.newRoomId });

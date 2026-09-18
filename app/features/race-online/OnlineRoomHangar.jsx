@@ -12,6 +12,7 @@ import {
   fetchRoom, subscribeRoom, setRoomShip, setRoomReady, leaveRoom, touchRoom,
 } from '@game/net/supabase/rooms.js';
 import { supabase } from '@game/net/supabase/client.js';
+import { getPlayerId, getAccessToken } from '@game/net/supabase/auth.js';
 
 import { useHangarScene } from '../hangar/useHangarScene.js';
 import HangarShell from '../hangar/HangarShell.jsx';
@@ -41,7 +42,10 @@ const HEARTBEAT_MS = 30000;
 export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }) {
   const { t } = useTranslation();
   const profile = loadProfile();
-  const myId    = profile.playerId;
+  // Id de jugador del servidor (plr_xxx), resuelto desde auth.uid() en
+  // MainMenu. Solo se usa para comparar contra room.host_id / guest_id: las
+  // RPC derivan la identidad del token, no de lo que mandemos.
+  const myId    = getPlayerId();
 
   const [room,        setRoom]        = useState(null);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -86,7 +90,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
       pickTimerRef.current = setTimeout(async () => {
         const shipId = SHIPS[clamped].id;
         try {
-          await setRoomShip({ roomId, playerId: myId, shipId });
+          await setRoomShip({ roomId, shipId });
           setPickError(null);
         } catch (e) {
           setPickError(e?.message || t('race.hangarExtra.shipUnavailable'));
@@ -101,34 +105,39 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   // ──────────────────────────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
-    const reload = () => fetchRoom(roomId)
+    const reload = () => fetchRoom(roomId, { playerId: myId })
       .then((r) => { if (mounted && r) setRoom(r); })
       .catch(() => {});
 
     reload();
+    // Realtime no emite `code` (revocada a nivel de columna) — preservar el
+    // que trajo fetchRoom para que el host no lo pierda en el primer update.
     const unsub = subscribeRoom(roomId, (next) => {
-      if (mounted && next) setRoom(next);
+      if (mounted && next) setRoom((prev) => ({ ...next, code: next.code ?? prev?.code ?? null }));
     });
     const pollId = setInterval(reload, 2000);
-    touchRoom({ roomId, playerId: myId }).catch(() => {});
+    touchRoom({ roomId }).catch(() => {});
     const beatId = setInterval(() => {
-      touchRoom({ roomId, playerId: myId }).catch(() => {});
+      touchRoom({ roomId }).catch(() => {});
     }, HEARTBEAT_MS);
 
     const onBeforeUnload = () => {
       try {
-        const url = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
-        const key = supabase?.supabaseKey;
-        if (url && key) {
+        const url   = `${supabase?.supabaseUrl || ''}/rest/v1/rpc/leave_race_room`;
+        const key   = supabase?.supabaseKey;
+        // leave_race_room exige rol authenticated: va el JWT de la sesion, no
+        // la anon key. El servidor identifica al jugador desde el token.
+        const token = getAccessToken();
+        if (url && key && token) {
           fetch(url, {
             method: 'POST',
             keepalive: true,
             headers: {
               'Content-Type':  'application/json',
               'apikey':        key,
-              'Authorization': `Bearer ${key}`,
+              'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ p_room_id: roomId, p_player_id: myId }),
+            body: JSON.stringify({ p_room_id: roomId }),
           }).catch(() => {});
         }
       } catch { /* ignore */ }
@@ -168,7 +177,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
     }
 
     initShipAttemptRef.current = true;
-    setRoomShip({ roomId, playerId: myId, shipId: preferred })
+    setRoomShip({ roomId, shipId: preferred })
       .catch(() => { initShipAttemptRef.current = false; });
   }, [room, status, myShip, otherShip, role, roomId, myId]);
 
@@ -261,7 +270,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
   async function handleToggleReady() {
     if (!myShip || deployingRef.current) return;
     try {
-      await setRoomReady({ roomId, playerId: myId, ready: !myReady });
+      await setRoomReady({ roomId, ready: !myReady });
     } catch (e) {
       setPickError(e?.message || t('race.hangarExtra.readyError'));
       setTimeout(() => setPickError(null), 2500);
@@ -270,7 +279,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
 
   async function handleLeave() {
     if (deployingRef.current) return;
-    try { await leaveRoom({ roomId, playerId: myId }); } catch { /* ignore */ }
+    try { await leaveRoom({ roomId }); } catch { /* ignore */ }
     onLeave?.();
   }
 

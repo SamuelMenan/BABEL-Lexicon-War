@@ -50,8 +50,6 @@ export async function saveMatchResult({
   });
 
   const payload = {
-    p_player_id:       profile.playerId,
-    p_auth_user_id:    user?.id ?? null,
     p_display_name:    displayName,
     p_session_id:      sessionId,
     p_mode:            mode || 'combat',

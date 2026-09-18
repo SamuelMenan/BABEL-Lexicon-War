@@ -14,6 +14,8 @@ import useTranslation from '@shared/i18n/useTranslation.js';
 //   - crear sala (publica o privada con codigo de 6 caracteres del servidor)
 //   - unirse por codigo
 // Cuando entra/crea sala llama onEnterRoom(roomId, role).
+const LOBBY_POLL_MS = 10000;
+
 export default function LobbyBrowser({ onEnterRoom, onClose }) {
   const { t } = useTranslation();
   const [rooms,   setRooms]   = useState([]);
@@ -37,10 +39,11 @@ export default function LobbyBrowser({ onEnterRoom, onClose }) {
   }, []);
 
   useEffect(() => {
-    // Refresh + poll cada 5s. El cleanup ya lo dispara list_public_rooms()
-    // en servidor; la RPC directa esta revocada a anon/authenticated.
+    // Poll cada 10s. Es la pantalla con mas usuarios simultaneos y estancia mas
+    // larga, asi que es donde el sondeo pesa. Las salas viven 3 minutos, no
+    // hace falta mas resolucion. La limpieza la hace pg_cron en servidor.
     refresh();
-    const id = setInterval(refresh, 5000);
+    const id = setInterval(refresh, LOBBY_POLL_MS);
     return () => clearInterval(id);
   }, [refresh]);
 

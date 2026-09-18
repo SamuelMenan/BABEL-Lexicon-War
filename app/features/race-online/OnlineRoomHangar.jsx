@@ -31,6 +31,11 @@ const DEFAULT_HOST_SHIP  = 'spaceship';
 const DEFAULT_GUEST_SHIP = 'spaceshipnew';
 const PICK_DEBOUNCE_MS = 350;
 const HEARTBEAT_MS = 30000;
+// Se queda en 2s a proposito, al contrario que lobby y RoomScreen: aqui
+// `status='starting'` dispara el arranque de la carrera para los dos jugadores.
+// Si Realtime falla, un poll lento haria que uno saliera segundos despues que
+// el otro. La estancia en esta pantalla dura segundos, asi que el coste es bajo.
+const ROOM_POLL_MS = 2000;
 
 // Vista 3D estilo hangar para salas online — usuario ve nave en 3D, navega
 // con flechas, ve piloto asignado, escoge nave (RPC), marca listo. Cuando
@@ -115,7 +120,7 @@ export default function OnlineRoomHangar({ roomId, role, onLeave, onMatchStart }
     const unsub = subscribeRoom(roomId, (next) => {
       if (mounted && next) setRoom((prev) => ({ ...next, code: next.code ?? prev?.code ?? null }));
     });
-    const pollId = setInterval(reload, 2000);
+    const pollId = setInterval(reload, ROOM_POLL_MS);
     touchRoom({ roomId }).catch(() => {});
     const beatId = setInterval(() => {
       touchRoom({ roomId }).catch(() => {});

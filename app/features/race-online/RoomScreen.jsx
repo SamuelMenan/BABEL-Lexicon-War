@@ -16,6 +16,12 @@ import { playLoopSfx, stopLoopSfx, playSfx } from '@shared/services/audioManager
 //
 // Esta es la unica responsabilidad: detectar match. La seleccion de nave +
 // ready toggle vive en OnlineRoomHangar (Fase B).
+// La llegada del rival la empuja Realtime; este poll es solo red de seguridad
+// por si la suscripcion se cae. Nada aqui es critico en tiempo — a diferencia
+// del hangar, donde `status='starting'` arranca la carrera para ambos y el
+// poll sigue a 2s a proposito.
+const ROOM_POLL_MS = 8000;
+
 export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
   const { t } = useTranslation();
   const [room, setRoom] = useState(null);
@@ -42,7 +48,7 @@ export default function RoomScreen({ roomId, role, onLeave, onRivalFound }) {
     const unsub = subscribeRoom(roomId, (next) => {
       if (mounted && next) setRoom((prev) => ({ ...next, code: next.code ?? prev?.code ?? null }));
     });
-    const pollId = setInterval(reload, 2000);
+    const pollId = setInterval(reload, ROOM_POLL_MS);
     touchRoom({ roomId }).catch(() => {});
     const beatId = setInterval(() => {
       touchRoom({ roomId }).catch(() => {});

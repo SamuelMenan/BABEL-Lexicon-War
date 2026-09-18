@@ -9,21 +9,32 @@ function ensure() {
   return supabase;
 }
 
-// Codigo aleatorio 4 digitos para salas privadas.
-export function generateRoomCode() {
-  return String(Math.floor(1000 + Math.random() * 9000));
+// Alfabeto de los codigos de sala: 31 chars sin I/L/O/0/1, para que se puedan
+// dictar en voz alta sin confusiones. Lo genera el servidor (gen_room_code);
+// aqui solo sirve para validar y normalizar lo que teclea el jugador.
+export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export const ROOM_CODE_LENGTH   = 6;
+
+const CODE_STRIP_RE = new RegExp(`[^${ROOM_CODE_ALPHABET}]`, 'g');
+
+export function normalizeRoomCode(raw) {
+  return String(raw || '').toUpperCase().replace(CODE_STRIP_RE, '').slice(0, ROOM_CODE_LENGTH);
 }
 
+export function isValidRoomCode(raw) {
+  return normalizeRoomCode(raw).length === ROOM_CODE_LENGTH;
+}
+
+// El codigo ya no lo elige el cliente: lo genera el servidor y solo el host
+// puede leerlo despues, via fetchRoomCode().
 export async function createRoom({ displayName, isPrivate = false }) {
   const sb = ensure();
-  const code = isPrivate ? generateRoomCode() : null;
   const { data, error } = await sb.rpc('create_race_room', {
     p_display_name: displayName || 'Pilot',
     p_is_private:   isPrivate,
-    p_code:         code,
   });
   if (error) throw error;
-  return { roomId: data, code };
+  return { roomId: data };
 }
 
 export async function joinRoomById({ roomId, displayName }) {

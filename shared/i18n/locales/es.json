@@ -237,12 +237,12 @@
       "label": "LOBBY · CARRERAS EN LINEA",
       "createRoom": "+ Crear sala",
       "joinByCode": "Unirse",
-      "codePlaceholder": "Codigo 4 digitos",
+      "codePlaceholder": "Codigo 6 caracteres",
       "refresh": "↻ Refrescar",
       "noRooms": "Sin salas publicas. Crea una.",
       "loadingRooms": "Cargando salas...",
       "createTitle": "Crear sala",
-      "privateLabel": "Privada (genera codigo 4 digitos)",
+      "privateLabel": "Privada (genera codigo de 6 caracteres)",
       "errors": {
         "load": "Error cargando salas",
         "create": "No se pudo crear sala",
@@ -306,7 +306,7 @@
       "createdAt": "Creada {when}",
       "secondsAgo": "{n}s atras",
       "minutesAgo": "{n}m atras",
-      "codeLenError": "Codigo debe ser 4 digitos",
+      "codeLenError": "Codigo debe ser 6 caracteres",
       "loadRoom": "Cargando sala...",
       "noData": "Sin datos",
       "backToLobby": "Volver al lobby"

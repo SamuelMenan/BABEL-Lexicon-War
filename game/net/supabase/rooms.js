@@ -82,6 +82,7 @@ export async function setRoomReady({ roomId, ready }) {
 
 export async function leaveRoom({ roomId }) {
   const sb = ensure();
+  forgetRoomCode(roomId);
   const { error } = await sb.rpc('leave_race_room', {
     p_room_id: roomId,
   });
@@ -108,13 +109,25 @@ const ROOM_COLUMNS = [
   'created_at', 'started_at', 'finished_at', 'last_activity_at',
 ].join(',');
 
+// El codigo de una sala no cambia nunca, y fetchRoom se sondea cada 2s: sin
+// cache serian ~30 RPC/min por un valor fijo. Las salas son efimeras, asi que
+// el Map no crece de forma apreciable.
+const codeCache = new Map();
+
 export async function fetchRoomCode({ roomId }) {
+  if (codeCache.has(roomId)) return codeCache.get(roomId);
   const sb = ensure();
   const { data, error } = await sb.rpc('get_room_code', {
     p_room_id: roomId,
   });
   if (error) throw error;
-  return data ?? null;
+  const code = data ?? null;
+  if (code) codeCache.set(roomId, code);
+  return code;
+}
+
+export function forgetRoomCode(roomId) {
+  codeCache.delete(roomId);
 }
 
 // playerId opcional: evita una RPC de mas cuando ya sabemos que no somos el

@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { COLORS, BLOOM_LAYER } from '@shared/config/constants.js';
-import { getQualityProfile } from '@shared/config/qualitySettings.js';
+import { getQualityProfile, onQualityChange } from '@shared/config/qualitySettings.js';
 import { ShipDestroyFx } from '../fx/ShipDestroyFx.js';
 
 const LIFETIME = 0.9;
@@ -149,6 +149,12 @@ export class ParticleEmitter {
     const p = getQualityProfile();
 
     this.scene = scene;
+    // Tope de rafagas simultaneas. El pool se dimensiona una vez aqui; al
+    // degradar no se reasigna nada, simplemente se usa menos de lo que ya hay.
+    this._burstCap = p.particleMaxBursts;
+    this._offQuality = onQualityChange((_tier, prof) => {
+      this._burstCap = Math.min(this._burstCap, prof.particleMaxBursts);
+    });
     this._pool = Array.from({ length: p.particleMaxBursts }, () => {
       const b = new Burst(p.particlePerBurst);
       b.points.castShadow    = false;
@@ -172,6 +178,7 @@ export class ParticleEmitter {
   burst(position) {
     if (!position || typeof position.x !== 'number') return;
     if (this._poolFree.length === 0) return;
+    if (this._pool.length - this._poolFree.length >= this._burstCap) return;
     this._pool[this._poolFree.pop()].activate(position);
   }
 
@@ -268,6 +275,7 @@ export class ParticleEmitter {
   }
 
   dispose() {
+    this._offQuality?.();
     this._clearDeathTimers();
     for (const b of this._pool) {
       this.scene.remove(b.points);

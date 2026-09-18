@@ -46,9 +46,50 @@ const QUALITY_PROFILES = Object.freeze({
 
 let _tier = QUALITY.MID;
 
+// Suscriptores para cambios de tier en caliente. Los consumidores del perfil
+// (ParticleEmitter, BoosterEffect, PostProcessing) lo leen en su CONSTRUCTOR,
+// asi que sin esto un cambio de tier no tendria ningun efecto sobre lo ya
+// construido.
+const _listeners = new Set();
+
+export function onQualityChange(cb) {
+  _listeners.add(cb);
+  return () => _listeners.delete(cb);
+}
+
+function _notify() {
+  for (const cb of _listeners) {
+    try { cb(_tier, QUALITY_PROFILES[_tier]); }
+    catch (e) { console.warn('[quality] listener fallo', e); }
+  }
+}
+
 export function setQualityTier(tier) {
   if (!QUALITY_PROFILES[tier]) return;
+  if (tier === _tier) return;
   _tier = tier;
+  _notify();
+}
+
+// Orden de menor a mayor coste. Solo se usa para BAJAR.
+const TIER_ORDER = [QUALITY.LOW, QUALITY.MID, QUALITY.HIGH];
+
+/**
+ * Baja un escalon de calidad. Devuelve el nuevo tier, o null si ya esta en LOW.
+ *
+ * Solo se degrada, nunca se sube: subir exigiria reconstruir pools y passes ya
+ * asignados (el pool de particulas se dimensiona en el constructor, el bloom
+ * se construye o no en init). Degradar solo requiere usar menos de lo que ya
+ * existe, que es seguro y barato. Si el equipo va sobrado, dejarlo como esta
+ * no cuesta nada.
+ */
+export function downgradeQualityTier() {
+  const i = TIER_ORDER.indexOf(_tier);
+  if (i <= 0) return null;
+  const next = TIER_ORDER[i - 1];
+  _tier = next;
+  _notify();
+  return next;
 }
 
 export function getQualityTier()    { return _tier; }

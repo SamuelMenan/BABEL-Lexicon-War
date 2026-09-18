@@ -13,7 +13,9 @@ import { getShipCatalogEntry } from '@shared/data/shopCatalog.js';
 // La clave se compara en MAYUSCULAS (redeemCode hace toUpperCase). El jugador
 // escribe "quierokeke" (cualquier caja) → coincide con 'QUIEROKEKE'.
 const SECRET_SHIP_CODES = {
-  'QUIEROKEKE': 'xwing',
+  // 'QUIEROKEKE': 'xwing',  ← deshabilitado con la nave (ver shopCatalog.js).
+  //   Desbloquearla ahora no serviria: playerProfile retira las naves `hidden`
+  //   del inventario en la siguiente carga. Reactivar junto con la nave.
 };
 
 class EconomySystemImpl {

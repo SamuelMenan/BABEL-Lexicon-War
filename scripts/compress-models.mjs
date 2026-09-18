@@ -34,7 +34,6 @@ const TARGETS = [
   'spaceship.glb',                                    // ship 5.4MB
   'spaceshipnew.glb',                                 // ship 3.4MB
   'spaceship__low_poly.glb',                          // ship 3.3MB
-  'rebels_x-wing_starfighter.glb',                    // ship secreto 59MB
 ];
 
 // Modelos cuyo .glb fuente trae materiales con alphaMode:BLEND por error de
@@ -42,7 +41,7 @@ const TARGETS = [
 // Para estos forzamos alphaMode:OPAQUE ANTES de comprimir (sobre el original
 // sin meshopt, IO simple). No es un bug de compresion: el original ya viene mal.
 const FORCE_OPAQUE = new Set([
-  'rebels_x-wing_starfighter.glb',
+  // vacio: 'rebels_x-wing_starfighter.glb' se retiro del proyecto.
 ]);
 
 // Reescribe `src` → `dst` con todos los materiales en alphaMode OPAQUE.
